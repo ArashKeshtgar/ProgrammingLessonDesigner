@@ -1,6 +1,6 @@
 import type { Lesson, LessonIndexEntry } from '../types/lesson'
 
-const modules = import.meta.glob<{ default: Lesson }>('../data/lessons/l*.json', { eager: true })
+const modules = import.meta.glob<{ default: Lesson }>('../data/lessons/*.json', { eager: true })
 
 const lessons: Lesson[] = Object.values(modules)
   .map((m) => m.default)

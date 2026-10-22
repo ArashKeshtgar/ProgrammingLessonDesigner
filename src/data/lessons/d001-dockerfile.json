@@ -2,7 +2,12 @@
   "_id": "d001",
   "n": 1,
   "tag": "docker",
-  "topics": ["dockerfile", "multi-stage", "layer cache", "non-root"],
+  "topics": [
+    "dockerfile",
+    "multi-stage",
+    "layer cache",
+    "non-root"
+  ],
   "en": "A multi-stage Dockerfile for each runtime",
   "fa": "Dockerfile چندمرحله‌ای برای .NET، Node، Python و Java",
   "goal": [
@@ -10,48 +15,186 @@
     "ترتیب COPY را طوری بچینی که نصب وابستگی‌ها cache بماند.",
     "کانتینر را با کاربر غیر root و یک HEALTHCHECK اجرا کنی."
   ],
-  "story": "ReBiomed در Control Panel یک api.Dockerfile دارد: مرحله‌ی build با npm ci و tsc، مرحله‌ی نهایی فقط dist و وابستگی‌های production، با USER node. ClinicReport هم همین را برای .NET دارد: sdk:10.0 برای publish و aspnet:10.0 برای اجرا، با USER app. در این درس چهار Dockerfile برای سرویس‌های examples می‌سازیم و هر چهار را واقعاً build و اجرا کرده‌ایم: python ‏278MB، typescript ‏410MB، csharp ‏425MB، java ‏587MB.",
+  "story": "ReBiomed در Control Panel یک api.Dockerfile دارد: مرحله‌ی build با npm ci و tsc، مرحله‌ی نهایی فقط dist و وابستگی‌های production، با USER node. ClinicReport هم همین را برای .NET دارد: sdk:10.0 برای publish و aspnet:10.0 برای اجرا، با USER app. در این درس چهار Dockerfile برای سرویس‌های examples می‌سازیم و هر چهار را واقعاً build و اجرا کرده‌ایم. حجم imageها: پایتون ۲۷۸ مگابایت، تایپ‌اسکریپت ۴۱۰، سی‌شارپ ۴۲۵ و جاوا ۵۸۷ مگابایت.",
   "why": [
-    ["Q", "چرا دو مرحله؟ یک FROM کافی نیست؟"],
-    ["A", "SDK و کامپایلر و cache پکیج‌ها فقط برای ساختن لازم‌اند. در image نهایی هم حجم اضافه‌اند و هم سطح حمله. مرحله‌ی دوم فقط خروجی را کپی می‌کند."],
-    ["Q", "چرا package.json یا csproj جدا از بقیه‌ی کد کپی می‌شود؟"],
-    ["A", "Docker هر دستور را یک لایه می‌کند و تا وقتی ورودی‌اش عوض نشده از cache استفاده می‌کند. وابستگی‌ها کم عوض می‌شوند و کد زیاد. با این ترتیب، تغییر یک خط کد نصب پکیج‌ها را دوباره اجرا نمی‌کند."]
+    [
+      "Q",
+      "چرا دو مرحله؟ یک FROM کافی نیست؟"
+    ],
+    [
+      "A",
+      "SDK و کامپایلر و cache پکیج‌ها فقط برای ساختن لازم‌اند. در image نهایی هم حجم اضافه‌اند و هم سطح حمله. مرحله‌ی دوم فقط خروجی را کپی می‌کند."
+    ],
+    [
+      "Q",
+      "چرا package.json یا csproj جدا از بقیه‌ی کد کپی می‌شود؟"
+    ],
+    [
+      "A",
+      "Docker هر دستور را یک لایه می‌کند و تا وقتی ورودی‌اش عوض نشده از cache استفاده می‌کند. وابستگی‌ها کم عوض می‌شوند و کد زیاد. با این ترتیب، تغییر یک خط کد نصب پکیج‌ها را دوباره اجرا نمی‌کند."
+    ]
   ],
   "concepts": [
-    { "h": "image پایه‌ی هر runtime", "body": ".NET: sdk برای build، aspnet برای اجرا. Node: یک image برای هر دو، با npm prune --omit=dev. Python: venv در مرحله‌ی اول ساخته و کپی می‌شود. Java: maven با JDK برای build، eclipse-temurin:21-jre برای اجرا." },
-    { "h": "لایه‌ها و cache", "body": "اول فایل وابستگی‌ها (csproj، package-lock، requirements، pom) را کپی کن و نصب کن، بعد کد را. .dockerignore جلوی کپی شدن node_modules، .venv، bin/obj و target محلی را می‌گیرد؛ هم سرعت دارد، هم از کپی شدن باینری سیستم‌عامل اشتباه جلوگیری می‌کند." },
-    { "h": "کاربر غیر root", "body": "node image کاربر node دارد، .NET کاربر app با $APP_UID. در Python و Java کاربر را می‌سازیم. پوشه‌ی داده (/data) قبل از USER به همان کاربر داده می‌شود، وگرنه volume تازه قابل نوشتن نیست." },
-    { "h": "HEALTHCHECK", "body": "Docker هر چند ثانیه دستور را اجرا می‌کند و کانتینر را healthy یا unhealthy علامت می‌زند. compose و orchestratorها از آن برای ترتیب بالا آمدن و راه‌اندازی دوباره استفاده می‌کنند. image runtime دات‌نت curl ندارد، پس نصبش کرده‌ایم؛ در Node و Python از خود runtime استفاده می‌کنیم." }
+    {
+      "h": "image پایه‌ی هر runtime",
+      "body": ".NET: sdk برای build، aspnet برای اجرا. Node: یک image برای هر دو، با npm prune --omit=dev. Python: venv در مرحله‌ی اول ساخته و کپی می‌شود. Java: maven با JDK برای build، eclipse-temurin:21-jre برای اجرا."
+    },
+    {
+      "h": "لایه‌ها و cache",
+      "body": "اول فایل وابستگی‌ها (csproj، package-lock، requirements، pom) را کپی کن و نصب کن، بعد کد را. .dockerignore جلوی کپی شدن node_modules، .venv، bin/obj و target محلی را می‌گیرد؛ هم سرعت دارد، هم از کپی شدن باینری سیستم‌عامل اشتباه جلوگیری می‌کند."
+    },
+    {
+      "h": "کاربر غیر root",
+      "body": "node image کاربر node دارد، .NET کاربر app با $APP_UID. در Python و Java کاربر را می‌سازیم. پوشه‌ی داده (/data) قبل از USER به همان کاربر داده می‌شود، وگرنه volume تازه قابل نوشتن نیست."
+    },
+    {
+      "h": "HEALTHCHECK",
+      "body": "Docker هر چند ثانیه دستور را اجرا می‌کند و کانتینر را healthy یا unhealthy علامت می‌زند. compose و orchestratorها از آن برای ترتیب بالا آمدن و راه‌اندازی دوباره استفاده می‌کنند. image runtime دات‌نت curl ندارد، پس نصبش کرده‌ایم؛ در Node و Python از خود runtime استفاده می‌کنیم."
+    }
   ],
   "compare": [
-    { "concept": "image ساخت", "csharp": "mcr.microsoft.com/dotnet/sdk:10.0", "typescript": "node:22-slim", "python": "python:3.12-slim", "java": "maven:3.9-eclipse-temurin-21", "diff": "Node و Python image جدای SDK ندارند؛ ابزار ساخت داخل همان image است." },
-    { "concept": "image اجرا", "csharp": "mcr.microsoft.com/dotnet/aspnet:10.0", "typescript": "node:22-slim", "python": "python:3.12-slim", "java": "eclipse-temurin:21-jre", "diff": "Java و .NET image کوچک‌تری برای اجرا دارند؛ در Node و Python کوچکی از کپی نکردن ابزارها می‌آید." },
-    { "concept": "نصب وابستگی cache‌پذیر", "csharp": "COPY *.csproj; dotnet restore", "typescript": "COPY package*.json; npm ci", "python": "COPY requirements.txt; pip install", "java": "COPY pom.xml; mvn dependency:go-offline", "diff": "npm ci به package-lock دقیق پایبند است؛ npm install نیست." },
-    { "concept": "خروجی ساخت", "csharp": "dotnet publish -o /out", "typescript": "npm run build && npm prune --omit=dev", "python": "venv کامل /venv", "java": "mvn package → target/*.jar", "diff": "Spring Boot یک jar اجرایی می‌سازد که همه‌ی وابستگی‌ها داخلش است." },
-    { "concept": "کاربر غیر root", "csharp": "USER $APP_UID", "typescript": "USER node", "python": "useradd ... && USER app", "java": "useradd ... && USER app", "diff": "image‌های .NET و Node کاربر آماده دارند." },
-    { "concept": "health check", "csharp": "curl -fsS .../status (نصب‌شده)", "typescript": "node -e \"fetch(...)\"", "python": "python -c \"urllib.request.urlopen(...)\"", "java": "curl -fsS .../status", "diff": "از ابزاری استفاده کن که از قبل در image هست، تا چیز اضافه نصب نکنی." }
+    {
+      "concept": "image ساخت",
+      "csharp": "mcr.microsoft.com/dotnet/sdk:10.0",
+      "typescript": "node:22-slim",
+      "python": "python:3.12-slim",
+      "java": "maven:3.9-eclipse-temurin-21",
+      "diff": "Node و Python image جدای SDK ندارند؛ ابزار ساخت داخل همان image است."
+    },
+    {
+      "concept": "image اجرا",
+      "csharp": "mcr.microsoft.com/dotnet/aspnet:10.0",
+      "typescript": "node:22-slim",
+      "python": "python:3.12-slim",
+      "java": "eclipse-temurin:21-jre",
+      "diff": "Java و .NET image کوچک‌تری برای اجرا دارند؛ در Node و Python کوچکی از کپی نکردن ابزارها می‌آید."
+    },
+    {
+      "concept": "نصب وابستگی cache‌پذیر",
+      "csharp": "COPY *.csproj; dotnet restore",
+      "typescript": "COPY package*.json; npm ci",
+      "python": "COPY requirements.txt; pip install",
+      "java": "COPY pom.xml; mvn dependency:go-offline",
+      "diff": "npm ci به package-lock دقیق پایبند است؛ npm install نیست."
+    },
+    {
+      "concept": "خروجی ساخت",
+      "csharp": "dotnet publish -o /out",
+      "typescript": "npm run build && npm prune --omit=dev",
+      "python": "venv کامل /venv",
+      "java": "mvn package → target/*.jar",
+      "diff": "Spring Boot یک jar اجرایی می‌سازد که همه‌ی وابستگی‌ها داخلش است."
+    },
+    {
+      "concept": "کاربر غیر root",
+      "csharp": "USER $APP_UID",
+      "typescript": "USER node",
+      "python": "useradd ... && USER app",
+      "java": "useradd ... && USER app",
+      "diff": "image‌های .NET و Node کاربر آماده دارند."
+    },
+    {
+      "concept": "health check",
+      "csharp": "curl -fsS .../status (نصب‌شده)",
+      "typescript": "node -e \"fetch(...)\"",
+      "python": "python -c \"urllib.request.urlopen(...)\"",
+      "java": "curl -fsS .../status",
+      "diff": "از ابزاری استفاده کن که از قبل در image هست، تا چیز اضافه نصب نکنی."
+    }
   ],
   "code": [
-    { "group": "dockerfile", "lang": "csharp", "title": "Dockerfile", "origin": "tested", "file": "backend/csharp/Dockerfile", "region": "dockerfile" },
-    { "group": "dockerfile", "lang": "typescript", "title": "Dockerfile", "origin": "tested", "file": "backend/typescript/Dockerfile", "region": "dockerfile" },
-    { "group": "dockerfile", "lang": "python", "title": "Dockerfile", "origin": "tested", "file": "backend/python/Dockerfile", "region": "dockerfile" },
-    { "group": "dockerfile", "lang": "java", "title": "Dockerfile", "origin": "tested", "file": "backend/java/Dockerfile", "region": "dockerfile" }
+    {
+      "group": "dockerfile",
+      "lang": "csharp",
+      "title": "Dockerfile",
+      "origin": "tested",
+      "file": "backend/csharp/Dockerfile",
+      "region": "dockerfile"
+    },
+    {
+      "group": "dockerfile",
+      "lang": "typescript",
+      "title": "Dockerfile",
+      "origin": "tested",
+      "file": "backend/typescript/Dockerfile",
+      "region": "dockerfile"
+    },
+    {
+      "group": "dockerfile",
+      "lang": "python",
+      "title": "Dockerfile",
+      "origin": "tested",
+      "file": "backend/python/Dockerfile",
+      "region": "dockerfile"
+    },
+    {
+      "group": "dockerfile",
+      "lang": "java",
+      "title": "Dockerfile",
+      "origin": "tested",
+      "file": "backend/java/Dockerfile",
+      "region": "dockerfile"
+    }
   ],
   "pitfalls": [
-    { "lang": "all", "mistake": "COPY . . قبل از نصب وابستگی‌ها", "why": "هر تغییر کد cache را می‌شکند و نصب پکیج‌ها هر بار از اول اجرا می‌شود.", "fix": "اول فایل وابستگی‌ها، بعد نصب، بعد کد." },
-    { "lang": "all", "mistake": "نداشتن .dockerignore", "why": "node_modules یا .venv یا bin/obj ویندوزی وارد image لینوکسی می‌شود؛ build کند و گاهی خراب می‌شود.", "fix": ".dockerignore کنار هر Dockerfile." },
-    { "lang": "all", "mistake": "اجرا به‌عنوان root", "why": "هر آسیب‌پذیری در اپ با دسترسی root داخل کانتینر اجرا می‌شود.", "fix": "USER غیر root؛ مالکیت پوشه‌های نوشتنی را قبلش بده." },
-    { "lang": "typescript", "mistake": "کپی کل node_modules مرحله‌ی build بدون prune", "why": "TypeScript، tsx و @types وارد image نهایی می‌شوند.", "fix": "npm prune --omit=dev یا npm ci --omit=dev در مرحله‌ی دوم (روش ReBiomed)." },
-    { "lang": "csharp", "mistake": "HEALTHCHECK با curl روی aspnet بدون نصب آن", "why": "image runtime curl ندارد؛ کانتینر همیشه unhealthy می‌شود.", "fix": "curl را نصب کن یا یک حالت --health در خود اپ بساز." }
+    {
+      "lang": "all",
+      "mistake": "COPY . . قبل از نصب وابستگی‌ها",
+      "why": "هر تغییر کد cache را می‌شکند و نصب پکیج‌ها هر بار از اول اجرا می‌شود.",
+      "fix": "اول فایل وابستگی‌ها، بعد نصب، بعد کد."
+    },
+    {
+      "lang": "all",
+      "mistake": "نداشتن .dockerignore",
+      "why": "node_modules یا .venv یا bin/obj ویندوزی وارد image لینوکسی می‌شود؛ build کند و گاهی خراب می‌شود.",
+      "fix": ".dockerignore کنار هر Dockerfile."
+    },
+    {
+      "lang": "all",
+      "mistake": "اجرا به‌عنوان root",
+      "why": "هر آسیب‌پذیری در اپ با دسترسی root داخل کانتینر اجرا می‌شود.",
+      "fix": "USER غیر root؛ مالکیت پوشه‌های نوشتنی را قبلش بده."
+    },
+    {
+      "lang": "typescript",
+      "mistake": "کپی کل node_modules مرحله‌ی build بدون prune",
+      "why": "TypeScript، tsx و @types وارد image نهایی می‌شوند.",
+      "fix": "npm prune --omit=dev یا npm ci --omit=dev در مرحله‌ی دوم (روش ReBiomed)."
+    },
+    {
+      "lang": "csharp",
+      "mistake": "HEALTHCHECK با curl روی aspnet بدون نصب آن",
+      "why": "image runtime curl ندارد؛ کانتینر همیشه unhealthy می‌شود.",
+      "fix": "curl را نصب کن یا یک حالت --health در خود اپ بساز."
+    }
   ],
   "refs": [
-    { "project": "ControlPanel", "file": "deploy/rebiomed/api.Dockerfile", "line": 4, "note": "ReBiomed: build و runtime جدا، npm ci --omit=dev، USER node" },
-    { "project": "ClinicReport", "file": "Dockerfile", "line": 10, "note": "sdk:10.0 برای ساخت، aspnet:10.0 برای اجرا، USER app" }
+    {
+      "project": "ControlPanel",
+      "file": "deploy/rebiomed/api.Dockerfile",
+      "line": 4,
+      "note": "ReBiomed: build و runtime جدا، npm ci --omit=dev، USER node"
+    },
+    {
+      "project": "ClinicReport",
+      "file": "Dockerfile",
+      "line": 10,
+      "note": "sdk:10.0 برای ساخت، aspnet:10.0 برای اجرا، USER app"
+    }
   ],
   "exercises": [
-    { "q": "یک خط به Program.cs اضافه کن و image را دوباره build کن. کدام مرحله‌ها از cache آمدند؟", "a": "COPY csproj و dotnet restore از cache آمدند (CACHED)؛ از COPY Portfolio/ به بعد دوباره اجرا شد." },
-    { "q": "در Dockerfile پایتون، تست‌ها و pytest هم در image هستند؟ چطور بیرونشان می‌گذاری؟", "a": "پوشه‌ی tests با .dockerignore بیرون است، ولی pytest در requirements.txt نصب می‌شود. requirements را به دو فایل (runtime و dev) تقسیم کن و فقط runtime را در Dockerfile نصب کن." },
-    { "q": "docker run --rm lessons-python id -u چه عددی برمی‌گرداند؟", "a": "10001؛ کاربر app، نه root (0)." }
+    {
+      "q": "یک خط به Program.cs اضافه کن و image را دوباره build کن. کدام مرحله‌ها از cache آمدند؟",
+      "a": "COPY csproj و dotnet restore از cache آمدند (CACHED)؛ از COPY Portfolio/ به بعد دوباره اجرا شد."
+    },
+    {
+      "q": "در Dockerfile پایتون، تست‌ها و pytest هم در image هستند؟ چطور بیرونشان می‌گذاری؟",
+      "a": "پوشه‌ی tests با .dockerignore بیرون است، ولی pytest در requirements.txt نصب می‌شود. requirements را به دو فایل (runtime و dev) تقسیم کن و فقط runtime را در Dockerfile نصب کن."
+    },
+    {
+      "q": "docker run --rm lessons-python id -u چه عددی برمی‌گرداند؟",
+      "a": "10001؛ کاربر app، نه root (0)."
+    }
   ],
   "take": "Each service builds in a full SDK stage and runs from a small runtime image, with dependencies cached in their own layer, a non-root user and a health check."
 }

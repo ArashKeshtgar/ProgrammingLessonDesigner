@@ -92,8 +92,8 @@ button { font: inherit; }
 .compare .known { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
 .compare td code { white-space: pre-wrap; word-break: break-word; font-size: .8rem; }
 .compare .diff { color: var(--muted); min-width: 13rem; }
-/* Phones: each row becomes a card with labelled cells, so nothing scrolls sideways. */
-@media (max-width: 720px) {
+/* Phones and paper: each row becomes a card with labelled cells, so nothing scrolls or gets cut. */
+@media (max-width: 720px), print {
   .compare-wrap { border: 0; background: none; overflow: visible; }
   .compare thead { display: none; }
   .compare, .compare tbody, .compare tr, .compare th, .compare td { display: block; width: 100%; min-width: 0; }
@@ -164,10 +164,13 @@ button { font: inherit; }
   .code-tabs pre { white-space: pre-wrap; word-break: break-word; background: #f5f5f5; color: #111; border: 1px solid #ddd; font-size: 8pt; }
   .hljs-keyword, .hljs-built_in, .hljs-literal { color: #a3261b; }
   .hljs-string { color: #2e6b30; }
+  .hljs-number { color: #8a4b00; }
   .hljs-comment { color: #6b7378; }
   .hljs-title, .hljs-attr { color: #1d4f8a; }
   .hljs-type, .hljs-title.class_, .hljs-meta { color: #6a2c80; }
   .compare-wrap { overflow: visible; }
+  .hero, .topics { break-inside: avoid; }
+  .topics { flex-wrap: wrap; }
   .booklet-lesson { break-before: page; border: 0; }
   .pitfall, .concept, .exercise, .sample, .compare tr { break-inside: avoid; }
 }
