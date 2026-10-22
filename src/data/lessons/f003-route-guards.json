@@ -1,0 +1,62 @@
+{
+  "_id": "f003",
+  "n": 3,
+  "tag": "frontend",
+  "topics": ["routing", "guards", "roles"],
+  "langs": ["blazor", "angular", "react", "vue"],
+  "known": "blazor",
+  "en": "Route guards and roles",
+  "fa": "محافظ مسیر: صفحه‌ی ادمین برای Viewer باز نمی‌شود",
+  "goal": [
+    "یک صفحه را فقط برای نقش Admin باز کنی و بقیه را به داشبورد برگردانی.",
+    "روش هر فریم‌ورک را بشناسی: [Authorize] در Blazor، canActivate در Angular، wrapper در React، beforeEach در Vue.",
+    "بدانی محافظ فرانت فقط تجربه‌ی کاربری است و امنیت در سرور است."
+  ],
+  "story": "Control Panel صفحه‌ی manage-ports را با canActivate: [authGuard, adminGuard] محافظت می‌کند. ClinicReport در React همین را با یک شرط در element انجام می‌دهد: can(me, 'users.manage') ? <Users /> : <Navigate to=\"/\" />. LanguageLessonDesigner هم یک router.beforeEach دارد. در هر سه، سرور همان endpointها را جداگانه با نقش چک می‌کند (درس JWT در جزوه‌ی بک‌اند).",
+  "why": [
+    ["Q", "اگر سرور چک می‌کند، guard فرانت چه فایده‌ای دارد؟"],
+    ["A", "کاربر Viewer صفحه‌ای را نمی‌بیند که همه‌ی دکمه‌هایش 403 بدهند. guard تجربه است، نه امنیت: هر کسی می‌تواند JavaScript را عوض کند یا API را مستقیم صدا بزند."],
+    ["Q", "نقش کاربر را فرانت از کجا می‌داند؟"],
+    ["A", "از پاسخ login (یا از payload توکن). این مقدار فقط برای نمایش است؛ سرور نقش را از توکن امضاشده می‌خواند، نه از چیزی که کلاینت می‌گوید."]
+  ],
+  "concepts": [
+    { "h": "Blazor: attribute روی صفحه", "body": "@attribute [Authorize(Roles = \"Admin\")] روی صفحه، و AuthorizeRouteView در Router که آن را می‌خواند. AuthenticationStateProvider نقش کاربر را فراهم می‌کند." },
+    { "h": "Angular: CanActivateFn", "body": "یک تابع که true یا یک UrlTree برمی‌گرداند. UrlTree یعنی «به‌جایش برو اینجا». با inject() سرویس‌ها را می‌گیرد." },
+    { "h": "React Router: کامپوننت wrapper", "body": "React Router guard ندارد. یک کامپوننت (RequireRole) یا children را render می‌کند یا <Navigate replace />. در data routerها می‌شود loader هم استفاده کرد." },
+    { "h": "Vue Router: guard سراسری با meta", "body": "هر route در meta نقش لازم را می‌گوید و یک router.beforeEach همه را چک می‌کند. برگرداندن یک مسیر یعنی redirect. با declare module، meta.role نوع‌دار می‌شود." }
+  ],
+  "compare": [
+    { "concept": "علامت زدن صفحه", "blazor": "@attribute [Authorize(Roles = \"Admin\")]", "angular": "canActivate: [adminGuard]", "react": "<RequireRole role=\"Admin\">...</RequireRole>", "vue": "meta: { role: 'Admin' }", "diff": "Blazor و Vue اعلانی‌اند؛ Angular و React کد را مستقیم در تعریف route می‌گذارند." },
+    { "concept": "جایی که چک می‌شود", "blazor": "AuthorizeRouteView", "angular": "خود CanActivateFn", "react": "خود کامپوننت wrapper", "vue": "router.beforeEach", "diff": "در Vue یک جا برای همه‌ی مسیرها؛ در بقیه برای هر مسیر." },
+    { "concept": "redirect", "blazor": "<NotAuthorized> یا NavigationManager", "angular": "return router.createUrlTree(['/dashboard'])", "react": "<Navigate to=\"/dashboard\" replace />", "vue": "return '/dashboard'", "diff": "replace جلوی برگشت با دکمه‌ی Back به صفحه‌ی ممنوع را می‌گیرد." },
+    { "concept": "منبع نقش", "blazor": "AuthenticationStateProvider", "angular": "AuthService.role", "react": "SessionContext", "vue": "reactive session", "diff": "همه باید از پاسخ سرور پر شوند، نه از ورودی کاربر." }
+  ],
+  "code": [
+    { "group": "guard", "lang": "blazor", "title": "فقط Admin", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/Routes.razor", "region": "guard" },
+    { "group": "guard", "lang": "angular", "title": "فقط Admin", "origin": "tested", "file": "frontend/web/angular/auth.ts", "region": "guard" },
+    { "group": "guard", "lang": "react", "title": "فقط Admin", "origin": "tested", "file": "frontend/web/react/routes.tsx", "region": "guard" },
+    { "group": "guard", "lang": "vue", "title": "فقط Admin", "origin": "tested", "file": "frontend/web/vue/router.ts", "region": "guard" },
+    { "group": "page", "lang": "blazor", "title": "صفحه با [Authorize]", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/NewProjectPage.razor", "region": "page" },
+    { "group": "page", "lang": "angular", "title": "Control Panel: محافظت صفحه‌ی manage-ports", "origin": "real", "code": "export const adminGuard: CanActivateFn = () => {\n  const auth = inject(AuthService);\n  const router = inject(Router);\n\n  if (auth.isLoggedIn && auth.currentUser?.role === 'Admin') return true;\n\n  router.navigate(['/dashboard']);\n  return false;\n};\n\n// app.routes.ts\n{ path: 'manage-ports', component: ManagePortsPageComponent, canActivate: [authGuard, adminGuard] }" },
+    { "group": "page", "lang": "react", "title": "ClinicReport: شرط در element", "origin": "real", "code": "<Route path=\"/users\" element={can(me, 'users.manage') ? <Users /> : <Navigate to=\"/\" />} />\n<Route path=\"/audit\" element={can(me, 'audit.view') ? <Audit /> : <Navigate to=\"/\" />} />" },
+    { "group": "page", "lang": "vue", "title": "LanguageLessonDesigner: beforeEach", "origin": "real", "code": "// The private ctx.<domain> copy opens on Context; only the first navigation, so the Lessons tab still works there.\nrouter.beforeEach((to, from) => {\n  if (from === START_LOCATION && to.path === '/' && location.hostname.startsWith('ctx.')) return '/context'\n})" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "فقط guard فرانت، بدون چک در سرور", "why": "هر کسی API را مستقیم صدا می‌زند یا JavaScript را تغییر می‌دهد.", "fix": "نقش در سرور روی هر endpoint (درس JWT)." },
+    { "lang": "angular", "mistake": "router.navigate داخل guard و return false", "why": "کار می‌کند ولی دو navigation شروع می‌شود؛ UrlTree تمیزتر است و Angular آن را redirect می‌داند.", "fix": "return router.createUrlTree([...])." },
+    { "lang": "react", "mistake": "<Navigate> بدون replace", "why": "صفحه‌ی ممنوع در history می‌ماند و Back دوباره redirect می‌کند.", "fix": "<Navigate to=... replace />." },
+    { "lang": "blazor", "mistake": "[Authorize] روی صفحه بدون AuthorizeRouteView در Router", "why": "attribute خوانده نمی‌شود و صفحه برای همه باز است.", "fix": "AuthorizeRouteView و CascadingAuthenticationState." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "frontend/src/app/auth/admin.guard.ts", "line": 5, "note": "adminGuard در Angular" },
+    { "project": "ControlPanel", "file": "frontend/src/app/app.routes.ts", "line": 14, "note": "canActivate: [authGuard, adminGuard]" },
+    { "project": "ClinicReport", "file": "web/src/App.tsx", "line": 78, "note": "React: can(me, ...) ? <Page /> : <Navigate />" },
+    { "project": "LanguageLessonDesigner", "file": "src/router/index.ts", "line": 41, "note": "Vue: router.beforeEach" }
+  ],
+  "exercises": [
+    { "q": "در نسخه‌ی Vue یک نقش دوم (Viewer) برای /reports تعریف کن، طوری که Admin هم بتواند ببیند. meta و guard چه شکلی می‌شوند؟", "a": "meta: { roles: ['Admin', 'Viewer'] } و در beforeEach: if (to.meta.roles && !to.meta.roles.includes(session.role)) return '/dashboard'." },
+    { "q": "adminGuard در Control Panel از router.navigate و return false استفاده می‌کند. آن را به UrlTree تبدیل کن.", "a": "return auth.isLoggedIn && auth.currentUser?.role === 'Admin' ? true : inject(Router).createUrlTree(['/dashboard'])." },
+    { "q": "با DevTools نقش را در session به Admin تغییر بده و صفحه را باز کن. بعد Save بزن. چه می‌بینی؟", "a": "صفحه باز می‌شود (guard فقط سمت کلاینت است) ولی POST /projects با 403 رد می‌شود، چون سرور نقش را از توکن می‌خواند." }
+  ],
+  "take": "Route guards keep users away from pages they can't use, but the server checks the role again on every call; the guard is UX, not security."
+}

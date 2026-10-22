@@ -1,0 +1,58 @@
+{
+  "_id": "f002",
+  "n": 2,
+  "tag": "frontend",
+  "topics": ["http", "interceptors", "token refresh"],
+  "langs": ["blazor", "angular", "react", "vue"],
+  "known": "blazor",
+  "en": "Calling the API with tokens",
+  "fa": "فراخوانی API با توکن: یک refresh مشترک برای همه‌ی ۴۰۱ها",
+  "goal": [
+    "توکن را در یک جا به همه‌ی درخواست‌ها بچسبانی، نه در هر صفحه.",
+    "وقتی access token منقضی شد (401)، یک بار refresh کنی و درخواست را تکرار کنی، بی‌آنکه کاربر چیزی ببیند.",
+    "وقتی چند درخواست هم‌زمان 401 می‌گیرند فقط یک refresh بفرستی."
+  ],
+  "story": "در Control Panel، authInterceptor هر درخواست HttpClient را می‌گیرد، توکن را اضافه می‌کند، و در 401 با auth.refreshAccessToken() تلاش می‌کند. refreshAccessToken یک refreshInFlight مشترک دارد، چون سرور refresh token را می‌چرخاند: دو refresh هم‌زمان با همان توکن، دومی را با توکنِ دیگر باطل‌شده می‌فرستد. همین منطق را در Blazor با DelegatingHandler، و برای React و Vue با یک fetch wrapper مشترک ساخته‌ایم. هر دو تست دارند: دو 401 هم‌زمان، دقیقاً یک refresh.",
+  "why": [
+    ["Q", "چرا refresh را در هر صفحه یا hook انجام ندهیم؟"],
+    ["A", "چون صفحه‌ها همدیگر را نمی‌شناسند. دو صفحه‌ی هم‌زمان دو refresh می‌فرستند و یکی شکست می‌خورد. یک لایه در مسیر همه‌ی درخواست‌ها (interceptor، handler، wrapper) تنها جایی است که می‌تواند refresh را مشترک کند."],
+    ["Q", "اگر خود درخواست refresh 401 بگیرد؟"],
+    ["A", "یعنی session تمام شده (logout، رمز عوض شده، ۷ روز گذشته). توکن‌ها پاک می‌شوند و کاربر به صفحه‌ی ورود می‌رود. درخواست refresh هرگز از همان مسیر retry رد نمی‌شود، وگرنه حلقه می‌سازد."]
+  ],
+  "concepts": [
+    { "h": "یک لایه برای همه", "body": "Angular: HttpInterceptorFn که با provideHttpClient(withInterceptors([...])) ثبت می‌شود. Blazor: DelegatingHandler در pipeline یک HttpClient. React و Vue: فریم‌ورک چیزی ندارد؛ یک wrapper دور fetch (یا interceptor در axios)." },
+    { "h": "refresh مشترک", "body": "اولین 401 یک promise/observable/task می‌سازد و در یک فیلد نگه می‌دارد. 401های بعدی همان را await می‌کنند. وقتی تمام شد، فیلد پاک می‌شود. RxJS: shareReplay(1) + finalize. TS: ??= و finally. C#: lock و یک Task." },
+    { "h": "تکرار درخواست", "body": "Angular و fetch درخواست را دوباره می‌سازند. در .NET یک HttpRequestMessage را نمی‌شود دو بار فرستاد؛ باید یک کپی ساخت." },
+    { "h": "کجا توکن نگه داریم", "body": "این مثال‌ها، مثل Control Panel، localStorage استفاده می‌کنند. یک باگ XSS می‌تواند آن را بخواند. قدم بعدی، cookie از نوع httpOnly برای refresh token است که JavaScript به آن دسترسی ندارد (README خود Control Panel همین را نوشته)." }
+  ],
+  "compare": [
+    { "concept": "لایه‌ی مشترک", "blazor": "class AuthHandler : DelegatingHandler", "angular": "const authInterceptor: HttpInterceptorFn", "react": "createApi(...) دور fetch", "vue": "createApi(...) دور fetch", "diff": "React و Vue این را ندارند؛ همان کد TypeScript برای هر دو." },
+    { "concept": "ثبت", "blazor": "AddHttpClient<ProjectsClient>().AddHttpMessageHandler<AuthHandler>()", "angular": "provideHttpClient(withInterceptors([authInterceptor]))", "react": "import { apiFetch } from './session'", "vue": "import { apiFetch } from './session'", "diff": "در Blazor و Angular ثبت یک بار است و همه‌ی HttpClientها از آن رد می‌شوند." },
+    { "concept": "refresh مشترک", "blazor": "lock + Task<string>? refreshing", "angular": "refreshInFlight + shareReplay(1)", "react": "refreshing ??= (async () => ...)()", "vue": "refreshing ??= (async () => ...)()", "diff": "JavaScript تک‌نخی است و lock لازم ندارد؛ C# چندنخی است." },
+    { "concept": "استفاده در صفحه", "blazor": "@inject ProjectsClient Api", "angular": "inject(ProjectsService)", "react": "const { projects } = useProjects()", "vue": "const { projects } = useProjects()", "diff": "hook و composable تقریباً یکی‌اند؛ composable بدون قواعد ترتیب hookها." }
+  ],
+  "code": [
+    { "group": "client", "lang": "blazor", "title": "توکن و refresh در یک لایه", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/AuthHandler.cs", "region": "client" },
+    { "group": "client", "lang": "angular", "title": "توکن و refresh در یک لایه", "origin": "tested", "file": "frontend/web/angular/auth.ts", "region": "interceptor" },
+    { "group": "client", "lang": "react", "title": "hook برای صفحه‌ها", "origin": "tested", "file": "frontend/web/react/useProjects.ts", "region": "client" },
+    { "group": "client", "lang": "vue", "title": "composable برای صفحه‌ها", "origin": "tested", "file": "frontend/web/vue/useProjects.ts", "region": "client" },
+    { "group": "shared", "lang": "all", "title": "fetch wrapper مشترک React و Vue", "origin": "tested", "file": "frontend/web/shared/api.ts", "region": "api" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "refresh جدا برای هر درخواست 401", "why": "سرور refresh token را می‌چرخاند؛ refresh دوم با توکن قدیمی شکست می‌خورد و کاربر بی‌دلیل خارج می‌شود.", "fix": "یک refresh در حال اجرا، مشترک بین همه." },
+    { "lang": "all", "mistake": "رد شدن درخواست refresh از همان interceptor", "why": "refresh با 401 دوباره refresh را صدا می‌زند: حلقه.", "fix": "مسیرهای /auth/ را از منطق retry معاف کن (isAuthEndpoint)." },
+    { "lang": "blazor", "mistake": "فرستادن دوباره‌ی همان HttpRequestMessage", "why": "InvalidOperationException: درخواست قبلاً فرستاده شده.", "fix": "یک کپی بساز (Clone)." },
+    { "lang": "angular", "mistake": "subscribe کردن مستقیم به http.post برای refresh بدون shareReplay", "why": "هر subscriber یک درخواست جدید می‌فرستد؛ observable سرد است.", "fix": "shareReplay(1)." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "frontend/src/app/auth/auth.interceptor.ts", "line": 18, "note": "authInterceptor: توکن، 401، refresh، retry" },
+    { "project": "ControlPanel", "file": "frontend/src/app/auth/auth.service.ts", "line": 43, "note": "refreshInFlight مشترک با shareReplay" },
+    { "project": "ClinicReport", "file": "web/src/api.ts", "line": 121, "note": "React: در 401 رویداد signed-out" }
+  ],
+  "exercises": [
+    { "q": "در تست api.test.ts، Promise.all دو درخواست را هم‌زمان می‌فرستد. اگر refreshing ??= را با refreshing = عوض کنی چند refresh می‌بینی؟", "a": "دو. هر 401 refresh جدید می‌سازد و تست (refreshes === 1) شکست می‌خورد." },
+    { "q": "در Blazor، lock را از SharedRefresh بردار. آیا تست همیشه شکست می‌خورد؟", "a": "نه همیشه؛ race condition است و به زمان‌بندی threadها بستگی دارد. همین است که باگ هم‌زمانی را خطرناک می‌کند: تست گاهی سبز است." },
+    { "q": "برای React به‌جای fetch wrapper از axios استفاده کن. معادل interceptor آن چیست؟", "a": "axios.interceptors.request.use برای اضافه کردن توکن، و axios.interceptors.response.use با شاخه‌ی خطا برای 401، با همان refresh مشترک." }
+  ],
+  "take": "Tokens are attached in one place for every request, and a 401 triggers a single shared refresh before the request is retried."
+}

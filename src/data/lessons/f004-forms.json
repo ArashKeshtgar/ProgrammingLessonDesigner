@@ -1,0 +1,59 @@
+{
+  "_id": "f004",
+  "n": 4,
+  "tag": "frontend",
+  "topics": ["forms", "validation", "server errors"],
+  "langs": ["blazor", "angular", "react", "vue"],
+  "known": "blazor",
+  "en": "Forms and client-side validation",
+  "fa": "فرم و اعتبارسنجی سمت کلاینت، با همان قواعد سرور",
+  "goal": [
+    "فرم ساخت پروژه را با همان قواعد DTO بک‌اند در چهار فریم‌ورک بسازی.",
+    "پیام خطا را بعد از اولین تلاش نشان بدهی، نه از لحظه‌ی باز شدن صفحه.",
+    "خطای سرور (مثلاً 409 تکراری) را هم نشان بدهی، چون سرور همیشه دوباره چک می‌کند."
+  ],
+  "story": "قواعد پروژه در بک‌اند: key با حروف کوچک، عدد و خط تیره تا ۴۰ کاراکتر؛ نام لازم تا ۱۰۰؛ آدرس http(s). فرم فرانت همین قواعد را تکرار می‌کند تا کاربر قبل از ارسال بداند. Blazor می‌تواند همان attributeهای DataAnnotations را روی مدل بگذارد؛ Angular قواعد را روی کنترل‌ها می‌گذارد؛ React و Vue از یک تابع validateProject مشترک استفاده می‌کنند که تست شده است.",
+  "why": [
+    ["Q", "قواعد دو جا نوشته شده‌اند. اگر یکی عوض شود؟"],
+    ["A", "سرور مرجع است و همیشه چک می‌کند؛ اگر کلاینت عقب بماند، کاربر 400 می‌بیند و پیام سرور نمایش داده می‌شود. در Blazor می‌شود همان کلاس DTO را بین سرور و کلاینت مشترک کرد، که مزیت C# در هر دو طرف است."],
+    ["Q", "چرا خطاها را از اول نشان ندهیم؟"],
+    ["A", "فرم خالی پر از خطای قرمز است، قبل از اینکه کاربر کاری کرده باشد. بعد از اولین submit (یا touch در Angular) خطاها معنی دارند."]
+  ],
+  "concepts": [
+    { "h": "Blazor: EditForm", "body": "EditForm با Model، DataAnnotationsValidator که attributeها را اجرا می‌کند، InputText با @bind-Value، و ValidationMessage برای هر فیلد. OnValidSubmit فقط وقتی همه‌ی قواعد درست باشند صدا زده می‌شود." },
+    { "h": "Angular: Reactive Forms", "body": "FormBuilder.nonNullable.group با Validators روی هر کنترل. form.invalid، control.touched، markAllAsTouched. getRawValue() مقدار typed را می‌دهد." },
+    { "h": "React: کنترل‌شده", "body": "مقدار هر input در state است و onChange آن را عوض می‌کند. خطاها در هر render از state محاسبه می‌شوند (نه در state جدا). برای فرم‌های بزرگ کتابخانه‌هایی مثل react-hook-form با zod." },
+    { "h": "Vue: v-model", "body": "v-model روی یک reactive دوطرفه وصل می‌شود؛ .trim فاصله‌ها را می‌برد. خطاها computed هستند و با هر تغییر فیلد دوباره حساب می‌شوند." },
+    { "h": "خطای سرور", "body": "اعتبارسنجی کلاینت نمی‌داند key تکراری است؛ فقط سرور می‌داند. پاسخ 409 یا 400 را بخوان و پیامش را نشان بده." }
+  ],
+  "compare": [
+    { "concept": "تعریف قواعد", "blazor": "[Required, RegularExpression(...)] روی مدل", "angular": "Validators.required, Validators.pattern(...)", "react": "validateProject(form) (تابع مشترک)", "vue": "validateProject(form) (تابع مشترک)", "diff": "Blazor همان attributeهای سرور C# را استفاده می‌کند." },
+    { "concept": "اتصال input", "blazor": "<InputText @bind-Value=\"model.Key\" />", "angular": "<input formControlName=\"key\" />", "react": "<input value={form.key} onChange={set('key')} />", "vue": "<input v-model.trim=\"form.key\" />", "diff": "React تنها جایی است که اتصال دوطرفه را خودتان می‌نویسید." },
+    { "concept": "نمایش خطای فیلد", "blazor": "<ValidationMessage For=\"() => model.Key\" />", "angular": "@if (form.controls.key.touched && form.controls.key.invalid)", "react": "{touched && errors.key && <small>...</small>}", "vue": "<small v-if=\"touched && errors.key\">", "diff": "Angular وضعیت touched را برای هر کنترل نگه می‌دارد؛ در بقیه یک پرچم ساده است." },
+    { "concept": "ارسال", "blazor": "OnValidSubmit=\"Save\"", "angular": "(ngSubmit)=\"save()\"", "react": "onSubmit={submit} + e.preventDefault()", "vue": "@submit.prevent=\"submit\"", "diff": "React و Vue باید جلوی ارسال پیش‌فرض مرورگر را بگیرند (preventDefault / .prevent)." }
+  ],
+  "code": [
+    { "group": "form", "lang": "blazor", "title": "فرم ساخت پروژه", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/ProjectForm.razor", "region": "form" },
+    { "group": "form", "lang": "angular", "title": "فرم ساخت پروژه", "origin": "tested", "file": "frontend/web/angular/project-form.component.ts", "region": "form" },
+    { "group": "form", "lang": "react", "title": "فرم ساخت پروژه", "origin": "tested", "file": "frontend/web/react/ProjectForm.tsx", "region": "form" },
+    { "group": "form", "lang": "vue", "title": "فرم ساخت پروژه", "origin": "tested", "file": "frontend/web/vue/ProjectForm.vue", "region": "form" },
+    { "group": "rules", "lang": "all", "title": "قواعد مشترک React و Vue", "origin": "tested", "file": "frontend/web/shared/model.ts", "region": "rules" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "اعتماد به اعتبارسنجی کلاینت برای امنیت", "why": "درخواست را می‌شود مستقیم با curl فرستاد.", "fix": "سرور همیشه دوباره چک می‌کند (درس اعتبارسنجی بک‌اند)." },
+    { "lang": "all", "mistake": "نادیده گرفتن پیام خطای سرور", "why": "کاربر نمی‌فهمد چرا ذخیره نشد (مثلاً key تکراری).", "fix": "پیام error پاسخ را در فرم نشان بده." },
+    { "lang": "angular", "mistake": "subscribe با complete برای خاموش کردن دکمه‌ی در حال ذخیره", "why": "در خطا complete صدا زده نمی‌شود و دکمه برای همیشه غیرفعال می‌ماند.", "fix": "finalize(() => saving.set(false))." },
+    { "lang": "react", "mistake": "نگه داشتن errors در state جدا", "why": "با تغییر فرم همگام نمی‌ماند و یک setState اضافه در هر تایپ.", "fix": "از form در هر render محاسبه کن." },
+    { "lang": "blazor", "mistake": "OnSubmit به‌جای OnValidSubmit", "why": "با OnSubmit اعتبارسنجی را خودت باید صدا بزنی؛ فرم نامعتبر هم ارسال می‌شود.", "fix": "OnValidSubmit، یا editContext.Validate() در OnSubmit." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/core-api/src/projects/dto/project.dto.ts", "line": 4, "note": "قواعد سرور که فرم تکرار می‌کند" },
+    { "project": "ClinicReport", "file": "web/src/pages/Login.tsx", "line": 13, "note": "React: input کنترل‌شده با useState" }
+  ],
+  "exercises": [
+    { "q": "در Blazor، کلاس CreateProjectModel را به یک پروژه‌ی Shared ببر و هم در سرور و هم در کلاینت استفاده کن. چه چیزی به دست می‌آوری؟", "a": "یک تعریف قواعد برای هر دو طرف؛ اگر قاعده عوض شود، فرم و API با هم عوض می‌شوند. این در React و Vue فقط با کد TS مشترک (مثلاً schema zod در یک monorepo) شدنی است." },
+    { "q": "در React، هم‌زمان با تایپ key فقط حروف کوچک را بپذیر (حروف بزرگ را کوچک کن). کجا تغییر می‌دهی؟", "a": "در set('key'): setForm({ ...form, key: e.target.value.toLowerCase() }). چون input کنترل‌شده است، مقدار نمایش‌داده‌شده هم کوچک می‌شود." },
+    { "q": "دکمه‌ی Save را تا زمانی که فرم نامعتبر است غیرفعال کن، در Vue. خوب است یا بد؟", "a": ":disabled=\"saving || Object.keys(errors).length > 0\". کار می‌کند، ولی کاربر نمی‌فهمد چرا دکمه غیرفعال است تا پیام‌ها را ببیند؛ نمایش پیام‌ها بعد از اولین کلیک معمولاً بهتر است." }
+  ],
+  "take": "The form repeats the server's rules for instant feedback, shows errors after the first attempt, and still displays the server's answer, because the server is the real check."
+}

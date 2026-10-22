@@ -1,0 +1,65 @@
+{
+  "_id": "f001",
+  "n": 1,
+  "tag": "frontend",
+  "topics": ["components", "props", "events", "state"],
+  "langs": ["blazor", "angular", "react", "vue"],
+  "known": "blazor",
+  "en": "Components: input, output and state",
+  "fa": "کامپوننت: ورودی، رویداد، و وضعیت",
+  "goal": [
+    "یک کامپوننت کارت با ورودی (پروژه) و خروجی (رویداد refresh) در چهار فریم‌ورک بسازی.",
+    "وضعیت (فهرست، در حال بارگذاری، خطا) را در کامپوننت والد نگه داری و تغییرش بدهی.",
+    "بفهمی هر فریم‌ورک کی دوباره render می‌کند: Blazor بعد از event، Angular با signal، React با setState، Vue با ref."
+  ],
+  "story": "داشبورد Control Panel برای هر پروژه یک کارت دارد: سالم یا خراب، یک خلاصه، و دکمه‌ای برای خواندن دوباره‌ی وضعیت. در این درس همان کارت و فهرست را در Blazor (زبانی که از C# می‌آید)، Angular (فرانت Control Panel)، React (فرانت ClinicReport و ReBiomed) و Vue (همین سایت) می‌سازیم. الگو یکی است: داده از بالا به پایین با props/input، رویداد از پایین به بالا با callback/output.",
+  "why": [
+    ["Q", "چرا کارت خودش وضعیت را دوباره نمی‌خواند؟"],
+    ["A", "کارت فقط نمایش می‌دهد و می‌گوید «دکمه زده شد». والد تصمیم می‌گیرد چه کند و فهرست را عوض می‌کند. این‌طوری کارت در هر صفحه‌ای قابل استفاده است و فقط یک جا داده را عوض می‌کند."],
+    ["Q", "در React چرا آرایه را map می‌کنیم و push نمی‌کنیم؟"],
+    ["A", "React تغییر را با مقایسه‌ی مرجع تشخیص می‌دهد. اگر همان آرایه را تغییر بدهی، مرجع عوض نشده و ممکن است render نشود. Vue و Angular signal تغییر درجا را هم می‌بینند، ولی الگوی آرایه‌ی جدید در همه درست کار می‌کند."]
+  ],
+  "concepts": [
+    { "h": "ورودی", "body": "Blazor: [Parameter] روی property. Angular 17+: input.required<T>() که یک signal است. React: props تابع. Vue: defineProps. در هر چهار، کامپوننت نباید ورودی را مستقیم تغییر بدهد." },
+    { "h": "خروجی", "body": "Blazor: EventCallback<T> و InvokeAsync. Angular: output<T>() و emit. React: یک تابع در props (onRefresh). Vue: defineEmits و emit('refresh', key)." },
+    { "h": "وضعیت و render", "body": "Blazor بعد از هر event handler و بعد از await در lifecycle خودش render می‌کند. Angular با signal فقط جاهایی که signal خوانده شده را به‌روز می‌کند. React با هر setState کل تابع کامپوننت را دوباره اجرا می‌کند. Vue تغییر ref/reactive را ردیابی می‌کند و فقط وابسته‌ها را به‌روز می‌کند." },
+    { "h": "بارگذاری اولیه", "body": "Blazor: OnInitializedAsync. Angular: ngOnInit. React: useEffect با آرایه‌ی وابستگی خالی (و پرچم cancelled برای وقتی کامپوننت قبل از پاسخ unmount شد). Vue: onMounted." },
+    { "h": "کلید در فهرست", "body": "Blazor @key، Angular track، React key، Vue :key. فریم‌ورک با کلید می‌فهمد کدام کارت کدام است و فقط همان را به‌روز می‌کند." }
+  ],
+  "compare": [
+    { "concept": "ورودی", "blazor": "[Parameter] public ProjectStatus Project { get; set; }", "angular": "project = input.required<ProjectStatus>()", "react": "function StatusCard({ project }: Props)", "vue": "defineProps<{ project: ProjectStatus }>()", "diff": "در Angular ورودی یک signal است و با project() خوانده می‌شود." },
+    { "concept": "رویداد به والد", "blazor": "EventCallback<string> OnRefresh + InvokeAsync", "angular": "refresh = output<string>() + emit", "react": "onRefresh: (key: string) => void", "vue": "defineEmits<{ refresh: [key: string] }>()", "diff": "React رویداد ندارد؛ فقط تابعی که والد پاس داده." },
+    { "concept": "وضعیت", "blazor": "private List<ProjectStatus>? projects;", "angular": "projects = signal<ProjectStatus[]>([])", "react": "const [projects, setProjects] = useState(...)", "vue": "const projects = ref<ProjectStatus[] | null>(null)", "diff": "Blazor فیلد معمولی است؛ بقیه یک ظرف واکنشی دارند." },
+    { "concept": "مقدار محاسبه‌شده", "blazor": "private string Label => ...", "angular": "label = computed(() => ...)", "react": "const label = ... (در هر render)", "vue": "const label = computed(() => ...)", "diff": "React در هر render دوباره حساب می‌کند؛ برای هزینه‌بر useMemo." },
+    { "concept": "حلقه با کلید", "blazor": "@foreach + @key", "angular": "@for (p of projects(); track p.key)", "react": "projects.map(p => <StatusCard key={p.key} />)", "vue": "v-for=\"p in projects\" :key=\"p.key\"", "diff": "Angular از نسخه‌ی 17 track را اجباری کرده." },
+    { "concept": "بارگذاری اولیه", "blazor": "OnInitializedAsync()", "angular": "ngOnInit()", "react": "useEffect(() => {...}, [])", "vue": "onMounted(async () => ...)", "diff": "useEffect در حالت StrictMode در development دو بار اجرا می‌شود." }
+  ],
+  "code": [
+    { "group": "card", "lang": "blazor", "title": "کارت وضعیت", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/StatusCard.razor", "region": "card" },
+    { "group": "card", "lang": "angular", "title": "کارت وضعیت", "origin": "tested", "file": "frontend/web/angular/status-card.component.ts", "region": "card" },
+    { "group": "card", "lang": "react", "title": "کارت وضعیت", "origin": "tested", "file": "frontend/web/react/StatusCard.tsx", "region": "card" },
+    { "group": "card", "lang": "vue", "title": "کارت وضعیت", "origin": "tested", "file": "frontend/web/vue/StatusCard.vue", "region": "card" },
+    { "group": "list", "lang": "blazor", "title": "فهرست با وضعیت", "origin": "tested", "file": "frontend/blazor/Lessons.Blazor/StatusList.razor", "region": "list" },
+    { "group": "list", "lang": "angular", "title": "فهرست با وضعیت", "origin": "tested", "file": "frontend/web/angular/status-card.component.ts", "region": "list" },
+    { "group": "list", "lang": "react", "title": "فهرست با وضعیت", "origin": "tested", "file": "frontend/web/react/StatusCard.tsx", "region": "list" },
+    { "group": "list", "lang": "vue", "title": "فهرست با وضعیت", "origin": "tested", "file": "frontend/web/vue/StatusList.vue", "region": "list" }
+  ],
+  "pitfalls": [
+    { "lang": "react", "mistake": "تغییر درجای state (projects.push، p.healthy = true)", "why": "مرجع عوض نمی‌شود و React ممکن است render نکند.", "fix": "همیشه آرایه/شیء جدید: map، spread." },
+    { "lang": "react", "mistake": "useEffect بدون آرایه‌ی وابستگی برای fetch", "why": "بعد از هر render اجرا می‌شود؛ fetch → setState → render → fetch، حلقه‌ی بی‌پایان.", "fix": "[] برای یک بار، یا وابستگی‌های دقیق." },
+    { "lang": "angular", "mistake": "فراموش کردن پرانتز در template: project.healthy به‌جای project().healthy", "why": "signal یک تابع است؛ بدون () خود تابع را می‌خوانی.", "fix": "project().healthy." },
+    { "lang": "vue", "mistake": "destructure کردن props یا reactive", "why": "قبل از Vue 3.5 واکنش‌پذیری از دست می‌رفت.", "fix": "props.project یا toRefs؛ از 3.5 destructure در defineProps واکنشی است." },
+    { "lang": "blazor", "mistake": "تغییر state از یک thread یا timer بیرونی بدون StateHasChanged", "why": "Blazor فقط بعد از event handler و lifecycle خودش render می‌کند.", "fix": "InvokeAsync(StateHasChanged)." }
+  ],
+  "refs": [
+    { "project": "ClinicReport", "file": "web/src/pages/Login.tsx", "line": 13, "note": "React: useState در فرانت ClinicReport" },
+    { "project": "LanguageLessonDesigner", "file": "src/components/HeroBlock.vue", "line": 4, "note": "Vue: defineProps در همین نوع سایت" },
+    { "project": "ControlPanel", "file": "frontend/src/app/components/assistant-panel/assistant-panel.component.ts", "line": 1, "note": "Angular: کامپوننت standalone در Control Panel" }
+  ],
+  "exercises": [
+    { "q": "یک ورودی دوم به کارت اضافه کن: compact (bool) که خلاصه را پنهان کند. در هر فریم‌ورک چند خط است؟", "a": "Blazor: یک [Parameter] و یک @if. Angular: compact = input(false) و @if. React: یک prop و {!compact && ...}. Vue: یک prop و v-if. در هر چهار حدود سه خط." },
+    { "q": "در نسخه‌ی React پرچم cancelled را بردار، و کامپوننت را قبل از پاسخ fetch از صفحه حذف کن. چه می‌شود؟", "a": "setProjects روی کامپوننتی که دیگر نیست صدا زده می‌شود. React 18+ هشداری نمی‌دهد ولی کار بیهوده انجام می‌شود، و اگر پاسخ دو درخواست به ترتیب اشتباه برسد داده‌ی قدیمی جای جدید را می‌گیرد." },
+    { "q": "تست bUnit کارت Blazor را بخوان. معادلش در React با Testing Library چه شکلی است؟", "a": "render(<StatusCard project={p} onRefresh={fn} />); expect(screen.getByText('Adapter unreachable.')); await userEvent.click(screen.getByRole('button')); expect(fn).toHaveBeenCalledWith('lab')." }
+  ],
+  "take": "Data flows down through inputs, events flow up through callbacks, and the parent owns the state; only the syntax differs between Blazor, Angular, React and Vue."
+}
