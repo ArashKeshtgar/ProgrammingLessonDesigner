@@ -1,10 +1,13 @@
 import type { Lesson, LessonIndexEntry } from '../types/lesson'
+import { BOOKLETS } from './booklets'
 
 const modules = import.meta.glob<{ default: Lesson }>('../data/lessons/*.json', { eager: true })
 
+// Booklet order first (each booklet numbers its lessons from 1), then lesson number.
+const bookletOrder = Object.keys(BOOKLETS)
 const lessons: Lesson[] = Object.values(modules)
   .map((m) => m.default)
-  .sort((a, b) => a.n - b.n)
+  .sort((a, b) => bookletOrder.indexOf(a.tag) - bookletOrder.indexOf(b.tag) || a.n - b.n)
 
 export function allLessons(): Lesson[] {
   return lessons
