@@ -1,0 +1,251 @@
+{
+  "_id": "l001",
+  "n": 1,
+  "tag": "backend",
+  "topics": ["concurrency", "async", "workers"],
+  "en": "Concurrency in the backend",
+  "fa": "همروندی در بک‌اند: چند کار با هم، بدون اینکه یکی همه را بخواباند",
+  "goal": [
+    "درخواست‌های I/O مستقل را موازی بفرستی و نتیجه‌ها را یک‌جا جمع کنی (Task.WhenAll / Promise.all / asyncio.gather / CompletableFuture).",
+    "بدانی چرا یک خطای تکی نباید کل پاسخ را بخواباند، و این را در کد واقعی ببینی.",
+    "یک کارگر پس‌زمینه با حلقه و وقفه بنویسی که با خطا نمی‌میرد (BackgroundService / @Scheduled)."
+  ],
+  "story": "داشبورد Control Panel باید وضعیت چند پروژه را یک‌جا نشان بدهد. هر پروژه یک adapter دارد که روی پورت خودش جواب می‌دهد. اگر core-api آن‌ها را یکی‌یکی صدا بزند و هر کدام ۳ ثانیه طول بکشد، با ۹ پروژه صفحه ۲۷ ثانیه می‌ماند. اگر همه را همزمان بفرستد، کل صفحه فقط به اندازه کندترین adapter طول می‌کشد. اما اگر یکی از adapterها خاموش باشد، نباید کل داشبورد خطا بدهد. همین دو شرط، موازی بودن و تحمل خطا، قلب این درس است.",
+  "why": [
+    ["Q", "چرا adapterها را یکی‌یکی صدا نزنیم؟"],
+    ["A", "پس زمان کل می‌شود جمع زمان‌ها. با موازی کردن، می‌شود بیشترین زمان. چون کار ما صبر برای شبکه است، نه محاسبه، thread اضافه لازم نیست؛ فقط باید صبر را همزمان کنیم."],
+    ["Q", "و اگر یکی از adapterها خاموش باشد؟"],
+    ["A", "همان‌جا که صدایش می‌زنیم خطا را می‌گیریم و به‌جایش healthy=false برمی‌گردانیم. پس عمل موازی هیچ‌وقت exception به بالا نمی‌دهد."]
+  ],
+  "concepts": [
+    {
+      "h": "I/O-bound یا CPU-bound؟",
+      "body": "اول بپرس کار از چه نوعی است. صبر برای شبکه یا دیسک (I/O) با async همزمان می‌شود و thread اضافه نمی‌خواهد. محاسبه سنگین (CPU) باید روی thread یا process جدا برود. در این درس هر چه از adapterها و outbox می‌خوانید I/O است."
+    },
+    {
+      "h": "Fan-out و Fan-in",
+      "body": "Fan-out یعنی ساختن N کار مستقل و شروع همه با هم. Fan-in یعنی منتظر ماندن برای همه و جمع کردن نتیجه به همان ترتیب ورودی. ترتیب نتیجه همیشه ترتیب ورودی است، نه ترتیب تمام شدن."
+    },
+    {
+      "h": "خطا را کجا بگیریم؟",
+      "body": "اگر هر کار تکی خطایش را خودش بگیرد و یک نتیجه‌ی «ناموفق» برگرداند، جمع‌کننده هیچ‌وقت خطا نمی‌بیند. اگر نگیرد، اولین خطا کل جمع‌کننده را می‌اندازد (در C# و Python بسته به API ممکن است بقیه‌ی کارها هم در پس‌زمینه ادامه دهند). کد واقعی ما راه اول را رفته است."
+    },
+    {
+      "h": "کارگر پس‌زمینه",
+      "body": "یک حلقه: کار را انجام بده، خطا را لاگ کن اما حلقه را نکش، بعد مدتی صبر کن. صبر باید با درخواست توقف قطع شود، وگرنه خاموش کردن سرویس چند ثانیه دیر می‌شود."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "چند کار I/O با هم، جمع نتیجه",
+      "csharp": "await Task.WhenAll(tasks)",
+      "typescript": "await Promise.all(promises)",
+      "python": "await asyncio.gather(*coros)",
+      "java": "CompletableFuture.allOf(...).join()",
+      "diff": "در هر چهار، نتیجه به ترتیب ورودی است. فقط Python نیاز دارد * بزنید تا لیست به آرگومان باز شود."
+    },
+    {
+      "concept": "کار «شروع شده» چیست؟",
+      "csharp": "Task (داغ: با ساخت شروع می‌شود)",
+      "typescript": "Promise (داغ)",
+      "python": "coroutine (سرد: تا await/gather/create_task اجرا نمی‌شود)",
+      "java": "CompletableFuture.supplyAsync (داغ)",
+      "diff": "در Python اگر coroutine را فقط صدا بزنید و await نکنید، هیچ اتفاقی نمی‌افتد و فقط یک warning می‌گیرید."
+    },
+    {
+      "concept": "خطا در یک کار",
+      "csharp": "await روی WhenAll اولین exception را می‌اندازد (همه‌ی خطاها در task.Exception.InnerExceptions می‌مانند)",
+      "typescript": "Promise.all با اولین reject رد می‌شود؛ allSettled همه را می‌دهد",
+      "python": "gather خطای اول را می‌اندازد؛ return_exceptions=True آن را به نتیجه تبدیل می‌کند",
+      "java": "join یک CompletionException می‌اندازد",
+      "diff": "اگر هر کار خودش خطایش را بگیرد (مثل fetchStatus)، این ردیف دیگر مهم نیست."
+    },
+    {
+      "concept": "لغو و timeout",
+      "csharp": "CancellationToken + CancelAfter",
+      "typescript": "AbortSignal.timeout(ms)",
+      "python": "timeout= در httpx یا asyncio.timeout()",
+      "java": "HttpRequest.timeout(Duration)",
+      "diff": "در C# و TypeScript signal را باید خودتان به فراخوانی بدهید؛ فراموش کنید، timeout کار نمی‌کند."
+    },
+    {
+      "concept": "کارگر پس‌زمینه",
+      "csharp": "BackgroundService.ExecuteAsync",
+      "typescript": "حلقه‌ی async + setTimeout/sleep",
+      "python": "asyncio.create_task در lifespan",
+      "java": "@Scheduled(fixedDelay)",
+      "diff": "Spring حلقه را برای شما می‌نویسد؛ در بقیه خودتان می‌نویسید."
+    },
+    {
+      "concept": "صبر قابل‌توقف",
+      "csharp": "Task.Delay(span, stoppingToken)",
+      "typescript": "sleep(ms, undefined, { signal })",
+      "python": "asyncio.wait_for(stop.wait(), timeout)",
+      "java": "scheduler را Spring متوقف می‌کند",
+      "diff": "C# با پرتاب OperationCanceledException از Delay خارج می‌شود؛ در حلقه‌ی ما همین استثنا از catch کنار گذاشته شده تا حلقه تمام شود."
+    },
+    {
+      "concept": "thread واقعی",
+      "csharp": "Task.Run (thread pool)",
+      "typescript": "worker_threads (برای CPU)",
+      "python": "ThreadPoolExecutor / ProcessPoolExecutor (به‌خاطر GIL برای CPU process)",
+      "java": "ExecutorService / virtual threads (Java 21)",
+      "diff": "برای I/O در Python و TypeScript تقریباً هیچ‌وقت thread لازم نیست."
+    }
+  ],
+  "code": [
+    {
+      "group": "fanout",
+      "lang": "csharp",
+      "title": "Fan-out به adapterها",
+      "origin": "port",
+      "code": "public record AdapterStatus(bool Healthy, string? Error = null);\npublic record ProjectWithStatus(Project Project, AdapterStatus Status);\n\npublic async Task<IReadOnlyList<ProjectWithStatus>> ListWithStatusAsync(CancellationToken ct)\n{\n    var registry = await ListRegistryAsync(ct);\n\n    // Each element starts immediately; WhenAll keeps the input order.\n    return await Task.WhenAll(registry.Select(async p =>\n        new ProjectWithStatus(p, await FetchStatusAsync(p, ct))));\n}\n\n// Never throws for an adapter problem: a down adapter becomes Healthy = false.\nprivate async Task<AdapterStatus> FetchStatusAsync(Project p, CancellationToken ct)\n{\n    try\n    {\n        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);\n        cts.CancelAfter(TimeSpan.FromSeconds(3));\n\n        var res = await http.GetAsync($\"{p.AdapterBaseUrl}/status\", cts.Token);\n        if (!res.IsSuccessStatusCode)\n            return new(false, $\"Adapter returned HTTP {(int)res.StatusCode}\");\n\n        return (await res.Content.ReadFromJsonAsync<AdapterStatus>(cancellationToken: cts.Token))!;\n    }\n    catch (Exception) when (!ct.IsCancellationRequested)\n    {\n        // timeout, refused connection, bad JSON: all the same to the dashboard\n        return new(false, \"Adapter unreachable.\");\n    }\n}"
+    },
+    {
+      "group": "fanout",
+      "lang": "typescript",
+      "title": "Fan-out به adapterها",
+      "origin": "real",
+      "code": "async listWithStatus(): Promise<ProjectWithStatus[]> {\n  const registry = await this.listRegistry();\n\n  return Promise.all(\n    registry.map(async (project) => ({\n      ...project,\n      status: await this.fetchStatus(project),\n    })),\n  );\n}\n\nprivate async fetchStatus(project: ProjectRegistryEntry): Promise<AdapterStatus> {\n  try {\n    const response = await this.requestAdapter(project, '/status');\n    if (!response.ok) return { healthy: false, error: `Adapter returned HTTP ${response.status}` };\n    return (await response.json()) as AdapterStatus;\n  } catch (err) {\n    this.logger.warn(`Adapter unreachable for ${project.key}: ${(err as Error).message}`);\n    return { healthy: false, error: 'Adapter unreachable.' };\n  }\n}"
+    },
+    {
+      "group": "fanout",
+      "lang": "python",
+      "title": "Fan-out به adapterها",
+      "origin": "port",
+      "code": "import asyncio\nimport httpx\nfrom pydantic import BaseModel\n\nclass Project(BaseModel):\n    key: str\n    adapter_base_url: str\n\nclass AdapterStatus(BaseModel):\n    healthy: bool\n    error: str | None = None\n\nclass ProjectWithStatus(BaseModel):\n    project: Project\n    status: AdapterStatus\n\nasync def fetch_status(client: httpx.AsyncClient, p: Project) -> AdapterStatus:\n    # Never raises for an adapter problem: a down adapter becomes healthy=False.\n    try:\n        res = await client.get(f\"{p.adapter_base_url}/status\", timeout=3.0)\n        if res.status_code != 200:\n            return AdapterStatus(healthy=False, error=f\"Adapter returned HTTP {res.status_code}\")\n        return AdapterStatus(**res.json())\n    except (httpx.HTTPError, ValueError):  # ValueError: bad JSON or a pydantic ValidationError\n        return AdapterStatus(healthy=False, error=\"Adapter unreachable.\")\n\nasync def list_with_status(registry: list[Project]) -> list[ProjectWithStatus]:\n    async with httpx.AsyncClient() as client:\n        statuses = await asyncio.gather(*(fetch_status(client, p) for p in registry))\n    return [ProjectWithStatus(project=p, status=s) for p, s in zip(registry, statuses)]"
+    },
+    {
+      "group": "fanout",
+      "lang": "java",
+      "title": "Fan-out به adapterها",
+      "origin": "port",
+      "code": "@JsonIgnoreProperties(ignoreUnknown = true)\nrecord AdapterStatus(boolean healthy, String error) {}\nrecord Project(String key, String adapterBaseUrl) {}\nrecord ProjectWithStatus(Project project, AdapterStatus status) {}\n\n@Service\nclass ProjectsService {\n    private final HttpClient http = HttpClient.newBuilder()\n            .connectTimeout(Duration.ofSeconds(3)).build();\n    private final ObjectMapper mapper = new ObjectMapper();\n    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21\n\n    List<ProjectWithStatus> listWithStatus(List<Project> registry) {\n        // Start every call first, then join: the list keeps the input order.\n        var futures = registry.stream()\n                .map(p -> CompletableFuture.supplyAsync(\n                        () -> new ProjectWithStatus(p, fetchStatus(p)), executor))\n                .toList();\n        return futures.stream().map(CompletableFuture::join).toList();\n    }\n\n    // Never throws for an adapter problem: a down adapter becomes healthy = false.\n    AdapterStatus fetchStatus(Project p) {\n        try {\n            var req = HttpRequest.newBuilder(URI.create(p.adapterBaseUrl() + \"/status\"))\n                    .timeout(Duration.ofSeconds(3)).GET().build();\n            var res = http.send(req, HttpResponse.BodyHandlers.ofString());\n            if (res.statusCode() != 200)\n                return new AdapterStatus(false, \"Adapter returned HTTP \" + res.statusCode());\n            return mapper.readValue(res.body(), AdapterStatus.class);\n        } catch (IOException e) {\n            return new AdapterStatus(false, \"Adapter unreachable.\");\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt(); // keep the interrupt flag\n            return new AdapterStatus(false, \"Interrupted.\");\n        }\n    }\n}"
+    },
+    {
+      "group": "worker",
+      "lang": "csharp",
+      "title": "کارگر پس‌زمینه‌ی Outbox",
+      "origin": "real",
+      "code": "public class OutboxWorker(OutboxDispatcher dispatcher, IOptionsMonitor<IntegrationOptions> options, ILogger<OutboxWorker> logger) : BackgroundService\n{\n    protected override async Task ExecuteAsync(CancellationToken stoppingToken)\n    {\n        while (!stoppingToken.IsCancellationRequested && options.CurrentValue.PollSeconds > 0)\n        {\n            try\n            {\n                await dispatcher.DispatchAsync(stoppingToken);\n            }\n            catch (Exception ex) when (ex is not OperationCanceledException)\n            {\n                logger.LogError(ex, \"The outbox pass failed; trying again on the next one.\");\n            }\n            await Task.Delay(TimeSpan.FromSeconds(options.CurrentValue.PollSeconds), stoppingToken);\n        }\n    }\n}"
+    },
+    {
+      "group": "worker",
+      "lang": "typescript",
+      "title": "کارگر پس‌زمینه‌ی Outbox",
+      "origin": "port",
+      "code": "import { setTimeout as sleep } from 'node:timers/promises';\n\nexport async function runWorker(\n  dispatch: () => Promise<void>,\n  pollSeconds: number,\n  signal: AbortSignal,\n  logger: { error(msg: string, err: unknown): void },\n): Promise<void> {\n  while (!signal.aborted && pollSeconds > 0) {\n    try {\n      await dispatch();\n    } catch (err) {\n      logger.error('The outbox pass failed; trying again on the next one.', err);\n    }\n    // sleep rejects with AbortError when the signal fires; swallow it and let the loop end\n    await sleep(pollSeconds * 1000, undefined, { signal }).catch(() => undefined);\n  }\n}"
+    },
+    {
+      "group": "worker",
+      "lang": "python",
+      "title": "کارگر پس‌زمینه‌ی Outbox",
+      "origin": "port",
+      "code": "import asyncio\nimport logging\nfrom collections.abc import Awaitable, Callable\n\nlogger = logging.getLogger(__name__)\n\nasync def run_worker(\n    dispatch: Callable[[], Awaitable[None]],\n    poll_seconds: float,\n    stop: asyncio.Event,\n) -> None:\n    while not stop.is_set() and poll_seconds > 0:\n        try:\n            await dispatch()\n        except Exception:  # CancelledError is a BaseException, so it passes through\n            logger.exception(\"The outbox pass failed; trying again on the next one.\")\n        try:\n            # wakes up early when stop is set, so shutdown does not wait out the delay\n            await asyncio.wait_for(stop.wait(), timeout=poll_seconds)\n        except asyncio.TimeoutError:\n            pass"
+    },
+    {
+      "group": "worker",
+      "lang": "java",
+      "title": "کارگر پس‌زمینه‌ی Outbox",
+      "origin": "port",
+      "code": "@Configuration\n@EnableScheduling\nclass SchedulingConfig {}\n\n@Component\nclass OutboxWorker {\n    private static final Logger log = LoggerFactory.getLogger(OutboxWorker.class);\n    private final OutboxDispatcher dispatcher;\n\n    OutboxWorker(OutboxDispatcher dispatcher) {\n        this.dispatcher = dispatcher;\n    }\n\n    // fixedDelay waits AFTER a pass finishes (like the C# loop); fixedRate would not.\n    @Scheduled(fixedDelayString = \"PT${integrations.poll-seconds}S\")\n    void run() {\n        try {\n            dispatcher.dispatch();\n        } catch (Exception e) {\n            log.error(\"The outbox pass failed; trying again on the next one.\", e);\n        }\n    }\n}"
+    }
+  ],
+  "pitfalls": [
+    {
+      "lang": "typescript",
+      "mistake": "await داخل for روی یک آرایه از adapterها",
+      "why": "هر await قبل از شروع بعدی تمام می‌شود، پس کار پشت‌سرهم اجرا می‌شود و موازی نیست.",
+      "fix": "اول map بزن تا همه‌ی promiseها ساخته شوند، بعد یک بار Promise.all."
+    },
+    {
+      "lang": "python",
+      "mistake": "صدا زدن fetch_status(...) بدون await یا gather",
+      "why": "coroutine سرد است: ساخته می‌شود اما اجرا نمی‌شود، فقط RuntimeWarning: coroutine was never awaited.",
+      "fix": "آن را به gather بدهید یا await کنید."
+    },
+    {
+      "lang": "python",
+      "mistake": "استفاده از requests.get داخل async def",
+      "why": "requests همزمان (blocking) است و کل event loop را می‌خواباند؛ gather هیچ فایده‌ای نمی‌کند.",
+      "fix": "از httpx.AsyncClient یا aiohttp استفاده کنید."
+    },
+    {
+      "lang": "java",
+      "mistake": "CompletableFuture.supplyAsync بدون executor",
+      "why": "از ForkJoinPool.commonPool استفاده می‌کند که برای کار CPU است و تعداد threadهایش کم است؛ I/O کند آن را اشباع می‌کند.",
+      "fix": "executor خودتان بدهید (مثلاً virtual threads در Java 21)."
+    },
+    {
+      "lang": "java",
+      "mistake": "catch (InterruptedException e) {} خالی",
+      "why": "علامت interrupt گم می‌شود و کسی که می‌خواهد thread را متوقف کند موفق نمی‌شود.",
+      "fix": "Thread.currentThread().interrupt() را دوباره صدا بزنید."
+    },
+    {
+      "lang": "csharp",
+      "mistake": "catch (Exception) بدون when(...) در حلقه‌ی worker",
+      "why": "OperationCanceledException هم گرفته می‌شود و سرویس هنگام خاموش شدن تا Task.Delay بعدی بیدار نمی‌شود.",
+      "fix": "when (ex is not OperationCanceledException) را اضافه کنید."
+    },
+    {
+      "lang": "all",
+      "mistake": "Promise.all / WhenAll / gather بدون تحمل خطا روی چند منبع",
+      "why": "اولین خطا کل نتیجه را می‌اندازد و داشبورد با خاموش بودن یک adapter کامل خراب می‌شود.",
+      "fix": "یا خطا را داخل هر کار بگیرید (مثل fetchStatus)، یا allSettled / return_exceptions=True بزنید."
+    }
+  ],
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "services/core-api/src/projects/projects.service.ts",
+      "line": 43,
+      "note": "Promise.all روی adapterها (fan-out/fan-in)"
+    },
+    {
+      "project": "ControlPanel",
+      "file": "services/core-api/src/projects/projects.service.ts",
+      "line": 124,
+      "note": "fetchStatus: خطا را می‌گیرد و healthy=false برمی‌گرداند"
+    },
+    {
+      "project": "ControlPanel",
+      "file": "services/core-api/src/assistant/assistant.service.ts",
+      "line": 95,
+      "note": "Promise.all برای پاسخ هم‌زمان ابزارهای مدل"
+    },
+    {
+      "project": "ClinicHub",
+      "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+      "line": 245,
+      "note": "OutboxWorker: حلقه‌ی BackgroundService با catch فیلتری"
+    },
+    {
+      "project": "ClinicHub",
+      "file": "tests/ClinicHub.Tests/EncounterTests.cs",
+      "line": 177,
+      "note": "Task.WhenAll در تست برای ذخیره‌های همزمان"
+    }
+  ],
+  "exercises": [
+    {
+      "q": "در نسخه‌ی TypeScript یک adapter را عمداً خاموش کنید. چه چیزی از fetchStatus برمی‌گردد و چرا Promise.all تمام می‌شود؟",
+      "hint": "به catch در fetchStatus نگاه کنید.",
+      "a": "{ healthy: false, error: 'Adapter unreachable.' }. چون fetchStatus خودش خطا را می‌گیرد، promise هیچ‌وقت reject نمی‌شود و Promise.all همه را تمام شده می‌بیند."
+    },
+    {
+      "q": "catch را از fetchStatus حذف کنید و به‌جایش در listWithStatus از Promise.allSettled استفاده کنید. نتیجه‌ی هر آیتم چه شکلی می‌شود و کجا باید آن را به AdapterStatus تبدیل کنید؟",
+      "a": "هر آیتم { status: 'fulfilled', value } یا { status: 'rejected', reason } است. تبدیل rejected به { healthy: false, error } باید در listWithStatus انجام شود، یعنی همان منطقی که قبلاً در catch بود فقط جابه‌جا شده."
+    },
+    {
+      "q": "در نسخه‌ی Python به‌جای gather از یک for ساده با await استفاده کنید و زمان را برای ۵ adapter که هر کدام ۱ ثانیه جواب می‌دهند اندازه بگیرید. با gather چقدر می‌شود؟",
+      "hint": "time.perf_counter() و asyncio.sleep(1) به‌جای شبکه.",
+      "a": "با for حدود ۵ ثانیه، با gather حدود ۱ ثانیه."
+    },
+    {
+      "q": "در Java @Scheduled(fixedDelay) را با fixedRate عوض کنید. اگر dispatcher.dispatch() ۱۰ ثانیه طول بکشد و poll هر ۵ ثانیه باشد چه تفاوتی می‌بینید؟",
+      "a": "fixedRate بعد از شروع هر اجرا حساب می‌کند. اگر اجرا طولانی شود، اجرای بعدی بلافاصله بعد از تمام شدن شروع می‌شود (روی یک thread اجرا همپوشانی ندارد). fixedDelay همیشه بعد از پایان ۵ ثانیه صبر می‌کند، که همان رفتار حلقه‌ی C# است."
+    }
+  ],
+  "take": "I run independent calls in parallel, and I make each one handle its own failure, so one slow or broken service never takes the whole dashboard down."
+}
