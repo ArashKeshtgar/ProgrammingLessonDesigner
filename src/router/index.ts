@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import LessonListView from '../views/LessonListView.vue'
 import LessonView from '../views/LessonView.vue'
 import { getLesson } from '../lib/lessons'
+import { BOOKLETS } from '../lib/booklets'
 
 // Hash history keeps deep links working on GitHub Pages with no rewrite rules.
 const router = createRouter({
@@ -9,13 +10,19 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'lessons', component: LessonListView },
     { path: '/lesson/:id', name: 'lesson', component: LessonView },
+    { path: '/booklet/:tag', name: 'booklet', component: () => import('../views/BookletView.vue') },
+    { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },
   ],
   scrollBehavior: (to, from) => (to.path === from.path ? false : { top: 0 }),
 })
 
 router.afterEach((to) => {
-  const l = to.name === 'lesson' ? getLesson(String(to.params.id)) : undefined
-  document.title = l ? `${l.en} · Programming Lessons` : 'Programming Lessons · درس‌های برنامه‌نویسی'
+  const APP = 'Programming Lessons'
+  let page = ''
+  if (to.name === 'lesson') page = getLesson(String(to.params.id))?.en ?? ''
+  if (to.name === 'booklet') page = `${BOOKLETS[String(to.params.tag)]?.title ?? to.params.tag} booklet`
+  if (to.name === 'review') page = 'Review'
+  document.title = page ? `${page} · ${APP}` : `${APP} · درس‌های برنامه‌نویسی`
 })
 
 export default router

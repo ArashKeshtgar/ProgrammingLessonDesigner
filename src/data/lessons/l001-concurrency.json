@@ -2,7 +2,11 @@
   "_id": "l001",
   "n": 1,
   "tag": "backend",
-  "topics": ["concurrency", "async", "workers"],
+  "topics": [
+    "concurrency",
+    "async",
+    "workers"
+  ],
   "en": "Concurrency in the backend",
   "fa": "همروندی در بک‌اند: چند کار با هم، بدون اینکه یکی همه را بخواباند",
   "goal": [
@@ -12,10 +16,22 @@
   ],
   "story": "داشبورد Control Panel باید وضعیت چند پروژه را یک‌جا نشان بدهد. هر پروژه یک adapter دارد که روی پورت خودش جواب می‌دهد. اگر core-api آن‌ها را یکی‌یکی صدا بزند و هر کدام ۳ ثانیه طول بکشد، با ۹ پروژه صفحه ۲۷ ثانیه می‌ماند. اگر همه را همزمان بفرستد، کل صفحه فقط به اندازه کندترین adapter طول می‌کشد. اما اگر یکی از adapterها خاموش باشد، نباید کل داشبورد خطا بدهد. همین دو شرط، موازی بودن و تحمل خطا، قلب این درس است.",
   "why": [
-    ["Q", "چرا adapterها را یکی‌یکی صدا نزنیم؟"],
-    ["A", "پس زمان کل می‌شود جمع زمان‌ها. با موازی کردن، می‌شود بیشترین زمان. چون کار ما صبر برای شبکه است، نه محاسبه، thread اضافه لازم نیست؛ فقط باید صبر را همزمان کنیم."],
-    ["Q", "و اگر یکی از adapterها خاموش باشد؟"],
-    ["A", "همان‌جا که صدایش می‌زنیم خطا را می‌گیریم و به‌جایش healthy=false برمی‌گردانیم. پس عمل موازی هیچ‌وقت exception به بالا نمی‌دهد."]
+    [
+      "Q",
+      "چرا adapterها را یکی‌یکی صدا نزنیم؟"
+    ],
+    [
+      "A",
+      "پس زمان کل می‌شود جمع زمان‌ها. با موازی کردن، می‌شود بیشترین زمان. چون کار ما صبر برای شبکه است، نه محاسبه، thread اضافه لازم نیست؛ فقط باید صبر را همزمان کنیم."
+    ],
+    [
+      "Q",
+      "و اگر یکی از adapterها خاموش باشد؟"
+    ],
+    [
+      "A",
+      "همان‌جا که صدایش می‌زنیم خطا را می‌گیریم و به‌جایش healthy=false برمی‌گردانیم. پس عمل موازی هیچ‌وقت exception به بالا نمی‌دهد."
+    ]
   ],
   "concepts": [
     {
@@ -98,8 +114,9 @@
       "group": "fanout",
       "lang": "csharp",
       "title": "Fan-out به adapterها",
-      "origin": "port",
-      "code": "public record AdapterStatus(bool Healthy, string? Error = null);\npublic record ProjectWithStatus(Project Project, AdapterStatus Status);\n\npublic async Task<IReadOnlyList<ProjectWithStatus>> ListWithStatusAsync(CancellationToken ct)\n{\n    var registry = await ListRegistryAsync(ct);\n\n    // Each element starts immediately; WhenAll keeps the input order.\n    return await Task.WhenAll(registry.Select(async p =>\n        new ProjectWithStatus(p, await FetchStatusAsync(p, ct))));\n}\n\n// Never throws for an adapter problem: a down adapter becomes Healthy = false.\nprivate async Task<AdapterStatus> FetchStatusAsync(Project p, CancellationToken ct)\n{\n    try\n    {\n        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);\n        cts.CancelAfter(TimeSpan.FromSeconds(3));\n\n        var res = await http.GetAsync($\"{p.AdapterBaseUrl}/status\", cts.Token);\n        if (!res.IsSuccessStatusCode)\n            return new(false, $\"Adapter returned HTTP {(int)res.StatusCode}\");\n\n        return (await res.Content.ReadFromJsonAsync<AdapterStatus>(cancellationToken: cts.Token))!;\n    }\n    catch (Exception) when (!ct.IsCancellationRequested)\n    {\n        // timeout, refused connection, bad JSON: all the same to the dashboard\n        return new(false, \"Adapter unreachable.\");\n    }\n}"
+      "origin": "tested",
+      "file": "backend/csharp/Portfolio/Fanout.cs",
+      "region": "fanout"
     },
     {
       "group": "fanout",
@@ -112,15 +129,17 @@
       "group": "fanout",
       "lang": "python",
       "title": "Fan-out به adapterها",
-      "origin": "port",
-      "code": "import asyncio\nimport httpx\nfrom pydantic import BaseModel\n\nclass Project(BaseModel):\n    key: str\n    adapter_base_url: str\n\nclass AdapterStatus(BaseModel):\n    healthy: bool\n    error: str | None = None\n\nclass ProjectWithStatus(BaseModel):\n    project: Project\n    status: AdapterStatus\n\nasync def fetch_status(client: httpx.AsyncClient, p: Project) -> AdapterStatus:\n    # Never raises for an adapter problem: a down adapter becomes healthy=False.\n    try:\n        res = await client.get(f\"{p.adapter_base_url}/status\", timeout=3.0)\n        if res.status_code != 200:\n            return AdapterStatus(healthy=False, error=f\"Adapter returned HTTP {res.status_code}\")\n        return AdapterStatus(**res.json())\n    except (httpx.HTTPError, ValueError):  # ValueError: bad JSON or a pydantic ValidationError\n        return AdapterStatus(healthy=False, error=\"Adapter unreachable.\")\n\nasync def list_with_status(registry: list[Project]) -> list[ProjectWithStatus]:\n    async with httpx.AsyncClient() as client:\n        statuses = await asyncio.gather(*(fetch_status(client, p) for p in registry))\n    return [ProjectWithStatus(project=p, status=s) for p, s in zip(registry, statuses)]"
+      "origin": "tested",
+      "file": "backend/python/portfolio/fanout.py",
+      "region": "fanout"
     },
     {
       "group": "fanout",
       "lang": "java",
       "title": "Fan-out به adapterها",
-      "origin": "port",
-      "code": "@JsonIgnoreProperties(ignoreUnknown = true)\nrecord AdapterStatus(boolean healthy, String error) {}\nrecord Project(String key, String adapterBaseUrl) {}\nrecord ProjectWithStatus(Project project, AdapterStatus status) {}\n\n@Service\nclass ProjectsService {\n    private final HttpClient http = HttpClient.newBuilder()\n            .connectTimeout(Duration.ofSeconds(3)).build();\n    private final ObjectMapper mapper = new ObjectMapper();\n    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21\n\n    List<ProjectWithStatus> listWithStatus(List<Project> registry) {\n        // Start every call first, then join: the list keeps the input order.\n        var futures = registry.stream()\n                .map(p -> CompletableFuture.supplyAsync(\n                        () -> new ProjectWithStatus(p, fetchStatus(p)), executor))\n                .toList();\n        return futures.stream().map(CompletableFuture::join).toList();\n    }\n\n    // Never throws for an adapter problem: a down adapter becomes healthy = false.\n    AdapterStatus fetchStatus(Project p) {\n        try {\n            var req = HttpRequest.newBuilder(URI.create(p.adapterBaseUrl() + \"/status\"))\n                    .timeout(Duration.ofSeconds(3)).GET().build();\n            var res = http.send(req, HttpResponse.BodyHandlers.ofString());\n            if (res.statusCode() != 200)\n                return new AdapterStatus(false, \"Adapter returned HTTP \" + res.statusCode());\n            return mapper.readValue(res.body(), AdapterStatus.class);\n        } catch (IOException e) {\n            return new AdapterStatus(false, \"Adapter unreachable.\");\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt(); // keep the interrupt flag\n            return new AdapterStatus(false, \"Interrupted.\");\n        }\n    }\n}"
+      "origin": "tested",
+      "file": "backend/java/src/main/java/portfolio/StatusFanout.java",
+      "region": "fanout"
     },
     {
       "group": "worker",
@@ -133,22 +152,25 @@
       "group": "worker",
       "lang": "typescript",
       "title": "کارگر پس‌زمینه‌ی Outbox",
-      "origin": "port",
-      "code": "import { setTimeout as sleep } from 'node:timers/promises';\n\nexport async function runWorker(\n  dispatch: () => Promise<void>,\n  pollSeconds: number,\n  signal: AbortSignal,\n  logger: { error(msg: string, err: unknown): void },\n): Promise<void> {\n  while (!signal.aborted && pollSeconds > 0) {\n    try {\n      await dispatch();\n    } catch (err) {\n      logger.error('The outbox pass failed; trying again on the next one.', err);\n    }\n    // sleep rejects with AbortError when the signal fires; swallow it and let the loop end\n    await sleep(pollSeconds * 1000, undefined, { signal }).catch(() => undefined);\n  }\n}"
+      "origin": "tested",
+      "file": "backend/typescript/src/worker.ts",
+      "region": "worker"
     },
     {
       "group": "worker",
       "lang": "python",
       "title": "کارگر پس‌زمینه‌ی Outbox",
-      "origin": "port",
-      "code": "import asyncio\nimport logging\nfrom collections.abc import Awaitable, Callable\n\nlogger = logging.getLogger(__name__)\n\nasync def run_worker(\n    dispatch: Callable[[], Awaitable[None]],\n    poll_seconds: float,\n    stop: asyncio.Event,\n) -> None:\n    while not stop.is_set() and poll_seconds > 0:\n        try:\n            await dispatch()\n        except Exception:  # CancelledError is a BaseException, so it passes through\n            logger.exception(\"The outbox pass failed; trying again on the next one.\")\n        try:\n            # wakes up early when stop is set, so shutdown does not wait out the delay\n            await asyncio.wait_for(stop.wait(), timeout=poll_seconds)\n        except asyncio.TimeoutError:\n            pass"
+      "origin": "tested",
+      "file": "backend/python/portfolio/worker.py",
+      "region": "worker"
     },
     {
       "group": "worker",
       "lang": "java",
       "title": "کارگر پس‌زمینه‌ی Outbox",
-      "origin": "port",
-      "code": "@Configuration\n@EnableScheduling\nclass SchedulingConfig {}\n\n@Component\nclass OutboxWorker {\n    private static final Logger log = LoggerFactory.getLogger(OutboxWorker.class);\n    private final OutboxDispatcher dispatcher;\n\n    OutboxWorker(OutboxDispatcher dispatcher) {\n        this.dispatcher = dispatcher;\n    }\n\n    // fixedDelay waits AFTER a pass finishes (like the C# loop); fixedRate would not.\n    @Scheduled(fixedDelayString = \"PT${integrations.poll-seconds}S\")\n    void run() {\n        try {\n            dispatcher.dispatch();\n        } catch (Exception e) {\n            log.error(\"The outbox pass failed; trying again on the next one.\", e);\n        }\n    }\n}"
+      "origin": "tested",
+      "file": "backend/java/src/main/java/portfolio/OutboxWorker.java",
+      "region": "worker"
     }
   ],
   "pitfalls": [

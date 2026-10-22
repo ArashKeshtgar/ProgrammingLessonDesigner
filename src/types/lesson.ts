@@ -1,31 +1,34 @@
-export type Lang = 'csharp' | 'typescript' | 'python' | 'java'
+export type Lang = 'csharp' | 'typescript' | 'python' | 'java' | 'blazor' | 'angular' | 'react' | 'vue'
 
-export const LANGS: { id: Lang; label: string }[] = [
-  { id: 'csharp', label: 'C#' },
-  { id: 'typescript', label: 'TypeScript' },
-  { id: 'python', label: 'Python' },
-  { id: 'java', label: 'Java' },
-]
-
-// One concept, four languages. `diff` is the one-line "what really differs".
-export interface CompareRow {
-  concept: string
-  csharp: string
-  typescript: string
-  python: string
-  java: string
-  diff: string
+export const LANG_LABELS: Record<Lang, string> = {
+  csharp: 'C#',
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  blazor: 'Blazor (C#)',
+  angular: 'Angular',
+  react: 'React',
+  vue: 'Vue',
 }
 
-// Samples sharing a `group` render as one tabbed block (C# / TS / Python / Java).
+export const BACKEND_LANGS: Lang[] = ['csharp', 'typescript', 'python', 'java']
+
+// One concept, several languages. `diff` is the one-line "what really differs".
+export type CompareRow = { concept: string; diff: string } & Partial<Record<Lang, string>>
+
+// Samples sharing a `group` render as one tabbed block, one tab per language.
+// The code is either inline (`code`, for a quote from a real project) or read at build
+// time from a tested file under examples/ (`file`, optionally cut to one `region`).
 export interface CodeSample {
   group: string
   lang: Lang
   title: string
-  code: string
-  // Where this sample comes from: 'real' = shortened from a project file (see refs),
-  // 'port' = written for this lesson as the equivalent.
-  origin: 'real' | 'port'
+  // 'real' = shortened from a project file (see refs); 'tested' = a file under examples/
+  // that the CI builds and tests; 'port' = written for the lesson, not run.
+  origin: 'real' | 'tested' | 'port'
+  code?: string
+  file?: string
+  region?: string
 }
 
 export interface Pitfall {
@@ -57,9 +60,13 @@ export interface Concept {
 export interface Lesson {
   _id: string
   n: number
-  // Booklet the lesson belongs to: backend, frontend, docker, ...
+  // Booklet the lesson belongs to: backend, frontend, docker.
   tag: string
   topics: string[]
+  // Columns of the compare table and tabs of the code blocks; defaults to the four backend languages.
+  langs?: Lang[]
+  // The column the reader already knows (highlighted); defaults to csharp.
+  known?: Lang
   en: string
   fa: string
   goal: string[]

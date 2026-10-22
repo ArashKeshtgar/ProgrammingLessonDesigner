@@ -1,18 +1,29 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { LANGS, type CodeSample } from '../types/lesson'
+import { LANG_LABELS, type CodeSample, type Lang } from '../types/lesson'
+import { highlightLanguage, sampleCode } from '../lib/code'
+import { highlight } from '../lib/highlight'
 
-const props = defineProps<{ samples: CodeSample[] }>()
+// `all` shows every language one under the other (booklet / print), instead of tabs.
+const props = defineProps<{ samples: CodeSample[]; order: Lang[]; all?: boolean }>()
 
-const available = computed(() => LANGS.filter((l) => props.samples.some((s) => s.lang === l.id)))
-const active = ref(available.value[0]?.id)
-const sample = computed(() => props.samples.find((s) => s.lang === active.value))
+const ordered = computed(() =>
+  [...props.samples].sort((a, b) => props.order.indexOf(a.lang) - props.order.indexOf(b.lang)),
+)
+const active = ref<Lang | undefined>(ordered.value[0]?.lang)
+const shown = computed(() => (props.all ? ordered.value : ordered.value.filter((s) => s.lang === active.value)))
+const html = (s: CodeSample) => highlight(sampleCode(s), highlightLanguage(s))
+
+const ORIGIN: Record<CodeSample['origin'], string> = {
+  real: 'از کد واقعی پروژه (کوتاه‌شده)',
+  tested: 'کد اجراشده و تست‌شده در examples/',
+  port: 'معادل نوشته‌شده، اجرا نشده',
+}
+
 const copied = ref(false)
-
-async function copy() {
-  if (!sample.value) return
+async function copy(s: CodeSample) {
   try {
-    await navigator.clipboard.writeText(sample.value.code)
+    await navigator.clipboard.writeText(sampleCode(s))
     copied.value = true
     setTimeout(() => (copied.value = false), 1500)
   } catch {
@@ -22,27 +33,31 @@ async function copy() {
 </script>
 
 <template>
-  <figure v-if="sample" class="code-tabs">
+  <figure v-if="ordered.length" class="code-tabs" :class="{ all }">
     <figcaption>
-      <b>{{ sample.title }}</b>
-      <span class="origin" :class="sample.origin">
-        {{ sample.origin === 'real' ? 'از کد واقعی پروژه (کوتاه‌شده)' : 'معادل نوشته‌شده برای این درس' }}
-      </span>
+      <b>{{ ordered[0].title }}</b>
     </figcaption>
-    <div class="tabs" role="tablist">
+    <div v-if="!all" class="tabs" role="tablist">
       <button
-        v-for="l in available"
-        :key="l.id"
+        v-for="s in ordered"
+        :key="s.lang"
         role="tab"
-        :aria-selected="l.id === active"
-        :class="{ on: l.id === active }"
-        @click="active = l.id"
+        :aria-selected="s.lang === active"
+        :class="{ on: s.lang === active }"
+        @click="active = s.lang"
       >
-        {{ l.label }}
+        {{ LANG_LABELS[s.lang] }}
       </button>
       <span class="spacer"></span>
-      <button class="copy" @click="copy">{{ copied ? 'کپی شد' : 'کپی' }}</button>
+      <button class="copy" @click="copy(shown[0])">{{ copied ? 'کپی شد' : 'کپی' }}</button>
     </div>
-    <pre dir="ltr"><code>{{ sample.code }}</code></pre>
+    <div v-for="s in shown" :key="s.lang" class="sample">
+      <div class="sample-head">
+        <span v-if="all" class="lang">{{ LANG_LABELS[s.lang] }}</span>
+        <span class="origin" :class="s.origin">{{ ORIGIN[s.origin] }}</span>
+        <code v-if="s.file" class="path" dir="ltr">examples/{{ s.file }}</code>
+      </div>
+      <pre dir="ltr"><code class="hljs" v-html="html(s)"></code></pre>
+    </div>
   </figure>
 </template>
