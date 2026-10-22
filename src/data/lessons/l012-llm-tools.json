@@ -1,0 +1,64 @@
+{
+  "_id": "l012",
+  "n": 12,
+  "tag": "backend",
+  "topics": ["llm", "tool use", "claude api"],
+  "en": "Calling an LLM with tools",
+  "fa": "فراخوانی مدل زبانی با ابزار: حلقه، سقف، و ابزار فقط‌خواندنی",
+  "goal": [
+    "حلقه‌ی tool use را بنویسی: مدل ابزار می‌خواهد، تو اجرا می‌کنی، نتیجه را برمی‌گردانی، تا جواب نهایی.",
+    "حلقه را محدود کنی: سقف نوبت، رسیدگی به refusal و max_tokens، ابزار شکست‌خورده با is_error.",
+    "ابزارها را فقط‌خواندنی طراحی کنی تا نتیجه‌ی آلوده (prompt injection) نتواند کاری انجام دهد."
+  ],
+  "story": "جعبه‌ی «Ask the portfolio» در Control Panel سؤال را به core-api می‌فرستد. core-api با Claude یک حلقه اجرا می‌کند و سه ابزار فقط‌خواندنی دارد: فهرست پروژه‌ها، وضعیت یک پروژه، و تحلیل جست‌وجوی کار از LedgerDashboard. حداکثر ۶ نوبت، ۲۰ سؤال در ساعت برای هر کاربر، همه‌ی نتیجه‌های ابزار در یک پیام، و fallbacks برای درخواست‌های ردشده. هیچ ابزاری نمی‌نویسد، SQL اجرا نمی‌کند یا URL نمی‌گیرد. این درس همان حلقه را در چهار زبان با SDK رسمی Anthropic می‌سازد.",
+  "why": [
+    ["Q", "چرا همه‌ی tool_resultها در یک پیام user؟"],
+    ["A", "مدل ممکن است چند ابزار را هم‌زمان بخواهد. اگر نتیجه‌ها را در چند پیام جدا بفرستی، مدل یاد می‌گیرد که دیگر فراخوانی موازی نکند. یک پیام با همه‌ی نتیجه‌ها شکل درست است."],
+    ["Q", "اگر ابزار خطا بدهد، نتیجه را حذف کنیم؟"],
+    ["A", "نه. هر tool_use باید tool_result داشته باشد، وگرنه درخواست بعدی رد می‌شود. خطا را با is_error: true برگردان تا مدل بداند و راه دیگری امتحان کند."]
+  ],
+  "concepts": [
+    { "h": "حلقه", "body": "درخواست → اگر stop_reason == tool_use: کل پاسخ مدل را بدون تغییر به messages اضافه کن، ابزارها را اجرا کن، نتیجه‌ها را در یک پیام user برگردان، تکرار. اگر end_turn: متن را برگردان." },
+    { "h": "stop_reasonها", "body": "end_turn: جواب تمام شد. tool_use: ابزار می‌خواهد. max_tokens: جواب نصفه ماند. refusal: مدل درخواست را رد کرد. قبل از خواندن content همیشه stop_reason را چک کن." },
+    { "h": "مدل و پارامترها", "body": "claude-opus-5-5 با output_config.effort = medium. thinking روی این مدل همیشه روشن است و نباید غیرفعالش کرد؛ عمق را با effort تنظیم کن. fallbacks با beta server-side-fallback در Python و TypeScript و C# روشن است: اگر درخواست رد شود، در همان فراخوانی روی مدل جایگزین اجرا می‌شود." },
+    { "h": "C# و Java: بدون ToParam در C#", "body": "SDK پایتون و TypeScript اجازه می‌دهند response.content را مستقیم برگردانی. در C# باید هر بلوک را به نوع Param متناظرش تبدیل کنی (Text، Thinking با Signature، ToolUse). Java یک response.toParam() دارد." },
+    { "h": "ابزار فقط‌خواندنی", "body": "نتیجه‌ی ابزار داده است، نه دستور. ولی اگر ابزاری بتواند بنویسد، متنی در داده می‌تواند مدل را قانع کند که بنویسد. بهترین دفاع این است که چنین ابزاری وجود نداشته باشد: lookup ثابت، بدون SQL، بدون URL." },
+    { "h": "تست بدون هزینه", "body": "Python و TypeScript تابع create را تزریق می‌کنند و در تست پاسخ جعلی می‌دهند. C# و Java کلاینت واقعی SDK را به یک سرور HTTP محلی وصل می‌کنند که JSON آماده برمی‌گرداند؛ پس کد SDK واقعاً اجرا می‌شود، ولی هیچ درخواستی به Anthropic نمی‌رود." }
+  ],
+  "compare": [
+    { "concept": "کلاینت", "csharp": "new AnthropicClient()", "typescript": "new Anthropic()", "python": "anthropic.Anthropic()", "java": "AnthropicOkHttpClient.fromEnv()", "diff": "همه ANTHROPIC_API_KEY را از محیط می‌خوانند." },
+    { "concept": "درخواست با ابزار", "csharp": "client.Beta.Messages.Create(new MessageCreateParams { Tools = [...] })", "typescript": "client.beta.messages.create({ tools: [...] })", "python": "client.beta.messages.create(tools=[...])", "java": "client.messages().create(MessageCreateParams.builder().addTool(tool)...)", "diff": "Java از builder استفاده می‌کند؛ نمونه‌ی Java ما beta و fallbacks ندارد چون شکل آن در مستندات SDK جاوا ثبت نشده." },
+    { "concept": "برگرداندن نوبت مدل", "csharp": "تبدیل دستی هر بلوک به *BlockParam", "typescript": "{ role: 'assistant', content: response.content }", "python": "{\"role\": \"assistant\", \"content\": response.content}", "java": "messages.add(response.toParam())", "diff": "C# تنها جایی است که باید بلوک به بلوک تبدیل کنی." },
+    { "concept": "نتیجه‌ی ابزار با خطا", "csharp": "new BetaToolResultBlockParam { IsError = true }", "typescript": "{ type: 'tool_result', is_error: true }", "python": "{\"type\": \"tool_result\", \"is_error\": True}", "java": "ToolResultBlockParam.builder().isError(true)", "diff": "یکسان؛ فقط نام‌گذاری زبان." },
+    { "concept": "fallbacks", "csharp": "Fallbacks = new BetaFallbacksParam([...])", "typescript": "fallbacks: 'default'", "python": "fallbacks=\"default\"", "java": "در نمونه نیست", "diff": "C# SDK نسخه‌ی 13 شکل لیستی را می‌پذیرد (beta 2026-06-01)؛ Python و TS شکل default را (beta 2026-07-01)." }
+  ],
+  "code": [
+    { "group": "call", "lang": "csharp", "title": "یک فراخوانی", "origin": "tested", "file": "backend/csharp/Portfolio/Assistant.cs", "region": "call" },
+    { "group": "call", "lang": "typescript", "title": "یک فراخوانی", "origin": "tested", "file": "backend/typescript/src/assistant.ts", "region": "call" },
+    { "group": "call", "lang": "python", "title": "یک فراخوانی", "origin": "tested", "file": "backend/python/portfolio/assistant.py", "region": "call" },
+    { "group": "call", "lang": "java", "title": "یک فراخوانی", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Assistant.java", "region": "call" },
+    { "group": "loop", "lang": "csharp", "title": "حلقه‌ی ابزار", "origin": "tested", "file": "backend/csharp/Portfolio/Assistant.cs", "region": "loop" },
+    { "group": "loop", "lang": "typescript", "title": "حلقه‌ی ابزار", "origin": "tested", "file": "backend/typescript/src/assistant.ts", "region": "loop" },
+    { "group": "loop", "lang": "python", "title": "حلقه‌ی ابزار", "origin": "tested", "file": "backend/python/portfolio/assistant.py", "region": "loop" },
+    { "group": "loop", "lang": "java", "title": "حلقه‌ی ابزار", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Assistant.java", "region": "loop" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "حلقه‌ی بدون سقف", "why": "مدل ممکن است بارها ابزار بخواهد؛ هزینه و زمان بی‌حد می‌شود.", "fix": "MAX_TURNS، و محدودیت تعداد سؤال برای هر کاربر." },
+    { "lang": "all", "mistake": "خواندن response.content بدون چک stop_reason", "why": "در refusal یا max_tokens محتوا ناقص یا خالی است.", "fix": "اول stop_reason را چک کن." },
+    { "lang": "all", "mistake": "دادن ابزار نوشتن یا اجرای SQL به دستیار", "why": "یک رشته در داده (نام شرکت، ایمیل، خطای adapter) می‌تواند مدل را به اجرای کار ناخواسته قانع کند (prompt injection).", "fix": "ابزار فقط‌خواندنی با ورودی محدود (enum، کلید)؛ کار نوشتن را به UI معمولی بسپار." },
+    { "lang": "csharp", "mistake": "new BetaContentBlockParam(block.Json) برای برگرداندن نوبت مدل", "why": "کامپایل می‌شود ولی مقدار typed آن null است و TryPick کار نمی‌کند.", "fix": "هر بلوک را به BetaTextBlockParam، BetaThinkingBlockParam (با Signature) و BetaToolUseBlockParam تبدیل کن." },
+    { "lang": "all", "mistake": "غیرفعال کردن thinking روی claude-opus-5-5", "why": "این مدل thinking را خاموش نمی‌کند و درخواست 400 می‌گیرد.", "fix": "thinking را نفرست و effort را پایین بیاور (low/medium)." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/core-api/src/assistant/assistant.service.ts", "line": 35, "note": "MAX_TURNS = 6" },
+    { "project": "ControlPanel", "file": "services/core-api/src/assistant/assistant.service.ts", "line": 95, "note": "همه‌ی tool_resultها با هم، خطا با is_error" },
+    { "project": "ControlPanel", "file": "services/core-api/src/assistant/assistant.service.ts", "line": 124, "note": "fallbacks: 'default'" },
+    { "project": "ControlPanel", "file": "services/core-api/src/assistant/assistant.tools.ts", "line": 1, "note": "سه ابزار فقط‌خواندنی" }
+  ],
+  "exercises": [
+    { "q": "در تست TypeScript، نتیجه‌ی ابزار دوم را در یک پیام جدا بفرست (دو پیام user). کدام assert شکست می‌خورد، و API واقعی چه می‌کرد؟", "a": "assert روی طول results (2) شکست می‌خورد. API واقعی درخواست را قبول می‌کند ولی مدل را به فراخوانی‌های سریالی عادت می‌دهد؛ اگر tool_use بدون نتیجه بماند 400 می‌دهد." },
+    { "q": "یک ابزار دوم list_projects اضافه کن (بدون ورودی). چه چیزهایی در هر زبان عوض می‌شود؟", "a": "تعریف ابزار در TOOLS و شاخه‌ی جدید در run_tool / portfolioTool. خود حلقه هیچ تغییری نمی‌کند." },
+    { "q": "چرا ابزار get_project_status کلید پروژه را می‌گیرد و نه URL adapter را؟", "a": "اگر URL بگیرد، مدل (یا متنی در داده) می‌تواند آن را به آدرس داخلی دیگری اشاره دهد (SSRF). با کلید، فقط پروژه‌های ثبت‌شده در دسترس‌اند." }
+  ],
+  "take": "My assistant runs a bounded tool loop with read-only tools, returns every tool result in one message, and checks the stop reason before reading the answer."
+}

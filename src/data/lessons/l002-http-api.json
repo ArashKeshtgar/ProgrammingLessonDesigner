@@ -1,0 +1,56 @@
+{
+  "_id": "l002",
+  "n": 2,
+  "tag": "backend",
+  "topics": ["http", "routing", "status codes"],
+  "en": "HTTP API and routing",
+  "fa": "API و مسیرها: هر endpoint یک قرارداد است",
+  "goal": [
+    "یک endpoint از نوع GET و یک POST در هر چهار زبان بنویسی و ببینی که ساختار همه یکی است: مسیر، ورودی، خروجی، کد وضعیت.",
+    "کد وضعیت درست را انتخاب کنی: 200، 201 با Location، 404، 409.",
+    "بدانی «سالم نبودن» یک پاسخ است و نه یک خطا، مثل /status در adapterهای Control Panel."
+  ],
+  "story": "هر adapter در Control Panel فقط یک قرارداد دارد: GET /status که { healthy, summary, metrics } برمی‌گرداند. core-api هیچ‌چیز دیگری از پروژه‌ها نمی‌داند. وقتی دیتابیس LedgerDashboard در دسترس نیست، adapter باز هم 200 می‌دهد، ولی با healthy=false، چون داشبورد باید بتواند این وضعیت را نشان بدهد. در این درس همان /status را به‌اضافه‌ی GET /projects/{key} و POST /projects در چهار زبان می‌سازیم.",
+  "why": [
+    ["Q", "چرا /status وقتی دیتابیس خاموش است 500 برنمی‌گرداند؟"],
+    ["A", "چون سؤال «آیا سالمی؟» جواب دارد: «نه». 500 یعنی خود endpoint خراب شده. داشبورد با 200 و healthy=false می‌تواند کارت قرمز نشان بدهد، اما با 500 فقط می‌داند که چیزی نامعلوم شکسته است."],
+    ["Q", "POST چرا 201 و Location؟"],
+    ["A", "201 می‌گوید چیزی ساخته شد و Location می‌گوید کجا. کلاینت لازم نیست آدرس را حدس بزند."]
+  ],
+  "concepts": [
+    { "h": "مسیر، متد، پارامتر", "body": "در هر چهار فریم‌ورک یک endpoint از سه چیز ساخته می‌شود: متد HTTP، الگوی مسیر با پارامتر ({key} یا :key)، و تابعی که پاسخ را برمی‌گرداند. فقط شکل نوشتن فرق دارد: C# و Python و TypeScript تابع را مستقیم به مسیر وصل می‌کنند (Minimal API، FastAPI، Express)، Java آن را روی متد یک کلاس با annotation می‌گذارد." },
+    { "h": "برگرداندن JSON", "body": "در C# و FastAPI و Spring یک شیء برمی‌گردانید و فریم‌ورک آن را JSON می‌کند. در Express خودتان res.json() را صدا می‌زنید. در C# برای کد وضعیت از Results.* استفاده می‌کنید، در Spring از ResponseEntity یا یک exception." },
+    { "h": "کد وضعیت را عمداً انتخاب کن", "body": "200 برای خواندن موفق، 201 + Location برای ساختن، 400 برای ورودی بد، 401 برای «وارد نشده‌ای»، 403 برای «اجازه نداری»، 404 برای «پیدا نشد»، 409 برای «با وضعیت فعلی تداخل دارد»، و 500 فقط برای «خود من خراب شدم»." },
+    { "h": "Express 4 و async", "body": "Express 4 promise رد شده‌ی یک handler را نمی‌گیرد. اگر await داخل handler خطا بدهد و خودتان آن را به next(err) ندهید، درخواست بی‌پاسخ می‌ماند. Express 5 این را درست کرده است؛ کد ما برای Express 4 است و try/catch دارد." }
+  ],
+  "compare": [
+    { "concept": "تعریف یک GET", "csharp": "app.MapGet(\"/projects/{key}\", (string key) => ...)", "typescript": "app.get('/projects/:key', (req, res) => ...)", "python": "@app.get(\"/projects/{key}\")", "java": "@GetMapping(\"/projects/{key}\")", "diff": "Express پارامتر را با : می‌نویسد و از req.params می‌خواند؛ بقیه آن را مستقیم به تابع می‌دهند." },
+    { "concept": "پارامتر مسیر", "csharp": "(string key)", "typescript": "req.params.key", "python": "def get_project(key: str)", "java": "@PathVariable String key", "diff": "در C# و Python نام پارامتر تابع باید با {key} یکی باشد؛ در Java با annotation وصل می‌شود." },
+    { "concept": "404 با پیام", "csharp": "Results.NotFound(new { error = ... })", "typescript": "res.status(404).json({ error })", "python": "raise HTTPException(404, ...)", "java": "throw new ResponseStatusException(NOT_FOUND, ...)", "diff": "Python و Java با پرتاب exception جواب می‌دهند؛ C# و Express مقدار برمی‌گردانند." },
+    { "concept": "201 با Location", "csharp": "Results.Created($\"/projects/{key}\", row)", "typescript": "res.status(201).location(url).json(row)", "python": "JSONResponse(..., status_code=201, headers={\"Location\": url})", "java": "ResponseEntity.created(URI.create(url)).body(row)", "diff": "FastAPI کمکی برای Location ندارد؛ هدر را خودتان می‌گذارید." },
+    { "concept": "بدنه‌ی JSON درخواست", "csharp": "(CreateProject body)", "typescript": "app.use(express.json()); req.body", "python": "def create(body: CreateProject)", "java": "@RequestBody CreateProject body", "diff": "Express بدون express.json() اصلاً بدنه را نمی‌خواند و req.body خالی است." }
+  ],
+  "code": [
+    { "group": "routes", "lang": "csharp", "title": "/status و /projects", "origin": "tested", "file": "backend/csharp/Portfolio/PortfolioApp.cs", "region": "routes" },
+    { "group": "routes", "lang": "typescript", "title": "/status و /projects", "origin": "tested", "file": "backend/typescript/src/app.ts", "region": "routes" },
+    { "group": "routes", "lang": "python", "title": "/status و /projects", "origin": "tested", "file": "backend/python/portfolio/app.py", "region": "routes" },
+    { "group": "routes", "lang": "java", "title": "/status و /projects", "origin": "tested", "file": "backend/java/src/main/java/portfolio/PortfolioController.java", "region": "routes" }
+  ],
+  "pitfalls": [
+    { "lang": "typescript", "mistake": "handler async در Express 4 بدون try/catch و next(err)", "why": "Express 4 promise رد شده را نمی‌بیند؛ درخواست تا timeout معلق می‌ماند و خطا فقط در لاگ unhandledRejection دیده می‌شود.", "fix": "try/catch و next(err)، یا Express 5 که این را خودش انجام می‌دهد." },
+    { "lang": "all", "mistake": "برگرداندن 500 برای «پیدا نشد» یا «سالم نیست»", "why": "کلاینت و مانیتورینگ نمی‌توانند خرابی واقعی را از پاسخ عادی جدا کنند.", "fix": "404 برای نبودن، 200 با healthy=false برای ناسالم بودن، 500 فقط برای باگ." },
+    { "lang": "java", "mistake": "برگرداندن null از متد کنترلر برای «پیدا نشد»", "why": "Spring یک 200 با بدنه‌ی خالی می‌فرستد.", "fix": "Optional.orElseThrow با ResponseStatusException(NOT_FOUND)." },
+    { "lang": "python", "mistake": "فراموش کردن status_code=201 در POST", "why": "FastAPI به‌طور پیش‌فرض 200 می‌دهد، حتی برای ساختن.", "fix": "status_code=201 روی decorator، یا JSONResponse با کد." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.ts", "line": 51, "note": "GET /status: سالم نبودن هم 200 با healthy=false است" },
+    { "project": "ControlPanel", "file": "services/core-api/src/projects/projects.controller.ts", "line": 27, "note": "POST /projects در NestJS با @Roles('Admin')" },
+    { "project": "ClinicReport", "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs", "line": 47, "note": "Minimal API در C#: MapPost(\"/login\", ...)" }
+  ],
+  "exercises": [
+    { "q": "یک endpoint جدید GET /projects بنویس که همه‌ی پروژه‌ها را برگرداند، در زبانی که کمتر بلدی. چه چیزی را باید به interface مخزن اضافه کنی؟", "hint": "به ProjectRepository یک متد list اضافه کن و پیاده‌سازی in-memory را هم کامل کن.", "a": "یک متد list/all در ProjectRepository، پیاده‌سازی آن در InMemoryProjects و SqliteProjects، و یک route که نتیجه را برمی‌گرداند. هیچ چیز دیگری در route لازم نیست." },
+    { "q": "اگر دو بار پشت سر هم POST /projects با همان key بفرستی، بار دوم چه کدی برمی‌گردد و چرا 409 و نه 400؟", "a": "409. ورودی از نظر شکل درست است (پس 400 نیست)، اما با وضعیت فعلی سرور تداخل دارد: پروژه‌ای با این key وجود دارد." },
+    { "q": "در نسخه‌ی Express، try/catch را از GET /projects/:key بردار و یک خطا در find بینداز. با Express 4 چه می‌بینی؟", "a": "درخواست جواب نمی‌گیرد (تا timeout کلاینت) و Node یک unhandledRejection لاگ می‌کند. با next(err) خطا به error handler می‌رسد و 500 برمی‌گردد." }
+  ],
+  "take": "I treat every endpoint as a contract: a clear route, the right status code, and an unhealthy dependency reported as data, not as a 500."
+}

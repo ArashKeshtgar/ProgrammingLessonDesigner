@@ -1,0 +1,53 @@
+{
+  "_id": "l009",
+  "n": 9,
+  "tag": "backend",
+  "topics": ["mongodb", "concurrency", "idempotency"],
+  "en": "Atomic state changes in MongoDB",
+  "fa": "تغییر وضعیت اتمیک در MongoDB: فقط یک نفر برنده می‌شود",
+  "goal": [
+    "با یک findOneAndUpdate شرطی، یک تغییر وضعیت (pending → processing) را طوری بنویسی که دو درخواست هم‌زمان نتوانند هر دو انجامش بدهند.",
+    "الگوی «بخوان، چک کن، بنویس» را بشناسی و بدانی چرا زیر بار شکست می‌خورد.",
+    "همین مسئله را با تست واقعی روی Mongo ببینی: ده درخواست هم‌زمان، دقیقاً یک برنده."
+  ],
+  "story": "در ReBiomed (بازار تجهیزات پزشکی) پرداخت Stripe از دو راه تأیید می‌شود: webhook و فراخوانی کلاینت. هر دو ممکن است هم‌زمان برسند. finalizeOrder فقط وقتی موجودی کالا را کم می‌کند که خودش سفارش را از pending به processing برده باشد، با یک findOneAndUpdate که شرط status: 'pending' دارد. fulfillment.ts هم همین را برای ارسال و پرداخت به فروشنده انجام می‌دهد تا دوبار کلیک یا retry یک webhook دو بار پول جابه‌جا نکند.",
+  "why": [
+    ["Q", "اگر اول سفارش را بخوانم، چک کنم pending است و بعد آپدیت کنم، چه اشکالی دارد؟"],
+    ["A", "بین خواندن و نوشتن فاصله هست. دو درخواست هر دو pending را می‌خوانند و هر دو آپدیت می‌کنند. با فیلتر status در خود آپدیت، دیتابیس شرط و تغییر را یک قدم انجام می‌دهد."],
+    ["Q", "تراکنش لازم نیست؟"],
+    ["A", "برای یک سند نه؛ هر عملیات روی یک سند در MongoDB اتمیک است. تراکنش برای وقتی است که چند سند باید با هم عوض شوند."]
+  ],
+  "concepts": [
+    { "h": "Compare-and-set", "body": "آپدیت شرطی همان compare-and-set است: «اگر وضعیت هنوز pending است، processing کن». هر کس آپدیت موفق بگیرد برنده است؛ بقیه null می‌گیرند و وضعیت فعلی را می‌خوانند." },
+    { "h": "Idempotency", "body": "عملیات idempotent است اگر دوبار اجرایش همان نتیجه‌ی یک بار را داشته باشد. finalizeOrder دوم چیزی را عوض نمی‌کند و فقط وضعیت فعلی را برمی‌گرداند. webhook retry و دوبار کلیک دیگر خطرناک نیستند." },
+    { "h": "همین در SQL", "body": "UPDATE orders SET status='processing' WHERE id=@id AND status='pending' و بعد چک کردن تعداد سطرهای تغییرکرده (rowsAffected == 1). در EF Core: ExecuteUpdateAsync با Where، یا concurrency token." },
+    { "h": "returnDocument", "body": "پیش‌فرض findOneAndUpdate سند قبل از تغییر را برمی‌گرداند. returnDocument: after / ReturnDocument.AFTER سند بعد از تغییر را می‌دهد. برای تشخیص برنده هر دو کار می‌کند؛ مهم null بودن یا نبودن است." }
+  ],
+  "compare": [
+    { "concept": "آپدیت شرطی", "csharp": "FindOneAndUpdateAsync(o => o.Id == id && o.Status == \"pending\", ...)", "typescript": "findOneAndUpdate({ _id, status: 'pending' }, { $set: ... })", "python": "find_one_and_update({\"_id\": id, \"status\": \"pending\"}, {\"$set\": ...})", "java": "findOneAndUpdate(and(eq(\"_id\", id), eq(\"status\", \"pending\")), set(...))", "diff": "درایور C# فیلتر را از lambda می‌سازد؛ Java از Filters و Updates." },
+    { "concept": "برگرداندن سند جدید", "csharp": "ReturnDocument = ReturnDocument.After", "typescript": "{ returnDocument: 'after' }", "python": "return_document=ReturnDocument.AFTER", "java": "new FindOneAndUpdateOptions().returnDocument(AFTER)", "diff": "در mongodb v6 برای Node، نتیجه مستقیم سند است (نه { value })." },
+    { "concept": "نگاشت سند", "csharp": "class OrderDoc با [BsonId]", "typescript": "interface OrderDoc + Collection<OrderDoc>", "python": "dict", "java": "org.bson.Document", "diff": "Python و Java اینجا بی‌type کار می‌کنند؛ Java می‌تواند POJO هم با CodecRegistry بگیرد." },
+    { "concept": "اجرای هم‌زمان در تست", "csharp": "Task.WhenAll(... Task.Run(...))", "typescript": "Promise.all(Array.from({ length: 10 }, ...))", "python": "threading.Thread × 10", "java": "CompletableFuture.supplyAsync × 10", "diff": "pymongo sync است، پس Python thread می‌سازد؛ بقیه async یا pool." }
+  ],
+  "code": [
+    { "group": "transition", "lang": "csharp", "title": "pending → processing، فقط یک بار", "origin": "tested", "file": "backend/csharp/Portfolio/Orders.cs", "region": "transition" },
+    { "group": "transition", "lang": "typescript", "title": "pending → processing، فقط یک بار", "origin": "tested", "file": "backend/typescript/src/orders.ts", "region": "transition" },
+    { "group": "transition", "lang": "python", "title": "pending → processing، فقط یک بار", "origin": "tested", "file": "backend/python/portfolio/orders.py", "region": "transition" },
+    { "group": "transition", "lang": "java", "title": "pending → processing، فقط یک بار", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Orders.java", "region": "transition" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "خواندن سند، چک کردن وضعیت در کد، و بعد updateOne", "why": "دو درخواست هم‌زمان هر دو چک را رد می‌کنند؛ موجودی دو بار کم یا پول دو بار پرداخت می‌شود.", "fix": "شرط را در فیلتر خود آپدیت بگذار." },
+    { "lang": "typescript", "mistake": "خواندن result.value از findOneAndUpdate در driver v6", "why": "از v6 نتیجه خود سند است و .value همیشه undefined است؛ هر درخواستی بازنده حساب می‌شود.", "fix": "خود نتیجه را چک کن (یا includeResultMetadata: true)." },
+    { "lang": "all", "mistake": "فرض کردن اینکه webhook یک بار می‌رسد", "why": "providerها در صورت timeout یا 5xx دوباره می‌فرستند.", "fix": "عملیات را idempotent کن (درس webhook هم event id را نگه می‌دارد)." }
+  ],
+  "refs": [
+    { "project": "mern-animation-project", "file": "services/checkout.ts", "line": 152, "note": "finalizeOrder در ReBiomed: فقط برنده‌ی pending → processing موجودی را کم می‌کند" },
+    { "project": "mern-animation-project", "file": "services/fulfillment.ts", "line": 13, "note": "هر تغییر وضعیت یک آپدیت شرطی است" }
+  ],
+  "exercises": [
+    { "q": "finalize_order را عمداً به شکل «find_one، if status == pending، update_one» بنویس و تست هم‌زمانی را چند بار اجرا کن. چه می‌بینی؟", "a": "گاهی بیش از یک «won» دیده می‌شود (بسته به زمان‌بندی). این همان race condition است که آپدیت شرطی حذف می‌کند." },
+    { "q": "معادل SQL این تابع را برای SQL Server بنویس و بگو برنده را چطور تشخیص می‌دهی.", "a": "UPDATE dbo.Orders SET Status = 'processing' WHERE Id = @id AND Status = 'pending'; اگر @@ROWCOUNT (یا rowsAffected) برابر 1 بود برنده‌ای، اگر 0 بود کس دیگری قبلاً انجام داده." },
+    { "q": "چرا تست Mongo در CI اجرا می‌شود ولی روی لپ‌تاپ بدون MONGO_URL skip می‌شود؟", "a": "چون به سرور Mongo واقعی نیاز دارد. CI یک سرویس mongo بالا می‌آورد؛ روی لپ‌تاپ با docker run -p 27017:27017 mongo:7 و MONGO_URL اجرا می‌شود." }
+  ],
+  "take": "A state change is one conditional update — 'only if still pending' — so concurrent requests and retried webhooks can't do the work twice."
+}

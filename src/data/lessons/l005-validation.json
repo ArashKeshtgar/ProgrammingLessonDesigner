@@ -1,0 +1,56 @@
+{
+  "_id": "l005",
+  "n": 5,
+  "tag": "backend",
+  "topics": ["validation", "dto", "mass assignment"],
+  "en": "Validating input",
+  "fa": "اعتبارسنجی ورودی: شکل درست، و هیچ فیلد اضافه‌ای",
+  "goal": [
+    "قواعد ورودی را روی یک DTO تعریف کنی (DataAnnotations، zod، Pydantic، Bean Validation).",
+    "فیلدهای ناشناخته را رد کنی تا کسی نتواند فیلدی مثل isAdmin را جا بزند.",
+    "در هر چهار زبان یک پاسخ 400 یکسان بدهی: { error, errors: { field: message } }."
+  ],
+  "story": "core-api در Control Panel این خط را دارد: ValidationPipe({ whitelist: true, transform: true }). whitelist یعنی فیلدی که در DTO نیست دور ریخته می‌شود. ما یک قدم جلوتر می‌رویم و چنین فیلدی را خطا می‌دانیم، تا کلاینتی که فکر می‌کند isAdmin را تنظیم کرده بداند که نکرده. همین قاعده در هر چهار زبان ساخته و تست می‌شود.",
+  "why": [
+    ["Q", "دور ریختن فیلد اضافه کافی نیست؟"],
+    ["A", "از نظر امنیت کافی است. اما رد کردن آن اشتباه‌های کلاینت را زود نشان می‌دهد: اگر کسی displayname با n کوچک بفرستد، به‌جای اینکه بی‌صدا نادیده گرفته شود، 400 می‌گیرد."],
+    ["Q", "FastAPI که خودش اعتبارسنجی می‌کند، چرا handler جدا؟"],
+    ["A", "FastAPI به‌طور پیش‌فرض 422 می‌دهد و شکل پاسخش متفاوت است. ما همه را 400 با یک شکل می‌کنیم تا کلاینت فرق زبان سرور را نبیند."]
+  ],
+  "concepts": [
+    { "h": "DTO جدا از مدل داده", "body": "CreateProject فقط چیزی است که کلاینت مجاز است بفرستد. ProjectRow چیزی است که ذخیره می‌شود. وقتی این دو یکی باشند، هر فیلد مدل (مثل نقش یا مالک) از بیرون قابل تنظیم می‌شود (mass assignment)." },
+    { "h": "کجا قواعد نوشته می‌شوند", "body": "C# و Java روی property یا field با attribute/annotation. Pydantic روی type و Field(...). zod یک شیء schema جدا که type را هم از آن درمی‌آورد (z.infer)." },
+    { "h": "فیلد ناشناخته", "body": "Pydantic: extra=\"forbid\". zod: .strict(). System.Text.Json: [JsonUnmappedMemberHandling(Disallow)]. Jackson: fail-on-unknown-properties=true (Spring Boot پیش‌فرضش را false گذاشته است)." },
+    { "h": "اعتبارسنجی در Minimal API", "body": "Minimal API در C# خودش DataAnnotations را اجرا نمی‌کند (برخلاف کنترلرهای [ApiController]). کد ما Validator.TryValidateObject را صریحاً صدا می‌زند تا قاعده دیده شود." }
+  ],
+  "compare": [
+    { "concept": "تعریف DTO", "csharp": "class CreateProject { [Required] string Key }", "typescript": "z.object({ key: z.string() })", "python": "class CreateProject(BaseModel)", "java": "record CreateProject(@NotBlank String key)", "diff": "در zod schema اول است و type از آن ساخته می‌شود؛ در بقیه type اول است و قواعد روی آن." },
+    { "concept": "regex", "csharp": "[RegularExpression(\"^...$\")]", "typescript": ".regex(/^...$/)", "python": "Field(pattern=r\"^...$\")", "java": "@Pattern(regexp = \"^...$\")", "diff": "Pydantic v2 از موتور regex راست استفاده می‌کند؛ lookaround پشتیبانی نمی‌شود." },
+    { "concept": "URL", "csharp": "[Url]", "typescript": "z.string().url()", "python": "AnyHttpUrl", "java": "@URL(regexp = \"^https?:.*\")", "diff": "[Url] در C# ftp را هم قبول می‌کند؛ اگر فقط http(s) می‌خواهید قاعده‌ی جدا لازم است." },
+    { "concept": "رد فیلد ناشناخته", "csharp": "[JsonUnmappedMemberHandling(Disallow)]", "typescript": ".strict()", "python": "model_config = ConfigDict(extra=\"forbid\")", "java": "fail-on-unknown-properties=true", "diff": "در Java سراسری است (یک property)، در بقیه روی هر DTO." },
+    { "concept": "اجرای اعتبارسنجی", "csharp": "Validator.TryValidateObject(...)", "typescript": "Schema.safeParse(req.body)", "python": "خودکار با type hint پارامتر", "java": "@Valid @RequestBody", "diff": "FastAPI و Spring خودکار اجرا می‌کنند؛ Express و Minimal API را خودتان صدا می‌زنید." },
+    { "concept": "کد پیش‌فرض خطا", "csharp": "400 (با ValidationProblem)", "typescript": "ندارد (خودتان)", "python": "422", "java": "400", "diff": "FastAPI تنها کسی است که 422 می‌دهد؛ ما آن را 400 کردیم." }
+  ],
+  "code": [
+    { "group": "dto", "lang": "csharp", "title": "DTO با قواعد", "origin": "tested", "file": "backend/csharp/Portfolio/Models.cs", "region": "validation" },
+    { "group": "dto", "lang": "typescript", "title": "DTO با قواعد", "origin": "tested", "file": "backend/typescript/src/models.ts", "region": "validation" },
+    { "group": "dto", "lang": "python", "title": "DTO با قواعد", "origin": "tested", "file": "backend/python/portfolio/models.py", "region": "validation" },
+    { "group": "dto", "lang": "java", "title": "DTO با قواعد", "origin": "tested", "file": "backend/java/src/main/java/portfolio/CreateProject.java", "region": "validation" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "گرفتن مستقیم entity دیتابیس به‌عنوان بدنه‌ی درخواست", "why": "کلاینت هر فیلدی را می‌تواند تنظیم کند، از جمله نقش، مالک یا وضعیت (mass assignment).", "fix": "DTO جدا با فقط فیلدهای مجاز، و کپی صریح به مدل." },
+    { "lang": "csharp", "mistake": "انتظار اعتبارسنجی خودکار DataAnnotations در Minimal API", "why": "Minimal API (تا قبل از AddValidation در .NET 10) آن را اجرا نمی‌کند؛ ورودی نامعتبر بی‌صدا رد می‌شود.", "fix": "Validator.TryValidateObject، یا endpoint filter، یا AddValidation در .NET 10." },
+    { "lang": "java", "mistake": "فراموش کردن @Valid کنار @RequestBody", "why": "annotationهای record اجرا نمی‌شوند.", "fix": "@Valid @RequestBody." },
+    { "lang": "typescript", "mistake": "استفاده از req.body بعد از safeParse به‌جای parsed.data", "why": "req.body ممکن است فیلد اضافه یا نوع اشتباه داشته باشد؛ فقط parsed.data تضمین شده است.", "fix": "همیشه parsed.data." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/core-api/src/main.ts", "line": 17, "note": "ValidationPipe({ whitelist: true, transform: true })" },
+    { "project": "ControlPanel", "file": "services/core-api/src/projects/dto/project.dto.ts", "line": 4, "note": "CreateProjectDto با class-validator" }
+  ],
+  "exercises": [
+    { "q": "یک قاعده اضافه کن: displayName نباید فقط فاصله باشد. در هر زبان کجا می‌نویسی؟", "a": "C#: [RegularExpression(@\".*\\S.*\")]. zod: .trim().min(1). Pydantic: Field(min_length=1) با str_strip_whitespace یا یک field_validator. Java: @NotBlank که همین را چک می‌کند." },
+    { "q": "در NestJS whitelist: true فیلد اضافه را دور می‌ریزد. چه گزینه‌ای آن را خطا می‌کند؟", "a": "forbidNonWhitelisted: true. آن‌وقت ValidationPipe برای فیلد ناشناخته 400 می‌دهد." },
+    { "q": "تست unknown_field را در Java اجرا کن، بعد خط fail-on-unknown-properties را از application.properties بردار. نتیجه؟", "a": "تست شکست می‌خورد: Jackson فیلد isAdmin را نادیده می‌گیرد و پروژه با 201 ساخته می‌شود." }
+  ],
+  "take": "Input goes through a DTO that lists exactly what a client may send; unknown fields are rejected, and every language answers with the same 400 shape."
+}

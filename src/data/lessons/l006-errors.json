@@ -1,0 +1,54 @@
+{
+  "_id": "l006",
+  "n": 6,
+  "tag": "backend",
+  "topics": ["error handling", "logging", "information leak"],
+  "en": "Error handling without leaking",
+  "fa": "مدیریت خطا: جزئیات در لاگ، نه در پاسخ",
+  "goal": [
+    "یک error handler سراسری در هر چهار زبان بنویسی که خطای پیش‌بینی‌نشده را 500 با trace id برگرداند.",
+    "پیام exception را هرگز به کاربر نشان ندهی، چون نام سرور، کاربر دیتابیس و SQL در آن است.",
+    "خطاهای «عادی» (404، 409، 400) را از خطای واقعی جدا کنی."
+  ],
+  "story": "تست ledgerdash-adapter دقیقاً همین را چک می‌کند: وقتی دیتابیس با «Login failed for user ledger_reader» می‌افتد، پاسخ فقط می‌گوید «LedgerDashboard database unreachable.». نام لاگین در پاسخ نیست. در این درس همین رفتار را برای هر خطای پیش‌بینی‌نشده‌ای در کل اپ می‌سازیم: کاربر یک trace id می‌گیرد، جزئیات با همان id در لاگ می‌روند.",
+  "why": [
+    ["Q", "پیام exception که به دیباگ کمک می‌کند. چرا مخفی‌اش کنیم؟"],
+    ["A", "چون مهاجم هم با آن دیباگ می‌کند: آدرس سرور، نام کاربر، ساختار جدول، نسخه‌ی کتابخانه. trace id به شما اجازه می‌دهد همان خطا را در لاگ پیدا کنید، بدون اینکه چیزی بیرون برود."],
+    ["Q", "پس 404 و 409 هم باید مخفی شوند؟"],
+    ["A", "نه، آن‌ها خطای عمدی و قابل‌انتظارند و پیامشان را خودمان نوشته‌ایم. فقط خطای پیش‌بینی‌نشده پیام عمومی می‌گیرد."]
+  ],
+  "concepts": [
+    { "h": "دو نوع خطا", "body": "خطای عمدی (HttpError در TS، HTTPException در FastAPI، ResponseStatusException در Spring، Results.NotFound در C#) پیامی دارد که برای کاربر نوشته شده. هر چیز دیگر خطای پیش‌بینی‌نشده است و پیام عمومی می‌گیرد." },
+    { "h": "یک جا برای همه", "body": "C#: UseExceptionHandler. Express: middleware با چهار پارامتر که آخر ثبت می‌شود. FastAPI: @app.exception_handler(Exception). Spring: @RestControllerAdvice با @ExceptionHandler. هر route لازم نیست try/catch داشته باشد." },
+    { "h": "Trace id", "body": "یک شناسه که هم در پاسخ و هم در لاگ می‌آید. کاربر آن را گزارش می‌دهد و شما در لاگ پیدا می‌کنید. ASP.NET خودش HttpContext.TraceIdentifier دارد؛ در بقیه یک UUID می‌سازیم." },
+    { "h": "Express: چرا چهار پارامتر؟", "body": "Express از تعداد پارامترهای تابع (function.length) تشخیص می‌دهد که middleware برای خطاست. اگر next را حذف کنید چون استفاده‌اش نمی‌کنید، Express آن را middleware معمولی حساب می‌کند." }
+  ],
+  "compare": [
+    { "concept": "handler سراسری", "csharp": "app.UseExceptionHandler(...)", "typescript": "app.use((err, req, res, next) => ...)", "python": "@app.exception_handler(Exception)", "java": "@RestControllerAdvice + @ExceptionHandler", "diff": "در Express ترتیب مهم است: باید بعد از همه‌ی routeها ثبت شود." },
+    { "concept": "خطای عمدی با کد", "csharp": "Results.NotFound(...) (مقدار برگشتی)", "typescript": "throw new HttpError(404, ...)", "python": "raise HTTPException(404, ...)", "java": "throw new ResponseStatusException(NOT_FOUND, ...)", "diff": "C# در Minimal API معمولاً مقدار برمی‌گرداند، نه exception." },
+    { "concept": "لاگ با جزئیات", "csharp": "logger.LogError(ex, \"... {TraceId}\", id)", "typescript": "console.error(`... ${id}`, err)", "python": "logger.error(\"... %s\", id, exc_info=exc)", "java": "log.error(\"... {}\", id, e)", "diff": "همه structured یا نیمه‌structured؛ در Java و C# exception آخرین آرگومان است." },
+    { "concept": "body نامعتبر JSON", "csharp": "BadHttpRequestException (با ThrowOnBadRequest)", "typescript": "SyntaxError از express.json()", "python": "RequestValidationError", "java": "HttpMessageNotReadableException", "diff": "هر کدام نوع متفاوتی می‌اندازد؛ handler باید جدا آن را 400 کند." }
+  ],
+  "code": [
+    { "group": "errors", "lang": "csharp", "title": "error handler سراسری", "origin": "tested", "file": "backend/csharp/Portfolio/PortfolioApp.cs", "region": "errors" },
+    { "group": "errors", "lang": "typescript", "title": "error handler سراسری", "origin": "tested", "file": "backend/typescript/src/app.ts", "region": "errors" },
+    { "group": "errors", "lang": "python", "title": "error handler سراسری", "origin": "tested", "file": "backend/python/portfolio/app.py", "region": "errors" },
+    { "group": "errors", "lang": "java", "title": "error handler سراسری", "origin": "tested", "file": "backend/java/src/main/java/portfolio/ErrorHandler.java", "region": "errors" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "برگرداندن ex.Message یا err.message در پاسخ 500", "why": "پیام exception اطلاعات داخلی دارد: آدرس سرور، نام کاربر، SQL، مسیر فایل.", "fix": "پیام عمومی + trace id؛ جزئیات فقط در لاگ." },
+    { "lang": "csharp", "mistake": "UseDeveloperExceptionPage یا ProblemDetails با جزئیات در Production", "why": "stack trace کامل به کاربر می‌رسد.", "fix": "فقط در Development؛ در Production یک handler عمومی." },
+    { "lang": "typescript", "mistake": "error middleware با سه پارامتر (بدون next)", "why": "Express آن را middleware معمولی می‌بیند و هرگز با خطا صدا نمی‌زند.", "fix": "هر چهار پارامتر را بنویس، حتی _next." },
+    { "lang": "python", "mistake": "catch کردن Exception و return None در route", "why": "FastAPI 200 با null برمی‌گرداند؛ خطا گم می‌شود.", "fix": "بگذار exception بالا برود تا handler سراسری آن را بگیرد." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.spec.ts", "line": 6, "note": "تست: خطای دیتابیس به پاسخ نشت نمی‌کند" },
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.ts", "line": 77, "note": "insight: «Errors are reported, never leaked.»" }
+  ],
+  "exercises": [
+    { "q": "در هر زبان پیدا کن trace id در کجای لاگ می‌آید و چطور می‌توانی آن را از پاسخ به لاگ برسانی.", "a": "C#: TraceIdentifier هم در پاسخ و هم در پیام لاگ. TS و Python و Java: UUID ساخته‌شده در handler که در هر دو نوشته می‌شود. در لاگ جست‌وجوی همان رشته کافی است." },
+    { "q": "در Express، error handler را قبل از routeها ثبت کن. تست 500 چه می‌شود؟", "a": "Express به‌جای handler ما از handler پیش‌فرض خودش استفاده می‌کند که HTML با stack trace (در development) برمی‌گرداند و تست شکل JSON را پیدا نمی‌کند." },
+    { "q": "چرا /status خطای دیتابیس را خودش می‌گیرد و به handler سراسری نمی‌سپارد؟", "a": "چون برای /status خرابی دیتابیس یک پاسخ معتبر است (healthy=false)، نه یک خطا. handler سراسری برای چیزی است که اصلاً انتظارش را نداشتیم." }
+  ],
+  "take": "Expected errors get a status code and a message I wrote; everything else becomes a 500 with a trace id, and the details stay in the log."
+}

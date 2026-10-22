@@ -1,0 +1,60 @@
+{
+  "_id": "l003",
+  "n": 3,
+  "tag": "backend",
+  "topics": ["dependency injection", "ports", "composition root"],
+  "en": "Dependency injection and the composition root",
+  "fa": "تزریق وابستگی: برنامه نمی‌داند دیتابیس واقعی کدام است",
+  "goal": [
+    "وابستگی‌ها را به‌صورت interface (port) تعریف کنی و پیاده‌سازی را از بیرون بدهی.",
+    "تفاوت DI دستی (پارامتر factory در Python و TypeScript) و container (ASP.NET و Spring) را ببینی.",
+    "یک جای واحد به نام composition root داشته باشی که تنها جایی است که پیاده‌سازی‌های واقعی را می‌شناسد."
+  ],
+  "story": "ledgerdash-adapter در Control Panel یک تابع createApp(queries) دارد. خود اپ نمی‌داند queries از SQL Server می‌خواند یا از یک شیء جعلی در تست. main.ts تنها جایی است که اتصال واقعی mssql را می‌سازد و به createApp می‌دهد. نتیجه: تست‌ها یک اپ Express واقعی را اجرا می‌کنند و فقط دیتابیس جعلی است. همین الگو را در چهار زبان پیاده می‌کنیم.",
+  "why": [
+    ["Q", "در C# که container داریم، چرا باز هم Build(queries, projects, tokens) پارامتر می‌گیرد؟"],
+    ["A", "تا تست بتواند بدون container سازی و بدون override کردن سرویس‌ها، پیاده‌سازی جعلی را مستقیم بدهد. Build آن‌ها را در container ثبت می‌کند و endpointها مثل همیشه از container می‌گیرند."],
+    ["Q", "Spring چطور؟ آنجا new نمی‌کنیم."],
+    ["A", "در Spring کنترلر از constructor وابستگی می‌گیرد و beanها در یک کلاس @Configuration ساخته می‌شوند. تست با profile جدا beanهای جعلی را ثبت می‌کند. شکلش فرق دارد، ایده یکی است."]
+  ],
+  "concepts": [
+    { "h": "Port یعنی آنچه اپ لازم دارد، نه آنچه دیتابیس دارد", "body": "StatusQueries فقط status() دارد و ProjectRepository فقط find و add. اپ به همین‌ها وابسته است. SQL Server، SQLite یا یک dictionary در حافظه هر سه می‌توانند این قرارداد را پیاده کنند." },
+    { "h": "DI دستی در برابر container", "body": "در Python و TypeScript وابستگی‌ها پارامتر factory هستند (create_app(queries, projects, tokens)). FastAPI یک سیستم Depends هم دارد، اما برای این اندازه لازم نیست. در ASP.NET و Spring یک container ساخت اشیاء و طول عمرشان را مدیریت می‌کند." },
+    { "h": "Composition root", "body": "main.py، main.ts، Program.cs و کلاس Real در PortfolioApp.java: تنها جایی که SQLite واقعی، secretها و تنظیمات خوانده می‌شوند. هیچ جای دیگری new SqliteProjects نمی‌زند." },
+    { "h": "Interface در Python", "body": "Python به‌جای interface از typing.Protocol استفاده می‌کند: هر کلاسی که متدهای لازم را داشته باشد قبول است، بدون اینکه چیزی را implement کند (structural typing). TypeScript هم همین‌طور است. C# و Java باید صریحاً implements بنویسند." }
+  ],
+  "compare": [
+    { "concept": "تعریف port", "csharp": "interface IProjectRepository", "typescript": "interface ProjectRepository", "python": "class ProjectRepository(Protocol)", "java": "interface ProjectRepository", "diff": "Python و TypeScript ساختاری‌اند: لازم نیست کلاس بگوید implements." },
+    { "concept": "گرفتن وابستگی", "csharp": "پارامتر endpoint یا primary constructor", "typescript": "پارامتر createApp", "python": "پارامتر create_app", "java": "constructor کنترلر", "diff": "C# می‌تواند وابستگی را مستقیم به پارامتر lambda بدهد؛ Spring فقط از constructor (یا field)." },
+    { "concept": "ثبت پیاده‌سازی", "csharp": "builder.Services.AddSingleton(projects)", "typescript": "createApp(queries, projects, tokens)", "python": "create_app(queries, projects, tokens)", "java": "@Bean ProjectRepository projects()", "diff": "در Python و TypeScript «container» همان فراخوانی تابع است." },
+    { "concept": "جایگزینی در تست", "csharp": "Build(fakes, b => b.WebHost.UseTestServer())", "typescript": "createApp(fakeQueries(), ...)", "python": "create_app(FakeQueries(), ...)", "java": "@ActiveProfiles(\"test\") + @TestConfiguration", "diff": "Spring به profile نیاز دارد تا beanهای واقعی (که secret می‌خواهند) ساخته نشوند." },
+    { "concept": "طول عمر", "csharp": "Singleton / Scoped / Transient", "typescript": "خودتان (ماژول = singleton)", "python": "خودتان؛ یا Depends در FastAPI", "java": "singleton پیش‌فرض؛ @Scope(\"prototype\")", "diff": "Scoped در ASP.NET یعنی یکی برای هر درخواست؛ DbContext باید Scoped باشد." }
+  ],
+  "code": [
+    { "group": "ports", "lang": "csharp", "title": "portها", "origin": "tested", "file": "backend/csharp/Portfolio/Models.cs", "region": "ports" },
+    { "group": "ports", "lang": "typescript", "title": "portها", "origin": "tested", "file": "backend/typescript/src/models.ts", "region": "ports" },
+    { "group": "ports", "lang": "python", "title": "portها", "origin": "tested", "file": "backend/python/portfolio/models.py", "region": "ports" },
+    { "group": "ports", "lang": "java", "title": "portها", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Ports.java", "region": "ports" },
+    { "group": "factory", "lang": "csharp", "title": "ساختن اپ با وابستگی‌های داده‌شده", "origin": "tested", "file": "backend/csharp/Portfolio/PortfolioApp.cs", "region": "factory" },
+    { "group": "factory", "lang": "typescript", "title": "ساختن اپ با وابستگی‌های داده‌شده", "origin": "tested", "file": "backend/typescript/src/app.ts", "region": "factory" },
+    { "group": "factory", "lang": "python", "title": "ساختن اپ با وابستگی‌های داده‌شده", "origin": "tested", "file": "backend/python/portfolio/app.py", "region": "factory" },
+    { "group": "factory", "lang": "java", "title": "ساختن اپ با وابستگی‌های داده‌شده", "origin": "tested", "file": "backend/java/src/main/java/portfolio/PortfolioApp.java", "region": "factory" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "new کردن دیتابیس داخل handler یا سرویس", "why": "تست مجبور است دیتابیس واقعی داشته باشد و هیچ جای دیگری نمی‌تواند پیاده‌سازی را عوض کند.", "fix": "وابستگی را از constructor یا پارامتر factory بگیر و فقط در composition root بساز." },
+    { "lang": "csharp", "mistake": "ثبت DbContext یا سرویسی که DbContext دارد به‌صورت Singleton", "why": "DbContext thread-safe نیست و بین درخواست‌ها مشترک می‌شود.", "fix": "Scoped (AddDbContext خودش Scoped ثبت می‌کند)." },
+    { "lang": "java", "mistake": "@Autowired روی field به‌جای constructor", "why": "کلاس بدون Spring قابل ساختن نیست و وابستگی‌ها پنهان می‌مانند؛ field می‌تواند null باشد.", "fix": "constructor injection با فیلدهای final." },
+    { "lang": "python", "mistake": "import کردن اتصال دیتابیس سطح ماژول در فایل app", "why": "صرفاً import کردن ماژول دیتابیس را باز می‌کند و تست نمی‌تواند آن را عوض کند.", "fix": "اتصال را در main.py بساز و به create_app بده." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.ts", "line": 48, "note": "createApp(queries): اپ با port داده‌شده ساخته می‌شود" },
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.spec.ts", "line": 24, "note": "fakeQueries: پیاده‌سازی جعلی همان port" },
+    { "project": "ClinicHub", "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs", "line": 18, "note": "primary constructor در C#: وابستگی‌ها از container" }
+  ],
+  "exercises": [
+    { "q": "یک پیاده‌سازی دوم از StatusQueries بنویس که همیشه یک عدد ثابت برگرداند، و آن را فقط در composition root عوض کن. چند فایل عوض شد؟", "a": "فقط یک فایل جدید (پیاده‌سازی) و composition root. app/route هیچ تغییری نمی‌کند؛ این نشانه‌ی درستی جداسازی است." },
+    { "q": "در Spring چرا کلاس Real با @Profile(\"!test\") علامت خورده؟ اگر آن را برداری چه می‌شود؟", "a": "Real در ساخته شدن Config.load(System.getenv()) را صدا می‌زند که بدون JWT_SECRET خطا می‌دهد. بدون profile، context تست بالا نمی‌آید؛ تازه beanهای تکراری هم با beanهای جعلی تداخل می‌کنند." },
+    { "q": "در C# یک سرویس Scoped را از یک Singleton بگیر. در Development چه خطایی می‌گیری و چرا؟", "a": "ASP.NET در Development scope validation دارد و خطای «Cannot consume scoped service from singleton» می‌دهد. Singleton عمر بیشتری دارد و سرویس Scoped را بعد از پایان درخواست نگه می‌دارد (captive dependency)." }
+  ],
+  "take": "My handlers depend on small interfaces; only the composition root knows the real database, so tests run the real app with fakes."
+}

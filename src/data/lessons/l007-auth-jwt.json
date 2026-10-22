@@ -1,0 +1,61 @@
+{
+  "_id": "l007",
+  "n": 7,
+  "tag": "backend",
+  "topics": ["jwt", "refresh token", "rbac"],
+  "en": "Authentication with JWT and roles",
+  "fa": "احراز هویت با JWT: توکن کوتاه، توکن تمدید، و نقش‌ها",
+  "goal": [
+    "دو توکن بسازی: access برای ۱۵ دقیقه و refresh برای ۷ روز، با دو secret جدا.",
+    "با TokenVersion امکان logout واقعی بدهی، بدون جدول توکن.",
+    "نقش‌ها را یک بار تعریف کنی و روی route اعمال کنی: guard در Nest، filter در C#، interceptor در Spring، dependency در FastAPI."
+  ],
+  "story": "core-api در Control Panel این طرح را دارد: access token پانزده دقیقه‌ای با typ: access، refresh token هفت‌روزه با secret جدا و typ: refresh و tv (TokenVersion). refresh هر بار کاربر را دوباره از دیتابیس می‌خواند، پس تغییر نقش یا حذف کاربر بلافاصله اثر دارد. logout فقط TokenVersion را یکی زیاد می‌کند و همه‌ی refresh tokenهای قبلی باطل می‌شوند. اپ اگر secret کوتاه یا تکراری باشد اصلاً بالا نمی‌آید.",
+  "why": [
+    ["Q", "چرا دو secret؟ typ را که چک می‌کنیم."],
+    ["A", "دفاع در عمق. اگر جایی چک typ فراموش شود، refresh token با secret دیگری امضا شده و اصلاً به‌عنوان access تأیید نمی‌شود. یک باگ کافی نیست؛ دو اشتباه لازم است."],
+    ["Q", "access token را چطور قبل از ۱۵ دقیقه باطل کنیم؟"],
+    ["A", "در این طرح نمی‌شود؛ هزینه‌ی stateless بودن همین است. برای همین کوتاه است. اگر لازم است، باید در هر درخواست چیزی را در دیتابیس چک کنید و دیگر stateless نیست."]
+  ],
+  "concepts": [
+    { "h": "JWT چیست", "body": "سه بخش base64: header، payload (claims)، signature. هر کسی payload را می‌تواند بخواند؛ فقط صاحب secret می‌تواند امضا بسازد. پس داده‌ی محرمانه در JWT نگذار و نقش را فقط از توکن امضاشده بخوان، نه از بدنه‌ی درخواست." },
+    { "h": "الگوریتم را تو تعیین کن", "body": "حمله‌ی کلاسیک: توکنی با alg: none یا با الگوریتم دیگری که کتابخانه را گول بزند. Python و TS: algorithms=['HS256']. C#: ValidAlgorithms. jjwt: verifyWith(SecretKey) فقط HMAC را قبول می‌کند." },
+    { "h": "TokenVersion", "body": "هر کاربر یک عدد دارد که در refresh token هم ذخیره می‌شود. logout یا تغییر رمز عدد را زیاد می‌کند. refresh با عدد قدیمی رد می‌شود. یک ستون، بدون جدول توکن." },
+    { "h": "نقش‌ها", "body": "Nest: @Roles('Admin') + RolesGuard که metadata را می‌خواند. Spring: annotation @RequireRole + HandlerInterceptor (همان ایده). C#: endpoint filter یا [Authorize(Roles = \"Admin\")] با JwtBearer. FastAPI: Depends(require_role(\"Admin\")). 401 یعنی «نمی‌دانم کیستی»، 403 یعنی «می‌دانم، ولی اجازه نداری»." },
+    { "h": "C#: MapInboundClaims", "body": "JwtSecurityTokenHandler به‌طور پیش‌فرض claim role را به URI طولانی ClaimTypes.Role تغییر نام می‌دهد. MapInboundClaims = false نام‌ها را همان‌طور نگه می‌دارد." }
+  ],
+  "compare": [
+    { "concept": "ساختن توکن", "csharp": "handler.WriteToken(new JwtSecurityToken(...))", "typescript": "jwt.sign(payload, secret, { expiresIn: '15m' })", "python": "jwt.encode(payload, secret, algorithm=\"HS256\")", "java": "Jwts.builder().claim(...).signWith(key).compact()", "diff": "در pyjwt خودتان exp را datetime می‌گذارید؛ jsonwebtoken رشته‌ای مثل '15m' می‌فهمد." },
+    { "concept": "تأیید و قفل الگوریتم", "csharp": "ValidAlgorithms = [HmacSha256]", "typescript": "jwt.verify(t, s, { algorithms: ['HS256'] })", "python": "jwt.decode(t, s, algorithms=[\"HS256\"])", "java": "Jwts.parser().verifyWith(key)", "diff": "pyjwt بدون algorithms خطا می‌دهد (خوب است)؛ jsonwebtoken بدون آن از header توکن پیروی می‌کند." },
+    { "concept": "اعمال نقش روی route", "csharp": ".AddEndpointFilter(RequireRole(\"Admin\"))", "typescript": "app.post(path, requireRole('Admin'), handler)", "python": "dependencies=[Depends(require_role(\"Admin\"))]", "java": "@RequireRole(\"Admin\") + HandlerInterceptor", "diff": "Express یک middleware در زنجیره است؛ Spring و Nest annotation/decorator را با reflection می‌خوانند." },
+    { "concept": "معادل استاندارد فریم‌ورک", "csharp": "[Authorize(Roles = \"Admin\")] + AddJwtBearer", "typescript": "passport-jwt / Nest JwtAuthGuard", "python": "fastapi.security.HTTPBearer", "java": "Spring Security oauth2ResourceServer", "diff": "در پروژه‌ی واقعی از این‌ها استفاده کنید؛ مثال‌ها دستی‌اند تا مکانیزم دیده شود." }
+  ],
+  "code": [
+    { "group": "tokens", "lang": "csharp", "title": "TokenService", "origin": "tested", "file": "backend/csharp/Portfolio/Tokens.cs", "region": "tokens" },
+    { "group": "tokens", "lang": "typescript", "title": "TokenService", "origin": "tested", "file": "backend/typescript/src/tokens.ts", "region": "tokens" },
+    { "group": "tokens", "lang": "python", "title": "TokenService", "origin": "tested", "file": "backend/python/portfolio/tokens.py", "region": "tokens" },
+    { "group": "tokens", "lang": "java", "title": "TokenService", "origin": "tested", "file": "backend/java/src/main/java/portfolio/TokenService.java", "region": "tokens" },
+    { "group": "roles", "lang": "csharp", "title": "نقش روی route", "origin": "tested", "file": "backend/csharp/Portfolio/PortfolioApp.cs", "region": "roles" },
+    { "group": "roles", "lang": "typescript", "title": "نقش روی route", "origin": "tested", "file": "backend/typescript/src/app.ts", "region": "roles" },
+    { "group": "roles", "lang": "python", "title": "نقش روی route", "origin": "tested", "file": "backend/python/portfolio/app.py", "region": "roles" },
+    { "group": "roles", "lang": "java", "title": "نقش روی route", "origin": "tested", "file": "backend/java/src/main/java/portfolio/RequireRole.java", "region": "roles" }
+  ],
+  "pitfalls": [
+    { "lang": "typescript", "mistake": "jwt.verify بدون algorithms", "why": "الگوریتم از header توکن خوانده می‌شود؛ پیکربندی اشتباه کلید می‌تواند به جعل منجر شود.", "fix": "{ algorithms: ['HS256'] }." },
+    { "lang": "all", "mistake": "یک secret برای access و refresh", "why": "refresh token هفت‌روزه به‌عنوان access token قبول می‌شود، اگر چک typ جایی جا بیفتد.", "fix": "دو secret متفاوت؛ اپ اگر برابر باشند بالا نیاید." },
+    { "lang": "all", "mistake": "secret پیش‌فرض در کد («changeme»)", "why": "secret در ریپوی عمومی دیده می‌شود و هر کسی توکن می‌سازد.", "fix": "بدون مقدار پیش‌فرض؛ اپ بدون secret حداقل ۳۲ کاراکتری بالا نیاید (درس Docker، پیکربندی)." },
+    { "lang": "csharp", "mistake": "خواندن نقش با FindFirst(\"role\") وقتی MapInboundClaims روشن است", "why": "claim به http://schemas.microsoft.com/.../role تغییر نام داده و null برمی‌گردد.", "fix": "MapInboundClaims = false یا ClaimTypes.Role." },
+    { "lang": "all", "mistake": "گرفتن نقش از بدنه یا query درخواست", "why": "کلاینت هر چه بخواهد می‌فرستد.", "fix": "نقش فقط از توکن امضاشده یا دیتابیس." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/core-api/src/auth/auth.service.ts", "line": 47, "note": "refresh: دو secret، typ و TokenVersion" },
+    { "project": "ControlPanel", "file": "services/core-api/src/auth/jwt-config.ts", "line": 24, "note": "secretها باید طولانی و متفاوت باشند" },
+    { "project": "ControlPanel", "file": "services/core-api/src/auth/roles.guard.ts", "line": 13, "note": "RolesGuard: نقش از JWT، نه از درخواست" }
+  ],
+  "exercises": [
+    { "q": "یک refresh token بساز، TokenVersion کاربر را زیاد کن و refresh را صدا بزن. چه پیامی می‌گیری؟ این کدام عملیات واقعی را شبیه‌سازی می‌کند؟", "a": "Refresh token has been revoked. این همان logout یا تغییر رمز است." },
+    { "q": "access token را در jwt.io باز کن. چه چیزی را می‌بینی و چه چیزی را نمی‌توانی تغییر بدهی؟", "a": "header و payload (sub، role، typ، exp) را می‌بینی. اگر role را عوض کنی امضا دیگر معتبر نیست و سرور 401 می‌دهد." },
+    { "q": "در نسخه‌ی C#، MapInboundClaims = false را بردار و تست Roles_are_checked را اجرا کن. چرا شکست می‌خورد؟", "a": "claim role به ClaimTypes.Role تغییر نام می‌دهد، FindFirst(\"role\") null برمی‌گرداند و admin هم 403 می‌گیرد." }
+  ],
+  "take": "Short access tokens, refresh tokens with their own secret and a token version for real logout, and roles read only from the signed token."
+}

@@ -1,0 +1,57 @@
+{
+  "_id": "l004",
+  "n": 4,
+  "tag": "backend",
+  "topics": ["sql", "parameters", "least privilege"],
+  "en": "Talking to a SQL database safely",
+  "fa": "کار با دیتابیس SQL: پارامتر، تراکنش، و کمترین دسترسی",
+  "goal": [
+    "در هر چهار زبان کوئری پارامتری بنویسی و ببینی چرا تلاش برای SQL injection به یک متن ساده تبدیل می‌شود.",
+    "منابع دیتابیس (connection، statement، reader) را درست ببندی: using، with، try-with-resources، free.",
+    "بفهمی چرا ledgerdash-adapter با لاگینی کار می‌کند که فقط viewها را می‌بیند."
+  ],
+  "story": "ledgerdash-adapter به دیتابیس LedgerDashboard وصل می‌شود، ولی با لاگین ledger_reader که هیچ جدولی را نمی‌بیند و فقط viewهای گزارش را می‌خواند. حتی اگر کسی راهی برای فرستادن SQL پیدا کند، چیزی برای خراب کردن ندارد. core-api هم هر مقداری را با .input('key', ...) می‌فرستد، نه با چسباندن رشته. در این درس مخزن پروژه‌ها را روی SQLite با همین دو اصل می‌سازیم.",
+  "why": [
+    ["Q", "اگر key را با رشته در SQL بچسبانم و قبلاً اعتبارسنجی کرده باشم، باز هم مشکل دارد؟"],
+    ["A", "بله. اعتبارسنجی یک لایه است، ولی پارامتر تنها چیزی است که تضمین می‌کند مقدار هرگز به‌عنوان SQL خوانده نشود. یک روز کسی قاعده‌ی اعتبارسنجی را شل می‌کند و آن روز injection برمی‌گردد."],
+    ["Q", "چرا لاگین فقط‌خواندنی، وقتی کد ما فقط SELECT می‌زند؟"],
+    ["A", "چون کد امروز را تضمین می‌کند، نه کد فردا یا باگ فردا را. دسترسی در دیتابیس مرز آخر است."]
+  ],
+  "concepts": [
+    { "h": "پارامتر یعنی مقدار جدا از متن SQL", "body": "با پارامتر، متن کوئری و مقدار جدا به درایور می‌روند. درایور (یا خود دیتابیس) مقدار را هرگز parse نمی‌کند. در تست هر چهار زبان، کلیدی مثل x'; DROP TABLE projects; -- به‌عنوان یک رشته‌ی عادی ذخیره و پیدا می‌شود." },
+    { "h": "نماد پارامتر در هر درایور", "body": "sqlite3 در Python و sql.js در TypeScript و JDBC از ? استفاده می‌کنند، Microsoft.Data.Sqlite از $name یا @name، mssql در Node از @name با .input()، و EF Core خودش پارامتر می‌سازد." },
+    { "h": "بستن منابع", "body": "connection و command و reader منابع غیر حافظه‌ای دارند. C#: using/await using. Java: try-with-resources. Python: with. sql.js: stmt.free()، چون حافظه‌ی WebAssembly را GC آزاد نمی‌کند." },
+    { "h": "تراکنش", "body": "Python: with conn: (commit در پایان، rollback در exception). C#: BeginTransaction و Commit؛ dispose بدون Commit یعنی rollback. Java: setAutoCommit(false)، commit، rollback. درس Outbox از این استفاده می‌کند." },
+    { "h": "کمترین دسترسی", "body": "لاگین برنامه فقط به چیزی دسترسی داشته باشد که لازم دارد: یک adapter گزارش فقط SELECT روی viewها. اسکریپت ساخت کاربر در خود ریپو باشد تا قابل بازبینی باشد." }
+  ],
+  "compare": [
+    { "concept": "کوئری پارامتری", "csharp": "cmd.Parameters.AddWithValue(\"$key\", key)", "typescript": "stmt.bind([key])", "python": "conn.execute(sql, (key,))", "java": "ps.setString(1, key)", "diff": "Python یک tuple می‌خواهد: (key,) با ویرگول، نه (key)." },
+    { "concept": "بستن منبع", "csharp": "await using var cmd = ...", "typescript": "try { ... } finally { stmt.free() }", "python": "with conn:", "java": "try (var ps = ...) { }", "diff": "with در sqlite3 پایتون تراکنش را می‌بندد، نه اتصال را." },
+    { "concept": "خواندن یک سطر", "csharp": "if (await reader.ReadAsync()) reader.GetString(0)", "typescript": "if (stmt.step()) stmt.get()", "python": "cur.fetchone()", "java": "if (rs.next()) rs.getString(1)", "diff": "JDBC از 1 شمارش می‌کند؛ بقیه از 0." },
+    { "concept": "خطای checked", "csharp": "ندارد", "typescript": "ندارد", "python": "ندارد", "java": "SQLException باید catch یا throws شود", "diff": "در Java یا throws می‌نویسی یا به unchecked تبدیل می‌کنی (IllegalStateException)." },
+    { "concept": "ORM معمول", "csharp": "EF Core / Dapper", "typescript": "Prisma / TypeORM / Knex", "python": "SQLAlchemy", "java": "JPA (Hibernate) / JdbcTemplate", "diff": "همه پارامتر می‌سازند؛ خطر injection وقتی برمی‌گردد که SQL خام را با رشته بسازید (FromSqlRaw، text())." }
+  ],
+  "code": [
+    { "group": "repo", "lang": "csharp", "title": "مخزن پروژه‌ها روی SQLite", "origin": "tested", "file": "backend/csharp/Portfolio/SqliteProjects.cs", "region": "repository" },
+    { "group": "repo", "lang": "typescript", "title": "مخزن پروژه‌ها روی SQLite", "origin": "tested", "file": "backend/typescript/src/db.ts", "region": "repository" },
+    { "group": "repo", "lang": "python", "title": "مخزن پروژه‌ها روی SQLite", "origin": "tested", "file": "backend/python/portfolio/db.py", "region": "repository" },
+    { "group": "repo", "lang": "java", "title": "مخزن پروژه‌ها روی SQLite", "origin": "tested", "file": "backend/java/src/main/java/portfolio/SqliteProjects.java", "region": "repository" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "ساختن SQL با f-string، template literal یا +", "why": "هر مقدار حاوی ' می‌تواند SQL را بشکند یا تغییر دهد (injection).", "fix": "همیشه پارامتر؛ حتی برای مقدارهایی که فکر می‌کنی امن‌اند." },
+    { "lang": "python", "mistake": "conn.execute(sql, (key))", "why": "(key) یک رشته است، نه tuple؛ درایور هر حرف را یک پارامتر حساب می‌کند و خطای تعداد پارامتر می‌دهد.", "fix": "(key,) با ویرگول." },
+    { "lang": "typescript", "mistake": "فراموش کردن stmt.free() در sql.js", "why": "statement حافظه‌ی WebAssembly نگه می‌دارد که GC آزادش نمی‌کند؛ نشت حافظه.", "fix": "try/finally با free()؛ یا db.exec/db.run برای کوئری‌های یک‌باره." },
+    { "lang": "csharp", "mistake": "FromSqlRaw($\"... {key}\") در EF Core", "why": "interpolation در FromSqlRaw رشته می‌سازد؛ injection.", "fix": "FromSql($\"... {key}\") یا FromSqlInterpolated که پارامتر می‌سازد." },
+    { "lang": "java", "mistake": "Statement.executeQuery با رشته‌ی ساخته‌شده", "why": "Statement پارامتر ندارد.", "fix": "PreparedStatement با ?." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/core-api/src/projects/projects.service.ts", "line": 55, "note": ".input('key', dto.key): پارامتر در mssql" },
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.ts", "line": 3, "note": "خواندن فقط از viewها با لاگین ledger_reader" }
+  ],
+  "exercises": [
+    { "q": "در نسخه‌ی Python، find را عمداً با f-string بنویس و تست parameters_keep_injection را اجرا کن. چه اتفاقی می‌افتد؟", "a": "کوئری با خطای syntax می‌شکند یا (بسته به مقدار) نتیجه‌ی اشتباه می‌دهد؛ تست شکست می‌خورد. با پارامتر برمی‌گردد به حالت سبز." },
+    { "q": "یک کاربر SQL Server بساز که فقط روی یک view مجوز SELECT داشته باشد. چه دستورهایی لازم است؟", "hint": "CREATE LOGIN، CREATE USER، GRANT SELECT ON dbo.vName TO ...", "a": "CREATE LOGIN ledger_reader WITH PASSWORD = '...'; CREATE USER ledger_reader FOR LOGIN ledger_reader; GRANT SELECT ON dbo.vFollowupsDue TO ledger_reader; بدون نقش db_datareader، تا جدول‌ها دیده نشوند." },
+    { "q": "در Java چرا SqliteProjects، SQLException را به IllegalStateException تبدیل می‌کند؟", "a": "interface ProjectRepository متدهایش throws ندارد و نباید جزئیات JDBC را به اپ نشت دهد. تبدیل به unchecked باعث می‌شود خطا به ErrorHandler برسد و 500 بدهد." }
+  ],
+  "take": "Every value goes in as a parameter, every resource is closed, and the app's database login can only read what it needs."
+}

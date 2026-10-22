@@ -1,0 +1,55 @@
+{
+  "_id": "l008",
+  "n": 8,
+  "tag": "backend",
+  "topics": ["testing", "integration tests", "fakes"],
+  "en": "Testing the real app with fake dependencies",
+  "fa": "تست: اپ واقعی، دیتابیس جعلی",
+  "goal": [
+    "تستی بنویسی که pipeline واقعی HTTP را اجرا کند (routing، اعتبارسنجی، error handler) و فقط دیتابیس را جعلی کند.",
+    "ابزار هر زبان را بشناسی: xUnit + TestServer، node:test + fetch، pytest + TestClient، JUnit + MockMvc.",
+    "تست‌هایی بنویسی که رفتار را چک می‌کنند، نه پیاده‌سازی را."
+  ],
+  "story": "app.spec.ts در ledgerdash-adapter یک اپ Express واقعی را روی یک پورت آزاد بالا می‌آورد و با fetch صدایش می‌زند. فقط LedgerQueries جعلی است. پس تست همان چیزی را می‌بیند که core-api می‌بیند: JSON، کد وضعیت، و اینکه خطای دیتابیس نشت نمی‌کند. همین سه تست در چهار زبان پیاده شده‌اند و در هر push اجرا می‌شوند.",
+  "why": [
+    ["Q", "چرا mock کتابخانه‌ای (Moq، Mockito) استفاده نکردیم؟"],
+    ["A", "یک کلاس جعلی کوچک که port را پیاده می‌کند خواناتر است و با عوض شدن جزئیات داخلی نمی‌شکند. mock کتابخانه‌ای وقتی مفید است که بخواهی چک کنی چه چیزی صدا زده شد، که اینجا مهم نیست."],
+    ["Q", "تست با سرور واقعی کند نیست؟"],
+    ["A", "TestServer در C# و MockMvc در Spring اصلاً پورت باز نمی‌کنند و در حافظه کار می‌کنند. Express روی پورت 0 در چند میلی‌ثانیه بالا می‌آید. کندی واقعی از دیتابیس واقعی است که جعلی شده."]
+  ],
+  "concepts": [
+    { "h": "هرم تست، ساده", "body": "تعداد زیادی تست سریع روی منطق خالص (backoff، تشخیص امضا)، تعدادی تست که اپ واقعی را با dependency جعلی اجرا می‌کنند (این درس)، و تعداد کمی تست روی زیرساخت واقعی (Mongo در CI)." },
+    { "h": "Fake در برابر Mock", "body": "Fake یک پیاده‌سازی واقعی ولی ساده است (InMemoryProjects). Mock یک شیء است که انتظار دارد فلان متد با فلان آرگومان صدا زده شود. Fake تست را به رفتار وصل می‌کند، Mock به پیاده‌سازی." },
+    { "h": "اجرای اپ در تست", "body": "C#: UseTestServer + GetTestClient. TS: listen(0) و fetch. Python: TestClient از Starlette (بدون پورت). Java: MockMvc (بدون پورت) با @SpringBootTest + @AutoConfigureMockMvc." },
+    { "h": "تست‌های مستقل", "body": "هر تست اپ خودش را می‌سازد (یا وضعیت را در BeforeEach ریست می‌کند). هیچ تستی نباید به ترتیب اجرا یا داده‌ی تست قبلی وابسته باشد." }
+  ],
+  "compare": [
+    { "concept": "فریم‌ورک تست", "csharp": "xUnit ([Fact])", "typescript": "node:test (describe/it)", "python": "pytest (def test_...)", "java": "JUnit 5 (@Test)", "diff": "pytest هیچ کلاس یا decorator لازم ندارد؛ هر تابع test_ یک تست است." },
+    { "concept": "assert", "csharp": "Assert.Equal(expected, actual)", "typescript": "assert.equal(actual, expected)", "python": "assert actual == expected", "java": "assertThat(actual).isEqualTo(expected)", "diff": "ترتیب expected/actual در xUnit و node:test برعکس است." },
+    { "concept": "اجرای اپ", "csharp": "UseTestServer() + GetTestClient()", "typescript": "createApp(...).listen(0)", "python": "TestClient(app)", "java": "@AutoConfigureMockMvc + MockMvc", "diff": "فقط نسخه‌ی TS پورت واقعی باز می‌کند." },
+    { "concept": "تست exception", "csharp": "Assert.Throws<T>(() => ...)", "typescript": "assert.throws(() => ..., Type)", "python": "with pytest.raises(T):", "java": "assertThatThrownBy(() -> ...).isInstanceOf(T.class)", "diff": "Python با context manager، بقیه با lambda." },
+    { "concept": "skip شرطی", "csharp": "return زودهنگام / Skip", "typescript": "describe(name, { skip: ... })", "python": "@pytest.mark.skipif(...)", "java": "assumeTrue(...)", "diff": "تست Mongo بدون MONGO_URL اجرا نمی‌شود؛ در CI سرویس mongo دارد." }
+  ],
+  "code": [
+    { "group": "test", "lang": "csharp", "title": "سه تست /status", "origin": "tested", "file": "backend/csharp/Portfolio.Tests/AppTests.cs", "region": "test" },
+    { "group": "test", "lang": "typescript", "title": "سه تست /status", "origin": "tested", "file": "backend/typescript/test/app.test.ts", "region": "test" },
+    { "group": "test", "lang": "python", "title": "سه تست /status", "origin": "tested", "file": "backend/python/tests/test_app.py", "region": "test" },
+    { "group": "test", "lang": "java", "title": "سه تست /status", "origin": "tested", "file": "backend/java/src/test/java/portfolio/AppTest.java", "region": "test" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "تست‌هایی که فقط چک می‌کنند متدی صدا زده شد", "why": "با هر refactor می‌شکنند، حتی وقتی رفتار عوض نشده.", "fix": "خروجی را چک کن: کد وضعیت، JSON، داده‌ی ذخیره‌شده." },
+    { "lang": "java", "mistake": "@SpringBootTest بدون جدا کردن beanهای واقعی", "why": "context تست سعی می‌کند دیتابیس و secret واقعی را بسازد و بالا نمی‌آید.", "fix": "profile تست، یا @WebMvcTest با @MockitoBean." },
+    { "lang": "typescript", "mistake": "بستن نکردن server در تست", "why": "پروسه‌ی تست تمام نمی‌شود یا پورت‌ها پر می‌شوند.", "fix": "try/finally با server.close()." },
+    { "lang": "python", "mistake": "TestClient(app) با raise_server_exceptions پیش‌فرض برای تست 500", "why": "TestClient به‌جای پاسخ 500، خود exception را در تست می‌اندازد.", "fix": "raise_server_exceptions=False وقتی پاسخ 500 را تست می‌کنی." }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "services/adapters/ledgerdash-adapter/src/app.spec.ts", "line": 6, "note": "اپ Express واقعی روی پورت آزاد؛ فقط دیتابیس جعلی" },
+    { "project": "ClinicHub", "file": "tests/ClinicHub.Tests/EncounterTests.cs", "line": 177, "note": "تست هم‌زمانی با Task.WhenAll" }
+  ],
+  "exercises": [
+    { "q": "یک تست چهارم بنویس: وقتی metrics.sent برابر 1 است، summary باید «1 sent» باشد. در کدام زبان سریع‌تر نوشتی و چرا؟", "a": "هر جوابی درست است؛ نکته این است که در هر زبان فقط داده‌ی جعلی عوض می‌شود و اپ دست نمی‌خورد." },
+    { "q": "در Python raise_server_exceptions=False را از make() بردار. کدام تست شکست می‌خورد و چرا؟", "a": "test_unexpected_error_is_500_without_details؛ TestClient به‌جای پاسخ 500 خود RuntimeError را بالا می‌اندازد." },
+    { "q": "تمام تست‌های چهار زبان را اجرا کن. دستورها چیست؟", "a": "C#: dotnet test. TS: npm test. Python: pytest. Java: mvn test (یا در Docker: docker run ... maven mvn test)." }
+  ],
+  "take": "I test the real HTTP pipeline with fake ports, so tests check behaviour — status, JSON, no leaks — and survive refactoring."
+}

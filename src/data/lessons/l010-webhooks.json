@@ -1,0 +1,59 @@
+{
+  "_id": "l010",
+  "n": 10,
+  "tag": "backend",
+  "topics": ["webhooks", "hmac", "raw body", "replay"],
+  "en": "Receiving webhooks safely",
+  "fa": "دریافت امن webhook: بدنه‌ی خام، امضا، تکرار",
+  "goal": [
+    "امضای HMAC یک webhook را روی بدنه‌ی خام بررسی کنی، با مقایسه‌ی زمان‌ثابت.",
+    "timestampهای قدیمی را رد کنی تا پیام ضبط‌شده دوباره قابل استفاده نباشد.",
+    "یک event را فقط یک بار پردازش کنی، حتی وقتی provider آن را دوباره می‌فرستد."
+  ],
+  "story": "در ReBiomed، مسیر /api/payment/webhook در app.ts قبل از express.json() ثبت شده، با این توضیح: «Stripe signs the raw request body». اگر JSON اول parse شود و بعد دوباره رشته شود، فاصله‌ها و ترتیب کلیدها عوض می‌شوند و امضا دیگر نمی‌خواند. verify هم دو secret را امتحان می‌کند، چون دو endpoint در Stripe (پرداخت و Connect) هر کدام secret خودشان را دارند. مثال‌های ما همان طرح Stripe را (t=…,v1=HMAC) بدون SDK پیاده می‌کنند تا مکانیزم دیده شود.",
+  "why": [
+    ["Q", "چرا مقایسه‌ی رشته‌ی عادی (==) برای امضا کافی نیست؟"],
+    ["A", "== در اولین کاراکتر متفاوت متوقف می‌شود. با اندازه‌گیری زمان پاسخ، مهاجم می‌تواند امضا را کاراکتر به کاراکتر حدس بزند. مقایسه‌ی زمان‌ثابت همیشه همه‌ی بایت‌ها را می‌خواند."],
+    ["Q", "امضا که درست است، timestamp دیگر چه کاری می‌کند؟"],
+    ["A", "یک پیام درست و امضاشده را می‌شود ضبط کرد و یک ماه بعد دوباره فرستاد. timestamp داخل چیزی است که امضا شده، پس قابل تغییر نیست، و بیش از ۵ دقیقه اختلاف یعنی رد."]
+  ],
+  "concepts": [
+    { "h": "بدنه‌ی خام", "body": "امضا روی بایت‌هایی است که provider فرستاده. Express: express.raw قبل از express.json. ASP.NET: Request.Body را مستقیم بخوان. FastAPI: await request.body(). Spring: @RequestBody byte[]." },
+    { "h": "HMAC", "body": "HMAC-SHA256(secret, \"<timestamp>.<body>\"). هر کسی که secret را دارد می‌تواند امضا بسازد و هیچ کس دیگری نمی‌تواند. secret را هرگز در کد یا لاگ نگذار." },
+    { "h": "مقایسه‌ی زمان‌ثابت", "body": "Python: hmac.compare_digest. Node: crypto.timingSafeEqual (که با طول متفاوت throw می‌کند، پس اول طول را چک کن). C#: CryptographicOperations.FixedTimeEquals. Java: MessageDigest.isEqual." },
+    { "h": "یک بار پردازش", "body": "provider هر بار که پاسخ 2xx سریع نگیرد دوباره می‌فرستد. id رویداد را نگه دار و تکراری را با 200 جواب بده (نه خطا، وگرنه باز می‌فرستد). در مثال یک set در حافظه است؛ در تولید یک جدول با کلید یکتا یا آپدیت شرطی درس قبل." }
+  ],
+  "compare": [
+    { "concept": "خواندن بدنه‌ی خام", "csharp": "await request.Body.CopyToAsync(buffer)", "typescript": "express.raw({ type: 'application/json' })", "python": "await request.body()", "java": "@RequestBody byte[] body", "diff": "در Express اگر express.json() زودتر ثبت شده باشد، بدنه‌ی خام دیگر در دسترس نیست." },
+    { "concept": "HMAC-SHA256", "csharp": "HMACSHA256.HashData(key, data)", "typescript": "createHmac('sha256', secret).update(...).digest('hex')", "python": "hmac.new(key, data, hashlib.sha256).hexdigest()", "java": "Mac.getInstance(\"HmacSHA256\")", "diff": "C# و Python یک فراخوانی؛ Java سه قدم (getInstance، init، doFinal)." },
+    { "concept": "مقایسه‌ی زمان‌ثابت", "csharp": "CryptographicOperations.FixedTimeEquals(a, b)", "typescript": "timingSafeEqual(a, b)", "python": "hmac.compare_digest(a, b)", "java": "MessageDigest.isEqual(a, b)", "diff": "timingSafeEqual در Node با طول نابرابر exception می‌دهد." },
+    { "concept": "SDK رسمی Stripe", "csharp": "EventUtility.ConstructEvent(json, sig, secret)", "typescript": "stripe.webhooks.constructEvent(body, sig, secret)", "python": "stripe.Webhook.construct_event(body, sig, secret)", "java": "Webhook.constructEvent(payload, sig, secret)", "diff": "در پروژه‌ی واقعی SDK را صدا بزن؛ همان کار مثال‌ها را می‌کند." }
+  ],
+  "code": [
+    { "group": "verify", "lang": "csharp", "title": "بررسی امضا", "origin": "tested", "file": "backend/csharp/Portfolio/Webhook.cs", "region": "verify" },
+    { "group": "verify", "lang": "typescript", "title": "بررسی امضا", "origin": "tested", "file": "backend/typescript/src/webhook.ts", "region": "verify" },
+    { "group": "verify", "lang": "python", "title": "بررسی امضا", "origin": "tested", "file": "backend/python/portfolio/webhook.py", "region": "verify" },
+    { "group": "verify", "lang": "java", "title": "بررسی امضا", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Webhook.java", "region": "verify" },
+    { "group": "route", "lang": "csharp", "title": "endpoint: بدنه‌ی خام و یک بار پردازش", "origin": "tested", "file": "backend/csharp/Portfolio/Webhook.cs", "region": "route" },
+    { "group": "route", "lang": "typescript", "title": "endpoint: بدنه‌ی خام و یک بار پردازش", "origin": "real", "code": "// ReBiomed app.ts: Stripe signs the raw request body, so the webhook must be mounted before express.json().\napp.use('/api/payment/webhook', webhookRoutes);\n\n// routes/webhook.ts\nrouter.post('/', express.raw({ type: 'application/json' }), async (req: Request, res: Response) => {\n  if (!keys.stripeWebhookSecret && !keys.stripeConnectWebhookSecret) {\n    return res.status(503).json({ msg: 'Webhook secret not configured' });\n  }\n\n  let event: Stripe.Event;\n  try {\n    event = verify(req.body, req.header('stripe-signature') ?? '');\n  } catch (err) {\n    return res.status(400).json({ msg: `Webhook signature verification failed: ${(err as Error).message}` });\n  }\n\n  try {\n    if (event.type === 'payment_intent.succeeded') {\n      const pi = event.data.object;\n      if (pi.metadata.orderId) await finalizeOrder(pi.metadata.orderId, pi, refund);\n    } else if (event.type === 'payment_intent.payment_failed') {\n      await markOrderFailed(event.data.object.id);\n    }\n    res.json({ received: true });\n  } catch (err) {\n    console.error((err as Error).message);\n    res.status(500).json({ msg: 'Webhook handling failed' });\n  }\n});" },
+    { "group": "route", "lang": "python", "title": "endpoint: بدنه‌ی خام و یک بار پردازش", "origin": "tested", "file": "backend/python/portfolio/webhook.py", "region": "route" },
+    { "group": "route", "lang": "java", "title": "endpoint: بدنه‌ی خام و یک بار پردازش", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Webhook.java", "region": "route" }
+  ],
+  "pitfalls": [
+    { "lang": "typescript", "mistake": "ثبت express.json() قبل از مسیر webhook", "why": "بدنه parse شده و دیگر بایت‌های اصلی نیست؛ امضا هرگز نمی‌خواند.", "fix": "مسیر webhook را با express.raw قبل از express.json ثبت کن." },
+    { "lang": "all", "mistake": "مقایسه‌ی امضا با == یا equals", "why": "زمان پاسخ اطلاعات می‌دهد (timing attack).", "fix": "تابع مقایسه‌ی زمان‌ثابت زبان." },
+    { "lang": "all", "mistake": "برگرداندن 500 برای event تکراری", "why": "provider دوباره و دوباره می‌فرستد.", "fix": "200 با duplicate: true." },
+    { "lang": "all", "mistake": "کار سنگین قبل از پاسخ دادن", "why": "provider بعد از چند ثانیه timeout می‌کند و دوباره می‌فرستد.", "fix": "ذخیره کن، سریع 200 بده، پردازش را در پس‌زمینه انجام بده (مثل outbox)." }
+  ],
+  "refs": [
+    { "project": "mern-animation-project", "file": "app.ts", "line": 31, "note": "ReBiomed: webhook قبل از express.json() ثبت می‌شود" },
+    { "project": "mern-animation-project", "file": "routes/webhook.ts", "line": 18, "note": "verify با دو secret (پرداخت و Connect)" },
+    { "project": "mern-animation-project", "file": "routes/webhook.ts", "line": 35, "note": "express.raw و بررسی امضا" }
+  ],
+  "exercises": [
+    { "q": "در تست webhook، بدنه را بعد از امضا فقط با اضافه کردن یک فاصله تغییر بده. نتیجه؟", "a": "400؛ HMAC روی بایت‌هاست و یک فاصله هم امضا را عوض می‌کند. به همین دلیل بدنه باید خام بماند." },
+    { "q": "tolerance را از 300 به 0 تغییر بده و تست valid را اجرا کن. چرا هنوز پاس می‌شود؟", "a": "چون clock در تست ثابت است (1_000_000) و timestamp هم همان است. در تولید با tolerance صفر، تأخیر شبکه هر پیامی را رد می‌کند." },
+    { "q": "set حافظه‌ای seen را با یک جدول SQL جایگزین کن. چه قیدی روی جدول لازم است و چرا؟", "a": "PRIMARY KEY یا UNIQUE روی event_id. INSERT دوم با خطای کلید تکراری شکست می‌خورد و همان نشان «تکراری» است، حتی بین چند نمونه از سرور." }
+  ],
+  "take": "I verify the HMAC over the raw body with a constant-time compare, reject old timestamps, and handle each event id once."
+}

@@ -1,0 +1,60 @@
+{
+  "_id": "l011",
+  "n": 11,
+  "tag": "backend",
+  "topics": ["outbox", "retry", "backoff", "transactions"],
+  "en": "The outbox pattern",
+  "fa": "الگوی Outbox: پیام با داده ذخیره می‌شود، بعداً فرستاده می‌شود",
+  "goal": [
+    "سفارش و پیامش را در یک تراکنش ذخیره کنی تا هیچ‌وقت یکی بدون دیگری نباشد.",
+    "یک dispatcher بنویسی که پیام‌های آماده را بفرستد و در خطا با فاصله‌ی رو به رشد دوباره امتحان کند.",
+    "بدانی کی بعد از چند تلاش باید دست کشید و وضعیت را شکست‌خورده نشان داد."
+  ],
+  "story": "ClinicHub وقتی سفارش آزمایش یا رادیولوژی ثبت می‌کند، پیام FHIR آن را در جدول Outbox همان دیتابیس کلینیک می‌گذارد و هر دو با هم commit می‌شوند. OutboxWorker هر چند ثانیه پیام‌های آماده را به LabFlow یا ClinicReport می‌فرستد. اگر طرف مقابل خاموش باشد، پیام می‌ماند و بعد از ۱۰، ۲۰، ۴۰ ثانیه… تا ۳۰ دقیقه دوباره امتحان می‌شود. بعد از ۱۲ تلاش سفارش Failed می‌شود. این درس همان طرح را با SQLite در چهار زبان نشان می‌دهد.",
+  "why": [
+    ["Q", "چرا پیام را همان لحظه‌ی ثبت سفارش با HTTP نفرستیم؟"],
+    ["A", "دو حالت بد پیش می‌آید: سفارش ذخیره شد ولی HTTP شکست خورد (پیام گم شد)، یا HTTP رفت ولی ذخیره شکست خورد (طرف مقابل سفارشی دارد که ما نداریم). با outbox هر دو در یک تراکنش‌اند."],
+    ["Q", "طرف مقابل ممکن است پیام را دو بار بگیرد؟"],
+    ["A", "بله؛ اگر ارسال موفق باشد ولی ثبت sent قبل از crash انجام نشود. outbox «حداقل یک بار» تحویل می‌دهد، پس گیرنده باید idempotent باشد (درس ۹ و ۱۰)."]
+  ],
+  "concepts": [
+    { "h": "یک تراکنش، دو سطر", "body": "INSERT سفارش و INSERT پیام در یک تراکنش. اگر هر کدام شکست بخورد، هیچ کدام نمی‌ماند. تست این را با یک id تکراری نشان می‌دهد: تعداد پیام‌ها ۱ می‌ماند." },
+    { "h": "Dispatcher", "body": "پیام‌هایی را می‌خواند که sent ندارند، تلاششان کمتر از سقف است، و زمان تلاش بعدی‌شان رسیده. هر پیام را می‌فرستد؛ موفق → sent = now؛ ناموفق → attempts++ و next_attempt = now + backoff." },
+    { "h": "Exponential backoff با سقف", "body": "10 × 2^(n-1) ثانیه: 10، 20، 40، 80… تا حداکثر ۳۰ دقیقه. طرف مقابلِ در حال ریکاوری زیر بار retryهای پشت سر هم نمی‌ماند." },
+    { "h": "زمان را تزریق کن", "body": "dispatch پارامتر now می‌گیرد، به‌جای اینکه خودش ساعت را بخواند. تست می‌تواند بگوید «الان ثانیه‌ی 10 است» بدون اینکه صبر کند. ClinicHub همین کار را با TimeProvider انجام می‌دهد." },
+    { "h": "چه کسی dispatch را صدا می‌زند", "body": "همان کارگر پس‌زمینه‌ی درس ۱: BackgroundService، @Scheduled، یا حلقه‌ی async. یک نمونه کافی است؛ با چند نمونه باید قفل یا SELECT ... FOR UPDATE SKIP LOCKED داشت تا یک پیام دو بار برداشته نشود." }
+  ],
+  "compare": [
+    { "concept": "تراکنش", "csharp": "using var tx = conn.BeginTransaction(); ... tx.Commit();", "typescript": "db.run('BEGIN') ... 'COMMIT' / 'ROLLBACK'", "python": "with conn:", "java": "setAutoCommit(false); commit(); rollback();", "diff": "C# بدون Commit در Dispose خودش rollback می‌کند؛ sql.js هیچ کمکی ندارد." },
+    { "concept": "backoff", "csharp": "Math.Min(10 * Math.Pow(2, n - 1), 1800)", "typescript": "Math.min(10 * 2 ** (n - 1), 1800)", "python": "min(10 * 2 ** (n - 1), 1800)", "java": "Math.min(10 * Math.pow(2, n - 1), 1800)", "diff": "Python و TS عملگر توان (**) دارند؛ C# و Java تابع Pow." },
+    { "concept": "تزریق زمان", "csharp": "TimeProvider (در ClinicHub) / پارامتر now", "typescript": "پارامتر now", "python": "پارامتر now", "java": "java.time.Clock / پارامتر now", "diff": ".NET 8 به بعد TimeProvider دارد و FakeTimeProvider برای تست." },
+    { "concept": "کتابخانه‌ی آماده", "csharp": "MassTransit / Wolverine outbox", "typescript": "—", "python": "—", "java": "Spring Modulith event publication / Debezium", "diff": "برای یک سرویس، جدول خودتان کافی و روشن‌تر است." }
+  ],
+  "code": [
+    { "group": "save", "lang": "csharp", "title": "ذخیره‌ی سفارش و پیام با هم", "origin": "tested", "file": "backend/csharp/Portfolio/Outbox.cs", "region": "save" },
+    { "group": "save", "lang": "typescript", "title": "ذخیره‌ی سفارش و پیام با هم", "origin": "tested", "file": "backend/typescript/src/outbox.ts", "region": "save" },
+    { "group": "save", "lang": "python", "title": "ذخیره‌ی سفارش و پیام با هم", "origin": "tested", "file": "backend/python/portfolio/outbox.py", "region": "save" },
+    { "group": "save", "lang": "java", "title": "ذخیره‌ی سفارش و پیام با هم", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Outbox.java", "region": "save" },
+    { "group": "dispatch", "lang": "csharp", "title": "ارسال با backoff", "origin": "tested", "file": "backend/csharp/Portfolio/Outbox.cs", "region": "dispatch" },
+    { "group": "dispatch", "lang": "typescript", "title": "ارسال با backoff", "origin": "tested", "file": "backend/typescript/src/outbox.ts", "region": "dispatch" },
+    { "group": "dispatch", "lang": "python", "title": "ارسال با backoff", "origin": "tested", "file": "backend/python/portfolio/outbox.py", "region": "dispatch" },
+    { "group": "dispatch", "lang": "java", "title": "ارسال با backoff", "origin": "tested", "file": "backend/java/src/main/java/portfolio/Outbox.java", "region": "dispatch" }
+  ],
+  "pitfalls": [
+    { "lang": "all", "mistake": "ذخیره در دیتابیس و بعد ارسال HTTP در همان درخواست، بدون outbox", "why": "اگر HTTP شکست بخورد پیام گم می‌شود؛ اگر بعد از HTTP ذخیره شکست بخورد، دو سیستم ناهمگام می‌شوند.", "fix": "پیام را در همان تراکنش در جدول outbox بگذار." },
+    { "lang": "all", "mistake": "retry فوری و بی‌پایان", "why": "سرویسی که تازه بالا آمده زیر سیل retry دوباره می‌افتد؛ پیام خراب تا ابد صف را پر می‌کند.", "fix": "backoff نمایی با سقف و حداکثر تعداد تلاش." },
+    { "lang": "all", "mistake": "گیرنده‌ای که تکرار را تحمل نمی‌کند", "why": "outbox حداقل یک بار تحویل می‌دهد، نه دقیقاً یک بار.", "fix": "گیرنده با id پیام idempotent باشد." },
+    { "lang": "java", "mistake": "فراموش کردن setAutoCommit(true) بعد از تراکنش", "why": "اتصال بعدی‌ها در حالت دستی می‌ماند و تغییرات commit نمی‌شوند.", "fix": "finally با setAutoCommit(true)، یا TransactionTemplate در Spring." }
+  ],
+  "refs": [
+    { "project": "ClinicHub", "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs", "line": 95, "note": "پیام outbox همراه سفارش در یک SaveChanges" },
+    { "project": "ClinicHub", "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs", "line": 25, "note": "DispatchAsync: پیام‌های آماده، تلاش، backoff" },
+    { "project": "ClinicHub", "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs", "line": 22, "note": "MaxAttempts = 12" }
+  ],
+  "exercises": [
+    { "q": "تست retry را گام به گام دنبال کن: بعد از تلاش اول، دوم و سوم ناموفق، next_attempt چند است؟", "a": "تلاش 1 در 0 → 10. تلاش 2 در 10 → 30. تلاش 3 در 30 → 70." },
+    { "q": "dispatch را طوری تغییر بده که بعد از MAX_ATTEMPTS سفارش را Failed علامت بزند. کجا و در چه تراکنشی؟", "a": "در شاخه‌ی خطا: اگر attempts == MAX_ATTEMPTS، در همان تراکنشِ آپدیت پیام، وضعیت سفارش را Failed کن. ClinicHub همین کار را می‌کند." },
+    { "q": "اگر دو نمونه از سرویس هم‌زمان dispatch را اجرا کنند چه می‌شود؟ یک راه حل در SQL Server بگو.", "a": "هر دو همان پیام‌ها را برمی‌دارند و دو بار می‌فرستند. راه حل: SELECT TOP 20 ... WITH (UPDLOCK, READPAST)، یا آپدیت شرطی که پیام را به نام یک نمونه «رزرو» کند." }
+  ],
+  "take": "The message is saved in the same transaction as the data and delivered later with capped exponential backoff, so a down receiver never loses it."
+}
