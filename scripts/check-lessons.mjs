@@ -26,7 +26,7 @@ for (const f of readdirSync(dir).filter((x) => /^[a-z]\d+.*\.json$/.test(x))) {
   const groups = {}
   for (const s of l.code ?? []) {
     ;(groups[s.group] ??= []).push(s.lang)
-    if (!langs.includes(s.lang)) at(`code group "${s.group}" has a ${s.lang} tab the lesson does not list`)
+    if (s.lang !== 'all' && !langs.includes(s.lang)) at(`code group "${s.group}" has a ${s.lang} tab the lesson does not list`)
     if (!s.code && !s.file) at(`code "${s.group}/${s.lang}" has neither code nor file`)
     if (s.file) {
       const file = path.join(root, 'examples', s.file)
@@ -36,7 +36,8 @@ for (const f of readdirSync(dir).filter((x) => /^[a-z]\d+.*\.json$/.test(x))) {
     }
   }
   for (const [g, have] of Object.entries(groups))
-    for (const lang of langs) if (!have.includes(lang)) at(`code group "${g}" has no ${lang}`)
+    if (!have.includes('all'))
+      for (const lang of langs) if (!have.includes(lang)) at(`code group "${g}" has no ${lang}`)
   for (const r of l.compare ?? []) for (const lang of langs) if (!r[lang]) at(`compare "${r.concept}" has no ${lang}`)
 
   if (existsSync(refsRoot))

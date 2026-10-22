@@ -1,0 +1,165 @@
+{
+  "_id": "d002",
+  "n": 2,
+  "tag": "docker",
+  "topics": [
+    "docker compose",
+    "networks",
+    "healthchecks",
+    "volumes"
+  ],
+  "en": "Running several services with Docker Compose",
+  "fa": "اجرای چند سرویس با Docker Compose: شبکه‌ی داخلی، ترتیب، داده‌ی ماندگار",
+  "goal": [
+    "چهار سرویس و یک MongoDB را با یک فایل compose بالا بیاوری و منتظر healthy شدن همه بمانی.",
+    "دیتابیس را فقط روی یک شبکه‌ی internal بگذاری تا از بیرون در دسترس نباشد.",
+    "با depends_on و condition: service_healthy ترتیب درست را تضمین کنی و داده را در volume نگه داری."
+  ],
+  "story": "compose.apps.yml در Control Panel سرویس rebiomed-mongo را روی شبکه‌ای می‌گذارد که فقط API ReBiomed به آن وصل است. Mongo هیچ پورتی روی میزبان باز نمی‌کند و API با depends_on: condition: service_healthy منتظر آن می‌ماند. compose درس ما همین الگو را برای چهار سرویس examples پیاده می‌کند. با docker compose up --build --wait همه build می‌شوند و دستور تا healthy شدن همه برمی‌گردد. ما این را اجرا کرده‌ایم و /status هر چهار سرویس روی پورت‌های 8081 تا 8084 جواب داد.",
+  "why": [
+    [
+      "Q",
+      "depends_on بدون condition کافی نیست؟"
+    ],
+    [
+      "A",
+      "depends_on ساده فقط صبر می‌کند تا کانتینر شروع شود، نه تا دیتابیس آماده‌ی پذیرش اتصال باشد. Mongo یا SQL Server چند ثانیه بعد از شروع آماده می‌شوند. condition: service_healthy منتظر healthcheck می‌ماند."
+    ],
+    [
+      "Q",
+      "اگر پورت Mongo را باز نکنم، خودم چطور به آن وصل شوم؟"
+    ],
+    [
+      "A",
+      "docker compose exec mongo mongosh. برای توسعه‌ی محلی می‌شود یک فایل compose.override.yml با ports داشت که روی سرور استفاده نمی‌شود."
+    ]
+  ],
+  "concepts": [
+    {
+      "h": "شبکه‌ها",
+      "body": "سرویس‌های روی یک شبکه همدیگر را با نام سرویس پیدا می‌کنند (mongodb://mongo:27017). شبکه‌ی internal: true هیچ مسیری به بیرون ندارد و چیزی روی آن publish نمی‌شود. python روی هر دو شبکه است؛ بقیه فقط روی public."
+    },
+    {
+      "h": "ports و expose",
+      "body": "ports: [\"8081:8080\"] پورت 8080 کانتینر را روی 8081 میزبان باز می‌کند. سرویسی که ports ندارد فقط از داخل شبکه‌های خودش در دسترس است. دیتابیس معمولاً نباید ports داشته باشد."
+    },
+    {
+      "h": "volume",
+      "body": "پوشه‌ی /data هر سرویس و /data/db مونگو در volumeهای نام‌دار است و با down یا rebuild پاک نمی‌شود. فقط down -v آن‌ها را پاک می‌کند."
+    },
+    {
+      "h": "--wait",
+      "body": "docker compose up --wait تا وقتی همه‌ی سرویس‌ها running و healthy شوند برمی‌گردد و اگر یکی unhealthy شود با خطا تمام می‌شود. برای CI و اسکریپت‌ها عالی است."
+    },
+    {
+      "h": "یک فایل، چهار زبان",
+      "body": "compose به زبان سرویس اهمیت نمی‌دهد. هر سرویس build: پوشه‌ی خودش را دارد، با Dockerfile درس قبل. این دقیقاً همان الگوی adapterهاست: core-api فقط HTTP می‌بیند."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "build سرویس",
+      "csharp": "build: ../backend/csharp",
+      "typescript": "build: ../backend/typescript",
+      "python": "build: ../backend/python",
+      "java": "build: ../backend/java",
+      "diff": "همه یکسان؛ تفاوت در Dockerfile هر پوشه است."
+    },
+    {
+      "concept": "پورت میزبان",
+      "csharp": "8083:8080",
+      "typescript": "8082:8080",
+      "python": "8081:8080",
+      "java": "8084:8080",
+      "diff": "داخل کانتینر همه روی 8080 گوش می‌دهند؛ .NET با ASPNETCORE_HTTP_PORTS، Spring با SERVER_PORT، uvicorn با --port، Node با PORT."
+    },
+    {
+      "concept": "داده‌ی ماندگار",
+      "csharp": "csharp-data:/data",
+      "typescript": "ندارد (sql.js در حافظه)",
+      "python": "python-data:/data",
+      "java": "java-data:/data",
+      "diff": "sql.js دیتابیس را در حافظه نگه می‌دارد؛ برای ماندگاری باید آن را export و در فایل ذخیره کرد."
+    },
+    {
+      "concept": "زمان آماده شدن",
+      "csharp": "چند ثانیه",
+      "typescript": "کمتر از یک ثانیه",
+      "python": "حدود یک ثانیه",
+      "java": "۱۰ تا ۲۰ ثانیه (start-period: 30s)",
+      "diff": "Spring Boot و JVM کندتر بالا می‌آیند؛ start-period جلوی unhealthy شدن زودهنگام را می‌گیرد."
+    }
+  ],
+  "code": [
+    {
+      "group": "compose",
+      "lang": "all",
+      "title": "compose.yml: چهار سرویس و یک MongoDB داخلی",
+      "origin": "tested",
+      "file": "docker/compose.yml",
+      "region": "services"
+    },
+    {
+      "group": "real",
+      "lang": "all",
+      "title": "همین الگو در Control Panel برای ReBiomed",
+      "origin": "real",
+      "code": "# ControlPanel/compose.apps.yml (shortened): ReBiomed's own Mongo on a network only the API joins\n  rebiomed-mongo:\n    image: mongo:7\n    volumes:\n      - rebiomed-mongo:/data/db\n    networks:\n      - rebiomed\n    healthcheck:\n      test: [\"CMD\", \"mongosh\", \"--quiet\", \"--eval\", \"db.adminCommand('ping').ok\"]\n\n  rebiomed-api:\n    build:\n      context: ${REBIOMED_DIR:?set REBIOMED_DIR in .env (the ReBiomed repo folder)}\n      dockerfile: ${DEPLOY_DIR:?set DEPLOY_DIR in .env}/rebiomed/api.Dockerfile\n    depends_on:\n      rebiomed-mongo:\n        condition: service_healthy\n    environment:\n      MONGO_URI: mongodb://rebiomed-mongo:27017/rebiomed\n      JWT_SECRET: ${REBIOMED_JWT_SECRET:?set REBIOMED_JWT_SECRET in .env (32+ chars)}"
+    }
+  ],
+  "pitfalls": [
+    {
+      "lang": "all",
+      "mistake": "ports برای دیتابیس روی سرور",
+      "why": "دیتابیس از اینترنت قابل اسکن و حمله می‌شود.",
+      "fix": "بدون ports، روی شبکه‌ی internal؛ برای توسعه یک override فایل."
+    },
+    {
+      "lang": "all",
+      "mistake": "depends_on بدون condition",
+      "why": "اپ قبل از آماده شدن دیتابیس بالا می‌آید و اولین اتصال‌ها شکست می‌خورند.",
+      "fix": "healthcheck روی دیتابیس و condition: service_healthy."
+    },
+    {
+      "lang": "all",
+      "mistake": "localhost در connection string داخل کانتینر",
+      "why": "localhost داخل کانتینر خود کانتینر است، نه میزبان و نه سرویس دیگر.",
+      "fix": "نام سرویس (mongo، db) یا host.docker.internal برای میزبان."
+    },
+    {
+      "lang": "all",
+      "mistake": "docker compose down -v در عادت روزمره",
+      "why": "volumeها و همه‌ی داده‌ها پاک می‌شوند.",
+      "fix": "down بدون -v؛ -v فقط وقتی عمداً می‌خواهی از صفر شروع کنی."
+    }
+  ],
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "compose.apps.yml",
+      "line": 56,
+      "note": "rebiomed-mongo روی شبکه‌ی خودش، بدون ports"
+    },
+    {
+      "project": "ControlPanel",
+      "file": "compose.apps.yml",
+      "line": 76,
+      "note": "condition: service_healthy"
+    }
+  ],
+  "exercises": [
+    {
+      "q": "از داخل کانتینر typescript به mongo وصل شو (مثلاً با node -e و net.connect). چه می‌شود و چرا؟",
+      "a": "اتصال برقرار نمی‌شود (نام mongo حل نمی‌شود). typescript فقط روی شبکه‌ی public است و mongo فقط روی internal."
+    },
+    {
+      "q": "healthcheck مونگو را عمداً خراب کن (مثلاً دستور اشتباه). docker compose up --wait چه می‌کند؟",
+      "a": "mongo هرگز healthy نمی‌شود، python شروع نمی‌شود و --wait بعد از timeout با خطا تمام می‌شود."
+    },
+    {
+      "q": "یک سرویس ششم اضافه کن که هر ۳۰ ثانیه /status هر چهار سرویس را با curl بخواند. کدام شبکه لازم دارد؟",
+      "a": "public؛ و آدرس‌ها http://python:8080/status و ... با نام سرویس، نه localhost:8081."
+    }
+  ],
+  "take": "One compose file runs all services: the database sits on an internal network with no published port, and apps wait for it to be healthy."
+}

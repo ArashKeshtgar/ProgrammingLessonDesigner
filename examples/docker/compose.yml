@@ -1,0 +1,65 @@
+# The four example services side by side, plus a MongoDB only they can reach.
+# Run: JWT_SECRET=... JWT_REFRESH_SECRET=... docker compose -f examples/docker/compose.yml up --build --wait
+name: lessons
+
+# #region secrets
+# One block of settings shared by every service (a YAML anchor). ${VAR:?message} stops
+# `docker compose up` with that message when the variable is missing: no default secrets.
+x-secrets: &secrets
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET to a random value of 32+ characters}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET to a different random value of 32+ characters}
+# #endregion
+
+# #region services
+services:
+  python:
+    build: ../backend/python
+    environment: *secrets
+    ports: ["8081:8080"]
+    volumes: [python-data:/data]
+    networks: [public, internal]
+    depends_on:
+      mongo:
+        condition: service_healthy # wait until Mongo answers, not just until it started
+
+  typescript:
+    build: ../backend/typescript
+    environment: *secrets
+    ports: ["8082:8080"]
+    networks: [public]
+
+  csharp:
+    build: ../backend/csharp
+    environment: *secrets
+    ports: ["8083:8080"]
+    volumes: [csharp-data:/data]
+    networks: [public]
+
+  java:
+    build: ../backend/java
+    environment: *secrets
+    ports: ["8084:8080"]
+    volumes: [java-data:/data]
+    networks: [public]
+
+  mongo:
+    image: mongo:7
+    # No "ports": Mongo is not published on the host; only services on "internal" reach it.
+    volumes: [mongo-data:/data/db]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      retries: 10
+
+networks:
+  public:
+  internal:
+    internal: true # no route to the outside world either
+
+volumes:
+  python-data:
+  csharp-data:
+  java-data:
+  mongo-data:
+# #endregion

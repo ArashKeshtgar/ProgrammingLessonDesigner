@@ -21,7 +21,8 @@ export type CompareRow = { concept: string; diff: string } & Partial<Record<Lang
 // time from a tested file under examples/ (`file`, optionally cut to one `region`).
 export interface CodeSample {
   group: string
-  lang: Lang
+  // 'all' = one sample that is the same for every language (a compose file); shown without tabs.
+  lang: Lang | 'all'
   title: string
   // 'real' = shortened from a project file (see refs); 'tested' = a file under examples/
   // that the CI builds and tests; 'port' = written for the lesson, not run.

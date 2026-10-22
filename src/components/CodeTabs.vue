@@ -7,10 +7,13 @@ import { highlight } from '../lib/highlight'
 // `all` shows every language one under the other (booklet / print), instead of tabs.
 const props = defineProps<{ samples: CodeSample[]; order: Lang[]; all?: boolean }>()
 
+const langLabel = (l: CodeSample['lang']) => (l === 'all' ? 'همه‌ی زبان‌ها' : LANG_LABELS[l])
+
+const rank = (l: CodeSample['lang']) => (l === 'all' ? -1 : props.order.indexOf(l))
 const ordered = computed(() =>
-  [...props.samples].sort((a, b) => props.order.indexOf(a.lang) - props.order.indexOf(b.lang)),
+  [...props.samples].sort((a, b) => rank(a.lang) - rank(b.lang)),
 )
-const active = ref<Lang | undefined>(ordered.value[0]?.lang)
+const active = ref<CodeSample['lang'] | undefined>(ordered.value[0]?.lang)
 const shown = computed(() => (props.all ? ordered.value : ordered.value.filter((s) => s.lang === active.value)))
 const html = (s: CodeSample) => highlight(sampleCode(s), highlightLanguage(s))
 
@@ -37,7 +40,7 @@ async function copy(s: CodeSample) {
     <figcaption>
       <b>{{ ordered[0].title }}</b>
     </figcaption>
-    <div v-if="!all" class="tabs" role="tablist">
+    <div v-if="!all && ordered.length > 1" class="tabs" role="tablist">
       <button
         v-for="s in ordered"
         :key="s.lang"
@@ -46,14 +49,14 @@ async function copy(s: CodeSample) {
         :class="{ on: s.lang === active }"
         @click="active = s.lang"
       >
-        {{ LANG_LABELS[s.lang] }}
+        {{ langLabel(s.lang) }}
       </button>
       <span class="spacer"></span>
       <button class="copy" @click="copy(shown[0])">{{ copied ? 'کپی شد' : 'کپی' }}</button>
     </div>
     <div v-for="s in shown" :key="s.lang" class="sample">
       <div class="sample-head">
-        <span v-if="all" class="lang">{{ LANG_LABELS[s.lang] }}</span>
+        <span v-if="all || ordered.length === 1" class="lang">{{ langLabel(s.lang) }}</span>
         <span class="origin" :class="s.origin">{{ ORIGIN[s.origin] }}</span>
         <code v-if="s.file" class="path" dir="ltr">examples/{{ s.file }}</code>
       </div>
