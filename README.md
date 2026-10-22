@@ -3,7 +3,8 @@
 Lessons built on real project code, each concept compared side by side, with C# as the
 language the reader already knows. Persian text, code in the original language.
 
-Site: https://arashkeshtgar.github.io/ProgrammingLessonDesigner/ (installable as an app).
+Site: https://code.arashkeshtgar.ca (the VPS, deployed by Control Panel) and
+https://arashkeshtgar.github.io/ProgrammingLessonDesigner/ (GitHub Pages, with the PDFs). Installable as an app.
 
 | Booklet | Lessons | Columns |
 |---|---|---|

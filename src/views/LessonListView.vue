@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { listLessons } from '../lib/lessons'
-import { BOOKLETS } from '../lib/booklets'
+import { BOOKLETS, PDF_BASE } from '../lib/booklets'
 
-const base = import.meta.env.BASE_URL
 const booklets = Object.entries(BOOKLETS)
   .map(([tag, info]) => ({ tag, ...info, lessons: listLessons(tag) }))
   .filter((b) => b.lessons.length)
@@ -21,7 +20,7 @@ const booklets = Object.entries(BOOKLETS)
         <h2>{{ b.title }} <small>{{ b.fa }}</small></h2>
         <div class="booklet-links">
           <RouterLink :to="`/booklet/${b.tag}`">جزوه‌ی کامل</RouterLink>
-          <a :href="`${base}pdf/${b.tag}.pdf`" target="_blank" rel="noopener">PDF</a>
+          <a :href="`${PDF_BASE}${b.tag}.pdf`" target="_blank" rel="noopener">PDF</a>
         </div>
       </div>
       <ul class="lesson-list">

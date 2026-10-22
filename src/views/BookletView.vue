@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { allLessons } from '../lib/lessons'
-import { BOOKLETS } from '../lib/booklets'
+import { BOOKLETS, PDF_BASE } from '../lib/booklets'
 import LessonBody from '../components/LessonBody.vue'
 
 // One booklet = every lesson with this tag, fully expanded. The CI prints this page to PDF.
@@ -10,7 +10,7 @@ const route = useRoute()
 const tag = computed(() => String(route.params.tag))
 const lessons = computed(() => allLessons().filter((l) => l.tag === tag.value))
 const info = computed(() => BOOKLETS[tag.value])
-const pdf = computed(() => `${import.meta.env.BASE_URL}pdf/${tag.value}.pdf`)
+const pdf = computed(() => `${PDF_BASE}${tag.value}.pdf`)
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
