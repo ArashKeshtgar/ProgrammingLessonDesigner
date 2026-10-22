@@ -1,0 +1,44 @@
+@* #region list *@
+@inject ProjectsClient Api
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+else if (projects is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    @foreach (var p in projects)
+    {
+        <StatusCard @key="p.Key" Project="p" Busy="busyKey == p.Key" OnRefresh="Reload" />
+    }
+}
+
+@code {
+    // Plain fields are the state; Blazor re-renders after an event handler or StateHasChanged().
+    private List<ProjectStatus>? projects;
+    private string? busyKey;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { projects = await Api.ListAsync(); }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private async Task Reload(string key)
+    {
+        busyKey = key;
+        try
+        {
+            var fresh = await Api.StatusAsync(key);
+            projects = projects?.Select(p => p.Key == key ? fresh : p).ToList();
+        }
+        catch (Exception ex) { error = ex.Message; }
+        finally { busyKey = null; }
+    }
+}
+@* #endregion *@

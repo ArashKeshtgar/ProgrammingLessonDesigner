@@ -1,0 +1,15 @@
+@* #region card *@
+<article class="card @(Project.Healthy ? "" : "down")">
+    <h3>@Project.DisplayName</h3>
+    <p>@Label</p>
+    <button @onclick="() => OnRefresh.InvokeAsync(Project.Key)" disabled="@Busy">Refresh</button>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ProjectStatus Project { get; set; } = default!; // in: Project="p"
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public EventCallback<string> OnRefresh { get; set; } // out: OnRefresh="Reload"
+
+    private string Label => Project.Healthy ? Project.Summary ?? "Healthy" : Project.Error ?? "Down";
+}
+@* #endregion *@

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Lessons.Blazor.Tests/Lessons.Blazor.Tests.csproj" />
+  <Project Path="Lessons.Blazor/Lessons.Blazor.csproj" />
+</Solution>

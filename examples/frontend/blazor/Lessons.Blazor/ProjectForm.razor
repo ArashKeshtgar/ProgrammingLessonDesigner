@@ -1,0 +1,45 @@
+@* #region form *@
+@using Microsoft.AspNetCore.Components.Forms
+@inject ProjectsClient Api
+
+@* EditForm + DataAnnotationsValidator run the [Required]/[RegularExpression] rules on the model. *@
+<EditForm Model="model" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <label>Key <InputText @bind-Value="model.Key" /></label>
+    <ValidationMessage For="() => model.Key" />
+    <label>Name <InputText @bind-Value="model.DisplayName" /></label>
+    <ValidationMessage For="() => model.DisplayName" />
+    <label>Adapter URL <InputText @bind-Value="model.AdapterBaseUrl" /></label>
+    <ValidationMessage For="() => model.AdapterBaseUrl" />
+    @if (serverError is not null)
+    {
+        <p role="alert">@serverError</p>
+    }
+    <button type="submit" disabled="@saving">Save</button>
+</EditForm>
+
+@code {
+    private CreateProjectModel model = new();
+    private bool saving;
+    private string? serverError;
+
+    // Called only when every rule passes.
+    private async Task Save()
+    {
+        saving = true;
+        try
+        {
+            await Api.CreateAsync(model);
+            model = new();
+        }
+        catch (Exception ex)
+        {
+            serverError = ex.Message; // the server checks again (e.g. 409 already exists)
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}
+@* #endregion *@
