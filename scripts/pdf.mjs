@@ -9,7 +9,7 @@ import { chromium } from 'playwright'
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const site = process.env.SITE_URL ?? 'http://localhost:4173/'
 const out = path.join(root, 'dist', 'pdf')
-const BOOKLETS = ['backend', 'frontend', 'docker']
+const BOOKLETS = ['backend', 'frontend', 'docker', 'ops']
 
 mkdirSync(out, { recursive: true })
 const browser = await chromium.launch()

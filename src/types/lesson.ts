@@ -1,4 +1,18 @@
-export type Lang = 'csharp' | 'typescript' | 'python' | 'java' | 'blazor' | 'angular' | 'react' | 'vue'
+export type Lang =
+  | 'csharp'
+  | 'typescript'
+  | 'python'
+  | 'java'
+  | 'blazor'
+  | 'angular'
+  | 'react'
+  | 'vue'
+  | 'bash'
+  | 'powershell'
+  | 'github'
+  | 'azure'
+  | 'caddy'
+  | 'nginx'
 
 export const LANG_LABELS: Record<Lang, string> = {
   csharp: 'C#',
@@ -9,6 +23,12 @@ export const LANG_LABELS: Record<Lang, string> = {
   angular: 'Angular',
   react: 'React',
   vue: 'Vue',
+  bash: 'Bash',
+  powershell: 'PowerShell',
+  github: 'GitHub Actions',
+  azure: 'Azure Pipelines',
+  caddy: 'Caddy',
+  nginx: 'nginx',
 }
 
 export const BACKEND_LANGS: Lang[] = ['csharp', 'typescript', 'python', 'java']
@@ -61,7 +81,7 @@ export interface Concept {
 export interface Lesson {
   _id: string
   n: number
-  // Booklet the lesson belongs to: backend, frontend, docker.
+  // Booklet the lesson belongs to: backend, frontend, docker, ops.
   tag: string
   topics: string[]
   // Columns of the compare table and tabs of the code blocks; defaults to the four backend languages.

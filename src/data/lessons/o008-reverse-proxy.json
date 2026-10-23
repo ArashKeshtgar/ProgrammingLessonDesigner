@@ -1,0 +1,142 @@
+{
+  "_id": "o008",
+  "n": 8,
+  "tag": "ops",
+  "topics": ["reverse proxy", "automatic HTTPS", "basic auth", "security headers", "HSTS"],
+  "langs": ["caddy", "nginx"],
+  "known": "nginx",
+  "en": "A reverse proxy in front of every app",
+  "fa": "reverse proxy: HTTPS خودکار، basic auth و هدرهای امنیتی",
+  "goal": [
+    "همه‌ی برنامه‌ها را پشت یک reverse proxy بگذاری که تنها چیز رو به اینترنت است.",
+    "HTTPS را با Caddy خودکار بگیری و بدانی nginx برای همین کار چه چیزی کم دارد.",
+    "سایت‌های خصوصی را با basic auth ببندی و هدرهای امنیتی را روی همه‌ی پاسخ‌ها، حتی ۴۰۱، بگذاری."
+  ],
+  "story": "روی VPS فقط Caddy پورت 80 و 443 دارد. هفت دامنه، هر کدام یک reverse_proxy به یک کانتینر: panel، rebiomed، english، code و report عمومی‌اند و labflow، ledger و ctx پشت basic auth. یک snippet به نام (common) فشرده‌سازی، HSTS، nosniff و Referrer-Policy را می‌گذارد و هدر Server را برمی‌دارد، و (private) رمز را. گواهی Let's Encrypt هر دامنه را Caddy خودش می‌گیرد و تمدید می‌کند. ReBiomed داخل کانتینر خودش هم یک nginx دارد که فایل‌های React را می‌دهد و /api را به Node می‌فرستد. این درس همان دو سایت را با هر دو ابزار می‌سازد و با curl چک می‌کند چه چیزی به مرورگر می‌رسد.",
+  "why": [
+    ["Q", "چرا هر برنامه پورت خودش را باز نکند؟"],
+    ["A", "یک جا برای HTTPS، یک جا برای رمز، یک جا برای هدرها و لاگ. و چون Docker از ufw رد می‌شود، هر پورت publish‌شده واقعاً به اینترنت باز است. پشت proxy، دیتابیس‌ها و APIها هیچ پورتی ندارند."],
+    ["Q", "HSTS روی پاسخ ۴۰۱ چه فایده‌ای دارد؟"],
+    ["A", "اولین چیزی که مرورگر از سایت خصوصی می‌بیند ۴۰۱ است. اگر HSTS آنجا نباشد، مرورگر یاد نمی‌گیرد دفعه‌ی بعد مستقیم HTTPS بزند."]
+  ],
+  "concepts": [
+    {
+      "h": "HTTPS خودکار",
+      "body": "در Caddy آدرس سایت دامنه است (panel.example.com {) و همین کافی است: گواهی از Let's Encrypt، تمدید، و redirect از HTTP. شرطش این است که DNS از قبل به سرور اشاره کند و 80 و 443 باز باشند. nginx گواهی نمی‌گیرد؛ certbot جدا، یک timer برای تمدید، و reload بعد از هر تمدید لازم است."
+    },
+    {
+      "h": "basic auth",
+      "body": "Caddy hash bcrypt می‌خواهد (caddy hash-password) و nginx فایل htpasswd (openssl passwd -apr1 یا htpasswd). رمز روی HTTPS امن منتقل می‌شود ولی در هر درخواست فرستاده می‌شود؛ برای یک صاحب و چند مهمان خوب است، برای کاربران واقعی نه. در IIS معادل مستقیمی نیست: Basic Authentication با حساب‌های ویندوز کار می‌کند."
+    },
+    {
+      "h": "هدرها",
+      "body": "Strict-Transport-Security: فقط HTTPS برای یک سال. X-Content-Type-Options: nosniff: مرورگر نوع فایل را حدس نزند. Referrer-Policy: آدرس کامل به سایت‌های دیگر نرود. در nginx نکته‌ی پنهان دو تاست: بدون always هدر روی ۴xx و ۵xx نمی‌آید، و هر location که add_header خودش را داشته باشد هیچ‌کدام از هدرهای بالا را نمی‌گیرد. در Caddy یکی: اگر یک بلوک header حذف (-Server) داشته باشد، کل بلوک deferred می‌شود، و هدرهای deferred روی پاسخ خطا مثل ۴۰۱ basic_auth از دست می‌روند. تست این درس این را در Caddyfile سرور پیدا کرد و آنجا هم با دو بلوک header درست شد."
+    },
+    {
+      "h": "اعتماد به هدرهای proxy",
+      "body": "برنامه‌ی پشت proxy درخواست را از proxy می‌بیند، نه از کاربر. X-Forwarded-For و X-Forwarded-Proto آدرس و پروتکل اصلی را می‌برند؛ Caddy خودش می‌فرستد و در nginx باید proxy_set_header بنویسی. برنامه (UseForwardedHeaders در ASP.NET Core، trust proxy در Express) باید فقط به proxy اعتماد کند."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "HTTPS",
+      "caddy": "panel.example.com { ... } (خودکار)",
+      "nginx": "certbot --nginx + timer تمدید",
+      "diff": "Caddy redirect از HTTP و تمدید را هم خودش می‌کند."
+    },
+    {
+      "concept": "reverse proxy",
+      "caddy": "reverse_proxy app:80",
+      "nginx": "location / { proxy_pass http://app:80; proxy_set_header ... }",
+      "diff": "Caddy هدرهای X-Forwarded-* را خودش می‌فرستد؛ nginx فقط اگر بنویسی."
+    },
+    {
+      "concept": "تکه‌ی تکرارشونده",
+      "caddy": "(common) { ... } و import common",
+      "nginx": "include snippets/common.conf;",
+      "diff": "snippet در Caddy داخل همان فایل است؛ در nginx فایل جدا."
+    },
+    {
+      "concept": "basic auth",
+      "caddy": "basic_auth { user $2a$... }",
+      "nginx": "auth_basic \"private\"; auth_basic_user_file htpasswd;",
+      "diff": "hash bcrypt پر از $ است؛ در .env یا compose بدون نقل‌قول، Compose آن را متغیر می‌خواند."
+    },
+    {
+      "concept": "حذف هدر Server",
+      "caddy": "header -Server",
+      "nginx": "server_tokens off (فقط نسخه را برمی‌دارد)",
+      "diff": "nginx بدون ماژول headers-more «Server: nginx» را همیشه می‌فرستد. تست هر دو را ثابت می‌کند."
+    },
+    {
+      "concept": "هدر روی ۴۰۱",
+      "caddy": "header جدا از -Server (نه deferred)",
+      "nginx": "add_header ... always",
+      "diff": "هر دو پیش‌فرض ۴۰۱ را بدون هدر می‌فرستند، به دو دلیل مختلف. تست هر دو را ثابت می‌کند."
+    }
+  ],
+  "code": [
+    { "group": "proxy", "lang": "caddy", "title": "دو سایت: عمومی و خصوصی", "origin": "tested", "file": "ops/proxy/Caddyfile", "region": "proxy" },
+    { "group": "proxy", "lang": "nginx", "title": "دو سایت: عمومی و خصوصی", "origin": "tested", "file": "ops/proxy/nginx.conf", "region": "proxy" },
+    { "group": "test", "lang": "all", "title": "آنچه مرورگر می‌گیرد، با curl", "origin": "tested", "file": "ops/proxy/test.sh" }
+  ],
+  "pitfalls": [
+    {
+      "lang": "caddy",
+      "mistake": "هدرهای امنیتی و -Server در یک بلوک header",
+      "why": "حذف کل بلوک را deferred می‌کند و هدرهای deferred روی ۴۰۱ basic_auth نمی‌آیند. Caddyfile سرور همین شکل را داشت: labflow، ledger و ctx اولین پاسخشان را بدون HSTS می‌دادند (حالا درست شده).",
+      "fix": "یک بلوک header برای تنظیم‌ها و یک header -Server جدا؛ تست proxy/test.sh هر دو را چک می‌کند."
+    },
+    {
+      "lang": "caddy",
+      "mistake": "hash bcrypt در .env بدون نقل‌قول تکی",
+      "why": "Compose هر $ را شروع یک متغیر می‌داند؛ hash بریده می‌شود و هیچ رمزی کار نمی‌کند.",
+      "fix": "در .env با '...' (کاری که make-env.sh می‌کند)، یا در compose با $$."
+    },
+    {
+      "lang": "caddy",
+      "mistake": "دامنه‌ای که هنوز DNS ندارد در Caddyfile",
+      "why": "Caddy گواهی نمی‌گیرد و مدام دوباره تلاش می‌کند؛ Let's Encrypt برای تلاش‌های ناموفق محدودیت دارد.",
+      "fix": "اول رکورد A، بعد Caddyfile. برای آزمایش، acme_ca staging."
+    },
+    {
+      "lang": "nginx",
+      "mistake": "add_header بدون always",
+      "why": "صفحه‌ی ۴۰۱ و ۵۰۲ بدون HSTS و nosniff می‌رسد.",
+      "fix": "always در پایان هر add_header."
+    },
+    {
+      "lang": "nginx",
+      "mistake": "یک add_header در location",
+      "why": "همه‌ی add_headerهای سطح server و http برای آن location حذف می‌شوند؛ ارث‌بری ادغامی نیست.",
+      "fix": "هدرها را در یک فایل include کن و در هر location که add_header دارد دوباره include کن."
+    },
+    {
+      "lang": "all",
+      "mistake": "سایت خصوصی که فقط «مخفی» است",
+      "why": "نام دامنه‌ها در Certificate Transparency عمومی ثبت می‌شوند؛ ربات‌ها چند دقیقه بعد از صدور گواهی سر می‌زنند.",
+      "fix": "رمز (basic auth یا login واقعی)، نه آدرس مخفی."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/Caddyfile", "line": 8, "note": "(common): فشرده‌سازی، HSTS، nosniff، و حذف Server در بلوک جدا، تا هدرها روی ۴۰۱ هم بیایند" },
+    { "project": "ControlPanel", "file": "deploy/vps/Caddyfile", "line": 28, "note": "(private): basic auth برای LabFlow، LedgerDashboard و ctx" },
+    { "project": "ControlPanel", "file": "deploy/vps/make-env.sh", "line": 63, "note": "hash بین نقل‌قول تکی در .env تا Compose $ها را نخواند" },
+    { "project": "ControlPanel", "file": "deploy/rebiomed/nginx.conf", "line": 8, "note": "nginx داخل کانتینر ReBiomed: /api به Node، بقیه SPA" }
+  ],
+  "exercises": [
+    {
+      "q": "curl -I https://panel.<domain> را بزن. کدام هدرهای (common) را می‌بینی و کدام را نه؟",
+      "a": "strict-transport-security، x-content-type-options و referrer-policy هست؛ server نیست. اگر content-encoding ندیدی، چون -I درخواست HEAD است و Accept-Encoding نفرستاده؛ با --compressed دوباره امتحان کن."
+    },
+    {
+      "q": "در nginx.conf این درس، داخل location / یک add_header X-Frame-Options DENY اضافه کن. تست کدام خط‌ها را قرمز می‌کند؟",
+      "a": "HSTS روی 8090 دیگر نمی‌آید، چون آن location حالا add_header خودش را دارد و هیچ‌کدام از سطح بالا را به ارث نمی‌برد. سایت 8091 (location خودش بدون add_header) سالم می‌ماند."
+    },
+    {
+      "q": "یک سایت دیگر به VPS اضافه کن، مثلاً status.<domain> که فقط برای تو باشد. چه چیزهایی باید عوض شوند؟",
+      "a": "رکورد A در DNS، یک بلوک در Caddyfile با import common و import private و reverse_proxy، متغیر دامنه در compose.vps.yml و .env، و deploy.sh (که Caddyfile تغییرکرده را می‌بیند و caddy را restart می‌کند)."
+    }
+  ],
+  "take": "Only the reverse proxy faces the internet: Caddy gets and renews every certificate itself, adds the security headers to every response including 401s, and puts the private sites behind basic auth, while nginx needs certbot for the certificates and the always flag for the headers."
+}

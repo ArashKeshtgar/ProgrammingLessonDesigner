@@ -1,7 +1,8 @@
 name: Verify and deploy
 
 # Every push runs every example's tests in its own language, builds and starts the Docker
-# stack, then builds the site, prints the booklet PDFs and publishes to the gh-pages branch.
+# stack, runs the ops scripts in a container, then builds the site, prints the booklet PDFs
+# and publishes to the gh-pages branch.
 # The site is deployed only when all of that passes: the "tested" label on a sample is earned here.
 on:
   push:
@@ -91,8 +92,30 @@ jobs:
         run: |
           if docker compose -f examples/docker/compose.yml config > /dev/null 2>&1; then echo "expected a failure"; exit 1; fi
 
+  ops:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck examples/ops/*/*.sh
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) { Install-Module PSScriptAnalyzer -Force -Scope CurrentUser }
+          $found = Invoke-ScriptAnalyzer -Path examples/ops -Recurse -Severity Warning, Error
+          $found | Format-Table -AutoSize RuleName, Severity, ScriptName, Line, Message
+          if ($found) { exit 1 }
+      - name: Python compiles
+        run: python3 -m py_compile examples/ops/*/*.py
+      - name: actionlint on the deploy workflow
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 examples/ops/ci/deploy-vps.yml
+      - name: Every script in bash, PowerShell and Python, in Ubuntu 24.04
+        run: docker build -t lessons-ops examples/ops && docker run --rm lessons-ops
+      - name: Caddy and nginx in front of an app
+        run: examples/ops/proxy/test.sh
+
   deploy:
-    needs: [python, typescript, csharp, java, frontend, docker]
+    needs: [python, typescript, csharp, java, frontend, docker, ops]
     # Pinned: Playwright's --with-deps needs an Ubuntu release it knows.
     runs-on: ubuntu-24.04
     steps:

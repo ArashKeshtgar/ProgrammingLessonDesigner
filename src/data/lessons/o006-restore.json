@@ -1,0 +1,145 @@
+{
+  "_id": "o006",
+  "n": 6,
+  "tag": "ops",
+  "topics": ["restore test", "off-site copy", "3-2-1", "rclone", "restic", "integrity check"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "A backup that was never restored is not a backup",
+  "fa": "بازگردانی: بکاپی که restore نشده، بکاپ نیست",
+  "goal": [
+    "یک کپی شبانه از بکاپ را بیرون از سرور بفرستی، در حساب و ارائه‌دهنده‌ی دیگری.",
+    "هر شب خودکار ثابت کنی همان کپی بیرونی restore می‌شود: checksum، integrity check و داده‌ی واقعی.",
+    "بدانی restore یک دیتابیس SQL Server روی سرور تازه چه چیزهایی جز خود فایل لازم دارد."
+  ],
+  "story": "بکاپ شبانه‌ی VPS درست کار می‌کند، ولی بررسی سرور دو چیز نشان داد. اول: هر ۱۵ بکاپ فقط روی خود سرور است. هیچ ابزار کپی بیرونی (rclone یا restic) نصب نیست، و README خود پروژه هم می‌گوید «این بکاپ‌ها با سرور می‌میرند». دوم: از لاگ‌ها معلوم نیست restore هیچ‌وقت آزمایش شده باشد. این درس هر دو را درست می‌کند: restore-test بعد از بکاپ، جدیدترین پوشه را به مقصد بیرونی کپی می‌کند و بعد از روی همان کپی، نه نسخه‌ی اصلی، restore می‌کند. تست‌ها سه حالت خراب را هم امتحان می‌کنند: فایل آسیب‌دیده، دیتابیس خالی و نبود بکاپ.",
+  "why": [
+    ["Q", "بکاپ روی همان سرور در برابر چه چیزی محافظت نمی‌کند؟"],
+    ["A", "در برابر هر چیزی که خود سرور را ببرد: خرابی دیسک، حذف اشتباه VPS، قطع حساب ارائه‌دهنده، یا نفوذی که rm -rf /srv می‌کند. بکاپ و اصل یک‌جا می‌میرند."],
+    ["Q", "چرا restore را از کپی بیرونی تست کنیم و نه از اصل؟"],
+    ["A", "روزی که سرور از دست رفت، فقط کپی بیرونی داری. اگر کپی ناقص منتقل شده یا مقصد خرابش کرده، باید امشب بفهمی، نه آن روز."]
+  ],
+  "concepts": [
+    {
+      "h": "قاعده‌ی ۳-۲-۱",
+      "body": "سه نسخه از داده، روی دو نوع رسانه‌ی مختلف، یک نسخه بیرون از محل. برای این VPS: داده‌ی زنده، بکاپ‌های /srv/backups، و یک کپی در ارائه‌دهنده‌ی دیگر (Backblaze B2، یک bucket در S3، یا حتی PC خانه). snapshot خود ارائه‌دهنده هم کمک می‌کند ولی در همان حساب است."
+    },
+    {
+      "h": "rclone یا restic",
+      "body": "rclone copy /srv/backups/daily remote:portfolio فایل‌ها را همان‌طور که هست به ده‌ها نوع مقصد می‌فرستد. restic بکاپ رمزنگاری‌شده و deduplicate می‌سازد: هر snapshot فقط تکه‌های تازه را می‌فرستد و ارائه‌دهنده محتوا را نمی‌بیند. برای داده‌ای مثل جست‌وجوی شغلی و اطلاعات تماس، رمزنگاری سمت سرور ضروری است. کلید دسترسی مقصد فقط باید اجازه‌ی نوشتن داشته باشد، نه پاک کردن، تا نفوذ به سرور به بکاپ‌ها نرسد."
+    },
+    {
+      "h": "تست restore چه چیزی را ثابت می‌کند",
+      "body": "سه لایه: checksum (فایل همان است که ساخته شد)، باز کردن و integrity check (فایل یک دیتابیس سالم است)، و یک پرس‌وجوی واقعی با حداقل تعداد ردیف (دیتابیس خالی هم کاملاً restore می‌شود). در SQL Server معادلش RESTORE VERIFYONLY و بعد RESTORE به نام موقت و DBCC CHECKDB است."
+    },
+    {
+      "h": "restore روی سرور تازه",
+      "body": "restore-db.sh نشان می‌دهد فایل .bak کافی نیست: مسیرهای ویندوزی داخل بکاپ با MOVE به /var/opt/mssql/data می‌روند، و loginها در master هستند نه در دیتابیس، پس کاربرهای دیتابیس یتیم‌اند و باید با رمزهای .env دوباره ساخته شوند. یعنی .env هم بخشی از بکاپ است و باید جای امنی بیرون از سرور باشد (password manager)."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "جدیدترین بکاپ",
+      "bash": "find daily -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1",
+      "powershell": "Get-ChildItem -Directory | Sort-Object Name | Select-Object -Last 1",
+      "python": "sorted(d for d in daily.iterdir() if d.is_dir())[-1]",
+      "diff": "نام پوشه‌ها yyyyMMdd-HHmm است تا ترتیب الفبایی همان ترتیب زمانی باشد."
+    },
+    {
+      "concept": "کپی پوشه",
+      "bash": "[[ -d dst ]] || cp -r src dst",
+      "powershell": "if (-not (Test-Path dst)) { Copy-Item src dst -Recurse }",
+      "python": "shutil.copytree(src, dst)",
+      "diff": "cp -r و Copy-Item -Recurse به پوشه‌ای که هست، src را داخلش می‌گذارند (dst/src)."
+    },
+    {
+      "concept": "چک checksum",
+      "bash": "sha256sum --quiet -c SHA256SUMS",
+      "powershell": "(Get-FileHash ...).Hash -ne $expected",
+      "python": "hashlib.sha256(...).hexdigest() != expected",
+      "diff": "-ne در PowerShell حروف بزرگ و کوچک را یکی می‌گیرد؛ != در Python نه، پس هر دو را hex کوچک نگه دار."
+    },
+    {
+      "concept": "پوشه‌ی موقت که پاک شود",
+      "bash": "tmp=\"$(mktemp -d)\"; trap 'rm -rf \"$tmp\"' EXIT",
+      "powershell": "try { ... } finally { Remove-Item $tmp -Recurse -Force }",
+      "python": "with tempfile.TemporaryDirectory() as tmp:",
+      "diff": "trap EXIT در Bash روی exit و set -e هم اجرا می‌شود."
+    },
+    {
+      "concept": "اثبات سلامت دیتابیس",
+      "bash": "sqlite3 db 'PRAGMA integrity_check;'",
+      "powershell": "sqlite3 $db 'PRAGMA integrity_check;' + $LASTEXITCODE",
+      "python": "conn.execute('PRAGMA integrity_check').fetchone()[0]",
+      "diff": "SQL Server: DBCC CHECKDB. MongoDB: mongorestore به یک دیتابیس موقت و شمردن سندها."
+    }
+  ],
+  "code": [
+    { "group": "offsite", "lang": "bash", "title": "کپی بیرون از سرور", "origin": "tested", "file": "ops/restore/restore-test.sh", "region": "offsite" },
+    { "group": "offsite", "lang": "powershell", "title": "کپی بیرون از سرور", "origin": "tested", "file": "ops/restore/restore-test.ps1", "region": "offsite" },
+    { "group": "offsite", "lang": "python", "title": "کپی بیرون از سرور", "origin": "tested", "file": "ops/restore/restore_test.py", "region": "offsite" },
+    { "group": "restore", "lang": "bash", "title": "restore از همان کپی، و اثباتش", "origin": "tested", "file": "ops/restore/restore-test.sh", "region": "restore" },
+    { "group": "restore", "lang": "powershell", "title": "restore از همان کپی، و اثباتش", "origin": "tested", "file": "ops/restore/restore-test.ps1", "region": "restore" },
+    { "group": "restore", "lang": "python", "title": "restore از همان کپی، و اثباتش", "origin": "tested", "file": "ops/restore/restore_test.py", "region": "restore" },
+    {
+      "group": "mssql",
+      "lang": "all",
+      "title": "restore یک .bak در SQL Server لینوکسی (restore-db.sh)",
+      "origin": "real",
+      "code": "# One MOVE per file in the backup: Windows paths mean nothing here.\nwhile IFS='|' read -r logical _ type _; do\n  [[ -z \"$logical\" || -z \"$type\" ]] && continue\n  case \"$type\" in L) ext=ldf ;; *) ext=mdf ;; esac\n  [[ $n -gt 0 && \"$ext\" == mdf ]] && ext=ndf\n  moves+=\", MOVE N'$logical' TO N'/var/opt/mssql/data/${db}_$n.$ext'\"\n  n=$((n + 1))\ndone < <(sql \"SET NOCOUNT ON; RESTORE FILELISTONLY FROM DISK = N'$inside'\")\n\nsql \"IF DB_ID(N'$db') IS NOT NULL ALTER DATABASE [$db] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;\n     RESTORE DATABASE [$db] FROM DISK = N'$inside' WITH REPLACE, RECOVERY$moves;\n     ALTER DATABASE [$db] SET MULTI_USER;\"\n\n# Logins live in master, not in the database: drop the orphaned users and recreate\n# them with the passwords from .env.\nsql \"USE [LabFlow]; DROP USER IF EXISTS labflow_svc;\"\nrun_sql_file deploy/labflow/sql-login.sql -v \"LABFLOW_DB_PASSWORD=$(env_val LABFLOW_DB_PASSWORD .env)\""
+    }
+  ],
+  "pitfalls": [
+    {
+      "lang": "all",
+      "mistake": "بکاپ فقط روی همان سرور",
+      "why": "وضعیت فعلی VPS: ۱۵ بکاپ سالم که با یک خرابی دیسک یا حذف VPS همه با هم از بین می‌روند.",
+      "fix": "کپی شبانه با rclone یا restic به ارائه‌دهنده‌ی دیگر، بعد از backup.sh در همان cron."
+    },
+    {
+      "lang": "all",
+      "mistake": "کلید مقصد بیرونی با اجازه‌ی پاک کردن",
+      "why": "کسی که سرور را گرفته با همان کلید بکاپ‌های بیرونی را هم پاک یا رمزگذاری می‌کند (باج‌افزار دقیقاً همین را می‌کند).",
+      "fix": "کلید فقط-نوشتن (B2: application key بدون deleteFiles؛ S3: Object Lock)، یا pull از بیرون به‌جای push."
+    },
+    {
+      "lang": "all",
+      "mistake": "«بکاپ گرفته شد» به‌جای «restore شد»",
+      "why": "فایل .gz ناقص، فایل خالی، یا بکاپ دیتابیسی که مدت‌هاست خالی است، همه «موفق» گزارش می‌شوند.",
+      "fix": "تست restore خودکار هر شب، با شمردن ردیف‌های یک جدول واقعی."
+    },
+    {
+      "lang": "all",
+      "mistake": "فراموش کردن .env",
+      "why": "بدون رمز sa و رمزهای سرویس‌ها، دیتابیس restore‌شده login ندارد و برنامه‌ها وصل نمی‌شوند.",
+      "fix": ".env در password manager، و در تمرین restore از آن استفاده کن."
+    },
+    {
+      "lang": "bash",
+      "mistake": "cp -r به پوشه‌ای که از قبل هست",
+      "why": "cp -r a b وقتی b هست، b/a می‌سازد؛ restore بعدی فایل را در مسیر اشتباه پیدا نمی‌کند.",
+      "fix": "اول چک کن پوشه نیست، یا cp -rT."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/README.md", "line": 169, "note": "«Off-server copy: these backups die with the server»" },
+    { "project": "ControlPanel", "file": "deploy/vps/backup.sh", "line": 8, "note": "در برابر از دست دادن سرور محافظت نمی‌کند" },
+    { "project": "ControlPanel", "file": "deploy/vps/restore-db.sh", "line": 12, "note": "loginها در master هستند؛ کاربرهای restore‌شده یتیم‌اند" },
+    { "project": "ControlPanel", "file": "deploy/vps/restore-db.sh", "line": 51, "note": "یک MOVE برای هر فایل داخل بکاپ" }
+  ],
+  "exercises": [
+    {
+      "q": "به خط crontab فعلی چه اضافه می‌کنی تا کپی بیرونی و تست restore هم هر شب اجرا شوند؟",
+      "a": "30 3 * * * cd /srv/portfolio/ControlPanel && deploy/vps/backup.sh && deploy/vps/offsite.sh && deploy/vps/restore-test.sh >> /srv/backups/backup.log 2>&1. با && هر قدم فقط اگر قبلی موفق بود اجرا می‌شود. (offsite.sh و restore-test.sh هنوز روی سرور نیستند.)"
+    },
+    {
+      "q": "در تست‌ها، برای فایل آسیب‌دیده کدام قدم شکست می‌خورد و چرا قبل از gunzip؟",
+      "a": "checksum. به انتهای app.db.gz چند بایت اضافه شده، پس SHA-256 فرق می‌کند. چک checksum قبل از باز کردن، خرابی را با پیام روشن می‌گوید، نه با خطای مبهم gzip."
+    },
+    {
+      "q": "تمرین restore کامل روی سرور: LabFlow را از بکاپ دیشب به نام دیگری restore کن بدون اینکه LabFlow اصلی را دست بزنی.",
+      "a": "فایل را LabFlowRestoreTest.bak.gz نام‌گذاری کن و restore-db.sh را رویش اجرا کن؛ نام دیتابیس از نام فایل می‌آید. بعد SELECT COUNT(*) روی یک جدول، مقایسه با اصل، و DROP DATABASE LabFlowRestoreTest."
+    }
+  ],
+  "take": "Every night the newest backup is copied to another provider with a write-only key, and then restored from that copy into a scratch database and checked: checksum, integrity, and real rows, because the only backup that counts is one I have actually restored."
+}

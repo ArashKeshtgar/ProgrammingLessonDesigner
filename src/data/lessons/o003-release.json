@@ -1,0 +1,133 @@
+{
+  "_id": "o003",
+  "n": 3,
+  "tag": "ops",
+  "topics": ["preflight checks", "dry run", "confirmation", "git tag", "rollback"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "A release: check, show the plan, ask, then ship",
+  "fa": "انتشار: اول چک، بعد نقشه، بعد تأیید، بعد ارسال",
+  "goal": [
+    "قبل از هر ارسال وضعیت همه‌ی repoها را چک کنی: شاخه‌ی درست، بدون تغییر commit‌نشده، عقب نبودن از GitHub.",
+    "همه‌ی مشکل‌ها را یکجا گزارش کنی، با -DryRun فقط نقشه را نشان بدهی، و بدون «yes» صریح کاری نکنی.",
+    "هر انتشار را با یک tag علامت بزنی تا بدانی دقیقاً چه چیزی روی سرور است و چطور برگردی."
+  ],
+  "story": "release.ps1 در Control Panel با یک دستور همه‌چیز را از PC به سرور می‌فرستد، در هفت قدم که هر شکستی بقیه را متوقف می‌کند. قدم اول فقط نگاه می‌کند: پنج repo، شاخه، تغییرات، عقب یا جلو بودن، و حتی اینکه truth bank روی سرور commitی دارد که PC ندارد (قدم چهارم آن را بازنویسی می‌کرد). بعد نقشه را نشان می‌دهد و می‌پرسد. با -DryRun همان‌جا می‌ایستد. آخر کار هم tag release-<تاریخ-ساعت> در هر repo. نمونه‌ی این درس همان قدم‌های چک، تأیید و tag است، در سه زبان، روی repoهای git واقعی با یک remote محلی.",
+  "why": [
+    ["Q", "چرا همه‌ی مشکل‌ها را جمع می‌کند و بعد متوقف می‌شود؟"],
+    ["A", "اگر اولین مشکل متوقف کند، درستش می‌کنی، دوباره اجرا می‌کنی و به دومی می‌رسی. با یک فهرست کامل، یک دور تعمیر کافی است."],
+    ["Q", "tag وقتی commit hash هست چه فایده‌ای دارد؟"],
+    ["A", "release-20261022-2130 در هر پنج repo یعنی «این مجموعه با هم روی سرور بود». برگشت: git checkout آن tag در هر repo روی سرور و deploy.sh دوباره."]
+  ],
+  "concepts": [
+    {
+      "h": "چک قبل از ارسال",
+      "body": "fetch، بعد سه سؤال: آیا روی شاخه‌ای هستم که سرور می‌کشد (پیش‌فرض remote با ls-remote --symref)؟ تغییر commit‌نشده هست؟ remote چیزی دارد که من ندارم (rev-list --count HEAD..origin/main)؟ تعداد commitهای جلوتر هم برای نقشه چاپ می‌شود."
+    },
+    {
+      "h": "Dry run",
+      "body": "همه‌ی چک‌ها و نقشه، بدون هیچ تغییر. اسکریپتی که dry run ندارد را اولین بار باید روی production امتحان کنی. قاعده: dry run باید از همان کد مسیر اصلی رد شود و درست قبل از اولین تغییر بایستد."
+    },
+    {
+      "h": "تأیید",
+      "body": "فقط «yes» کامل قبول است؛ y، Enter یا ورودی خالی یعنی نه. برای CI یا خودکارسازی -Yes / --yes هست. در PowerShell، Read-Host زیر -NonInteractive خطا می‌دهد، پس نمونه از [Console]::In.ReadLine() می‌خواند که ورودی pipe‌شده را هم می‌گیرد."
+    },
+    {
+      "h": "ترتیب قدم‌ها",
+      "body": "ارزان و بی‌خطر اول (چک، تست)، بعد چیزهایی که برگشت دارند (push، tag)، آخر چیزی که روی سرور اثر دارد (deploy، migrate) و در نهایت smoke test از بیرون: هر سایت همان کدی را بدهد که باید (۲۰۰، یا ۴۰۱ پشت basic auth)."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "پارامتر dry run",
+      "bash": "--dry-run (حلقه‌ی while/case)",
+      "powershell": "[switch]$DryRun",
+      "python": "argparse: action='store_true'",
+      "diff": "PowerShell و Python تجزیه‌ی آرگومان را مجانی می‌دهند؛ Bash دستی."
+    },
+    {
+      "concept": "جمع کردن مشکل‌ها",
+      "bash": "problems+=(\"...\")",
+      "powershell": "$problems += '...'",
+      "python": "problems.append('...')",
+      "diff": "+= در PowerShell هر بار آرایه‌ی تازه می‌سازد؛ برای ده تا مهم نیست، برای هزاران List[string]."
+    },
+    {
+      "concept": "پرسیدن از کاربر",
+      "bash": "read -r -p '...' answer",
+      "powershell": "[Console]::In.ReadLine() (نه Read-Host)",
+      "python": "input('...') با except EOFError",
+      "diff": "بدون ترمینال، read شکست می‌خورد و input EOFError می‌دهد؛ هر دو باید «نه» حساب شوند."
+    },
+    {
+      "concept": "خروجی git در متغیر",
+      "bash": "x=\"$(git -C repo branch --show-current)\"",
+      "powershell": "$x = git -C repo branch --show-current",
+      "python": "run([...], capture_output=True, text=True).stdout.strip()",
+      "diff": "PowerShell خروجی چندخطی را آرایه می‌کند؛ Bash و Python یک رشته."
+    },
+    {
+      "concept": "نوشتن در stderr",
+      "bash": "echo '...' >&2",
+      "powershell": "[Console]::Error.WriteLine('...')",
+      "python": "print('...', file=sys.stderr)",
+      "diff": "Write-Error در PowerShell با 'Stop' اسکریپت را همان‌جا متوقف می‌کند؛ برای فقط پیام، stderr مستقیم."
+    }
+  ],
+  "code": [
+    { "group": "checks", "lang": "bash", "title": "چک همه‌ی repoها، همه‌ی مشکل‌ها یکجا", "origin": "tested", "file": "ops/release/release.sh", "region": "checks" },
+    { "group": "checks", "lang": "powershell", "title": "چک همه‌ی repoها، همه‌ی مشکل‌ها یکجا", "origin": "tested", "file": "ops/release/release.ps1", "region": "checks" },
+    { "group": "checks", "lang": "python", "title": "چک همه‌ی repoها، همه‌ی مشکل‌ها یکجا", "origin": "tested", "file": "ops/release/release.py", "region": "checks" },
+    { "group": "confirm", "lang": "bash", "title": "dry run، تأیید، push و tag", "origin": "tested", "file": "ops/release/release.sh", "region": "confirm" },
+    { "group": "confirm", "lang": "powershell", "title": "dry run، تأیید، push و tag", "origin": "tested", "file": "ops/release/release.ps1", "region": "confirm" },
+    { "group": "confirm", "lang": "python", "title": "dry run، تأیید، push و tag", "origin": "tested", "file": "ops/release/release.py", "region": "confirm" }
+  ],
+  "pitfalls": [
+    {
+      "lang": "all",
+      "mistake": "deploy از شاخه‌ای که سرور نمی‌کشد",
+      "why": "push روی feature چیزی را روی سرور عوض نمی‌کند، ولی tag و smoke test می‌گویند «منتشر شد».",
+      "fix": "شاخه‌ی پیش‌فرض را از remote بپرس و با شاخه‌ی فعلی مقایسه کن."
+    },
+    {
+      "lang": "all",
+      "mistake": "ارسال وقتی سرور چیزی دارد که PC ندارد",
+      "why": "release.ps1 فایل‌های JobSearch را روی نسخه‌ی سرور می‌نویسد؛ ویرایش‌های داشبورد زنده بی‌صدا از بین می‌رفت.",
+      "fix": "قبل از ارسال، تاریخچه‌ی سرور را بخوان و اگر commit اضافه دارد متوقف شو (-PullTruthBank)."
+    },
+    {
+      "lang": "powershell",
+      "mistake": "Read-Host در اسکریپتی که از Task Scheduler یا CI اجرا می‌شود",
+      "why": "زیر -NonInteractive خطا می‌دهد؛ بدون آن منتظر ورودی‌ای می‌ماند که هیچ‌وقت نمی‌آید.",
+      "fix": "سوییچ -Yes برای اجرای خودکار، و [Console]::In.ReadLine() برای حالت تعاملی."
+    },
+    {
+      "lang": "all",
+      "mistake": "tag فقط در یک repo",
+      "why": "وقتی پنج repo با هم روی سرورند، نسخه‌ی یکی بدون بقیه چیزی را بازسازی نمی‌کند.",
+      "fix": "یک نام tag برای همه‌ی repoهای یک انتشار."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 9, "note": "هفت قدم به ترتیب؛ هر شکست بقیه را متوقف می‌کند" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 95, "note": "قدم ۱: شاخه، تغییرات، عقب بودن، و truth bank سرور" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 156, "note": "-DryRun و تأیید با yes" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 178, "note": "tag release-<stamp> در هر repo" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 217, "note": "smoke test: هر سایت کد مورد انتظارش، ۴۰۱ برای سایت‌های خصوصی" }
+  ],
+  "exercises": [
+    {
+      "q": "در یک repo فایلی را تغییر بده و repo دیگر را روی شاخه‌ی دیگری ببر، بعد release.ps1 -DryRun. چند خط قرمز می‌بینی؟",
+      "a": "دو خط، هر دو در همان اجرا: «has uncommitted changes» و «is on 'feature', not 'main'». تست‌های examples/ops همین را چک می‌کنند."
+    },
+    {
+      "q": "چرا قالب tag تا دقیقه است و نه ثانیه؟ اگر دو انتشار در یک دقیقه باشند چه می‌شود؟",
+      "a": "خوانا است و دو انتشار در یک دقیقه نادر است. اگر پیش بیاید git tag خطا می‌دهد (tag already exists) و اسکریپت متوقف می‌شود، که درست است: هیچ چیز بی‌صدا بازنویسی نمی‌شود."
+    },
+    {
+      "q": "برگشت به انتشار قبلی روی سرور را بنویس.",
+      "a": "در هر repo: git -C /srv/portfolio/<repo> checkout release-<قبلی>، بعد deploy.sh. توجه: deploy.sh با pull --ff-only روی HEAD جدا (detached) خطا می‌دهد؛ برای برگشت موقت یا pull را رد کن یا شاخه را reset کن."
+    }
+  ],
+  "take": "A release script checks every repo first and lists every problem at once, prints the plan, stops there on a dry run, ships only on an explicit yes, and tags all repos with one release name so I always know what is on the server and how to go back."
+}

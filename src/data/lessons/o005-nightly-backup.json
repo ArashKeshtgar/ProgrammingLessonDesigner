@@ -1,0 +1,149 @@
+{
+  "_id": "o005",
+  "n": 5,
+  "tag": "ops",
+  "topics": ["cron", "systemd timer", "Task Scheduler", "retention", "consistent backup", "checksum"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "The nightly job: backup, retention and a log",
+  "fa": "کار شبانه: بکاپ، نگه‌داری ۱۴ روزه و لاگ",
+  "goal": [
+    "از یک دیتابیس در حال کار بکاپ سازگار بگیری، فشرده کنی و checksum کنارش بگذاری.",
+    "بکاپ‌های قدیمی‌تر از N روز را پاک کنی و بدانی find -mtime دقیقاً چه چیزی را می‌شمارد.",
+    "کار را هر شب زمان‌بندی کنی (cron، systemd timer یا Task Scheduler) و خروجی‌اش را جایی بنویسی که بشود خواند."
+  ],
+  "story": "backup.sh روی VPS ساعت ۳:۳۰ هر شب از cron اجرا می‌شود: چهار دیتابیس SQL Server با BACKUP DATABASE ... WITH COPY_ONLY, CHECKSUM، MongoDB ریبایومد با mongodump، و سه volume فایل‌های آپلودی. نتیجه در /srv/backups/daily/<stamp>، و هر چیز قدیمی‌تر از ۱۴ روز پاک می‌شود. آخرین اجرا امشب ۳:۳۰ بود و همه‌ی بخش‌ها ok شدند. نمونه‌ی این درس همان شکل را با SQLite نشان می‌دهد (چون در کانتینر تست سبک است)، و تست‌ها یک تفاوت پنهان را ثابت می‌کنند: پوشه‌ی ۱۴.۵ روزه را find نگه می‌دارد و PowerShell و Python پاک می‌کنند.",
+  "why": [
+    ["Q", "چرا cp فایل دیتابیس کافی نیست؟"],
+    ["A", "اگر برنامه وسط کپی بنویسد، نیمی از فایل قبل از تغییر است و نیمی بعد از آن. ابزار بکاپ خود دیتابیس (sqlite .backup، BACKUP DATABASE، mongodump) یک عکس سازگار می‌گیرد."],
+    ["Q", "COPY_ONLY در backup.sh برای چیست؟"],
+    ["A", "بکاپ کامل معمولی زنجیره‌ی بکاپ‌های differential را از نو شروع می‌کند. COPY_ONLY یک بکاپ مستقل است که به برنامه‌ی بکاپ دیگری دست نمی‌زند."]
+  ],
+  "concepts": [
+    {
+      "h": "cron",
+      "body": "30 3 * * * یعنی دقیقه ۳۰، ساعت ۳، هر روز. cron با PATH کوتاه (/usr/bin:/bin) و بدون profile اجرا می‌کند؛ مسیرها را کامل بنویس. >> log 2>&1 هم خروجی و هم خطا را به لاگ می‌فرستد (ترتیبش مهم است: 2>&1 >> log خطا را جا می‌اندازد). اگر سرور ساعت ۳:۳۰ خاموش بود، cron آن شب را جبران نمی‌کند."
+    },
+    {
+      "h": "systemd timer",
+      "body": "دو فایل: backup.service (ExecStart=/srv/.../backup.sh) و backup.timer (OnCalendar=*-*-* 03:30، Persistent=true). Persistent یعنی اجرای جاافتاده بعد از روشن شدن انجام شود. لاگ خودکار در journalctl -u backup، کد خروج در systemctl status، و systemctl list-timers زمان اجرای بعدی را نشان می‌دهد."
+    },
+    {
+      "h": "Task Scheduler ویندوز",
+      "body": "Register-ScheduledTask با New-ScheduledTaskTrigger -Daily -At 3:30am و یک Action که pwsh -NoProfile -NonInteractive -File را اجرا می‌کند. «Run whether user is logged on or not» و «Run task as soon as possible after a scheduled start is missed» معادل Persistent هستند. کد خروج در Last Run Result."
+    },
+    {
+      "h": "نگه‌داری و checksum",
+      "body": "find -mtime +14 سن را به روز کامل گرد پایین می‌کند و فقط ۱۵ روز و بیشتر را پاک می‌کند؛ PowerShell و Python دقیقاً ۱۴×۲۴ ساعت را مقایسه می‌کنند. SHA256SUMS کنار هر بکاپ به فرمت sha256sum است تا هر کپی در هر جا با sha256sum -c قابل اثبات باشد."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "زمان‌بندی",
+      "bash": "crontab: 30 3 * * * /path/backup.sh >> log 2>&1",
+      "powershell": "Register-ScheduledTask -Trigger (New-ScheduledTaskTrigger -Daily -At 3:30am)",
+      "python": "زمان‌بند ندارد؛ از cron یا systemd timer",
+      "diff": "cron اجرای جاافتاده را جبران نمی‌کند؛ systemd با Persistent=true و Task Scheduler با گزینه‌اش جبران می‌کنند."
+    },
+    {
+      "concept": "بکاپ سازگار SQLite",
+      "bash": "sqlite3 app.db \".backup 'out/app.db'\"",
+      "powershell": "sqlite3 $db \".backup '$out/app.db'\" + $LASTEXITCODE",
+      "python": "src.backup(dst)",
+      "diff": "Python API بکاپ را در ماژول استاندارد دارد؛ بقیه CLI را صدا می‌زنند."
+    },
+    {
+      "concept": "gzip",
+      "bash": "gzip file",
+      "powershell": "[IO.Compression.GZipStream]",
+      "python": "gzip.open(..., 'wb')",
+      "diff": "Compress-Archive پاورشل zip می‌سازد، نه gz."
+    },
+    {
+      "concept": "checksum",
+      "bash": "sha256sum app.db.gz > SHA256SUMS",
+      "powershell": "(Get-FileHash -Algorithm SHA256).Hash.ToLower()",
+      "python": "hashlib.sha256(data).hexdigest()",
+      "diff": "Get-FileHash حروف بزرگ می‌دهد؛ برای sha256sum -c کوچکش کن."
+    },
+    {
+      "concept": "پاک کردن قدیمی‌تر از ۱۴ روز",
+      "bash": "find daily -mindepth 1 -maxdepth 1 -type d -mtime +14 -exec rm -rf {} +",
+      "powershell": "Get-ChildItem -Directory | Where-Object LastWriteTime -lt (Get-Date).AddDays(-14) | Remove-Item -Recurse",
+      "python": "if d.stat().st_mtime < time.time() - 14 * 86400: shutil.rmtree(d)",
+      "diff": "find روز کامل می‌شمارد: پوشه‌ی ۱۴.۵ روزه می‌ماند. دو تای دیگر آن را پاک می‌کنند. تست ثابتش می‌کند."
+    }
+  ],
+  "code": [
+    { "group": "backup", "lang": "bash", "title": "بکاپ سازگار، فشرده، با checksum", "origin": "tested", "file": "ops/backup/backup.sh", "region": "backup" },
+    { "group": "backup", "lang": "powershell", "title": "بکاپ سازگار، فشرده، با checksum", "origin": "tested", "file": "ops/backup/backup.ps1", "region": "backup" },
+    { "group": "backup", "lang": "python", "title": "بکاپ سازگار، فشرده، با checksum", "origin": "tested", "file": "ops/backup/backup.py", "region": "backup" },
+    { "group": "retention", "lang": "bash", "title": "نگه‌داری ۱۴ روز", "origin": "tested", "file": "ops/backup/backup.sh", "region": "retention" },
+    { "group": "retention", "lang": "powershell", "title": "نگه‌داری ۱۴ روز", "origin": "tested", "file": "ops/backup/backup.ps1", "region": "retention" },
+    { "group": "retention", "lang": "python", "title": "نگه‌داری ۱۴ روز", "origin": "tested", "file": "ops/backup/backup.py", "region": "retention" },
+    {
+      "group": "sqlserver",
+      "lang": "all",
+      "title": "همان کار برای SQL Server در کانتینر (backup.sh روی VPS)",
+      "origin": "real",
+      "code": "for db in \"${DATABASES[@]}\"; do\n  # Express can't compress backups; gzip does it afterwards.\n  sql \"BACKUP DATABASE [$db] TO DISK = N'/var/opt/mssql/backup/$db.bak' WITH INIT, COPY_ONLY, CHECKSUM\" >/dev/null\n  # Read it through the container: the file belongs to mssql (uid 10001).\n  docker compose exec -T sqlserver cat \"/var/opt/mssql/backup/$db.bak\" | gzip > \"$OUT/$db.bak.gz\"\n  docker compose exec -T sqlserver rm -f \"/var/opt/mssql/backup/$db.bak\"\n  echo \"  $db ok\"\ndone\n\ndocker compose exec -T rebiomed-mongo mongodump --quiet --archive --gzip > \"$OUT/rebiomed-mongo.archive.gz\""
+    }
+  ],
+  "pitfalls": [
+    {
+      "lang": "bash",
+      "mistake": "cron با دستوری که در ترمینال کار می‌کند",
+      "why": "cron PATH و متغیرهای profile را ندارد؛ docker یا sqlcmd پیدا نمی‌شود و خطا فقط در ایمیلی می‌رود که کسی نمی‌خواند.",
+      "fix": "مسیر کامل اسکریپت، cd داخل اسکریپت، و >> log 2>&1."
+    },
+    {
+      "lang": "all",
+      "mistake": "لاگی که فقط «شروع» دارد",
+      "why": "اگر اسکریپت وسط کار بمیرد، لاگ نمی‌گوید کجا. بدون خط done نمی‌دانی موفق بود.",
+      "fix": "زمان شروع، یک خط ok برای هر بخش، و زمان پایان با حجم؛ مثل backup.sh."
+    },
+    {
+      "lang": "python",
+      "mistake": "with sqlite3.connect(...) as conn برای بستن اتصال",
+      "why": "context manager اتصال sqlite3 فقط commit یا rollback می‌کند و فایل را باز نگه می‌دارد.",
+      "fix": "contextlib.closing(sqlite3.connect(...))."
+    },
+    {
+      "lang": "powershell",
+      "mistake": "Compress-Archive برای فایل .gz",
+      "why": "zip می‌سازد؛ gunzip یا gzip -t رویش شکست می‌خورد.",
+      "fix": "GZipStream، یا اگر zip می‌خواهی پسوند .zip."
+    },
+    {
+      "lang": "all",
+      "mistake": "پاک کردن قدیمی‌ها قبل از ساختن بکاپ امشب",
+      "why": "اگر بکاپ امشب شکست بخورد، یک بکاپ خوب کمتر داری.",
+      "fix": "اول بکاپ تازه، بعد پاک کردن؛ با set -e شکست بکاپ به پاک کردن نمی‌رسد."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/backup.sh", "line": 8, "note": "«این در برابر اشتباه محافظت می‌کند، نه در برابر از دست دادن سرور»" },
+    { "project": "ControlPanel", "file": "deploy/vps/backup.sh", "line": 34, "note": "BACKUP DATABASE ... WITH INIT, COPY_ONLY, CHECKSUM" },
+    { "project": "ControlPanel", "file": "deploy/vps/backup.sh", "line": 52, "note": "نگه‌داری ۱۴ روزه با find -mtime" },
+    { "project": "ControlPanel", "file": "deploy/vps/README.md", "line": 163, "note": "خط crontab ساعت ۳:۳۰ با لاگ" }
+  ],
+  "exercises": [
+    {
+      "q": "backup.sh را به یک systemd timer منتقل کن. دو فایل را بنویس.",
+      "a": "/etc/systemd/system/portfolio-backup.service: [Service] Type=oneshot, User=deploy, ExecStart=/srv/portfolio/ControlPanel/deploy/vps/backup.sh. و portfolio-backup.timer: [Timer] OnCalendar=*-*-* 03:30, Persistent=true; [Install] WantedBy=timers.target. بعد systemctl enable --now portfolio-backup.timer."
+    },
+    {
+      "q": "پوشه‌ای که دقیقاً ۱۴ روز و ۱۲ ساعت پیش ساخته شده با KEEP_DAYS=14 در هر زبان چه می‌شود؟",
+      "a": "Bash (find -mtime +14) نگهش می‌دارد چون ۱۴.۵ به ۱۴ گرد می‌شود و ۱۴ > ۱۴ نیست. PowerShell و Python پاکش می‌کنند. تست‌های examples/ops هر سه را چک می‌کنند."
+    },
+    {
+      "q": "KEEP_DAYS روی VPS ۱۴ است، ولی در /srv/backups/daily پانزده پوشه هست. اشکال است؟",
+      "a": "نه، همان گرد کردن find است: پوشه‌ی دقیقاً ۱۴ روز و چند ساعته هنوز «۱۴ روز» حساب می‌شود و -mtime +14 آن را نگه می‌دارد. با اجرای ۳:۳۰ هر شب، همیشه ۱۵ پوشه می‌ماند."
+    },
+    {
+      "q": "از کجا می‌فهمی بکاپ دیشب اجرا شده؟",
+      "a": "tail /srv/backups/backup.log: خط done با تاریخ امروز. بدون آن خط یعنی یا اجرا نشده یا وسط کار مرده. بهتر: یک health check بیرونی (مثل healthchecks.io) که اسکریپت در پایان صدایش کند و اگر نکرد به تو خبر دهد."
+    }
+  ],
+  "take": "The nightly job takes a consistent backup with the database's own tool, compresses it, writes a checksum next to it, deletes old ones only after the new one exists, and logs start, every part and the end, so the log alone tells me whether last night worked."
+}

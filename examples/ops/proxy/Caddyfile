@@ -1,0 +1,38 @@
+# The Control Panel's Caddyfile in miniature: an app behind Caddy, once public and
+# once behind basic auth. Tested over plain HTTP (CI has no domain). On the VPS the
+# site address is the domain itself, e.g. `panel.example.com {`, and Caddy gets and
+# renews its Let's Encrypt certificate and redirects HTTP to HTTPS by itself.
+
+# #region proxy
+(common) {
+	encode zstd gzip
+	# Two blocks on purpose. A deletion (-Server) defers its whole block until the
+	# final response, and deferred headers are lost when a handler fails, as basic_auth
+	# does with its 401. Set right away, these reach the 401 too.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	# Deferred: removes the app's own Server header too.
+	header -Server
+}
+
+(private) {
+	basic_auth {
+		# A bcrypt hash (caddy hash-password), never the password itself.
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+}
+
+:8080 {
+	import common
+	reverse_proxy app:80
+}
+
+:8081 {
+	import common
+	import private
+	reverse_proxy app:80
+}
+# #endregion

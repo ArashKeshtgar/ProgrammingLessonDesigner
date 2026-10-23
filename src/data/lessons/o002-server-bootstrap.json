@@ -1,0 +1,145 @@
+{
+  "_id": "o002",
+  "n": 2,
+  "tag": "ops",
+  "topics": ["ssh hardening", "ufw", "fail2ban", "swap", "non-root user"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "Setting up a fresh server",
+  "fa": "راه‌اندازی سرور تازه: SSH، فایروال، fail2ban و swap",
+  "goal": [
+    "یک سرور Ubuntu تازه را به کاربر غیر root، ورود فقط با کلید، فایروال، fail2ban، به‌روزرسانی خودکار و swap برسانی.",
+    "بفهمی چرا ترتیب نام فایل‌های sshd_config.d مهم است و تنظیم را از خود sshd بپرسی، نه از فایل.",
+    "کاری کنی که اشتباه در کلید، تو را از سرور بیرون نیندازد."
+  ],
+  "story": "bootstrap.sh یک بار روی VPS با sudo اجرا شد. سخت‌ترین قسمتش یک خط بود: فایل سخت‌سازی اول 99-hardening.conf نام داشت و sshd هنوز رمز عبور قبول می‌کرد. دلیلش: image ابری OVH فایل 50-cloud-init.conf با PasswordAuthentication yes دارد، و sshd برای هر تنظیم اولین مقداری را که می‌خواند نگه می‌دارد. حالا فایل 00-hardening.conf است و اسکریپت با sshd -T از خود sshd می‌پرسد. تست این درس همان وضعیت را در یک کانتینر Ubuntu 24.04 می‌سازد و نشان می‌دهد 99- می‌بازد.",
+  "why": [
+    ["Q", "چرا کاربر deploy، وقتی root هست؟"],
+    ["A", "root را همه‌ی رباتهای اینترنت امتحان می‌کنند و هر اشتباهی با آن بی‌حد است. deploy با sudo کار می‌کند، و ورود مستقیم root از SSH بسته است."],
+    ["Q", "چرا اسکریپت می‌گوید session اول را نبند؟"],
+    ["A", "اگر کلید درست کپی نشده باشد، بعد از بسته شدن ورود با رمز دیگر راهی به داخل نیست. session باز راه برگشت است تا وقتی ssh deploy@server از ترمینال دوم کار کند."]
+  ],
+  "concepts": [
+    {
+      "h": "SSH: اولین مقدار برنده است",
+      "body": "sshd_config در اولین خطش Include /etc/ssh/sshd_config.d/*.conf دارد و فایل‌ها به ترتیب الفبا خوانده می‌شوند. برای بیشتر تنظیم‌ها اولین مقدار می‌ماند. پس فایل سخت‌سازی باید قبل از 50-cloud-init.conf بیاید. sshd -t نحو را چک می‌کند و sshd -T تنظیم نهایی را چاپ می‌کند."
+    },
+    {
+      "h": "فایروال و Docker",
+      "body": "ufw: همه‌ی ورودی‌ها بسته، فقط 22، 80 و 443. ولی Docker پورت‌های publish‌شده را مستقیم در iptables باز می‌کند و ufw آن را نمی‌بیند. برای همین compose.vps.yml همه‌ی ports را با !reset برمی‌دارد و فقط Caddy پورت دارد."
+    },
+    {
+      "h": "fail2ban و به‌روزرسانی خودکار",
+      "body": "fail2ban لاگ sshd را می‌خواند و IPی که ۵ بار در ۱۰ دقیقه شکست خورد را یک ساعت می‌بندد. unattended-upgrades وصله‌های امنیتی را هر روز خودش نصب می‌کند؛ ریبوت با توست."
+    },
+    {
+      "h": "swap و لاگ کانتینرها",
+      "body": "SQL Server و buildها حافظه می‌خورند؛ ۴ گیگ swap جلوی OOM killer را در اوج می‌گیرد و vm.swappiness=10 یعنی فقط در اضطرار. daemon.json لاگ کانتینرها را به ۳ فایل ۱۰ مگابایتی محدود می‌کند، وگرنه یک روز دیسک پر می‌شود."
+    },
+    {
+      "h": "در ویندوز چه معادلی دارد؟",
+      "body": "OpenSSH Server ویندوز همان sshd_config را دارد (C:\\ProgramData\\ssh)، فایروال Windows Defender با New-NetFirewallRule، و به‌جای fail2ban معمولاً قفل حساب در Local Security Policy. PowerShell 7 روی لینوکس هم اجرا می‌شود، و نسخه‌ی PowerShell این درس در همان کانتینر Ubuntu تست شده."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "نوشتن فایل تنظیم",
+      "bash": "cat > file <<'EOF' ... EOF",
+      "powershell": "@(...) -join \"`n\" | Set-Content -NoNewline",
+      "python": "Path(file).write_text(text)",
+      "diff": "here-string پاورشل پایان خط خود فایل .ps1 را می‌گیرد؛ checkout با CRLF به sshd «no\\r» می‌دهد."
+    },
+    {
+      "concept": "پاک کردن فایلی که شاید نباشد",
+      "bash": "rm -f file",
+      "powershell": "Remove-Item file -ErrorAction Ignore",
+      "python": "Path(file).unlink(missing_ok=True)",
+      "diff": "بدون -ErrorAction Ignore، 'Stop' نبودن فایل را خطا می‌کند."
+    },
+    {
+      "concept": "پرسیدن تنظیم واقعی",
+      "bash": "sshd -T | grep -qx 'passwordauthentication no'",
+      "powershell": "(sshd -T) -notcontains 'passwordauthentication no'",
+      "python": "'...' in run(['sshd','-T']).stdout.splitlines()",
+      "diff": "خروجی native در PowerShell آرایه‌ای از خط‌هاست؛ -contains کل خط را مقایسه می‌کند."
+    },
+    {
+      "concept": "اجرا با دسترسی root",
+      "bash": "[[ $EUID -eq 0 ]] || die",
+      "powershell": "[Environment]::UserName -eq 'root' (ویندوز: #Requires -RunAsAdministrator)",
+      "python": "os.geteuid() == 0",
+      "diff": "#Requires -RunAsAdministrator فقط در ویندوز معنی دارد."
+    }
+  ],
+  "code": [
+    { "group": "harden", "lang": "bash", "title": "سخت‌سازی SSH و اثباتش", "origin": "tested", "file": "ops/server/harden-ssh.sh", "region": "harden" },
+    { "group": "harden", "lang": "powershell", "title": "سخت‌سازی SSH و اثباتش", "origin": "tested", "file": "ops/server/harden-ssh.ps1", "region": "harden" },
+    { "group": "harden", "lang": "python", "title": "سخت‌سازی SSH و اثباتش", "origin": "tested", "file": "ops/server/harden_ssh.py", "region": "harden" },
+    {
+      "group": "bootstrap",
+      "lang": "all",
+      "title": "بقیه‌ی bootstrap.sh (Bash): فایروال، fail2ban، swap",
+      "origin": "real",
+      "code": "ufw default deny incoming\nufw default allow outgoing\nufw allow OpenSSH\nufw allow 80/tcp\nufw allow 443/tcp\nufw allow 443/udp   # HTTP/3\nufw --force enable\n\ncat > /etc/fail2ban/jail.d/sshd.local <<'EOF'\n[sshd]\nenabled = true\nmaxretry = 5\nfindtime = 10m\nbantime = 1h\nEOF\nsystemctl enable --now fail2ban\n\nif ! swapon --show | grep -q .; then   # only once: the script can run again\n  fallocate -l \"$SWAP_SIZE\" /swapfile\n  chmod 600 /swapfile\n  mkswap /swapfile\n  swapon /swapfile\n  echo '/swapfile none swap sw 0 0' >> /etc/fstab\n  echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf\nfi"
+    }
+  ],
+  "pitfalls": [
+    {
+      "lang": "all",
+      "mistake": "نام 99-hardening.conf",
+      "why": "50-cloud-init.conf زودتر خوانده می‌شود و PasswordAuthentication yes آن می‌ماند. تست این درس این را نشان می‌دهد.",
+      "fix": "00-hardening.conf، و همیشه sshd -T برای اثبات."
+    },
+    {
+      "lang": "all",
+      "mistake": "بستن session اول قبل از امتحان کاربر جدید",
+      "why": "کلید اشتباه یعنی دیگر هیچ راهی به سرور نیست جز کنسول ارائه‌دهنده.",
+      "fix": "از ترمینال دوم ssh deploy@server؛ فقط بعد از موفقیت، اولی را ببند."
+    },
+    {
+      "lang": "all",
+      "mistake": "اعتماد به ufw برای پورت‌های Docker",
+      "why": "ports: \"1433:1433\" در compose از ufw رد می‌شود و SQL Server به اینترنت باز است.",
+      "fix": "هیچ پورتی جز reverse proxy publish نکن، یا به 127.0.0.1 ببند."
+    },
+    {
+      "lang": "all",
+      "mistake": "اسکریپتی که دوبار اجرا شدنش خراب می‌کند",
+      "why": "دومین اجرا خط swap را دوباره به fstab اضافه می‌کند یا کاربر را دوباره می‌سازد و خطا می‌دهد.",
+      "fix": "هر قدم اول چک کند: if ! id user، if ! swapon --show | grep -q ."
+    },
+    {
+      "lang": "bash",
+      "mistake": "sshd -T | grep -qx ... زیر pipefail",
+      "why": "grep -q با اولین تطابق خارج می‌شود، sshd در نوشتن بقیه‌ی خروجی SIGPIPE می‌گیرد و pipefail کل pipeline را شکست می‌داند. نتیجه تصادفی است: بسته به اینکه خط کجای خروجی باشد. تست این درس اول همین را گرفت، و bootstrap.sh هم همین خط را داشت (حالا درست شده).",
+      "fix": "اول در متغیر: effective=\"$(sshd -T)\"، بعد grep -qx ... <<<\"$effective\"."
+    },
+    {
+      "lang": "powershell",
+      "mistake": "here-string برای فایل تنظیم لینوکس",
+      "why": "اگر .ps1 با CRLF ذخیره شده باشد، هر خط به \\r ختم می‌شود و sshd آن را نمی‌فهمد.",
+      "fix": "خط‌ها را با \"`n\" join کن، یا .gitattributes با eol=lf."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/bootstrap.sh", "line": 62, "note": "چرا 00- و نه 99-: sshd اولین مقدار را نگه می‌دارد" },
+    { "project": "ControlPanel", "file": "deploy/vps/bootstrap.sh", "line": 76, "note": "sshd -T در یک متغیر، بعد grep: اثبات اینکه رمز عبور واقعاً بسته است، بدون شکست تصادفی SIGPIPE" },
+    { "project": "ControlPanel", "file": "deploy/vps/bootstrap.sh", "line": 89, "note": "Docker از ufw رد می‌شود؛ فقط پورت‌های Caddy publish شده‌اند" },
+    { "project": "ControlPanel", "file": "deploy/vps/bootstrap.sh", "line": 132, "note": "محدود کردن لاگ کانتینرها در daemon.json" }
+  ],
+  "exercises": [
+    {
+      "q": "روی سرور sudo sshd -T | grep -E 'permitrootlogin|passwordauthentication' چه باید نشان دهد؟",
+      "a": "permitrootlogin no و passwordauthentication no. اگر yes دیدی، یک فایل دیگر در sshd_config.d زودتر خوانده شده است."
+    },
+    {
+      "q": "بعد از bootstrap، چطور مطمئن می‌شوی جز 22، 80 و 443 چیزی از بیرون باز نیست؟",
+      "a": "sudo ss -tlnp روی سرور (همه‌ی گوش‌دهنده‌های 0.0.0.0 را ببین)، و از بیرون nmap -Pn <ip>. ufw status کافی نیست چون پورت‌های Docker را نشان نمی‌دهد."
+    },
+    {
+      "q": "harden-ssh.ps1 را روی ویندوز اجرا کنی چه چیزی را باید عوض کنی؟",
+      "a": "مسیر به C:\\ProgramData\\ssh\\sshd_config، و sshd ویندوز sshd_config.d را پیش‌فرض Include نمی‌کند؛ باید خود sshd_config را ویرایش کنی و Restart-Service sshd."
+    }
+  ],
+  "take": "A fresh server gets a sudo user with my key, SSH with keys only and no root, a firewall that allows 22, 80 and 443, fail2ban, automatic security updates and swap; and I prove the SSH change with sshd -T before I close the session that could still get me back in."
+}

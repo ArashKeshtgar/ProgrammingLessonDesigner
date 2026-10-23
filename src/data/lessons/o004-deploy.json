@@ -1,0 +1,141 @@
+{
+  "_id": "o004",
+  "n": 4,
+  "tag": "ops",
+  "topics": ["flock", "file lock", "git pull --ff-only", "health check", "idempotent deploy"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "Deploying on the server: one at a time, fast-forward only, wait for health",
+  "fa": "استقرار روی سرور: یکی‌یکی، فقط fast-forward، صبر برای سلامت",
+  "goal": [
+    "با یک قفل فایل مطمئن شوی دو deploy هم‌زمان روی هم کار نمی‌کنند، و قفل بعد از crash گیر نمی‌کند.",
+    "کد را فقط با fast-forward بکشی تا سرور هیچ‌وقت merge اختراع نکند.",
+    "deploy را تا وقتی برنامه به health جواب نداده موفق حساب نکنی."
+  ],
+  "story": "deploy.sh هم دستی اجرا می‌شود، هم از GitHub Actions بعد از هر push موفق، هم از قدم پنجم release.ps1. دو push پشت سر هم یعنی دو deploy که می‌توانند هم‌زمان git pull و docker compose up --build کنند. خط exec 9>/tmp/portfolio-deploy.lock; flock 9 دومی را منتظر نگه می‌دارد. بعد pull --ff-only، build، و حلقه‌ای که تا ۵ دقیقه منتظر می‌ماند همه‌ی سرویس‌ها healthy شوند؛ اگر نشدند کد ۱ و Action قرمز. نمونه‌ی این درس همان سه قدم است و تست‌ها هر سه را واقعاً امتحان می‌کنند: قفل گرفته‌شده، repo واگرا، و برنامه‌ای که جواب نمی‌دهد.",
+  "why": [
+    ["Q", "چرا قفل فایل و نه یک فایل «در حال اجرا» که آخر کار پاک شود؟"],
+    ["A", "اگر اسکریپت وسط کار بمیرد (kill، OOM، قطع SSH) فایل می‌ماند و deploy بعدی برای همیشه منتظر است. flock را kernel نگه می‌دارد و با بسته شدن فایل یا مرگ پروسه، هر طور که باشد، آزاد می‌کند."],
+    ["Q", "چرا --ff-only؟ pull معمولی هم کار می‌کند."],
+    ["A", "pull معمولی وقتی سرور commit خودش را داشته باشد یک merge commit می‌سازد که هیچ‌کس review نکرده. --ff-only در این حالت متوقف می‌شود و می‌گوید چیزی غیرعادی است."]
+  ],
+  "concepts": [
+    {
+      "h": "قفل در سه زبان",
+      "body": "Bash: exec 9>file باز می‌کند و flock 9 منتظر می‌ماند؛ flock -n فوراً شکست می‌خورد تا بشود پیام «منتظرم» داد. Python: fcntl.flock با همان قفل kernel، پس با Bash هم هماهنگ است. PowerShell: [IO.File]::Open(..., FileShare.None)؛ .NET روی لینوکس همان flock را می‌گیرد، ولی صبر نمی‌کند و استثنا می‌دهد، پس حلقه لازم است. روی ویندوز FileShare.None قفل واقعی ویندوز است."
+    },
+    {
+      "h": "idempotent",
+      "body": "deploy.sh را صد بار پشت سر هم اجرا کنی نتیجه همان است: repo اگر نیست clone، اگر هست pull، و docker compose up فقط چیزی را که عوض شده دوباره می‌سازد. اسکریپتی که بار دوم خطا می‌دهد، در CI که retry می‌کند، دردسر می‌شود."
+    },
+    {
+      "h": "صبر برای health",
+      "body": "اینکه docker compose up تمام شد یعنی کانتینرها شروع شدند، نه اینکه برنامه جواب می‌دهد. deploy.sh وضعیت HEALTHCHECK هر کانتینر را می‌خواند تا هیچ‌کدام starting نباشد، و اگر unhealthy ماند با کد ۱ تمام می‌شود. نمونه‌ی این درس همین را با یک URL نشان می‌دهد: هر ثانیه یک درخواست، تا سقف timeout."
+    },
+    {
+      "h": "Caddyfile و bind mount",
+      "body": "یک نکته‌ی پنهان از deploy.sh: Caddyfile تک‌فایل mount شده. git pull فایل را با فایل تازه جایگزین می‌کند (inode جدید) و کانتینر هنوز نسخه‌ی قدیم را می‌بیند. deploy.sh قبل و بعد از pull hash می‌گیرد و اگر فرق کرد caddy را restart می‌کند."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "گرفتن قفل",
+      "bash": "exec 9>lock; flock 9",
+      "powershell": "[IO.File]::Open(lock, 'OpenOrCreate', 'ReadWrite', 'None')",
+      "python": "fcntl.flock(f, fcntl.LOCK_EX)",
+      "diff": "PowerShell/.NET صبر نمی‌کند؛ IOException را بگیر و دوباره امتحان کن."
+    },
+    {
+      "concept": "امتحان بدون صبر",
+      "bash": "flock -n 9",
+      "powershell": "(همیشه بدون صبر)",
+      "python": "LOCK_EX | LOCK_NB → BlockingIOError",
+      "diff": "حالت بدون صبر برای چاپ «منتظرم» است، تا کسی فکر نکند اسکریپت هنگ کرده."
+    },
+    {
+      "concept": "آزاد شدن قفل",
+      "bash": "با پایان پروسه",
+      "powershell": "$lock.Dispose() در finally",
+      "python": "با بسته شدن فایل یا پایان پروسه",
+      "diff": "در هر سه، مرگ پروسه قفل را آزاد می‌کند؛ هیچ فایل قفل کهنه‌ای نمی‌ماند."
+    },
+    {
+      "concept": "درخواست health",
+      "bash": "curl -fsS -o /dev/null -m 5 \"$url\"",
+      "powershell": "Invoke-WebRequest $url -TimeoutSec 5",
+      "python": "urllib.request.urlopen(url, timeout=5)",
+      "diff": "curl بدون -f با ۵۰۰ هم موفق است؛ Invoke-WebRequest و urlopen روی ۴xx/۵xx استثنا می‌دهند."
+    },
+    {
+      "concept": "حلقه با timeout",
+      "bash": "for _ in $(seq \"$timeout\"); do ...; sleep 1; done",
+      "powershell": "foreach ($i in 1..$timeout) { ... }",
+      "python": "for _ in range(timeout): ...",
+      "diff": "بعد از حلقه یعنی شکست: هر سه با پیام و کد غیر صفر تمام می‌شوند."
+    }
+  ],
+  "code": [
+    { "group": "lock", "lang": "bash", "title": "یک deploy در هر لحظه", "origin": "tested", "file": "ops/deploy/deploy.sh", "region": "lock" },
+    { "group": "lock", "lang": "powershell", "title": "یک deploy در هر لحظه", "origin": "tested", "file": "ops/deploy/deploy.ps1", "region": "lock" },
+    { "group": "lock", "lang": "python", "title": "یک deploy در هر لحظه", "origin": "tested", "file": "ops/deploy/deploy.py", "region": "lock" },
+    { "group": "pull", "lang": "bash", "title": "pull فقط با fast-forward", "origin": "tested", "file": "ops/deploy/deploy.sh", "region": "pull" },
+    { "group": "pull", "lang": "powershell", "title": "pull فقط با fast-forward", "origin": "tested", "file": "ops/deploy/deploy.ps1", "region": "pull" },
+    { "group": "pull", "lang": "python", "title": "pull فقط با fast-forward", "origin": "tested", "file": "ops/deploy/deploy.py", "region": "pull" },
+    { "group": "health", "lang": "bash", "title": "موفق فقط وقتی برنامه جواب داد", "origin": "tested", "file": "ops/deploy/deploy.sh", "region": "health" },
+    { "group": "health", "lang": "powershell", "title": "موفق فقط وقتی برنامه جواب داد", "origin": "tested", "file": "ops/deploy/deploy.ps1", "region": "health" },
+    { "group": "health", "lang": "python", "title": "موفق فقط وقتی برنامه جواب داد", "origin": "tested", "file": "ops/deploy/deploy.py", "region": "health" }
+  ],
+  "pitfalls": [
+    {
+      "lang": "all",
+      "mistake": "فایل pid یا «در حال اجرا» به‌جای قفل",
+      "why": "بعد از یک crash فایل می‌ماند و همه‌ی deployهای بعدی گیر می‌کنند، یا کسی آن را دستی پاک می‌کند وقتی واقعاً deployی در حال اجراست.",
+      "fix": "flock (یا FileShare.None)؛ kernel صاحب قفل است."
+    },
+    {
+      "lang": "all",
+      "mistake": "deploy موفق = docker compose up تمام شد",
+      "why": "کانتینر بالا آمده ولی برنامه هنوز migration می‌کند یا crash-loop است. Action سبز است و سایت ۵۰۲ می‌دهد.",
+      "fix": "تا healthy شدن صبر کن و در غیر این صورت کد ۱."
+    },
+    {
+      "lang": "all",
+      "mistake": "docker compose up --wait وقتی سرویس‌های یک‌باره (db-init، seed) هست",
+      "why": "بعضی نسخه‌های Compose خروج عادی آن‌ها را شکست حساب می‌کنند.",
+      "fix": "حلقه‌ی خودت روی docker compose ps --format '{{.Health}}'، مثل deploy.sh."
+    },
+    {
+      "lang": "bash",
+      "mistake": "curl بدون -f در health check",
+      "why": "curl روی ۵۰۰ هم کد ۰ برمی‌گرداند؛ health check همیشه موفق است.",
+      "fix": "curl -fsS."
+    },
+    {
+      "lang": "powershell",
+      "mistake": "catch بدون نوع دور [IO.File]::Open",
+      "why": "مسیر اشتباه یا نبود دسترسی هم IOException نیست و باید فوراً خطا بدهد، نه اینکه برای همیشه «منتظر» بماند.",
+      "fix": "catch [IO.IOException]؛ بقیه‌ی خطاها بالا بروند."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/deploy.sh", "line": 28, "note": "exec 9>/tmp/portfolio-deploy.lock; flock 9" },
+    { "project": "ControlPanel", "file": "deploy/vps/deploy.sh", "line": 41, "note": "git pull --ff-only برای هر repo" },
+    { "project": "ControlPanel", "file": "deploy/vps/deploy.sh", "line": 57, "note": "Caddyfile عوض شد؟ caddy را restart کن" },
+    { "project": "ControlPanel", "file": "deploy/vps/deploy.sh", "line": 62, "note": "صبر برای health، نه up --wait، و کد ۱ اگر سالم نشد" }
+  ],
+  "exercises": [
+    {
+      "q": "روی سرور، در یک ترمینال flock /tmp/portfolio-deploy.lock sleep 60 و در دیگری deploy.sh. چه می‌بینی؟",
+      "a": "deploy.sh واقعی پیامی نمی‌دهد و فقط صبر می‌کند (flock بدون -n). نسخه‌ی این درس اول می‌گوید «another deploy is running; waiting». بعد از ۶۰ ثانیه هر دو ادامه می‌دهند."
+    },
+    {
+      "q": "روی سرور یک commit در ControlPanel بساز و deploy.sh را اجرا کن. چرا شکست می‌خورد و چطور درستش می‌کنی؟",
+      "a": "اگر GitHub هم commit تازه دارد، تاریخچه‌ها واگرا شده‌اند و --ff-only رد می‌کند. commit سرور را به PC ببر (اگر لازم است)، بعد روی سرور git reset --hard origin/main."
+    },
+    {
+      "q": "deploy.ps1 روی ویندوز و deploy.sh روی همان ماشین در WSL هم‌زمان اجرا شوند؛ قفل جلویشان را می‌گیرد؟",
+      "a": "نه. قفل ویندوز (FileShare.None) و flock لینوکس دو سیستم جدا هستند، حتی روی یک فایل در /mnt/c. قفل فقط بین پروسه‌هایی کار می‌کند که از یک نوع قفل استفاده کنند."
+    }
+  ],
+  "take": "A deploy takes a kernel file lock so only one runs at a time and a crash can't leave it stuck, pulls with --ff-only so the server never invents a merge, and only reports success once the app answers its health check."
+}

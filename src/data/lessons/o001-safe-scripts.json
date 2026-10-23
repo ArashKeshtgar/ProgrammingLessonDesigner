@@ -1,0 +1,135 @@
+{
+  "_id": "o001",
+  "n": 1,
+  "tag": "ops",
+  "topics": ["set -euo pipefail", "ErrorActionPreference", "exit code", "fail fast"],
+  "langs": ["bash", "powershell", "python"],
+  "known": "powershell",
+  "en": "A script that stops on the first error",
+  "fa": "اسکریپت ایمن: اولین خطا یعنی توقف",
+  "goal": [
+    "بدانی Bash و PowerShell به‌طور پیش‌فرض بعد از خطا ادامه می‌دهند و Python نه، و هر کدام را چطور سخت‌گیر کنی.",
+    "خطای یک pipeline، متغیر تعریف‌نشده و exit code برنامه‌های بیرونی را در هر سه زبان بگیری.",
+    "جاهایی را بشناسی که حالت سخت‌گیر خودش اشتباه می‌کند: grep بدون نتیجه، head و SIGPIPE، و local."
+  ],
+  "story": "همه‌ی اسکریپت‌های deploy/vps در Control Panel با set -euo pipefail شروع می‌شوند و release.ps1 با $ErrorActionPreference = 'Stop'. این یک خط تفاوت بین «بکاپ گرفته نشد و خبردار شدی» و «بکاپ گرفته نشد و لاگ نوشت done» است. نمونه‌ی این درس یک خلاصه‌ساز لاگ است، با یک نسخه‌ی عمداً غلط کنارش: unsafe-log-summary.sh به فایلی که وجود ندارد می‌گوید «errors: 0» و با کد ۰ تمام می‌شود. تست‌ها همین را هم چک می‌کنند.",
+  "why": [
+    ["Q", "چرا Bash بعد از یک دستور خراب ادامه می‌دهد؟"],
+    ["A", "پوسته برای کار تعاملی ساخته شده: در ترمینال نمی‌خواهی با هر خطا پنجره بسته شود. اسکریپت همان قاعده را به ارث می‌برد، مگر اینکه با set -e عوضش کنی."],
+    ["Q", "PowerShell که exception دارد؛ مشکلش چیست؟"],
+    ["A", "بیشتر خطاهای cmdletها non-terminating هستند: پیام قرمز چاپ می‌شود و خط بعد اجرا می‌شود. 'Stop' آن‌ها را exception می‌کند. ولی برنامه‌های بیرونی مثل git یا sshd اصلاً exception نمی‌دهند؛ فقط $LASTEXITCODE عوض می‌شود."]
+  ],
+  "concepts": [
+    {
+      "h": "سه حرف Bash",
+      "body": "-e: اگر دستوری با کد غیر صفر تمام شد، اسکریپت هم تمام شود. -u: استفاده از متغیر تعریف‌نشده خطاست (rm -rf \"$DIR/\" با DIR خالی یعنی rm -rf /). -o pipefail: کد خروج یک pipeline کد آخرین دستور ناموفق آن است، نه فقط دستور آخر. بدون آن grep x missing.log | wc -l صفر چاپ می‌کند و موفق است."
+    },
+    {
+      "h": "PowerShell: دو نوع خطا",
+      "body": "$ErrorActionPreference = 'Stop' خطاهای cmdletها را terminating می‌کند و Set-StrictMode -Version Latest متغیر تعریف‌نشده را خطا می‌کند. برای برنامه‌های native باید بعد از هر فراخوانی $LASTEXITCODE را چک کنی؛ از PowerShell 7.4 می‌شود $PSNativeCommandUseErrorActionPreference = $true را هم روشن کرد. release.ps1 این کار را در تابع Git انجام می‌دهد."
+    },
+    {
+      "h": "Python: پیش‌فرض درست، با یک استثنا",
+      "body": "هر exception که گرفته نشود اسکریپت را با کد ۱ تمام می‌کند. استثنا subprocess.run است: بدون check=True کد خروج برنامه فقط در returncode می‌ماند و کسی نگاهش نمی‌کند."
+    },
+    {
+      "h": "وقتی سخت‌گیری اشتباه می‌کند",
+      "body": "grep وقتی چیزی پیدا نکند کد ۱ می‌دهد، و با pipefail «خطایی نبود» می‌شود «اسکریپت مُرد». پس فقط کد ۱ را ببخش (|| [[ $? -eq 1 ]])، نه همه را (|| true). head و grep -q زود می‌بندند و دستور قبلی با SIGPIPE (کد ۱۴۱) می‌میرد: تست درس دوم همین را در sshd -T | grep -qx گرفت. و local x=$(cmd) کد خروج cmd را می‌پوشاند، چون local خودش موفق است."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "روشن کردن توقف روی خطا",
+      "bash": "set -euo pipefail",
+      "powershell": "$ErrorActionPreference = 'Stop'",
+      "python": "(پیش‌فرض)",
+      "diff": "فقط Python بدون یک خط اضافه درست رفتار می‌کند."
+    },
+    {
+      "concept": "متغیر تعریف‌نشده",
+      "bash": "set -u",
+      "powershell": "Set-StrictMode -Version Latest",
+      "python": "NameError (پیش‌فرض)",
+      "diff": "بدون آن در Bash و PowerShell متغیر خالی بی‌صدا رشته‌ی خالی می‌شود."
+    },
+    {
+      "concept": "خطای برنامه‌ی بیرونی",
+      "bash": "با -e خودکار",
+      "powershell": "if ($LASTEXITCODE -ne 0) { throw }",
+      "python": "subprocess.run(..., check=True)",
+      "diff": "'Stop' در PowerShell روی git و sshd اثری ندارد؛ این بزرگ‌ترین سوراخ آن است."
+    },
+    {
+      "concept": "خطای وسط pipeline",
+      "bash": "set -o pipefail",
+      "powershell": "خطای cmdlet با 'Stop' متوقف می‌کند",
+      "python": "pipeline ندارد؛ هر قدم جدا",
+      "diff": "pipeline پاورشل شیء جابه‌جا می‌کند، نه متن؛ مشکل SIGPIPE را ندارد."
+    },
+    {
+      "concept": "کد خروج",
+      "bash": "exit 1",
+      "powershell": "exit 1 یا throw (کد ۱)",
+      "python": "sys.exit(1) یا sys.exit('پیام')",
+      "diff": "sys.exit با رشته پیام را در stderr می‌نویسد و کد ۱ برمی‌گرداند."
+    }
+  ],
+  "code": [
+    { "group": "strict", "lang": "bash", "title": "log-summary: شمردن خطاهای لاگ", "origin": "tested", "file": "ops/safe/log-summary.sh", "region": "strict" },
+    { "group": "strict", "lang": "powershell", "title": "log-summary: شمردن خطاهای لاگ", "origin": "tested", "file": "ops/safe/log-summary.ps1", "region": "strict" },
+    { "group": "strict", "lang": "python", "title": "log-summary: شمردن خطاهای لاگ", "origin": "tested", "file": "ops/safe/log_summary.py", "region": "strict" }
+  ],
+  "pitfalls": [
+    {
+      "lang": "bash",
+      "mistake": "اسکریپت بدون set -euo pipefail",
+      "why": "unsafe-log-summary.sh به لاگی که وجود ندارد می‌گوید errors: 0 و موفق تمام می‌شود. cron هم چیزی گزارش نمی‌کند.",
+      "fix": "set -euo pipefail خط دوم هر اسکریپت، بعد از shebang."
+    },
+    {
+      "lang": "bash",
+      "mistake": "grep ... || true",
+      "why": "خطای واقعی (فایل نیست، کد ۲) هم با «پیدا نشد» (کد ۱) قورت داده می‌شود.",
+      "fix": "grep ... || [[ $? -eq 1 ]]"
+    },
+    {
+      "lang": "powershell",
+      "mistake": "تکیه بر 'Stop' برای git، docker یا sshd",
+      "why": "برنامه‌ی native با کد غیر صفر exception نمی‌دهد؛ اسکریپت ادامه می‌دهد.",
+      "fix": "بعد از هر فراخوانی $LASTEXITCODE را چک کن، یا یک تابع کوچک مثل Invoke-Git بساز."
+    },
+    {
+      "lang": "powershell",
+      "mistake": "Select-String به‌جای grep بدون -CaseSensitive",
+      "why": "Select-String پیش‌فرض حساس به حروف نیست؛ «error» کوچک هم شمرده می‌شود و عدد با grep فرق می‌کند.",
+      "fix": "-CaseSensitive، و -SimpleMatch وقتی الگو regex نیست."
+    },
+    {
+      "lang": "python",
+      "mistake": "subprocess.run بدون check=True",
+      "why": "برنامه‌ی ناموفق فقط returncode را عوض می‌کند و اسکریپت ادامه می‌دهد.",
+      "fix": "check=True، یا چک صریح returncode."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": "deploy/vps/bootstrap.sh", "line": 20, "note": "set -euo pipefail، با log و die برای پیام‌ها" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 36, "note": "$ErrorActionPreference = 'Stop' و تابع Git که $LASTEXITCODE را چک می‌کند" },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 79, "note": "git پیشرفت را در stderr می‌نویسد و Windows PowerShell 5.1 با 'Stop' آن را خطا می‌گیرد؛ تصمیم با exit code است" }
+  ],
+  "exercises": [
+    {
+      "q": "در log-summary.sh خط count=... را به local count=... داخل یک تابع تبدیل کن و فایل ناموجود بده. چه می‌شود؟",
+      "hint": "کد خروج local چیست؟",
+      "a": "اسکریپت ادامه می‌دهد و «errors: » خالی چاپ می‌کند: local موفق است و کد خروج command substitution را می‌پوشاند. درستش: local count; count=\"$(...)\"."
+    },
+    {
+      "q": "چرا در log-summary.sh به‌جای head -3 از awk 'NR <= 3' استفاده شده؟",
+      "a": "head بعد از سه خط pipe را می‌بندد. اگر sort هنوز در حال نوشتن باشد SIGPIPE می‌گیرد و با کد ۱۴۱ تمام می‌شود، و pipefail کل اسکریپت را ناموفق می‌کند. awk همه‌ی ورودی را می‌خواند."
+    },
+    {
+      "q": "در PowerShell بنویس: git pull و اگر ناموفق بود اسکریپت با پیام متوقف شود.",
+      "a": "git pull --ff-only; if ($LASTEXITCODE -ne 0) { throw 'git pull failed' }  یا در 7.4 به بعد: $PSNativeCommandUseErrorActionPreference = $true قبل از آن."
+    }
+  ],
+  "take": "Every script starts strict: set -euo pipefail in Bash, ErrorActionPreference Stop plus an exit-code check after every native command in PowerShell, check=True for subprocess in Python, and the only error I excuse is the one I name, like grep's exit code 1."
+}

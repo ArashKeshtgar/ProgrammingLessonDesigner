@@ -4,8 +4,9 @@ import type { CodeSample } from '../types/lesson'
 // so the page shows exactly the code the CI compiles and tests.
 const files = import.meta.glob<string>(
   [
-    '../../examples/**/*.{py,ts,tsx,cs,java,vue,razor,yml,yaml,properties}',
+    '../../examples/**/*.{py,ts,tsx,cs,java,vue,razor,yml,yaml,properties,sh,ps1,conf}',
     '../../examples/**/Dockerfile',
+    '../../examples/**/Caddyfile',
     '!../../examples/**/node_modules/**',
     '!../../examples/**/.venv/**',
     '!../../examples/**/bin/**',
@@ -74,6 +75,9 @@ const BY_EXTENSION: Record<string, string> = {
   yml: 'yaml',
   yaml: 'yaml',
   properties: 'ini',
+  sh: 'bash',
+  ps1: 'powershell',
+  conf: 'nginx',
 }
 
 const BY_LANG: Record<string, string> = {
@@ -85,11 +89,19 @@ const BY_LANG: Record<string, string> = {
   angular: 'typescript',
   react: 'typescript',
   vue: 'xml',
+  bash: 'bash',
+  powershell: 'powershell',
+  github: 'yaml',
+  azure: 'yaml',
+  // highlight.js has no Caddyfile grammar; nginx's (blocks, directives, # comments) is close.
+  caddy: 'nginx',
+  nginx: 'nginx',
 }
 
 // highlight.js language for a sample: from the file name when there is one, else from the tab.
 export function highlightLanguage(s: CodeSample): string {
   if (s.file?.endsWith('Dockerfile')) return 'dockerfile'
+  if (s.file?.endsWith('Caddyfile')) return 'nginx'
   const ext = s.file?.split('.').pop()
   return (ext && BY_EXTENSION[ext]) || BY_LANG[s.lang] || 'plaintext'
 }

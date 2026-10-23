@@ -1,0 +1,27 @@
+# An app (nginx's default page) behind Caddy on 8080/8081 and behind nginx on 8090/8091,
+# published on the host as 18080/18081 and 18090/18091 (8080 is often taken).
+# Started by test.sh, which makes the password hashes.
+name: lessons-proxy
+
+services:
+  app:
+    image: nginx:1.27-alpine
+
+  caddy:
+    image: caddy:2.10-alpine
+    ports: ["18080:8080", "18081:8081"]
+    environment:
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER}
+      # Passed through from the shell, so the $ signs of the bcrypt hash stay as they are.
+      # Written into a compose file or .env unquoted, compose would read them as variables.
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH}
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
+    depends_on: [app]
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports: ["18090:8090", "18091:8091"]
+    volumes:
+      - "./nginx.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "${HTPASSWD:?set HTPASSWD}:/etc/nginx/htpasswd:ro"
+    depends_on: [app]

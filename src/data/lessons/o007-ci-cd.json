@@ -1,0 +1,152 @@
+{
+  "_id": "o007",
+  "n": 7,
+  "tag": "ops",
+  "topics": ["workflow_run", "concurrency", "forced command", "authorized_keys", "known_hosts", "secrets"],
+  "langs": ["github", "azure"],
+  "known": "github",
+  "en": "CI/CD to a VPS: deploy after tests, with a key that can only deploy",
+  "fa": "CI/CD: استقرار بعد از تست، با کلیدی که فقط deploy بلد است",
+  "goal": [
+    "استقرار را به نتیجه‌ی CI ببندی: فقط وقتی تست‌ها روی main سبز شدند، و دستی وقتی لازم است.",
+    "به CI یک کلید SSH بدهی که روی سرور فقط یک دستور را اجرا می‌کند، و host key سرور را از قبل ثابت کنی.",
+    "همین را در Azure Pipelines هم بشناسی: trigger از pipeline دیگر، environment، و secretها."
+  ],
+  "story": "deploy-vps.yml در Control Panel با workflow_run بعد از تمام شدن CI اجرا می‌شود و فقط اگر نتیجه success باشد ادامه می‌دهد. خود workflow هیچ دستوری به سرور نمی‌فرستد: کلید GitHub در authorized_keys با restrict,command=\".../deploy.sh\" ثبت شده، پس هر چه درخواست شود فقط deploy.sh اجرا می‌شود. host key هم از secret VPS_KNOWN_HOSTS می‌آید، نه از اولین جوابی که می‌رسد. تست این درس یک sshd واقعی در کانتینر بالا می‌آورد و ثابت می‌کند: دستور دیگر فقط deploy می‌کند، port forwarding رد می‌شود، و سروری با کلید دیگر پذیرفته نمی‌شود. LabFlow هم CI خود را در Azure Pipelines دارد؛ ستون دوم همان استقرار را آنجا نشان می‌دهد.",
+  "why": [
+    ["Q", "چرا workflow جدا با workflow_run و نه یک job دیگر در همان CI؟"],
+    ["A", "CI روی هر push و PR اجرا می‌شود و نباید به secretهای سرور دسترسی داشته باشد. workflow جدا permissions: {} دارد، secretها را فقط خودش می‌بیند، و می‌شود دستی هم اجرایش کرد."],
+    ["Q", "اگر کلید CI دزدیده شود چه؟"],
+    ["A", "با command= و restrict، دزد فقط می‌تواند deploy.sh را اجرا کند: همان کد GitHub را دوباره بکشد و بسازد. shell، کپی فایل و tunnel ندارد. بعد کلید را از authorized_keys پاک می‌کنی."]
+  ],
+  "concepts": [
+    {
+      "h": "trigger بعد از CI",
+      "body": "workflow_run با types: [completed] روی هر نتیجه‌ای اجرا می‌شود، حتی failure؛ شرط if روی github.event.workflow_run.conclusion == 'success' لازم است. نکته‌ی پنهان: workflow_run همیشه نسخه‌ی workflow روی شاخه‌ی پیش‌فرض را اجرا می‌کند، نه نسخه‌ی شاخه‌ی push‌شده. در Azure معادلش resources.pipelines با trigger است."
+    },
+    {
+      "h": "صف، نه لغو",
+      "body": "concurrency با cancel-in-progress: false یعنی deploy دوم منتظر اولی می‌ماند. لغو وسط docker compose up --build سرور را در وضعیت نیمه رها می‌کند. روی خود سرور هم flock همین کار را می‌کند؛ دو لایه، چون deploy از release.ps1 هم می‌آید. در Azure: environment با Exclusive lock."
+    },
+    {
+      "h": "forced command",
+      "body": "یک خط در ~/.ssh/authorized_keys: restrict,command=\"/path/deploy.sh\" ssh-ed25519 AAAA.... restrict همه‌چیز را می‌بندد (port، agent و X11 forwarding، و pty). sshd درخواست اصلی را در SSH_ORIGINAL_COMMAND می‌گذارد؛ اسکریپت می‌تواند برای کارهای محدود مثل «فقط ControlPanel» از آن استفاده کند، با اعتبارسنجی سخت."
+    },
+    {
+      "h": "host key ثابت",
+      "body": "StrictHostKeyChecking=accept-new یا ssh-keyscan داخل workflow یعنی به هر کسی که اول جواب داد اعتماد کن. به‌جایش known_hosts در secret، که یک بار یک آدم fingerprint آن را با خروجی bootstrap.sh یا کنسول ارائه‌دهنده مقایسه کرده. اگر سرور عوض شد، ssh با «Host key verification failed» متوقف می‌شود، که همان رفتار درست است."
+    }
+  ],
+  "compare": [
+    {
+      "concept": "اجرا بعد از CI موفق",
+      "github": "on: workflow_run (completed) + if: conclusion == 'success'",
+      "azure": "resources.pipelines: trigger روی pipeline CI",
+      "diff": "Azure فقط روی اجرای موفق trigger می‌کند؛ GitHub روی هر نتیجه و شرط با توست."
+    },
+    {
+      "concept": "اجرای دستی",
+      "github": "workflow_dispatch",
+      "azure": "Run pipeline (همیشه هست)",
+      "diff": "در GitHub بدون workflow_dispatch دکمه‌ای در Actions نیست."
+    },
+    {
+      "concept": "یکی‌یکی",
+      "github": "concurrency: { group, cancel-in-progress: false }",
+      "azure": "environment با Exclusive lock",
+      "diff": "در هر دو، قفل CI جای flock سرور را نمی‌گیرد؛ deploy از جاهای دیگر هم می‌آید."
+    },
+    {
+      "concept": "secretها",
+      "github": "${{ secrets.VPS_SSH_KEY }} در env",
+      "azure": "Secure file + variable group، با env: صریح",
+      "diff": "متغیر secret در Azure خودکار env نمی‌شود؛ باید در env: نامش را بیاوری."
+    },
+    {
+      "concept": "تأیید انسانی",
+      "github": "environment: production با required reviewers",
+      "azure": "Approvals and checks روی environment",
+      "diff": "برای یک VPS شخصی لازم نیست؛ برای production تیمی معمول است."
+    },
+    {
+      "concept": "دسترسی توکن",
+      "github": "permissions: {}",
+      "azure": "Limit job authorization scope (تنظیم پروژه)",
+      "diff": "در GitHub در خود فایل، در Azure در تنظیمات پروژه."
+    }
+  ],
+  "code": [
+    { "group": "trigger", "lang": "github", "title": "کِی اجرا شود", "origin": "tested", "file": "ops/ci/deploy-vps.yml", "region": "trigger" },
+    {
+      "group": "trigger",
+      "lang": "azure",
+      "title": "کِی اجرا شود",
+      "origin": "port",
+      "code": "# Runs after the CI pipeline succeeds on main; never on its own pushes.\ntrigger: none\npr: none\n\nresources:\n  pipelines:\n    - pipeline: ci\n      source: LabFlow-CI          # the pipeline made from azure-pipelines.yml\n      trigger:\n        branches:\n          include: [main]"
+    },
+    { "group": "job", "lang": "github", "title": "اجرای deploy روی سرور", "origin": "tested", "file": "ops/ci/deploy-vps.yml", "region": "job" },
+    {
+      "group": "job",
+      "lang": "azure",
+      "title": "اجرای deploy روی سرور",
+      "origin": "port",
+      "code": "stages:\n  - stage: Deploy\n    jobs:\n      - deployment: Vps\n        # Approvals and the exclusive lock are set on the environment, in the portal.\n        environment: production\n        pool:\n          vmImage: ubuntu-24.04\n        variables:\n          - group: vps            # VPS_HOST, VPS_KNOWN_HOSTS (secret)\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: DownloadSecureFile@1\n                  name: key\n                  inputs:\n                    secureFile: vps-deploy-key\n                - script: |\n                    install -m 700 -d ~/.ssh\n                    install -m 600 \"$(key.secureFilePath)\" ~/.ssh/id_ed25519\n                    printf '%s\\n' \"$VPS_KNOWN_HOSTS\" > ~/.ssh/known_hosts\n                    ssh -T -o BatchMode=yes \"deploy@$VPS_HOST\"\n                  env:\n                    # Secret variables reach a script only when named here.\n                    VPS_HOST: $(VPS_HOST)\n                    VPS_KNOWN_HOSTS: $(VPS_KNOWN_HOSTS)"
+    },
+    { "group": "forced", "lang": "all", "title": "سمت سرور: کلیدی که فقط deploy می‌کند (تست‌شده با sshd واقعی)", "origin": "tested", "file": "ops/tests/run.sh", "region": "forced-command" },
+    { "group": "hostkey", "lang": "all", "title": "host key ثابت به‌جای اعتماد به اولین جواب", "origin": "tested", "file": "ops/tests/run.sh", "region": "known-hosts" }
+  ],
+  "pitfalls": [
+    {
+      "lang": "github",
+      "mistake": "workflow_run بدون شرط conclusion",
+      "why": "types: [completed] روی CI شکست‌خورده هم اجرا می‌شود و کد خراب را deploy می‌کند.",
+      "fix": "if: github.event.workflow_run.conclusion == 'success'."
+    },
+    {
+      "lang": "github",
+      "mistake": "ویرایش workflow_run روی یک شاخه و انتظار اثر",
+      "why": "GitHub نسخه‌ی شاخه‌ی پیش‌فرض را اجرا می‌کند؛ تغییر تا merge در main دیده نمی‌شود.",
+      "fix": "تغییرهای deploy-vps.yml را روی main امتحان کن، با workflow_dispatch."
+    },
+    {
+      "lang": "all",
+      "mistake": "ssh-keyscan یا StrictHostKeyChecking=no در CI",
+      "why": "هر کسی بین runner و سرور بنشیند (DNS، IP جابه‌جاشده) کلید CI و دستور را می‌گیرد.",
+      "fix": "known_hosts در secret، بعد از مقایسه‌ی fingerprint با چشم."
+    },
+    {
+      "lang": "all",
+      "mistake": "کلید CI بدون restrict",
+      "why": "command= به‌تنهایی port forwarding را باز می‌گذارد؛ با کلید دزدیده می‌شود از سرور به شبکه‌ی داخلی Docker تونل زد.",
+      "fix": "restrict,command=\"...\"؛ تست این درس ثابت می‌کند -R رد می‌شود."
+    },
+    {
+      "lang": "azure",
+      "mistake": "secret variable که در script خالی است",
+      "why": "Azure متغیرهای secret را خودکار به محیط script نمی‌دهد.",
+      "fix": "در env: نامشان را صریح بیاور."
+    }
+  ],
+  "refs": [
+    { "project": "ControlPanel", "file": ".github/workflows/deploy-vps.yml", "line": 8, "note": "workflow_run بعد از CI روی main" },
+    { "project": "ControlPanel", "file": ".github/workflows/deploy-vps.yml", "line": 14, "note": "concurrency بدون لغو" },
+    { "project": "ControlPanel", "file": ".github/workflows/deploy-vps.yml", "line": 38, "note": "known_hosts از secret، نه از اولین اتصال" },
+    { "project": "ControlPanel", "file": "deploy/vps/README.md", "line": 143, "note": "restrict,command=\".../deploy.sh\" در authorized_keys" },
+    { "project": "LabFlow", "file": "azure-pipelines.yml", "line": 8, "note": "CI در Azure Pipelines: trigger و stages" }
+  ],
+  "exercises": [
+    {
+      "q": "با کلید CI از PC خودت ssh deploy@server 'cat .env' بزن. چه چیزی برمی‌گردد؟",
+      "a": "خروجی deploy.sh: pull، build و health. cat هرگز اجرا نمی‌شود؛ درخواست فقط در SSH_ORIGINAL_COMMAND می‌ماند. تست examples/ops همین را با cat /etc/shadow نشان می‌دهد."
+    },
+    {
+      "q": "سرور را دوباره نصب کردی و host key عوض شد. Action چه می‌کند و چه باید بکنی؟",
+      "a": "با «Host key verification failed» قرمز می‌شود. fingerprint جدید را از خروجی bootstrap.sh یا کنسول ارائه‌دهنده با ssh-keygen -lf روی خروجی ssh-keyscan مقایسه کن و بعد VPS_KNOWN_HOSTS را به‌روز کن."
+    },
+    {
+      "q": "push به LedgerDashboard هیچ deployی راه نمی‌اندازد. دو راه برای درست کردنش بگو.",
+      "a": "۱) دستی: Actions → Deploy to VPS → Run workflow (همان کاری که README می‌گوید). ۲) در CI آن repo یک قدم repository_dispatch به ControlPanel با یک token محدود، و در deploy-vps.yml یک on: repository_dispatch."
+    }
+  ],
+  "take": "The deploy workflow runs only after CI succeeds on main, queues instead of cancelling, and uses an SSH key the server restricts to a single forced command, against a host key pinned in a secret, so a stolen key can deploy and nothing else."
+}
