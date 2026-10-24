@@ -2,18 +2,18 @@
   "project": "clinichub",
   "repo": "ClinicHub",
   "files": {
-    "README.md": 121,
+    "README.md": 127,
     "src/ClinicHub.Api/appsettings.Development.json": 107,
     "web/vite.config.ts": 20,
-    "src/ClinicHub.Api/Program.cs": 109,
+    "src/ClinicHub.Api/Program.cs": 110,
     "tests/ClinicHub.Tests/FrontDeskTests.cs": 259,
     "src/ClinicHub.Api/Catalog/ClinicDatabases.cs": 95,
-    "docs/architecture.md": 405,
+    "docs/architecture.md": 441,
     "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs": 76,
     "src/ClinicHub.Api/Endpoints/UserEndpoints.cs": 404,
     "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs": 258,
     "src/ClinicHub.Api/Auth/AuthSetup.cs": 163,
-    "web/src/api.ts": 383,
+    "web/src/api.ts": 412,
     "src/ClinicHub.Api/Auth/Totp.cs": 92,
     "src/ClinicHub.Api/Auth/Permissions.cs": 184,
     "src/ClinicHub.Api/Catalog/SecurityLog.cs": 44,
@@ -24,7 +24,7 @@
     "src/ClinicHub.Api/Domain/HealthCard.cs": 38,
     "src/ClinicHub.Api/Domain/HcvSimulator.cs": 40,
     "src/ClinicHub.Api/Domain/PatientMatching.cs": 171,
-    "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs": 494,
+    "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs": 643,
     "src/ClinicHub.Api/Domain/ConsentGuard.cs": 81,
     "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs": 181,
     "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs": 399,
@@ -39,13 +39,13 @@
     "src/ClinicHub.Api/Integrations/FhirOrders.cs": 250,
     "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs": 205,
     "web/src/App.tsx": 215,
-    "web/src/pages/EncounterPage.tsx": 752,
+    "web/src/pages/EncounterPage.tsx": 827,
     "src/ClinicHub.Api/Catalog/CatalogDbContext.cs": 60,
     "src/ClinicHub.Api/Catalog/CatalogEntities.cs": 150,
     "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs": 560,
-    "src/ClinicHub.Api/Data/ClinicHubDbContext.cs": 404,
+    "src/ClinicHub.Api/Data/ClinicHubDbContext.cs": 424,
     "docs/schema.md": 194,
-    "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs": 2710
+    "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs": 2893
   },
   "examples": {
     "run/vite": {
@@ -344,8 +344,8 @@
     },
     "health-card/check": {
       "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
-      "start": 140,
-      "end": 140,
+      "start": 142,
+      "end": 142,
       "code": "t.HasCheckConstraint(\"CK_Patient_HealthCard\", \"HealthCardNumber IS NULL OR (LEN(HealthCardNumber) = 10 AND HealthCardNumber NOT LIKE '%[^0-9]%')\");"
     },
     "patients/score": {
@@ -362,20 +362,38 @@
     },
     "patients/register": {
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "start": 85,
-      "end": 92,
+      "start": 86,
+      "end": 93,
       "code": "var matches = PatientMatching.FindMatches(patient, await Neighbours(db, patient));\nif (!req.ConfirmNew && matches.Any(m => m.Match.Score >= PatientMatching.Likely))\n    return Results.Problem(\"This person may already be registered. Open the existing record, or confirm this is someone else.\",\n        statusCode: StatusCodes.Status409Conflict, extensions: new Dictionary<string, object?>\n        {\n            [\"possibleDuplicates\"] = matches.Select(m => new PossibleDuplicate(Brief(m.Other, today), m.Other.DateOfBirth, m.Other.Phone,\n                m.Match.Score, m.Match.Reasons)).ToArray(),\n        });"
     },
     "patients/moves": {
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "start": 220,
-      "end": 228,
-      "code": "await db.Appointments.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Encounters.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.EligibilityChecks.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Referrals.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ServiceRequests.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Prescriptions.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Claims.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Invoices.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ConsentDirectives.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));"
+      "start": 247,
+      "end": 256,
+      "code": "await db.Appointments.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Encounters.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.EligibilityChecks.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Referrals.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ServiceRequests.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Prescriptions.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Claims.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Invoices.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ConsentDirectives.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Allergies.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));"
+    },
+    "patients/written": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 233,
+      "end": 236,
+      "code": "// What moves is written down, so that the merge can be undone (see Unmerge).\nvar moved = new Dictionary<string, List<int>>\n{\n    [nameof(db.Appointments)] = await db.Appointments.Where(x => x.PatientId == from).Select(x => x.Id).ToListAsync(),"
+    },
+    "patients/refused": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 373,
+      "end": 375,
+      "code": "var outboxIds = JsonSerializer.Deserialize<List<long>>(log.OutboxIdsJson) ?? [];\nif (await db.Outbox.AnyAsync(m => outboxIds.Contains(m.Id) && m.SentUtc != null))\n    return \"The applications have already been told about this merge and cannot be told to take it back. Correct the records there by hand.\";"
+    },
+    "patients/restore": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 385,
+      "end": 391,
+      "code": "// The fields the merge filled in are emptied again, unless the value has been changed since.\nvar beforeFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(log.FieldsBeforeJson) ?? [];\nvar afterFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(log.FieldsAfterJson) ?? [];\nvar current = Snapshot(survivor);\nforeach (var (field, was) in beforeFields)\n    if (current[field] == afterFields[field])\n        Restore(survivor, field, was);"
     },
     "patients/live": {
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "start": 230,
-      "end": 234,
+      "start": 258,
+      "end": 262,
       "code": "// The merged record leaves the live set first, so its health card can move to the survivor\n// (one live record per card is a unique index).\nmerged.MergedIntoPatientId = to;\nmerged.UpdatedUtc = now;\nawait db.SaveChangesAsync();"
     },
     "consent/applies": {
@@ -578,20 +596,20 @@
     },
     "fe-autosave/change": {
       "file": "web/src/pages/EncounterPage.tsx",
-      "start": 200,
-      "end": 207,
+      "start": 202,
+      "end": 209,
       "code": "const change = (key: keyof Soap, value: string) => {\n  latest.current = { ...latest.current, [key]: value }\n  setSoap(latest.current)\n  dirty.current = true\n  setStatus('Editing…')\n  window.clearTimeout(timer.current)\n  timer.current = window.setTimeout(flush, 800)\n}"
     },
     "fe-autosave/flush": {
       "file": "web/src/pages/EncounterPage.tsx",
-      "start": 182,
-      "end": 198,
+      "start": 184,
+      "end": 200,
       "code": "// One save at a time: a blur and the typing timer can both fire, and each waits for the one before.\nconst flush = useCallback(() => {\n  window.clearTimeout(timer.current)\n  inFlight.current = inFlight.current.then(async () => {\n    if (!dirty.current) return\n    dirty.current = false\n    setStatus('Saving…')\n    try {\n      const { updatedUtc } = await encounters.saveNote(id, latest.current)\n      setStatus(dirty.current ? 'Editing…' : `Saved ${localTime(updatedUtc)}`)\n    } catch (e) {\n      dirty.current = true\n      setStatus(e instanceof ApiError ? `Not saved: ${e.message}` : 'Not saved, retrying when you type again.')\n    }\n  })\n  return inFlight.current\n}, [id])"
     },
     "fe-autosave/leave": {
       "file": "web/src/pages/EncounterPage.tsx",
-      "start": 209,
-      "end": 210,
+      "start": 211,
+      "end": 212,
       "code": "// Leaving the page saves what was typed.\nuseEffect(() => () => { if (dirty.current) encounters.saveNote(id, latest.current) }, [id])"
     },
     "data-catalog/migrate": {
@@ -602,18 +620,58 @@
     },
     "data-care/conventions": {
       "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
-      "start": 60,
-      "end": 66,
+      "start": 62,
+      "end": 68,
       "code": "protected override void ConfigureConventions(ModelConfigurationBuilder b)\n{\n    b.Properties<decimal>().HavePrecision(10, 2);\n    b.Properties<decimal?>().HavePrecision(10, 2);\n    // UTC instants: datetime2 without time zone, the \"Utc\" suffix says what they hold.\n    b.Properties<DateTime>().HaveColumnType(\"datetime2(3)\");\n    b.Properties<DateTime?>().HaveColumnType(\"datetime2(3)\");"
     },
     "data-care/cascade": {
       "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
-      "start": 80,
-      "end": 84,
+      "start": 82,
+      "end": 86,
       "code": "// SQL Server refuses multiple cascade paths, and clinical history must not vanish with a parent\n// row anyway: nothing cascades except pure child rows configured explicitly below.\nforeach (var fk in b.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))\n    if (fk.DeleteBehavior == DeleteBehavior.Cascade && !CascadingChildren.Contains(fk.DeclaringEntityType.ClrType))\n        fk.DeleteBehavior = DeleteBehavior.Restrict;"
     }
   },
   "endpoints": [
+    {
+      "area": "Allergies",
+      "method": "GET",
+      "path": "/api/allergens",
+      "access": "patients.view",
+      "file": "src/ClinicHub.Api/Endpoints/AllergyEndpoints.cs",
+      "line": 26
+    },
+    {
+      "area": "Allergies",
+      "method": "GET",
+      "path": "/api/patients/{id:int}/allergies",
+      "access": "patients.view",
+      "file": "src/ClinicHub.Api/Endpoints/AllergyEndpoints.cs",
+      "line": 29
+    },
+    {
+      "area": "Allergies",
+      "method": "POST",
+      "path": "/api/patients/{id:int}/allergies",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/AllergyEndpoints.cs",
+      "line": 33
+    },
+    {
+      "area": "Allergies",
+      "method": "POST",
+      "path": "/api/patients/{id:int}/allergies/none",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/AllergyEndpoints.cs",
+      "line": 72
+    },
+    {
+      "area": "Allergies",
+      "method": "POST",
+      "path": "/api/allergies/{id:int}/end",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/AllergyEndpoints.cs",
+      "line": 96
+    },
     {
       "area": "Auth",
       "method": "POST",
@@ -996,7 +1054,7 @@
       "path": "/api/patients",
       "access": "patients.view",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 43
+      "line": 44
     },
     {
       "area": "Patients",
@@ -1004,7 +1062,7 @@
       "path": "/api/patients/{id:int}",
       "access": "patients.view",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 61
+      "line": 62
     },
     {
       "area": "Patients",
@@ -1012,7 +1070,7 @@
       "path": "/api/patients",
       "access": "patients.edit",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 73
+      "line": 74
     },
     {
       "area": "Patients",
@@ -1020,7 +1078,7 @@
       "path": "/api/patients/{id:int}",
       "access": "patients.edit",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 103
+      "line": 104
     },
     {
       "area": "Patients",
@@ -1028,7 +1086,7 @@
       "path": "/api/patients/duplicates",
       "access": "patients.merge",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 136
+      "line": 137
     },
     {
       "area": "Patients",
@@ -1036,7 +1094,7 @@
       "path": "/api/patients/duplicates/{id:int}",
       "access": "patients.merge",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 147
+      "line": 148
     },
     {
       "area": "Patients",
@@ -1044,7 +1102,7 @@
       "path": "/api/patients/duplicates/scan",
       "access": "patients.merge",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 161
+      "line": 162
     },
     {
       "area": "Patients",
@@ -1052,7 +1110,7 @@
       "path": "/api/patients/duplicates/{id:int}/not-duplicate",
       "access": "patients.merge",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 167
+      "line": 168
     },
     {
       "area": "Patients",
@@ -1060,7 +1118,15 @@
       "path": "/api/patients/merge",
       "access": "patients.merge",
       "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-      "line": 181
+      "line": 182
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients/{id:int}/unmerge",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 201
     },
     {
       "area": "Prescriptions",
@@ -1068,7 +1134,7 @@
       "path": "/api/prescriptions/catalog",
       "access": "encounters.view",
       "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
-      "line": 30
+      "line": 36
     },
     {
       "area": "Prescriptions",
@@ -1076,7 +1142,7 @@
       "path": "/api/encounters/{id:int}/prescriptions",
       "access": "encounters.view",
       "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
-      "line": 35
+      "line": 41
     },
     {
       "area": "Prescriptions",
@@ -1084,7 +1150,31 @@
       "path": "/api/encounters/{id:int}/prescriptions",
       "access": "prescriptions.write",
       "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
-      "line": 38
+      "line": 44
+    },
+    {
+      "area": "Prescriptions",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/prescriptions/check",
+      "access": "prescriptions.write",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 50
+    },
+    {
+      "area": "Prescriptions",
+      "method": "GET",
+      "path": "/api/patients/{id:int}/medications",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 61
+    },
+    {
+      "area": "Prescriptions",
+      "method": "POST",
+      "path": "/api/prescriptions/{id:int}/renew",
+      "access": "prescriptions.write",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 80
     },
     {
       "area": "Prescriptions",
@@ -1092,7 +1182,7 @@
       "path": "/api/prescriptions/{id:int}/cancel",
       "access": "prescriptions.write",
       "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
-      "line": 102
+      "line": 115
     },
     {
       "area": "Prescriptions",
@@ -1100,7 +1190,7 @@
       "path": "/api/prescriptions/{id:int}/resend",
       "access": "prescriptions.write",
       "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
-      "line": 167
+      "line": 180
     },
     {
       "area": "Result",
@@ -3881,9 +3971,103 @@
     {
       "database": "ClinicHub_<clinic>",
       "schema": "people",
+      "table": "PatientAllergy",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1353,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AllergenKey",
+          "type": "NVARCHAR(40)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EndReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "EndedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "EndedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "NoKnown",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "Reaction",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RecordedByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "Severity",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Substance",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Severity IN ('Mild','Moderate','Severe')"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "people",
       "table": "PatientDuplicateCandidate",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1342,
+      "line": 1404,
       "columns": [
         {
           "name": "Id",
@@ -3957,10 +4141,97 @@
     },
     {
       "database": "ClinicHub_<clinic>",
+      "schema": "people",
+      "table": "PatientMergeLog",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1464,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AtUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "FieldsAfterJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FieldsBeforeJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "MergedId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "MovedJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "OutboxIdsJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SurvivorId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "UndoneByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "UndoneUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
       "schema": "billing",
       "table": "Payment",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1386,
+      "line": 1503,
       "columns": [
         {
           "name": "Id",
@@ -4022,7 +4293,7 @@
       "schema": "orders",
       "table": "Prescription",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1487,
+      "line": 1613,
       "columns": [
         {
           "name": "Id",
@@ -4032,6 +4303,12 @@
             "PK",
             "identity"
           ]
+        },
+        {
+          "name": "AlertNote",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
         },
         {
           "name": "CancelReason",
@@ -4144,6 +4421,14 @@
           "notes": []
         },
         {
+          "name": "RenewsPrescriptionId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ orders.Prescription"
+          ]
+        },
+        {
           "name": "Repeats",
           "type": "INT",
           "nullable": false,
@@ -4182,7 +4467,7 @@
       "schema": "clinic",
       "table": "Provider",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1568,
+      "line": 1694,
       "columns": [
         {
           "name": "Id",
@@ -4282,7 +4567,7 @@
       "schema": "ref",
       "table": "Province",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1592,
+      "line": 1718,
       "columns": [
         {
           "name": "Code",
@@ -4312,7 +4597,7 @@
       "schema": "care",
       "table": "Referral",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1647,
+      "line": 1773,
       "columns": [
         {
           "name": "Id",
@@ -4389,7 +4674,7 @@
       "schema": "billing",
       "table": "RemittanceAdvice",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1691,
+      "line": 1817,
       "columns": [
         {
           "name": "Id",
@@ -4456,7 +4741,7 @@
       "schema": "billing",
       "table": "RemittanceItem",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1741,
+      "line": 1867,
       "columns": [
         {
           "name": "Id",
@@ -4527,7 +4812,7 @@
       "schema": "clinic",
       "table": "Room",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1773,
+      "line": 1899,
       "columns": [
         {
           "name": "Id",
@@ -4572,7 +4857,7 @@
       "schema": "sched",
       "table": "ScheduleException",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1809,
+      "line": 1935,
       "columns": [
         {
           "name": "Id",
@@ -4629,7 +4914,7 @@
       "schema": "sched",
       "table": "ScheduleTemplate",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1853,
+      "line": 1979,
       "columns": [
         {
           "name": "Id",
@@ -4710,7 +4995,7 @@
       "schema": "orders",
       "table": "ServiceRequest",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1947,
+      "line": 2073,
       "columns": [
         {
           "name": "Id",
@@ -4843,7 +5128,7 @@
       "schema": "ref",
       "table": "UninsuredService",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 1989,
+      "line": 2115,
       "columns": [
         {
           "name": "Id",
@@ -4897,7 +5182,7 @@
       "schema": "sec",
       "table": "User",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 2025,
+      "line": 2151,
       "columns": [
         {
           "name": "Id",
@@ -4947,7 +5232,7 @@
       "schema": "care",
       "table": "VitalSigns",
       "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
-      "line": 2078,
+      "line": 2204,
       "columns": [
         {
           "name": "Id",

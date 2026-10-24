@@ -91,13 +91,73 @@ function expressEndpoints(repo, dir) {
   })
 }
 
-// SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks, references), unique indexes
-// and DENY grants. Tables in a schema other than dbo carry it; the database is the script's USE,
-// or the scan entry's own ({ dir, database }) for scripts run against a database they don't name.
+// Express apps in plain JavaScript: app.get("/api/...", ...) in every .js file of `dir` (tests
+// left out). `gate` is the line that closes /api to anyone not signed in, app.use("/api", (req,
+// res, next) =>: routes declared before it in its file are public, every other route (later in
+// that file, or in a file whose routes are registered after it) needs a session. The area is the
+// path's first segment after /api. A path declared twice (a second /api/session for when there
+// is no password) is listed once, as first declared.
+function expressRoutes(repo, { dir, gate }) {
+  const files = walk(path.join(repo, dir), (n) => /\.(js|mjs|ts)$/.test(n) && !/\.test\./.test(n))
+  const gateRe = gate ? new RegExp(gate) : null
+  const out = []
+  const seen = new Set()
+  for (const file of files) {
+    const rel = path.relative(repo, file).replace(/\\/g, '/')
+    const src = lines(readFileSync(file, 'utf-8'))
+    const gateAt = gateRe ? src.findIndex((l) => gateRe.test(l)) : -1
+    src.forEach((l, i) => {
+      const m = /\b(?:app|router)\.(get|post|put|patch|delete)\(\s*["'`](\/api\/[^"'`]*)["'`]/.exec(l)
+      if (!m || seen.has(m[1] + m[2])) return
+      seen.add(m[1] + m[2])
+      const access = !gateRe ? 'public' : gateAt >= 0 && i < gateAt ? 'public' : 'signed-in'
+      out.push({ area: m[2].split('/')[2], method: m[1].toUpperCase(), path: m[2], access, file: rel, line: i + 1 })
+    })
+  }
+  return out
+}
+
+// SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks, references), columns and
+// CHECKs added later by ALTER TABLE … ADD, unique indexes and DENY grants. Tables in a schema
+// other than dbo carry it; the database is the script's USE, or the scan entry's own
+// ({ dir, database }) for scripts run against a database they don't name.
 function sqlTables(repo, entry) {
   const { dir, database } = typeof entry === 'string' ? { dir: entry } : entry
   const out = []
   const find = (schema, table) => out.find((t) => t.table === table && (t.schema ?? 'dbo') === schema)
+  // A CHECK written over several lines reads as one, without the joins' extra spaces.
+  const squash = (s) => s.replace(/\s+/g, ' ').trim()
+  // Parentheses opened on a line and closed on a later one (a CHECK's list): one logical line.
+  const depth =(s) => [...s.replace(/'[^']*'|--.*$/g, '')].reduce((d, ch) => d + (ch === '(') - (ch === ')'), 0)
+  // The logical line starting at src[j]: joined while a parenthesis is open, or while the next
+  // line goes on with the same column's constraints (no comma yet). Returns it and its last index.
+  const logical = (src, j) => {
+    let line = src[j]
+    const more = () => j + 1 < src.length
+    const join = () => (line = line.replace(/\s*--.*$/, '') + ' ' + src[++j].trim())
+    for (;;) {
+      if (depth(line) > 0 && more()) join()
+      else if (!/,\s*(--.*)?$/.test(line) && more() && /^\s*(CONSTRAINT|REFERENCES|DEFAULT|CHECK)\b/.test(src[j + 1])) join()
+      else return { line, end: j }
+    }
+  }
+  const column = (line) => {
+    const c = /^\s*\[?(\w+)\]?\s+([A-Za-z0-9]+(?:\(\s*(?:\d+|max|MAX)(?:,\s*\d+)?\))?)(?=[\s,;]|$)(.*?)[,;]?\s*$/.exec(line)
+    if (!c || /^(CONSTRAINT|PERIOD|PRIMARY|UNIQUE|CHECK|FOREIGN|INDEX|ALTER|IF|GO)$/i.test(c[1])) return null
+    const rest = c[3].replace(/\s*--.*$/, '')
+    const notes = []
+    if (/PRIMARY KEY/.test(rest)) notes.push('PK')
+    if (/IDENTITY/.test(c[2] + rest)) notes.push('identity')
+    if (/UNIQUE/.test(rest)) notes.push('unique')
+    const def = /DEFAULT \((.+?)\)\s*$/.exec(rest)?.[1] ?? /DEFAULT ('[^']*'|[\w.]+(?:\(\))?)/.exec(rest)?.[1]
+    if (def) notes.push(`default ${def}`)
+    const ref = /REFERENCES (\w+)\.(\w+)/.exec(rest)
+    if (ref) notes.push(`→ ${ref[1] === 'dbo' ? '' : ref[1] + '.'}${ref[2]}`)
+    const ck = /CHECK \((.+)\)/.exec(rest)?.[1]
+    if (ck) notes.push(`check ${squash(ck)}`)
+    // A key column is never null, whether or not it says NOT NULL.
+    return { name: c[1], type: c[2].toUpperCase(), nullable: !/NOT NULL|PRIMARY KEY/.test(rest), notes }
+  }
   for (const file of walk(path.join(repo, dir), (n) => n.endsWith('.sql')).sort()) {
     const rel = path.relative(repo, file).replace(/\\/g, '/')
     const src = lines(readFileSync(file, 'utf-8'))
@@ -105,33 +165,43 @@ function sqlTables(repo, entry) {
     src.forEach((l, i) => {
       const use = /^USE (\w+);/.exec(l)
       if (use) db = use[1]
+      // ALTER TABLE x ADD, then column definitions on the next lines, up to the one ending in ;
+      const addColumns = /ALTER TABLE (\w+)\.(\w+) ADD\s*$/.exec(l)
+      if (addColumns) {
+        for (let j = i + 1; j < src.length; j++) {
+          const { line, end } = logical(src, j)
+          const c = column(line)
+          if (c) find(addColumns[1], addColumns[2])?.columns.push(c)
+          j = end
+          if (/;\s*(--.*)?$/.test(line)) break
+        }
+      }
+      const addCheck = /ALTER TABLE (\w+)\.(\w+) ADD CONSTRAINT \w+ CHECK \(/.exec(l)
+      if (addCheck) {
+        const { line } = logical(src, i)
+        const t = find(addCheck[1], addCheck[2])
+        const body = /CHECK \((.+)\)\s*;?\s*$/.exec(line)?.[1]
+        if (t && body) t.checks = [...(t.checks ?? []), squash(body)]
+      }
       const create = /CREATE TABLE (\w+)\.(\w+) \(/.exec(l)
       if (create) {
         const columns = []
         const checks = []
-        // Parentheses opened on a line and closed on a later one (a CHECK's list): one logical line.
-        const depth = (s) => [...s.replace(/'[^']*'|--.*$/g, '')].reduce((d, ch) => d + (ch === '(') - (ch === ')'), 0)
         for (let j = i + 1; j < src.length && !/^\s*\)/.test(src[j]); j++) {
-          let line = src[j]
-          while (depth(line) > 0 && j + 1 < src.length) line = line.replace(/\s*--.*$/, '') + ' ' + src[++j].trim()
-          // A table-level constraint: only CHECKs are kept (keys show on their columns).
+          const { line, end } = logical(src, j)
+          j = end
+          // A table-level constraint: CHECKs are kept as they are, a key on several columns
+          // shows as PK on each of them.
           const tc = /^\s*CONSTRAINT \w+ CHECK \((.+)\),?\s*$/.exec(line)
-          if (tc) checks.push(tc[1])
-          const c = /^\s*\[?(\w+)\]?\s+([A-Za-z0-9]+(?:\(\s*(?:\d+|max)(?:,\s*\d+)?\))?)(?=[\s,]|$)(.*?),?\s*$/.exec(line)
-          if (!c || /^(CONSTRAINT|PERIOD|PRIMARY|UNIQUE|CHECK|FOREIGN|INDEX)$/i.test(c[1])) continue
-          const rest = c[3].replace(/\s*--.*$/, '')
-          const notes = []
-          if (/PRIMARY KEY/.test(rest)) notes.push('PK')
-          if (/IDENTITY/.test(c[2] + rest)) notes.push('identity')
-          if (/UNIQUE/.test(rest)) notes.push('unique')
-          const def = /DEFAULT \((.+?)\)\s*$/.exec(rest)?.[1] ?? /DEFAULT ('[^']*'|[\w.]+(?:\(\))?)/.exec(rest)?.[1]
-          if (def) notes.push(`default ${def}`)
-          const ref = /REFERENCES (\w+)\.(\w+)/.exec(rest)
-          if (ref) notes.push(`→ ${ref[1] === 'dbo' ? '' : ref[1] + '.'}${ref[2]}`)
-          const ck = /CHECK \((.+)\)/.exec(rest)?.[1]
-          if (ck) notes.push(`check ${ck}`)
-          // A key column is never null, whether or not it says NOT NULL.
-          columns.push({ name: c[1], type: c[2].toUpperCase(), nullable: !/NOT NULL|PRIMARY KEY/.test(rest), notes })
+          if (tc) checks.push(squash(tc[1]))
+          const pk = /^\s*CONSTRAINT \w+ PRIMARY KEY (?:CLUSTERED |NONCLUSTERED )?\(([^)]+)\)/.exec(line)
+          if (pk) for (const name of pk[1].split(',').map((s) => s.trim().replace(/\s+(ASC|DESC)$/i, ''))) {
+            const col = columns.find((x) => x.name === name)
+            if (col && !col.notes.includes('PK')) col.notes.unshift('PK')
+            if (col) col.nullable = false
+          }
+          const c = column(line)
+          if (c) columns.push(c)
         }
         out.push({
           database: db,
@@ -358,7 +428,8 @@ function efTables(repo, { file, database, provider }) {
 
 // --- one project -----------------------------------------------------------------
 function snapshot(topics) {
-  const repo = path.join(projectsRoot, topics.repo)
+  // `path`: where the repo is, when it isn't D:/E/Projects/<repo> (the page still shows `repo`).
+  const repo = path.join(projectsRoot, topics.path ?? topics.repo)
   const at = (m) => problems.push(`${topics.project}: ${m}`)
   const read = (f) => {
     const p = path.join(repo, f)
@@ -405,6 +476,7 @@ function snapshot(topics) {
     endpoints: [
       ...(s.nestControllers ?? []).flatMap((d) => nestEndpoints(repo, d)),
       ...(s.expressApps ?? []).flatMap((d) => expressEndpoints(repo, d)),
+      ...(s.expressRoutes ?? []).flatMap((x) => expressRoutes(repo, x)),
       ...(s.aspnetEndpoints ?? []).flatMap((d) => aspnetEndpoints(repo, d)),
     ],
     tables: [...(s.sql ?? []).flatMap((d) => sqlTables(repo, d)), ...(s.efSnapshots ?? []).flatMap((x) => efTables(repo, x))],

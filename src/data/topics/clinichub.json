@@ -1851,11 +1851,24 @@
           "id": "merge",
           "h": "Merging moves everything to the survivor",
           "p": [
-            "In one transaction every appointment, visit, order, claim, invoice and consent directive moves to the surviving record; the merged one stays, pointing at it. It leaves the live set first, because a filtered unique index allows one live record per health card. The applications that already have orders or prescriptions for it are told."
+            "In one transaction every appointment, visit, order, claim, invoice, consent directive and allergy moves to the surviving record; the merged one stays, pointing at it. It leaves the live set first, because a filtered unique index allows one live record per health card. The applications that already have orders or prescriptions for it are told."
           ],
           "examples": [
             "moves",
             "live"
+          ]
+        },
+        {
+          "id": "unmerge",
+          "h": "A merge can be undone",
+          "p": [
+            "Before anything moves, the merge writes down the ids of what it is about to move, the fields it filled in on the survivor (before and after) and the messages it queued. Undoing moves exactly those rows back, empties the filled fields unless someone has changed them since, and puts the pair back in the review queue.",
+            "It is refused once the applications have been told (they can't be told to forget it, so the records are corrected there by hand), when the survivor has since been merged into another record, and when the two records now share a health card."
+          ],
+          "examples": [
+            "written",
+            "refused",
+            "restore"
           ]
         }
       ],
@@ -1895,11 +1908,24 @@
           "id": "merge",
           "h": "ادغام همه‌چیز را به پرونده‌ی باقی‌مانده منتقل می‌کند",
           "p": [
-            "در یک تراکنش هر نوبت، ویزیت، درخواست، claim، فاکتور و consent directive به پرونده‌ی باقی‌مانده منتقل می‌شود؛ پرونده‌ی ادغام‌شده می‌ماند و به آن اشاره می‌کند. اول از مجموعه‌ی زنده بیرون می‌رود، چون یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک پرونده‌ی زنده اجازه می‌دهد. برنامه‌هایی که برای آن پرونده درخواست یا نسخه دارند خبردار می‌شوند."
+            "در یک تراکنش هر نوبت، ویزیت، درخواست، claim، فاکتور، consent directive و حساسیت به پرونده‌ی باقی‌مانده منتقل می‌شود؛ پرونده‌ی ادغام‌شده می‌ماند و به آن اشاره می‌کند. اول از مجموعه‌ی زنده بیرون می‌رود، چون یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک پرونده‌ی زنده اجازه می‌دهد. برنامه‌هایی که برای آن پرونده درخواست یا نسخه دارند خبردار می‌شوند."
           ],
           "examples": [
             "moves",
             "live"
+          ]
+        },
+        {
+          "id": "unmerge",
+          "h": "ادغام را می‌شود برگرداند",
+          "p": [
+            "قبل از این‌که چیزی منتقل شود، ادغام idهای چیزهایی را که می‌خواهد منتقل کند، فیلدهایی را که در پرونده‌ی باقی‌مانده پر کرده (قبل و بعد) و پیام‌هایی را که در صف گذاشته یادداشت می‌کند. برگرداندن دقیقاً همان ردیف‌ها را برمی‌گرداند، فیلدهای پرشده را خالی می‌کند مگر کسی از آن موقع عوضشان کرده باشد، و جفت را دوباره به صف بررسی می‌برد.",
+            "وقتی برنامه‌ها خبردار شده باشند رد می‌شود (نمی‌شود به آن‌ها گفت فراموشش کنند، پس پرونده‌ها همان‌جا با دست اصلاح می‌شوند)، وقتی پرونده‌ی باقی‌مانده از آن موقع در پرونده‌ی دیگری ادغام شده، و وقتی دو پرونده حالا یک کارت سلامت دارند."
+          ],
+          "examples": [
+            "written",
+            "refused",
+            "restore"
           ]
         }
       ],
@@ -1941,8 +1967,38 @@
           },
           "lang": "csharp",
           "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
-          "from": "await db.Appointments.Where(x => x.PatientId == from)",
-          "to": "await db.ConsentDirectives.Where(x => x.PatientId == from)"
+          "from": "await db.Appointments.Where(x => x.PatientId == from).ExecuteUpdateAsync",
+          "to": "await db.Allergies.Where(x => x.PatientId == from).ExecuteUpdateAsync"
+        },
+        "written": {
+          "title": {
+            "en": "What moves is written down first",
+            "fa": "چیزی که منتقل می‌شود اول یادداشت می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "// What moves is written down, so that the merge can be undone",
+          "lines": 4
+        },
+        "refused": {
+          "title": {
+            "en": "Too late once the applications were told",
+            "fa": "دیر است وقتی برنامه‌ها خبردار شده‌اند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "var outboxIds = JsonSerializer.Deserialize<List<long>>(log.OutboxIdsJson)",
+          "lines": 3
+        },
+        "restore": {
+          "title": {
+            "en": "Filled fields, emptied unless changed since",
+            "fa": "فیلدهای پرشده، خالی مگر از آن موقع عوض شده باشند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "// The fields the merge filled in are emptied again",
+          "lines": 7
         },
         "live": {
           "title": {

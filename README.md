@@ -44,12 +44,14 @@ points at an existing file and line.
   Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template (read
   only) and writes it. `npm run check` fails locally when it no longer matches them.
 - `src/data/topics/<project>.json`: the project as topics, W3Schools-style (so far Control
-  Panel, 29 topics in 6 groups; ClinicHub, 26 in 8; LabFlow, 21 in 8; ClinicReport, 19 in 7).
-  Each topic lists its files and quotes the real code, found by text anchors (`from` / `to` or
-  `lines`). `npm run code` snapshots those excerpts, plus what its `scan` reads from the code:
-  endpoints (NestJS, Express, ASP.NET Core Minimal APIs), tables (SQL scripts, EF Core model
-  snapshots for SQL Server or SQLite) and routes (Angular, React, including a route behind a
-  permission check), into `<project>.code.json`; `npm run check` fails locally when a
+  Panel, 29 topics in 6 groups; ClinicHub, 26 in 8; LabFlow, 21 in 8; ClinicReport, 19 in 7;
+  LedgerDashboard, 19 in 7). Each topic lists its files and quotes the real code, found by text
+  anchors (`from` / `to` or `lines`). `npm run code` snapshots those excerpts, plus what its
+  `scan` reads from the code: endpoints (NestJS, Express in TypeScript or JavaScript, ASP.NET Core
+  Minimal APIs), tables (SQL scripts, including columns and CHECKs added by `ALTER TABLE`, and EF
+  Core model snapshots for SQL Server or SQLite) and routes (Angular, React, including a route
+  behind a permission check), into `<project>.code.json`. A repo outside `D:/E/Projects` is named
+  by `path` (relative to it); `npm run check` fails locally when a
   snapshot no longer matches the repo, and when a topic's Persian and English differ.
 - `src/data/projects/<id>.json`: the hand-written page of a project, a summary and
   optionally sections in both `fa` and `en` (same section ids), with code examples shared

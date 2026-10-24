@@ -1,0 +1,1916 @@
+{
+  "project": "ledgerdashboard",
+  "repo": "LedgerDashboard",
+  "path": "../SmartLedgerAI-JobPrep/LedgerDashboard",
+  "scan": {
+    "expressRoutes": [{ "dir": "server/src", "gate": "app\\.use\\(\"/api\", \\(req, res, next\\) =>" }],
+    "sql": [{ "dir": "db", "database": "LedgerDashboard" }],
+    "reactRoutes": "client/src/App.jsx"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "security", "title": { "en": "Security and data safety", "fa": "امنیت و سلامت داده" } },
+    { "id": "ledger", "title": { "en": "Applications and the pipeline", "fa": "درخواست‌ها و pipeline" } },
+    { "id": "ai", "title": { "en": "With Claude: scoring, building, asking", "fa": "با Claude: امتیاز، ساخت، پرسش" } },
+    { "id": "truth", "title": { "en": "The truth bank and its health", "fa": "بانک حقیقت و سلامتش" } },
+    { "id": "frontend", "title": { "en": "Frontend (React)", "fa": "فرانت‌اند (React)" } },
+    { "id": "data", "title": { "en": "Data: CSV or SQL Server", "fa": "داده: CSV یا SQL Server" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it: on the PC or in Docker", "fa": "اجرا: روی PC یا در Docker" },
+      "files": ["README.md", "server/index.js", "server/src/config.js", "Dockerfile", "server/.env.example"],
+      "en": [
+        {
+          "id": "local",
+          "h": "One process, one port",
+          "p": [
+            "`cd server && npm start` serves the API and the built React app on http://localhost:4310, so no second terminal is needed. The data is not in the repo: it is the sibling `JobSearch/engine/` folder (the ledger, the pipeline events, the application folders, the fact bank) and the Python résumé engine there, which the server runs.",
+            "With no password set, it listens on 127.0.0.1 only. That is not a default you can forget to change: asked to listen anywhere else without a password, it refuses to start."
+          ],
+          "examples": ["host", "start"]
+        },
+        {
+          "id": "docker",
+          "h": "The image",
+          "p": [
+            "The image has Node, Python with python-docx, LibreOffice (Word to PDF) and git, runs as the unprivileged `node` user, and never contains the job-search data: that is mounted at `/data/JobSearch`. `NODE_ENV=production` turns on Secure cookies and hides internal error messages."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "server",
+          "h": "On the server",
+          "p": [
+            "Control Panel runs it at ledger.arashkeshtgar.ca with a password and a session secret, bound to the server's loopback behind Caddy, and with the SQL Server store. The nightly job search on the PC reaches it through an SSH tunnel with an API token instead of a login. How the server is set up is in Control Panel's topics (deploy-vps)."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "local",
+          "h": "یک process، یک پورت",
+          "p": [
+            "`cd server && npm start` هم API و هم اپ React build‌شده را روی http://localhost:4310 سرو می‌کند، پس ترمینال دوم لازم نیست. داده در repo نیست: پوشه‌ی کناری `JobSearch/engine/` است (ledger، رویدادهای pipeline، پوشه‌ی درخواست‌ها، fact bank) و موتور رزومه‌ی Python همان‌جا، که سرور اجرایش می‌کند.",
+            "بدون رمز، فقط روی 127.0.0.1 گوش می‌دهد. این پیش‌فرضی نیست که یادت برود عوضش کنی: اگر بخواهی بدون رمز جای دیگری گوش بدهد، اصلاً بالا نمی‌آید."
+          ],
+          "examples": ["host", "start"]
+        },
+        {
+          "id": "docker",
+          "h": "image",
+          "p": [
+            "image، Node، Python با python-docx، LibreOffice (Word به PDF) و git دارد، با کاربر بی‌امتیاز `node` اجرا می‌شود، و هیچ‌وقت داده‌ی جست‌وجوی کار را ندارد: آن در `/data/JobSearch` mount می‌شود. `NODE_ENV=production` کوکی Secure را روشن می‌کند و پیام خطاهای داخلی را پنهان."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "server",
+          "h": "روی سرور",
+          "p": [
+            "Control Panel آن را روی ledger.arashkeshtgar.ca اجرا می‌کند، با رمز و session secret، بسته به loopback سرور پشت Caddy، و با store از نوع SQL Server. جست‌وجوی شبانه‌ی کار روی PC از یک تونل SSH با API token به آن می‌رسد نه با ورود. این‌که سرور چطور راه افتاده در topicهای Control Panel آمده (deploy-vps)."
+          ]
+        }
+      ],
+      "examples": {
+        "host": {
+          "title": { "en": "No password, no other host", "fa": "بدون رمز، بدون host دیگر" },
+          "lang": "javascript",
+          "file": "server/src/config.js",
+          "from": "const host = env.HOST || (password ? \"0.0.0.0\" : \"127.0.0.1\");",
+          "lines": 7
+        },
+        "start": {
+          "title": { "en": "An unsafe setup stops at start", "fa": "تنظیم ناامن موقع بالا آمدن متوقف می‌شود" },
+          "lang": "javascript",
+          "file": "server/index.js",
+          "from": "let cfg;",
+          "lines": 9
+        },
+        "image": {
+          "title": { "en": "The image's settings", "fa": "تنظیمات image" },
+          "lang": "dockerfile",
+          "file": "Dockerfile",
+          "from": "ENV NODE_ENV=production",
+          "lines": 11
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": { "en": "Tests, CI and releases", "fa": "تست‌ها، CI و releaseها" },
+      "files": ["server/test/api.test.js", "server/test/fixture.js", ".github/workflows/ci.yml", ".github/workflows/release.yml"],
+      "en": [
+        {
+          "id": "api",
+          "h": "The real app, a copy of the data",
+          "p": [
+            "`npm test` (Vitest) runs the real Express app from `createApp(config, deps)` against a temporary copy of the data layout. Claude is a fake passed in `deps`, and the engine scripts are stand-ins, so analyze → build, timeouts and the build lock are tested without spending anything. The tests read like the rules: a foreign website is refused, a delete lands on the right row after another row was removed, a guessed email is refused."
+          ],
+          "examples": ["origin"]
+        },
+        {
+          "id": "ci",
+          "h": "CI with a real SQL Server",
+          "p": [
+            "GitHub Actions starts a throwaway SQL Server container, so the same suite also runs against the SQL store: each run creates and drops its own database. Then the client is linted and built, and the Docker image built."
+          ],
+          "examples": ["ci"]
+        },
+        {
+          "id": "release",
+          "h": "A tag is a release",
+          "p": [
+            "Pushing a tag like `v1.2.0` publishes a GitHub release with notes generated from the merged pull requests and the built web app attached."
+          ],
+          "examples": ["release"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "api",
+          "h": "اپ واقعی، یک کپی از داده",
+          "p": [
+            "`npm test` (Vitest) اپ واقعی Express را از `createApp(config, deps)` روی یک کپی موقت از ساختار داده اجرا می‌کند. Claude یک fake است که در `deps` داده می‌شود، و اسکریپت‌های موتور جانشین دارند، پس analyze → build، timeoutها و قفل build بدون خرج کردن چیزی تست می‌شوند. تست‌ها مثل خود قانون‌ها خوانده می‌شوند: سایت غریبه رد می‌شود، حذف بعد از حذف یک ردیف دیگر روی ردیف درست می‌نشیند، ایمیل حدسی رد می‌شود."
+          ],
+          "examples": ["origin"]
+        },
+        {
+          "id": "ci",
+          "h": "CI با یک SQL Server واقعی",
+          "p": [
+            "GitHub Actions یک container دورریختنی SQL Server بالا می‌آورد، پس همین مجموعه روی store SQL هم اجرا می‌شود: هر اجرا دیتابیس خودش را می‌سازد و پاک می‌کند. بعد client، lint و build می‌شود، و image داکر ساخته می‌شود."
+          ],
+          "examples": ["ci"]
+        },
+        {
+          "id": "release",
+          "h": "یک tag یعنی یک release",
+          "p": [
+            "push کردن tagی مثل `v1.2.0` یک GitHub release منتشر می‌کند، با یادداشت‌هایی ساخته از pull requestهای merge‌شده و اپ وب build‌شده به‌عنوان پیوست."
+          ],
+          "examples": ["release"]
+        }
+      ],
+      "examples": {
+        "origin": {
+          "title": { "en": "A foreign website can't read the ledger", "fa": "سایت غریبه ledger را نمی‌خواند" },
+          "lang": "javascript",
+          "file": "server/test/api.test.js",
+          "from": "it(\"refuses a read from a foreign website\"",
+          "lines": 7
+        },
+        "ci": {
+          "title": { "en": "A SQL Server for the tests", "fa": "یک SQL Server برای تست‌ها" },
+          "lang": "yaml",
+          "file": ".github/workflows/ci.yml",
+          "from": "services:",
+          "lines": 15
+        },
+        "release": {
+          "title": { "en": "Package and publish", "fa": "بسته‌بندی و انتشار" },
+          "lang": "yaml",
+          "file": ".github/workflows/release.yml",
+          "from": "- name: Package",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "login",
+      "group": "security",
+      "title": { "en": "Two modes: local, or a password", "fa": "دو حالت: محلی، یا با رمز" },
+      "files": ["server/src/config.js", "server/src/security.js", "server/src/app.js"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "The only routes open without a session",
+          "p": [
+            "Everything else under `/api` sits behind the gate below. Locally, with no password, there is no gate and no login at all: the 127.0.0.1 binding is the protection."
+          ],
+          "data": { "kind": "endpoints", "only": ["login", "logout", "session"] }
+        },
+        {
+          "id": "config",
+          "h": "Settings checked before anything runs",
+          "p": [
+            "`loadConfig` reads every environment setting in one place and throws on a dangerous combination: a password shorter than 12 characters, a session secret shorter than 32 or equal to the password, an API token without a password. The server would rather not start than run exposed."
+          ],
+          "examples": ["secret"]
+        },
+        {
+          "id": "session",
+          "h": "A signed cookie, nothing in memory",
+          "p": [
+            "The session is a signed `httpOnly` cookie (`cookie-session`), `SameSite=Lax`, Secure in production, valid 30 days. Nothing is kept on the server, so sessions survive restarts and redeploys, and changing `SESSION_SECRET` signs every device out."
+          ],
+          "examples": ["cookie"]
+        },
+        {
+          "id": "guess",
+          "h": "Against guessing",
+          "p": [
+            "The password is compared in constant time: both sides are hashed with SHA-256 first, so even the length can't leak. Five wrong tries lock that IP out for 15 minutes, with a `Retry-After`."
+          ],
+          "examples": ["compare", "login"]
+        },
+        {
+          "id": "token",
+          "h": "Scripts: a bearer token",
+          "p": [
+            "The nightly job search can't fill a login form, so `Authorization: Bearer <API_TOKEN>` counts as a session. A browser never sends that header on its own, so it opens nothing to other websites."
+          ],
+          "examples": ["token", "gate"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "تنها routeهایی که بدون session باز هستند",
+          "p": [
+            "بقیه‌ی `/api` پشت دروازه‌ای است که پایین آمده. در حالت محلی، بدون رمز، نه دروازه‌ای هست و نه ورودی: بسته بودن به 127.0.0.1 خودش محافظت است."
+          ],
+          "data": { "kind": "endpoints", "only": ["login", "logout", "session"] }
+        },
+        {
+          "id": "config",
+          "h": "تنظیمات قبل از اجرای هر چیز چک می‌شوند",
+          "p": [
+            "`loadConfig` همه‌ی تنظیمات محیطی را در یک جا می‌خواند و با یک ترکیب خطرناک خطا می‌اندازد: رمز کوتاه‌تر از ۱۲ کاراکتر، session secret کوتاه‌تر از ۳۲ یا برابر رمز، API token بدون رمز. سرور ترجیح می‌دهد بالا نیاید تا این‌که باز اجرا شود."
+          ],
+          "examples": ["secret"]
+        },
+        {
+          "id": "session",
+          "h": "کوکی امضاشده، هیچ چیز در حافظه",
+          "p": [
+            "session یک کوکی `httpOnly` امضاشده است (`cookie-session`)، `SameSite=Lax`، در production با Secure، و ۳۰ روز معتبر. روی سرور هیچ چیز نگه داشته نمی‌شود، پس session‌ها از restart و redeploy جان سالم به در می‌برند، و عوض کردن `SESSION_SECRET` همه‌ی دستگاه‌ها را بیرون می‌کند."
+          ],
+          "examples": ["cookie"]
+        },
+        {
+          "id": "guess",
+          "h": "در برابر حدس زدن",
+          "p": [
+            "رمز با زمان ثابت مقایسه می‌شود: هر دو طرف اول با SHA-256 hash می‌شوند، پس حتی طولش هم لو نمی‌رود. پنج تلاش غلط آن IP را ۱۵ دقیقه قفل می‌کند، با `Retry-After`."
+          ],
+          "examples": ["compare", "login"]
+        },
+        {
+          "id": "token",
+          "h": "اسکریپت‌ها: یک bearer token",
+          "p": [
+            "جست‌وجوی شبانه‌ی کار نمی‌تواند فرم ورود را پر کند، پس `Authorization: Bearer <API_TOKEN>` یک session حساب می‌شود. مرورگر هیچ‌وقت خودش این هدر را نمی‌فرستد، پس چیزی به روی سایت‌های دیگر باز نمی‌کند."
+          ],
+          "examples": ["token", "gate"]
+        }
+      ],
+      "examples": {
+        "secret": {
+          "title": { "en": "The session secret's rules", "fa": "قانون‌های session secret" },
+          "lang": "javascript",
+          "file": "server/src/config.js",
+          "from": "if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {",
+          "lines": 10
+        },
+        "cookie": {
+          "title": { "en": "The session cookie", "fa": "کوکی session" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "cookieSession({",
+          "lines": 8
+        },
+        "compare": {
+          "title": { "en": "Same length, same time", "fa": "طول یکسان، زمان یکسان" },
+          "lang": "javascript",
+          "file": "server/src/security.js",
+          "from": "export function passwordMatches(candidate, expected) {",
+          "lines": 5
+        },
+        "login": {
+          "title": { "en": "Sign-in with the limiter", "fa": "ورود با محدودکننده" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "app.post(\"/api/login\", (req, res) => {",
+          "lines": 18
+        },
+        "token": {
+          "title": { "en": "A bearer token for scripts", "fa": "bearer token برای اسکریپت‌ها" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "const hasApiToken = (req) => {",
+          "lines": 5
+        },
+        "gate": {
+          "title": { "en": "The gate", "fa": "دروازه" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "app.use(\"/api\", (req, res, next) => {",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "origin",
+      "group": "security",
+      "title": { "en": "No website may call the API", "fa": "هیچ سایتی API را صدا نمی‌زند" },
+      "files": ["server/src/security.js", "server/src/config.js"],
+      "en": [
+        {
+          "id": "why",
+          "h": "Reads too, not only writes",
+          "p": [
+            "The dashboard is often used with no password, on 127.0.0.1. A page on any website open in the same browser could still send requests to localhost:4310. So every `/api` request carrying a foreign `Origin` gets 403, reads as well as writes: no other site can read the ledger, delete a row or start a paid build."
+          ],
+          "examples": ["guard"]
+        },
+        {
+          "id": "allowed",
+          "h": "Who may",
+          "p": [
+            "Same origin (the app served by this server) and requests with no `Origin` (curl, scripts) pass. The only foreign origin allowed is the Vite dev server, and only outside production; it is echoed back, never `*`."
+          ],
+          "examples": ["dev", "allowed"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "خواندن هم، نه فقط نوشتن",
+          "p": [
+            "داشبورد اغلب بدون رمز و روی 127.0.0.1 استفاده می‌شود. صفحه‌ای از هر سایتی که در همان مرورگر باز است هنوز می‌تواند به localhost:4310 درخواست بفرستد. پس هر درخواست `/api` که `Origin` غریبه دارد 403 می‌گیرد، چه خواندن چه نوشتن: هیچ سایت دیگری نمی‌تواند ledger را بخواند، ردیفی را حذف کند یا یک build پولی راه بیندازد."
+          ],
+          "examples": ["guard"]
+        },
+        {
+          "id": "allowed",
+          "h": "چه کسی اجازه دارد",
+          "p": [
+            "همان origin (اپی که همین سرور سرو می‌کند) و درخواست‌های بدون `Origin` (curl، اسکریپت‌ها) رد می‌شوند. تنها origin غریبه‌ی مجاز Vite dev server است، و فقط بیرون از production؛ خودش برگردانده می‌شود، هیچ‌وقت `*`."
+          ],
+          "examples": ["dev", "allowed"]
+        }
+      ],
+      "examples": {
+        "guard": {
+          "title": { "en": "The cross-origin guard", "fa": "نگهبان cross-origin" },
+          "lang": "javascript",
+          "file": "server/src/security.js",
+          "from": "export function originGuard(allowedOrigins) {",
+          "lines": 21
+        },
+        "dev": {
+          "title": { "en": "The dev server's origins", "fa": "originهای dev server" },
+          "lang": "javascript",
+          "file": "server/src/config.js",
+          "from": "const DEV_ORIGINS",
+          "lines": 1
+        },
+        "allowed": {
+          "title": { "en": "Only outside production", "fa": "فقط بیرون از production" },
+          "lang": "javascript",
+          "file": "server/src/config.js",
+          "from": "allowedOrigins: [",
+          "lines": 1
+        }
+      }
+    },
+    {
+      "id": "safety",
+      "group": "security",
+      "title": { "en": "Files that can't be damaged", "fa": "فایل‌هایی که خراب نمی‌شوند" },
+      "files": ["server/src/paths.js", "server/src/csv.js", "server/src/process.js", "server/src/app.js"],
+      "en": [
+        {
+          "id": "folders",
+          "h": "Every folder resolved inside applications/",
+          "p": [
+            "An application is addressed by its folder name (`2026-09-13__Company__Role`), never by row position, so an edit or a delete can't land on the wrong row after the ledger changes. Before any read, write or delete, the name is checked (letters, digits, dot, underscore, dash, no `..`) and resolved strictly inside `applications/`: a value from a request can never point at the fact bank, the scripts or `applications/` itself."
+          ],
+          "examples": ["name", "resolve"]
+        },
+        {
+          "id": "atomic",
+          "h": "Atomic writes, and Excel",
+          "p": [
+            "`ledger.csv` is rewritten through a temp file and a rename, so a crash leaves the old file or the new one, never half of one. On Windows, a file Excel has open refuses the rename: that becomes a 423 saying to close it in Excel, instead of a failure halfway."
+          ],
+          "examples": ["atomic", "locked"]
+        },
+        {
+          "id": "process",
+          "h": "Python and LibreOffice with timeouts",
+          "p": [
+            "`validate.py` and `build.py` run as child processes without blocking the event loop (other requests keep being answered during a render), and are killed with their whole process tree after 30 s and 180 s: a hung LibreOffice can't hang the server."
+          ],
+          "examples": ["timer", "kill"]
+        },
+        {
+          "id": "errors",
+          "h": "Errors with the right status",
+          "p": [
+            "Known errors map to their status (423 locked file, 400 unsafe folder or value the database refused, 429 and 502 from Claude); anything else is a 500 whose message, which can include server paths, is logged but not sent in production."
+          ],
+          "examples": ["errors"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "folders",
+          "h": "هر پوشه داخل applications/ resolve می‌شود",
+          "p": [
+            "هر درخواست با اسم پوشه‌اش شناخته می‌شود (`2026-09-13__Company__Role`)، هیچ‌وقت با شماره‌ی ردیف، پس ویرایش یا حذف بعد از تغییر ledger روی ردیف غلط نمی‌نشیند. قبل از هر خواندن، نوشتن یا حذف، اسم چک می‌شود (حرف، رقم، نقطه، زیرخط، خط تیره، بدون `..`) و دقیقاً داخل `applications/` resolve می‌شود: مقداری که از درخواست آمده هیچ‌وقت نمی‌تواند به fact bank، اسکریپت‌ها یا خود `applications/` اشاره کند."
+          ],
+          "examples": ["name", "resolve"]
+        },
+        {
+          "id": "atomic",
+          "h": "نوشتن اتمیک، و Excel",
+          "p": [
+            "`ledger.csv` از راه یک فایل موقت و rename بازنویسی می‌شود، پس crash یا فایل قدیمی را باقی می‌گذارد یا فایل تازه را، هیچ‌وقت نصفش را. در Windows، فایلی که Excel باز کرده rename را رد می‌کند: این یک 423 می‌شود که می‌گوید در Excel ببندش، نه شکستی در نیمه‌ی راه."
+          ],
+          "examples": ["atomic", "locked"]
+        },
+        {
+          "id": "process",
+          "h": "Python و LibreOffice با timeout",
+          "p": [
+            "`validate.py` و `build.py` به‌صورت child process اجرا می‌شوند بی‌آن‌که event loop را قفل کنند (درخواست‌های دیگر وسط render جواب می‌گیرند)، و بعد از ۳۰ و ۱۸۰ ثانیه با کل درخت processشان کشته می‌شوند: LibreOffice گیرکرده نمی‌تواند سرور را گیر بیندازد."
+          ],
+          "examples": ["timer", "kill"]
+        },
+        {
+          "id": "errors",
+          "h": "خطاها با status درست",
+          "p": [
+            "خطاهای شناخته‌شده به status خودشان می‌رسند (423 فایل قفل، 400 پوشه‌ی ناامن یا مقداری که دیتابیس رد کرده، 429 و 502 از Claude)؛ هر چیز دیگر 500 است که پیامش، که ممکن است مسیرهای سرور را داشته باشد، در production log می‌شود ولی فرستاده نمی‌شود."
+          ],
+          "examples": ["errors"]
+        }
+      ],
+      "examples": {
+        "name": {
+          "title": { "en": "A safe folder name", "fa": "اسم پوشه‌ی امن" },
+          "lang": "javascript",
+          "file": "server/src/paths.js",
+          "from": "const FOLDER_NAME_RE",
+          "lines": 5
+        },
+        "resolve": {
+          "title": { "en": "Strictly inside applications/", "fa": "دقیقاً داخل applications/" },
+          "lang": "javascript",
+          "file": "server/src/paths.js",
+          "from": "export function resolveApplicationFolder(applicationsDir, name) {",
+          "lines": 9
+        },
+        "atomic": {
+          "title": { "en": "Temp file, then rename", "fa": "فایل موقت، بعد rename" },
+          "lang": "javascript",
+          "file": "server/src/csv.js",
+          "from": "export function writeFileAtomic(file, content) {",
+          "lines": 11
+        },
+        "locked": {
+          "title": { "en": "Open in Excel", "fa": "در Excel باز است" },
+          "lang": "javascript",
+          "file": "server/src/csv.js",
+          "from": "export class FileLockedError extends Error {",
+          "lines": 7
+        },
+        "timer": {
+          "title": { "en": "Past the timeout: kill", "fa": "بعد از timeout: کشتن" },
+          "lang": "javascript",
+          "file": "server/src/process.js",
+          "from": "const timer = setTimeout(() => {",
+          "lines": 4
+        },
+        "kill": {
+          "title": { "en": "The whole process tree", "fa": "کل درخت process" },
+          "lang": "javascript",
+          "file": "server/src/process.js",
+          "from": "function killTree(pid, isWindows) {",
+          "lines": 11
+        },
+        "errors": {
+          "title": { "en": "Known errors, known statuses", "fa": "خطاهای شناخته، statusهای شناخته" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "function sendError(res, err) {",
+          "lines": 22
+        }
+      }
+    },
+    {
+      "id": "applications",
+      "group": "ledger",
+      "title": { "en": "Applications, by folder", "fa": "درخواست‌ها، با پوشه" },
+      "files": ["server/src/app.js", "client/src/pages/ApplicationsList.jsx", "client/src/pages/ApplicationDetail.jsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "`:id` is the folder. A new application, typed in or analyzed, starts as a draft with its own folder named after the date, the company and the role."
+          ],
+          "data": { "kind": "endpoints", "only": ["applications"] },
+          "examples": ["folder"]
+        },
+        {
+          "id": "edit",
+          "h": "What may be edited",
+          "p": [
+            "`PATCH` changes the tracking fields only (notes, next action, last contact, outcome, gap tags, the hiring contact). The stage goes through pipeline events, and the posting's own facts come from how the package was built."
+          ],
+          "examples": ["editable"]
+        },
+        {
+          "id": "delete",
+          "h": "Deleting a draft",
+          "p": [
+            "Deleting removes the row and its folder: it is meant for a draft you skipped, not as an archive. It is refused while a build is running for that folder."
+          ],
+          "examples": ["delete"]
+        },
+        {
+          "id": "files",
+          "h": "Files, only by their listed name",
+          "p": [
+            "Builds run on the server, so a package reaches the PC as a download. Only names that actually appear in the folder's listing are served, so no path can be slipped in."
+          ],
+          "examples": ["download"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "`:id` همان پوشه است. درخواست تازه، چه تایپ‌شده چه analyze‌شده، به‌صورت پیش‌نویس شروع می‌شود با پوشه‌ی خودش به اسم تاریخ، شرکت و نقش."
+          ],
+          "data": { "kind": "endpoints", "only": ["applications"] },
+          "examples": ["folder"]
+        },
+        {
+          "id": "edit",
+          "h": "چه چیزی ویرایش می‌شود",
+          "p": [
+            "`PATCH` فقط فیلدهای پیگیری را عوض می‌کند (یادداشت، قدم بعدی، آخرین تماس، نتیجه، gap tagها، مخاطب استخدام). مرحله از رویدادهای pipeline عوض می‌شود، و مشخصات خود آگهی از نحوه‌ی ساخته شدن بسته می‌آیند."
+          ],
+          "examples": ["editable"]
+        },
+        {
+          "id": "delete",
+          "h": "حذف یک پیش‌نویس",
+          "p": [
+            "حذف ردیف و پوشه‌اش را پاک می‌کند: برای پیش‌نویسی است که ردش کرده‌ای، نه برای بایگانی. وقتی برای آن پوشه build در جریان است رد می‌شود."
+          ],
+          "examples": ["delete"]
+        },
+        {
+          "id": "files",
+          "h": "فایل‌ها، فقط با اسمی که در فهرست هست",
+          "p": [
+            "buildها روی سرور اجرا می‌شوند، پس بسته به‌صورت دانلود به PC می‌رسد. فقط اسم‌هایی سرو می‌شوند که واقعاً در فهرست پوشه هستند، پس هیچ مسیری نمی‌شود جا زد."
+          ],
+          "examples": ["download"]
+        }
+      ],
+      "examples": {
+        "folder": {
+          "title": { "en": "A folder name that doesn't collide", "fa": "اسم پوشه‌ای که تکراری نمی‌شود" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "const base = `${date}__${slugify(company)",
+          "lines": 7
+        },
+        "editable": {
+          "title": { "en": "The editable fields", "fa": "فیلدهای قابل ویرایش" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "const EDITABLE_LEDGER_FIELDS = new Set([",
+          "lines": 3
+        },
+        "delete": {
+          "title": { "en": "Not while it's building", "fa": "نه وقتی در حال build است" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "app.delete(\"/api/applications/:id\"",
+          "lines": 18
+        },
+        "download": {
+          "title": { "en": "Only listed names", "fa": "فقط اسم‌های فهرست‌شده" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "const listed = existsSync(folderPath) ? readdirSync(folderPath) : [];",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "pipeline",
+      "group": "ledger",
+      "title": { "en": "The pipeline: append-only stages, follow-ups", "fa": "pipeline: مرحله‌های فقط‌افزودنی، پیگیری‌ها" },
+      "files": ["server/src/pipeline.js", "server/src/stores/csvStore.js", "server/src/stores/sqlStore.js", "client/src/pages/PipelineBoard.jsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Dragging a card on the Pipeline board (Draft → … → Contract signed) adds an event; nothing is overwritten."
+          ],
+          "data": { "kind": "endpoints", "only": ["pipeline-events", "pipeline-stages"] }
+        },
+        {
+          "id": "events",
+          "h": "The last event is the stage",
+          "p": [
+            "Stage changes are events appended to `pipeline.csv` (or `PipelineEvents`), and an application's current stage is its last stage-changing event: the history is never lost. A follow-up is an event too, but it doesn't change the stage."
+          ],
+          "examples": ["append", "current"]
+        },
+        {
+          "id": "followup",
+          "h": "Seven silent days",
+          "p": [
+            "Stages marked `waiting` in `pipeline_stages.yml` mean the employer has to act next. After 7 days without action (entering the stage, or the last follow-up, whichever is newer) the card asks for a follow-up; logging one restarts the clock."
+          ],
+          "examples": ["since"]
+        },
+        {
+          "id": "dates",
+          "h": "Dates in local time",
+          "p": [
+            "`new Date(\"2026-09-10\")` would be UTC midnight, the previous evening in Toronto, and \"days in stage\" would be off by one depending on the hour. Ledger dates are read as local calendar dates, and a future date (a booked interview) counts down instead of becoming zero."
+          ],
+          "examples": ["local"]
+        },
+        {
+          "id": "undo",
+          "h": "Undo, but never the draft",
+          "p": [
+            "A stage marked by mistake can be taken back: the latest event, or every event after the first. The first event, the row's own draft, always stays."
+          ],
+          "examples": ["undo"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "کشیدن یک کارت روی صفحه‌ی Pipeline (Draft → … → Contract signed) یک رویداد اضافه می‌کند؛ هیچ چیز رونویسی نمی‌شود."
+          ],
+          "data": { "kind": "endpoints", "only": ["pipeline-events", "pipeline-stages"] }
+        },
+        {
+          "id": "events",
+          "h": "آخرین رویداد همان مرحله است",
+          "p": [
+            "تغییر مرحله‌ها رویدادهایی‌اند که به `pipeline.csv` (یا `PipelineEvents`) اضافه می‌شوند، و مرحله‌ی فعلی یک درخواست آخرین رویداد تغییر مرحله‌ی آن است: تاریخچه هیچ‌وقت گم نمی‌شود. پیگیری هم یک رویداد است، ولی مرحله را عوض نمی‌کند."
+          ],
+          "examples": ["append", "current"]
+        },
+        {
+          "id": "followup",
+          "h": "هفت روز سکوت",
+          "p": [
+            "مرحله‌هایی که در `pipeline_stages.yml` با `waiting` علامت خورده‌اند یعنی قدم بعدی با کارفرماست. بعد از ۷ روز بی‌کاری (ورود به مرحله، یا آخرین پیگیری، هر کدام تازه‌تر) کارت پیگیری می‌خواهد؛ ثبت یک پیگیری ساعت را از نو شروع می‌کند."
+          ],
+          "examples": ["since"]
+        },
+        {
+          "id": "dates",
+          "h": "تاریخ‌ها به وقت محلی",
+          "p": [
+            "`new Date(\"2026-09-10\")` نیمه‌شب UTC می‌شد، که در Toronto عصر روز قبل است، و «روزهای این مرحله» بسته به ساعت یکی جابه‌جا می‌شد. تاریخ‌های ledger به‌صورت تاریخ تقویم محلی خوانده می‌شوند، و تاریخ آینده (یک مصاحبه‌ی رزروشده) شمارش معکوس می‌شود نه صفر."
+          ],
+          "examples": ["local"]
+        },
+        {
+          "id": "undo",
+          "h": "برگرداندن، ولی هیچ‌وقت پیش‌نویس",
+          "p": [
+            "مرحله‌ای که اشتباهی زده شده را می‌شود پس گرفت: آخرین رویداد، یا همه‌ی رویدادهای بعد از اولی. رویداد اول، یعنی پیش‌نویس خود ردیف، همیشه می‌ماند."
+          ],
+          "examples": ["undo"]
+        }
+      ],
+      "examples": {
+        "append": {
+          "title": { "en": "One more line in pipeline.csv", "fa": "یک خط دیگر در pipeline.csv" },
+          "lang": "javascript",
+          "file": "server/src/stores/csvStore.js",
+          "from": "function appendEventLine({ folder, company, stage, date, note }) {",
+          "lines": 7
+        },
+        "current": {
+          "title": { "en": "The current stage", "fa": "مرحله‌ی فعلی" },
+          "lang": "javascript",
+          "file": "server/src/pipeline.js",
+          "from": "const stageEvents = history.filter((h) => h.stage !== FOLLOWUP_KEY);",
+          "lines": 3
+        },
+        "since": {
+          "title": { "en": "When a follow-up is due", "fa": "پیگیری کی لازم است" },
+          "lang": "javascript",
+          "file": "server/src/pipeline.js",
+          "from": "const lastActionDate =",
+          "lines": 10
+        },
+        "local": {
+          "title": { "en": "A ledger date as a local date", "fa": "تاریخ ledger به‌صورت تاریخ محلی" },
+          "lang": "javascript",
+          "file": "server/src/pipeline.js",
+          "from": "export function parseLocalDate(value) {",
+          "lines": 7
+        },
+        "undo": {
+          "title": { "en": "Undo in one DELETE", "fa": "برگرداندن در یک DELETE" },
+          "lang": "javascript",
+          "file": "server/src/stores/sqlStore.js",
+          "from": "async removeEvents(folder, { all = false } = {}) {",
+          "lines": 15
+        }
+      }
+    },
+    {
+      "id": "contact",
+      "group": "ledger",
+      "title": { "en": "The hiring contact: published or verified only", "fa": "مخاطب استخدام: فقط منتشرشده یا تأییدشده" },
+      "files": ["server/src/contact.js", "db/03-schema.sql", "client/src/components/ContactEditor.jsx"],
+      "en": [
+        {
+          "id": "rule",
+          "h": "No guessed addresses",
+          "p": [
+            "Marking an application as sent first asks who it went to and where their email came from. A guessed `careers@` or `firstname@` usually bounces or goes unread, which is worse than not writing, so only an address the posting showed, the ATS confirmation replied from or the person wrote from is stored. One you found yourself must be marked as checked."
+          ],
+          "examples": ["sources", "resolve"]
+        },
+        {
+          "id": "twice",
+          "h": "Refused twice",
+          "p": [
+            "The API applies the rule to the merged contact (a change to one field is checked with the others), and SQL Server refuses a row that breaks it with a CHECK constraint, so a script or a hand-written UPDATE can't store one either."
+          ],
+          "examples": ["patch", "check"]
+        },
+        {
+          "id": "email",
+          "h": "The follow-up email",
+          "p": [
+            "After 7 silent days, *Email follow-up* opens a short draft in your own mail app; nothing is sent from the dashboard. Confirming it logs the follow-up and restarts the clock."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "rule",
+          "h": "هیچ آدرس حدسی",
+          "p": [
+            "علامت زدن یک درخواست به‌عنوان فرستاده‌شده اول می‌پرسد به چه کسی رفته و ایمیلش از کجا آمده. یک `careers@` یا `firstname@` حدسی معمولاً برمی‌گردد یا خوانده نمی‌شود، که از ننوشتن بدتر است، پس فقط آدرسی ذخیره می‌شود که آگهی نشان داده، تأیید ATS از آن جواب داده یا خود آن آدم از آن نوشته. آدرسی که خودت پیدا کرده‌ای باید علامت چک‌شده بخورد."
+          ],
+          "examples": ["sources", "resolve"]
+        },
+        {
+          "id": "twice",
+          "h": "دو بار رد می‌شود",
+          "p": [
+            "API قانون را روی مخاطب ادغام‌شده اعمال می‌کند (تغییر یک فیلد با بقیه چک می‌شود)، و SQL Server ردیفی را که آن را بشکند با یک CHECK constraint رد می‌کند، پس اسکریپت یا یک UPDATE دست‌نویس هم نمی‌تواند چنین چیزی ذخیره کند."
+          ],
+          "examples": ["patch", "check"]
+        },
+        {
+          "id": "email",
+          "h": "ایمیل پیگیری",
+          "p": [
+            "بعد از ۷ روز سکوت، *Email follow-up* یک پیش‌نویس کوتاه در اپ ایمیل خودت باز می‌کند؛ هیچ چیز از داشبورد فرستاده نمی‌شود. تأییدش پیگیری را ثبت و ساعت را از نو شروع می‌کند."
+          ]
+        }
+      ],
+      "examples": {
+        "sources": {
+          "title": { "en": "Where an address may come from", "fa": "آدرس از کجا می‌تواند بیاید" },
+          "lang": "javascript",
+          "file": "server/src/contact.js",
+          "from": "export const CONTACT_SOURCES = {",
+          "lines": 6
+        },
+        "resolve": {
+          "title": { "en": "Published, or marked verified", "fa": "منتشرشده، یا علامت تأیید" },
+          "lang": "javascript",
+          "file": "server/src/contact.js",
+          "from": "const verified = CONTACT_SOURCES[source].published || isTrue(merged.contact_verified);",
+          "lines": 7
+        },
+        "patch": {
+          "title": { "en": "Checked as a whole", "fa": "به‌صورت یک کل چک می‌شود" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "if (CONTACT_FIELDS.some((f) => f in updates)) {",
+          "lines": 3
+        },
+        "check": {
+          "title": { "en": "The same rule in the database", "fa": "همان قانون در دیتابیس" },
+          "lang": "sql",
+          "file": "db/03-schema.sql",
+          "from": "ALTER TABLE dbo.Applications ADD CONSTRAINT CK_Applications_Contact CHECK (",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "boards",
+      "group": "ledger",
+      "title": { "en": "Funnel, rejections, recruiters, evaluation", "fa": "قیف، ردشده‌ها، recruiterها، ارزیابی" },
+      "files": ["server/src/funnel.js", "server/src/rejections.js", "server/src/recruiterNext.js", "server/src/evaluation.js"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "The other pages read the same ledger and compute in plain functions, with no model call."
+          ],
+          "data": { "kind": "endpoints", "only": ["funnel", "rejections", "recruiters", "eval", "motivation", "gap-tags"] }
+        },
+        {
+          "id": "funnel",
+          "h": "The funnel and a forecast",
+          "p": [
+            "Applied → any reply → interview → offer, plus a 6-month forecast of an offer. Before there is much data of your own it starts from published rates as Beta priors with a weak weight, so a few weeks of real results move it quickly; a posting silent for 21 days counts as a no."
+          ],
+          "examples": ["prior"]
+        },
+        {
+          "id": "recruiters",
+          "h": "Recruiters at LinkedIn's pace",
+          "p": [
+            "The outreach list says what to do next with each person (connect, wait, first message, follow up, monthly check-in), from the dates already stored. Connects go out without a note, and the daily and weekly targets warn before LinkedIn's limits would."
+          ],
+          "examples": ["caps"]
+        },
+        {
+          "id": "eval",
+          "h": "Is the score any good?",
+          "p": [
+            "Each saved posting can be labelled apply or skip without seeing the model's score, so the label isn't anchored on it. The labels against the scores give a confusion matrix, accuracy, precision and recall at a chosen threshold."
+          ],
+          "examples": ["confusion"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "صفحه‌های دیگر همان ledger را می‌خوانند و با تابع‌های ساده حساب می‌کنند، بدون صدا زدن مدل."
+          ],
+          "data": { "kind": "endpoints", "only": ["funnel", "rejections", "recruiters", "eval", "motivation", "gap-tags"] }
+        },
+        {
+          "id": "funnel",
+          "h": "قیف و یک پیش‌بینی",
+          "p": [
+            "فرستاده → هر جوابی → مصاحبه → پیشنهاد، به‌علاوه‌ی پیش‌بینی ۶ ماهه‌ی یک پیشنهاد کار. پیش از این‌که داده‌ی خودت زیاد شود از نرخ‌های منتشرشده به‌صورت prior بتا با وزن کم شروع می‌کند، پس چند هفته نتیجه‌ی واقعی سریع جابه‌جایش می‌کند؛ آگهی‌ای که ۲۱ روز ساکت مانده «نه» حساب می‌شود."
+          ],
+          "examples": ["prior"]
+        },
+        {
+          "id": "recruiters",
+          "h": "recruiterها با سرعت لینکدین",
+          "p": [
+            "فهرست ارتباط‌گیری می‌گوید با هر نفر قدم بعدی چیست (دعوت، صبر، پیام اول، پیگیری، سر زدن ماهانه)، از روی تاریخ‌هایی که از قبل ذخیره شده‌اند. دعوت‌ها بدون یادداشت می‌روند، و هدف‌های روزانه و هفتگی قبل از محدودیت‌های لینکدین هشدار می‌دهند."
+          ],
+          "examples": ["caps"]
+        },
+        {
+          "id": "eval",
+          "h": "امتیاز به درد می‌خورد؟",
+          "p": [
+            "هر آگهی ذخیره‌شده را می‌شود بدون دیدن امتیاز مدل با apply یا skip برچسب زد، تا برچسب به آن لنگر نیندازد. برچسب‌ها در برابر امتیازها یک confusion matrix، accuracy، precision و recall در آستانه‌ی انتخابی می‌دهند."
+          ],
+          "examples": ["confusion"]
+        }
+      ],
+      "examples": {
+        "prior": {
+          "title": { "en": "Priors before your own data", "fa": "priorها پیش از داده‌ی خودت" },
+          "lang": "javascript",
+          "file": "server/src/funnel.js",
+          "from": "// Benchmarks before any of the user's own data",
+          "lines": 6
+        },
+        "caps": {
+          "title": { "en": "LinkedIn's pace", "fa": "سرعت لینکدین" },
+          "lang": "javascript",
+          "file": "server/src/recruiterNext.js",
+          "from": "// LinkedIn (free) allows only a few personalised invites",
+          "lines": 9
+        },
+        "confusion": {
+          "title": { "en": "Score against label", "fa": "امتیاز در برابر برچسب" },
+          "lang": "javascript",
+          "file": "server/src/evaluation.js",
+          "from": "export function confusion(items, threshold) {",
+          "lines": 22
+        }
+      }
+    },
+    {
+      "id": "analyze",
+      "group": "ai",
+      "title": { "en": "Analyze: a cheap first call", "fa": "Analyze: یک صدا زدن ارزان اول" },
+      "files": ["server/src/app.js", "client/src/pages/NewPackage.jsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Two stages, with you in between",
+          "p": [
+            "Pasting a posting calls `/api/packages/analyze`: Claude scores it against the fact bank, lists the gaps and picks a résumé template, and a draft is created. Only after you choose Apply does `/api/packages/build` make the heavy call, so a posting you skip costs only the analysis."
+          ],
+          "data": { "kind": "endpoints", "only": ["packages"] }
+        },
+        {
+          "id": "strict",
+          "h": "A strict tool, then checks anyway",
+          "p": [
+            "The answer is a forced call to a `strict` tool, so its input matches the schema (without it the model sometimes dropped the gap tags or nested them in the wrong field). A cut-off answer, or gaps listed without gap tags, still throws, and nothing is saved."
+          ],
+          "examples": ["strict", "normalize"]
+        },
+        {
+          "id": "closed",
+          "h": "Closed gaps, enforced here",
+          "p": [
+            "The prompt tells the model never to use a gap the fact bank has closed, and it has done so anyway, so the gap dictionary is enforced on the server: closed slugs are dropped (and listed) whoever scored the posting, after merged slugs are mapped to the gap they now count as."
+          ],
+          "examples": ["closed"]
+        },
+        {
+          "id": "cache",
+          "h": "The fact bank, cached",
+          "p": [
+            "The fact bank is about 35k tokens and the same in every call, so the system prompt is marked for prompt caching: another analysis within a few minutes reads it at about a tenth of the price. A draft can be re-analyzed against today's fact bank, but only while it is still a draft: once sent, its gap tags record what was missing when it went out."
+          ],
+          "examples": ["cached", "draftOnly"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "دو مرحله، و تو وسطشان",
+          "p": [
+            "چسباندن یک آگهی `/api/packages/analyze` را صدا می‌زند: Claude آن را در برابر fact bank امتیاز می‌دهد، gapها را فهرست می‌کند و یک قالب رزومه انتخاب می‌کند، و یک پیش‌نویس ساخته می‌شود. فقط بعد از این‌که Apply را انتخاب کنی `/api/packages/build` صدا زدن سنگین را انجام می‌دهد، پس آگهی‌ای که ردش کنی فقط هزینه‌ی analysis را دارد."
+          ],
+          "data": { "kind": "endpoints", "only": ["packages"] }
+        },
+        {
+          "id": "strict",
+          "h": "یک tool سخت‌گیر، و باز هم چک",
+          "p": [
+            "جواب یک صدا زدن اجباری به یک tool از نوع `strict` است، پس ورودی‌اش با schema جور است (بدون آن مدل گاهی gap tagها را جا می‌انداخت یا در فیلد غلط می‌گذاشت). جواب بریده، یا gapهایی که بدون gap tag آمده‌اند، باز هم خطا می‌اندازند، و هیچ چیز ذخیره نمی‌شود."
+          ],
+          "examples": ["strict", "normalize"]
+        },
+        {
+          "id": "closed",
+          "h": "gapهای بسته، این‌جا اجبار می‌شوند",
+          "p": [
+            "prompt به مدل می‌گوید هیچ‌وقت gapی را که fact bank بسته به کار نبرد، و مدل با این حال این کار را کرده، پس دیکشنری gap روی سرور اجبار می‌شود: slugهای بسته حذف می‌شوند (و فهرست می‌شوند)، هر کس امتیاز داده باشد، بعد از این‌که slugهای ادغام‌شده به gapی که حالا حساب می‌شوند برگردانده شدند."
+          ],
+          "examples": ["closed"]
+        },
+        {
+          "id": "cache",
+          "h": "fact bank، cache‌شده",
+          "p": [
+            "fact bank حدود ۳۵ هزار token است و در هر صدا زدن همان است، پس system prompt برای prompt caching علامت خورده: analysis دیگری در چند دقیقه آن را با حدود یک‌دهم قیمت می‌خواند. پیش‌نویس را می‌شود در برابر fact bank امروز دوباره analyze کرد، ولی فقط تا وقتی پیش‌نویس است: بعد از فرستادن، gap tagهایش ثبت می‌کنند وقتی فرستاده شد چه چیزی کم بود."
+          ],
+          "examples": ["cached", "draftOnly"]
+        }
+      ],
+      "examples": {
+        "strict": {
+          "title": { "en": "Why strict", "fa": "چرا strict" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "// strict: the API then guarantees the input matches this schema.",
+          "lines": 9
+        },
+        "normalize": {
+          "title": { "en": "Fail loudly, save nothing", "fa": "با صدای بلند شکست بخور، هیچ چیز ذخیره نکن" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "if (message.stop_reason === \"max_tokens\") {",
+          "lines": 11
+        },
+        "closed": {
+          "title": { "en": "Dropping closed gaps", "fa": "حذف gapهای بسته" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "function withoutClosedGaps(rawTags) {",
+          "lines": 6
+        },
+        "cached": {
+          "title": { "en": "The cache breakpoint", "fa": "نقطه‌ی cache" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "function cachedSystem(text, tail = \"\") {",
+          "lines": 5
+        },
+        "draftOnly": {
+          "title": { "en": "Drafts only", "fa": "فقط پیش‌نویس" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "if (row.stage !== \"draft\") {",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "build",
+      "group": "ai",
+      "title": { "en": "Build: why the AI can't invent claims", "fa": "Build: چرا AI نمی‌تواند ادعا بسازد" },
+      "files": ["server/src/app.js", "server/src/combinePackage.js", "server/scripts/combine_docx.py"],
+      "en": [
+        {
+          "id": "enum",
+          "h": "Every bullet names a real fact",
+          "p": [
+            "The model never writes free-form claims. Each résumé bullet must carry a `fact_id` from an enum of the fact bank's real ids for that template, so it can't name a fact that doesn't exist; Skills lines are chosen by id and copied word for word."
+          ],
+          "examples": ["enum"]
+        },
+        {
+          "id": "guardian",
+          "h": "The guardian, before anything is written",
+          "p": [
+            "`validate.py` then checks every bullet's numbers against that fact's `allowed_numbers` and its `forbidden` phrases, before a single file is written. A missing employment role (a hole in the timeline) is checked here too. A rejected package gets one repair turn: the model sees the guardian's exact errors as a tool result and resubmits."
+          ],
+          "examples": ["roles", "repair"]
+        },
+        {
+          "id": "warn",
+          "h": "Still rejected: built, with warnings",
+          "p": [
+            "Both calls are already paid for by then, so a package rejected twice is built anyway, and the guardian's errors become warnings to review (in `build_error.json` and `plan.json`) before sending. `plan.json` keeps which fact every bullet came from and what that fact said, which is how the Résumé page links bullets back and Health spots a fact that changed since."
+          ],
+          "examples": ["warnings"]
+        },
+        {
+          "id": "lock",
+          "h": "One build per folder",
+          "p": [
+            "`build.py` renders the résumé and cover letter as Word and PDF, then the server adds one combined file of each for portals that take a single upload. A second build of the same folder while one is rendering would race on the same files, so it is refused with 409."
+          ],
+          "examples": ["inflight"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "enum",
+          "h": "هر bullet یک fact واقعی را نام می‌برد",
+          "p": [
+            "مدل هیچ‌وقت ادعای آزاد نمی‌نویسد. هر bullet رزومه باید یک `fact_id` از enumی از idهای واقعی fact bank برای آن قالب داشته باشد، پس نمی‌تواند factی را نام ببرد که وجود ندارد؛ خطوط Skills با id انتخاب و کلمه به کلمه کپی می‌شوند."
+          ],
+          "examples": ["enum"]
+        },
+        {
+          "id": "guardian",
+          "h": "نگهبان، قبل از نوشتن هر چیز",
+          "p": [
+            "بعد `validate.py` عددهای هر bullet را با `allowed_numbers` همان fact و عبارت‌های `forbidden` آن چک می‌کند، قبل از این‌که حتی یک فایل نوشته شود. جا افتادن یک سابقه‌ی کاری (حفره‌ای در timeline) هم همین‌جا چک می‌شود. بسته‌ی ردشده یک نوبت اصلاح می‌گیرد: مدل خطاهای دقیق نگهبان را به‌صورت tool result می‌بیند و دوباره می‌فرستد."
+          ],
+          "examples": ["roles", "repair"]
+        },
+        {
+          "id": "warn",
+          "h": "باز هم رد: ساخته می‌شود، با هشدار",
+          "p": [
+            "تا این‌جا پول هر دو صدا زدن داده شده، پس بسته‌ای که دو بار رد شده باز هم ساخته می‌شود، و خطاهای نگهبان هشدارهایی می‌شوند برای بازبینی (در `build_error.json` و `plan.json`) قبل از فرستادن. `plan.json` نگه می‌دارد هر bullet از کدام fact آمده و آن fact چه می‌گفت، و صفحه‌ی Résumé با همین bulletها را به fact برمی‌گرداند و Health factی را که از آن موقع عوض شده پیدا می‌کند."
+          ],
+          "examples": ["warnings"]
+        },
+        {
+          "id": "lock",
+          "h": "یک build برای هر پوشه",
+          "p": [
+            "`build.py` رزومه و cover letter را به‌صورت Word و PDF render می‌کند، بعد سرور از هر کدام یک فایل ترکیبی برای پورتال‌هایی که یک آپلود می‌گیرند اضافه می‌کند. build دوم همان پوشه وسط render روی همان فایل‌ها مسابقه می‌داد، پس با 409 رد می‌شود."
+          ],
+          "examples": ["inflight"]
+        }
+      ],
+      "examples": {
+        "enum": {
+          "title": { "en": "fact_id is an enum", "fa": "fact_id یک enum است" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "bullets: {",
+          "lines": 11
+        },
+        "roles": {
+          "title": { "en": "A missing role, or the guardian", "fa": "سابقه‌ی جاافتاده، یا نگهبان" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "validation = missingRoles.length",
+          "lines": 10
+        },
+        "repair": {
+          "title": { "en": "At most two attempts", "fa": "حداکثر دو تلاش" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "for (let attempt = 0; attempt < 2; attempt++) {",
+          "lines": 7
+        },
+        "warnings": {
+          "title": { "en": "Errors become warnings", "fa": "خطاها هشدار می‌شوند" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "let guardianWarnings = [];",
+          "lines": 7
+        },
+        "inflight": {
+          "title": { "en": "The in-flight lock", "fa": "قفل در جریان" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "app.post(\"/api/packages/build\", async (req, res) => {",
+          "lines": 17
+        }
+      }
+    },
+    {
+      "id": "assistant",
+      "group": "ai",
+      "title": { "en": "The assistant: ask the ledger", "fa": "دستیار: از ledger بپرس" },
+      "files": ["server/src/assistant.js", "client/src/components/AssistantPanel.jsx"],
+      "en": [
+        {
+          "id": "endpoint",
+          "h": "Read-only, from a snapshot",
+          "p": [
+            "*What should I do today?* gives a briefing (interviews coming up, follow-ups due, drafts waiting for approval, then patterns), and any question can be asked in English or Persian, with follow-ups. Claude sees a compact snapshot of the ledger with the pipeline already computed, and no contact names, emails or files. Nothing is ever changed."
+          ],
+          "data": { "kind": "endpoints", "only": ["assistant"] },
+          "examples": ["snapshot"]
+        },
+        {
+          "id": "shape",
+          "h": "An answer in a fixed shape",
+          "p": [
+            "The reply is structured JSON output against a schema: the answer text, and actions with a title, a reason, a priority and the folder they are about, so each action can open its application. The snapshot is a cached block, so follow-up questions read it at the cached price."
+          ],
+          "examples": ["schema", "call"]
+        },
+        {
+          "id": "folders",
+          "h": "A folder it made up is dropped",
+          "p": [
+            "Before the answer leaves the server, every action's folder is checked against the snapshot: one the model made up becomes null rather than a link to nowhere. A refusal or a cut-off answer becomes a clear message, and its cost is still recorded."
+          ],
+          "examples": ["known"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoint",
+          "h": "فقط‌خواندنی، از یک snapshot",
+          "p": [
+            "*What should I do today?* یک گزارش روز می‌دهد (مصاحبه‌های نزدیک، پیگیری‌هایی که وقتشان شده، پیش‌نویس‌هایی که منتظر تأییدند، بعد الگوها)، و هر سؤالی را می‌شود به انگلیسی یا فارسی پرسید، با سؤال‌های بعدی. Claude یک snapshot فشرده از ledger را می‌بیند که pipeline در آن از قبل حساب شده، بدون اسم مخاطب، ایمیل یا فایل. هیچ چیز هیچ‌وقت عوض نمی‌شود."
+          ],
+          "data": { "kind": "endpoints", "only": ["assistant"] },
+          "examples": ["snapshot"]
+        },
+        {
+          "id": "shape",
+          "h": "جواب با یک شکل ثابت",
+          "p": [
+            "پاسخ، خروجی JSON ساختاریافته در برابر یک schema است: متن جواب، و actionهایی با عنوان، دلیل، اولویت و پوشه‌ای که درباره‌اش هستند، تا هر action بتواند درخواست خودش را باز کند. snapshot یک بلوک cache‌شده است، پس سؤال‌های بعدی آن را با قیمت cache می‌خوانند."
+          ],
+          "examples": ["schema", "call"]
+        },
+        {
+          "id": "folders",
+          "h": "پوشه‌ی ساختگی حذف می‌شود",
+          "p": [
+            "قبل از این‌که جواب از سرور بیرون برود، پوشه‌ی هر action با snapshot چک می‌شود: پوشه‌ای که مدل از خودش ساخته null می‌شود نه لینکی به هیچ‌جا. امتناع یا جواب بریده یک پیام روشن می‌شود، و هزینه‌اش باز هم ثبت می‌شود."
+          ],
+          "examples": ["known"]
+        }
+      ],
+      "examples": {
+        "snapshot": {
+          "title": { "en": "What the model sees", "fa": "چیزی که مدل می‌بیند" },
+          "lang": "javascript",
+          "file": "server/src/assistant.js",
+          "from": "export function ledgerSnapshot(rows, now = new Date()) {",
+          "lines": 26
+        },
+        "schema": {
+          "title": { "en": "An action's folder", "fa": "پوشه‌ی یک action" },
+          "lang": "javascript",
+          "file": "server/src/assistant.js",
+          "from": "folder: {",
+          "lines": 4
+        },
+        "call": {
+          "title": { "en": "JSON output, a cached snapshot", "fa": "خروجی JSON، snapshot cache‌شده" },
+          "lang": "javascript",
+          "file": "server/src/assistant.js",
+          "from": "const message = await client.beta.messages.create({",
+          "lines": 15
+        },
+        "known": {
+          "title": { "en": "Only folders that exist", "fa": "فقط پوشه‌هایی که وجود دارند" },
+          "lang": "javascript",
+          "file": "server/src/assistant.js",
+          "from": "const known = new Set(snapshot.applications.map((a) => a.folder));",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "costs",
+      "group": "ai",
+      "title": { "en": "What each call cost, and a spending brake", "fa": "هزینه‌ی هر صدا زدن، و ترمز خرج" },
+      "files": ["server/src/aiUsage.js", "server/src/app.js", "client/src/pages/CostsPage.jsx", "client/src/api.js"],
+      "en": [
+        {
+          "id": "filed",
+          "h": "Filed with the package",
+          "p": [
+            "Every Claude call adds one JSON line to `applications/<folder>/ai_usage.jsonl`: tokens in, cache reads and writes, tokens out and the price in USD. The folder is the one place a release never overwrites, and the server log, which held these numbers before, is wiped on each restart. A call that failed after it was answered is filed all the same."
+          ],
+          "data": { "kind": "endpoints", "only": ["usage"] },
+          "examples": ["prices", "before"]
+        },
+        {
+          "id": "price",
+          "h": "The price of a call",
+          "p": [
+            "Input, cache reads, cache writes and output each at their own rate per million tokens. A model missing from the table is priced as Sonnet and flagged, rather than counted as free. The Costs page totals the month against `AI_MONTHLY_BUDGET`."
+          ],
+          "examples": ["cost"]
+        },
+        {
+          "id": "brake",
+          "h": "Only a click spends money",
+          "p": [
+            "Every Claude call has to start from a button in the dashboard: the page marks those requests with `X-AI-Request: app`. A script (the nightly search, a curl) is refused unless `AI_SCRIPT_CALLS` lets it in; it can save a posting as a draft instead, to analyze from its page later. This is a spending brake, not security: anyone already past the login could send the header."
+          ],
+          "examples": ["brake", "header"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "filed",
+          "h": "همراه بسته ثبت می‌شود",
+          "p": [
+            "هر صدا زدن Claude یک خط JSON به `applications/<folder>/ai_usage.jsonl` اضافه می‌کند: tokenهای ورودی، خواندن و نوشتن cache، tokenهای خروجی و قیمت به دلار. این پوشه تنها جایی است که release هیچ‌وقت رونویسی نمی‌کند، و log سرور، که قبلاً این عددها را داشت، با هر restart پاک می‌شود. صدا زدنی که بعد از جواب گرفتن شکست خورده هم همان‌طور ثبت می‌شود."
+          ],
+          "data": { "kind": "endpoints", "only": ["usage"] },
+          "examples": ["prices", "before"]
+        },
+        {
+          "id": "price",
+          "h": "قیمت یک صدا زدن",
+          "p": [
+            "ورودی، خواندن cache، نوشتن cache و خروجی هر کدام با نرخ خودشان به ازای یک میلیون token. مدلی که در جدول نیست با قیمت Sonnet حساب و علامت زده می‌شود، نه مجانی. صفحه‌ی Costs جمع ماه را در برابر `AI_MONTHLY_BUDGET` نشان می‌دهد."
+          ],
+          "examples": ["cost"]
+        },
+        {
+          "id": "brake",
+          "h": "فقط کلیک پول خرج می‌کند",
+          "p": [
+            "هر صدا زدن Claude باید از یک دکمه در داشبورد شروع شود: صفحه آن درخواست‌ها را با `X-AI-Request: app` علامت می‌زند. اسکریپت (جست‌وجوی شبانه، یک curl) رد می‌شود مگر `AI_SCRIPT_CALLS` راهش بدهد؛ به‌جایش می‌تواند آگهی را به‌صورت پیش‌نویس ذخیره کند تا بعداً از صفحه‌اش analyze شود. این ترمز خرج است، نه امنیت: هر کسی که از ورود رد شده می‌تواند این هدر را بفرستد."
+          ],
+          "examples": ["brake", "header"]
+        }
+      ],
+      "examples": {
+        "prices": {
+          "title": { "en": "Prices per million tokens", "fa": "قیمت به ازای یک میلیون token" },
+          "lang": "javascript",
+          "file": "server/src/aiUsage.js",
+          "from": "const PRICES = {",
+          "lines": 6
+        },
+        "before": {
+          "title": { "en": "Paid for, even if it fails next", "fa": "پولش داده شده، حتی اگر بعدش شکست بخورد" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "// Filed before normalizeAnalysis, which can still throw",
+          "lines": 3
+        },
+        "cost": {
+          "title": { "en": "The cost of one call", "fa": "هزینه‌ی یک صدا زدن" },
+          "lang": "javascript",
+          "file": "server/src/aiUsage.js",
+          "from": "export function costOf(model, usage) {",
+          "lines": 11
+        },
+        "brake": {
+          "title": { "en": "The spending brake", "fa": "ترمز خرج" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "const AI_ROUTES = {",
+          "lines": 17
+        },
+        "header": {
+          "title": { "en": "What the page sends", "fa": "چیزی که صفحه می‌فرستد" },
+          "lang": "javascript",
+          "file": "client/src/api.js",
+          "from": "const AI_HEADERS",
+          "lines": 1
+        }
+      }
+    },
+    {
+      "id": "truth-bank",
+      "group": "truth",
+      "title": { "en": "Editing the truth bank safely", "fa": "ویرایش امن بانک حقیقت" },
+      "files": ["server/src/truthBank.js", "server/src/truthRoutes.js", "server/src/engineGit.js", "client/src/pages/TruthBankPage.jsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Every fact in `facts/*.yml`, grouped by project or role, with the gaps it is evidence for and the built résumés that used it. Facts can be added, edited and removed here."
+          ],
+          "data": { "kind": "endpoints", "only": ["truth-bank"] }
+        },
+        {
+          "id": "surgical",
+          "h": "Only that fact's lines change",
+          "p": [
+            "A full YAML re-dump reformatted about 1,500 lines per file and lost every comment. So a save finds the edited fact's own lines (from its `- id:` to the next item) and replaces only those; everything else stays byte for byte, CRLF files included. A fact's id can't be renamed, since gaps and built résumés refer to it."
+          ],
+          "examples": ["spans", "rename"]
+        },
+        {
+          "id": "readback",
+          "h": "Parsed back before it's written",
+          "p": [
+            "The new file text is parsed again and compared before it touches the disk: the fact must read back exactly as asked, and the file must have the same number of facts (one more for a new fact). A formatting slip can't silently change a claim."
+          ],
+          "examples": ["checked"]
+        },
+        {
+          "id": "git",
+          "h": "Every save is a commit",
+          "p": [
+            "The engine folder is a local git repo with no remote, and every save from the dashboard is one commit with the fact id in its message, so a fact's history is a real diff (🕘) instead of a pile of `.bak` files. Without git, or without the repo, a save still works and just goes unrecorded."
+          ],
+          "examples": ["commit"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "هر fact در `facts/*.yml`، گروه‌بندی‌شده بر اساس پروژه یا نقش، با gapهایی که برایشان شاهد است و رزومه‌های ساخته‌شده‌ای که از آن استفاده کرده‌اند. factها را همین‌جا می‌شود اضافه، ویرایش و حذف کرد."
+          ],
+          "data": { "kind": "endpoints", "only": ["truth-bank"] }
+        },
+        {
+          "id": "surgical",
+          "h": "فقط خطوط همان fact عوض می‌شوند",
+          "p": [
+            "dump دوباره‌ی کل YAML حدود ۱,۵۰۰ خط از هر فایل را دوباره قالب‌بندی می‌کرد و همه‌ی comment‌ها را از دست می‌داد. پس ذخیره خطوط خود fact ویرایش‌شده را پیدا می‌کند (از `- id:`ش تا آیتم بعدی) و فقط همان‌ها را عوض می‌کند؛ بقیه بایت به بایت می‌مانند، فایل‌های CRLF هم. id یک fact عوض نمی‌شود، چون gapها و رزومه‌های ساخته‌شده به آن اشاره می‌کنند."
+          ],
+          "examples": ["spans", "rename"]
+        },
+        {
+          "id": "readback",
+          "h": "قبل از نوشتن دوباره خوانده می‌شود",
+          "p": [
+            "متن تازه‌ی فایل قبل از این‌که به دیسک برسد دوباره parse و مقایسه می‌شود: fact باید دقیقاً همان‌طور که خواسته شده خوانده شود، و فایل باید همان تعداد fact را داشته باشد (برای fact تازه یکی بیشتر). یک لغزش قالب‌بندی نمی‌تواند بی‌صدا یک ادعا را عوض کند."
+          ],
+          "examples": ["checked"]
+        },
+        {
+          "id": "git",
+          "h": "هر ذخیره یک commit است",
+          "p": [
+            "پوشه‌ی موتور یک repo محلی git بدون remote است، و هر ذخیره از داشبورد یک commit با id آن fact در پیامش، پس تاریخچه‌ی یک fact یک diff واقعی است (🕘) نه انبوهی از فایل‌های `.bak`. بدون git، یا بدون repo، ذخیره باز هم کار می‌کند و فقط ثبت نمی‌شود."
+          ],
+          "examples": ["commit"]
+        }
+      ],
+      "examples": {
+        "spans": {
+          "title": { "en": "Where each fact's lines are", "fa": "خطوط هر fact کجاست" },
+          "lang": "javascript",
+          "file": "server/src/truthBank.js",
+          "from": "function itemSpans(lines) {",
+          "lines": 13
+        },
+        "rename": {
+          "title": { "en": "An id stays", "fa": "id می‌ماند" },
+          "lang": "javascript",
+          "file": "server/src/truthBank.js",
+          "from": "if (!create && fact.id !== id) {",
+          "lines": 3
+        },
+        "checked": {
+          "title": { "en": "Read back, or nothing is written", "fa": "دوباره خوانده شود، وگرنه هیچ چیز نوشته نمی‌شود" },
+          "lang": "javascript",
+          "file": "server/src/truthBank.js",
+          "from": "writeChecked(filePath, lines.join(\"\\n\"), (parsed) => {",
+          "lines": 8
+        },
+        "commit": {
+          "title": { "en": "One commit per save", "fa": "یک commit برای هر ذخیره" },
+          "lang": "javascript",
+          "file": "server/src/engineGit.js",
+          "from": "async function commit(paths, message) {",
+          "lines": 17
+        }
+      }
+    },
+    {
+      "id": "health",
+      "group": "truth",
+      "title": { "en": "Gaps, résumés and Health", "fa": "gapها، رزومه‌ها و Health" },
+      "files": ["server/src/health.js", "server/src/truthRoutes.js", "server/src/truthBank.js", "client/src/pages/HealthPage.jsx", "client/src/pages/GapsPage.jsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Gaps: the gap dictionary with each gap's status, its evidence and the postings tagged with it. Résumé: the templates as the engine reads them, and every built résumé with each bullet linked to its fact. Health: where the pieces disagree."
+          ],
+          "data": { "kind": "endpoints", "only": ["gaps", "resume", "health"] }
+        },
+        {
+          "id": "status",
+          "h": "A gap's status is in its own words",
+          "p": [
+            "Whether a gap is open, partial or closed is read from its label's Persian wording (\"بسته شد\" closed, with \"همچنان/باقی/هنوز\" partial), the same rule the Context engine uses, so the dictionary text is the only place a status lives."
+          ],
+          "examples": ["status"]
+        },
+        {
+          "id": "checks",
+          "h": "Every check was a real mistake once",
+          "p": [
+            "Health lists where the truth bank, the gap dictionary, the templates and the drafts disagree: a technology tag a fact's claim never names (the model only reads claims), an open gap with tagged evidence but no citation, a label citing a fact that no longer exists, drafts scored before the truth bank changed or built from facts that changed since, files edited outside the dashboard. Each one is there because it happened and had to be found by hand."
+          ],
+          "examples": ["why", "stem"]
+        },
+        {
+          "id": "stale",
+          "h": "Stale, exactly",
+          "p": [
+            "Every analysis saves a short hash of the facts and gap labels it read. A draft whose hash differs from today's was scored against an older truth bank, exactly, not guessed from file dates; it can be re-analyzed on its own or with all the others."
+          ],
+          "examples": ["fingerprint", "staleFlag"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "Gaps: دیکشنری gap با وضعیت هر gap، شاهدش و آگهی‌هایی که با آن برچسب خورده‌اند. Résumé: قالب‌ها همان‌طور که موتور می‌خواند، و هر رزومه‌ی ساخته‌شده با هر bullet وصل به factش. Health: جاهایی که تکه‌ها با هم نمی‌خوانند."
+          ],
+          "data": { "kind": "endpoints", "only": ["gaps", "resume", "health"] }
+        },
+        {
+          "id": "status",
+          "h": "وضعیت gap در کلمات خودش است",
+          "p": [
+            "باز، نیمه یا بسته بودن یک gap از متن فارسی برچسبش خوانده می‌شود («بسته شد» بسته، با «همچنان/باقی/هنوز» نیمه)، همان قانونی که موتور Context به کار می‌برد، پس متن دیکشنری تنها جایی است که وضعیت زندگی می‌کند."
+          ],
+          "examples": ["status"]
+        },
+        {
+          "id": "checks",
+          "h": "هر چک یک بار اشتباهی واقعی بوده",
+          "p": [
+            "Health فهرست می‌کند کجا بانک حقیقت، دیکشنری gap، قالب‌ها و پیش‌نویس‌ها با هم نمی‌خوانند: tag فناوری‌ای که ادعای fact هیچ‌وقت نامش را نمی‌برد (مدل فقط ادعاها را می‌خواند)، gap بازی با شاهد برچسب‌خورده ولی بی‌ارجاع، برچسبی که به factی ارجاع می‌دهد که دیگر نیست، پیش‌نویس‌هایی که قبل از تغییر بانک حقیقت امتیاز گرفته‌اند یا از factهایی ساخته شده‌اند که بعد عوض شده‌اند، فایل‌هایی که بیرون از داشبورد ویرایش شده‌اند. هر کدام آن‌جاست چون اتفاق افتاده و باید با دست پیدا می‌شد."
+          ],
+          "examples": ["why", "stem"]
+        },
+        {
+          "id": "stale",
+          "h": "کهنه، دقیقاً",
+          "p": [
+            "هر analysis یک hash کوتاه از factها و برچسب‌های gapی که خوانده ذخیره می‌کند. پیش‌نویسی که hashش با امروز فرق دارد در برابر بانک حقیقت قدیمی‌تری امتیاز گرفته، دقیقاً، نه حدس از تاریخ فایل‌ها؛ می‌شود آن را تنها یا همراه همه‌ی بقیه دوباره analyze کرد."
+          ],
+          "examples": ["fingerprint", "staleFlag"]
+        }
+      ],
+      "examples": {
+        "status": {
+          "title": { "en": "Status from the label", "fa": "وضعیت از برچسب" },
+          "lang": "javascript",
+          "file": "server/src/truthBank.js",
+          "from": "export function gapStatus(label) {",
+          "lines": 6
+        },
+        "why": {
+          "title": { "en": "Why these checks exist", "fa": "چرا این چک‌ها هستند" },
+          "lang": "javascript",
+          "file": "server/src/health.js",
+          "from": "// Consistency checks across",
+          "lines": 8
+        },
+        "stem": {
+          "title": { "en": "Does a claim name its tag?", "fa": "ادعا tagش را نام می‌برد؟" },
+          "lang": "javascript",
+          "file": "server/src/health.js",
+          "from": "const stemLast = (tag) =>",
+          "lines": 12
+        },
+        "fingerprint": {
+          "title": { "en": "The truth bank's fingerprint", "fa": "اثر انگشت بانک حقیقت" },
+          "lang": "javascript",
+          "file": "server/src/truthBank.js",
+          "from": "export function bankFingerprint(factsDir, gapTagsPath) {",
+          "lines": 8
+        },
+        "staleFlag": {
+          "title": { "en": "A draft that went stale", "fa": "پیش‌نویسی که کهنه شده" },
+          "lang": "javascript",
+          "file": "server/src/truthRoutes.js",
+          "from": "// Old drafts have no saved fingerprint",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "fe-app",
+      "group": "frontend",
+      "title": { "en": "The pages and the API client", "fa": "صفحه‌ها و API client" },
+      "files": ["client/src/App.jsx", "client/src/api.js", "client/src/components/LoginGate.jsx", "client/vite.config.js"],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Routes",
+          "p": [
+            "React with Vite and Bootstrap, `HashRouter`, one page per part of the search. The navbar, the daily line, the scroll control and the assistant panel are on every page."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "gate",
+          "h": "The login, only when there is one",
+          "p": [
+            "`LoginGate` asks the server whether a password is required. Locally it isn't and the app opens at once; deployed, a password form shows until the session cookie is set. If the check itself fails, it opens rather than locking a local user out: the server still refuses what needs a session."
+          ],
+          "examples": ["gate"]
+        },
+        {
+          "id": "served",
+          "h": "Served by the API itself",
+          "p": [
+            "In production the built app is served by the Express server, so API calls are same-origin with a relative base. Under `vite dev` the page runs on :5173 and calls :4310, which is why that one origin is allowed outside production."
+          ],
+          "examples": ["base", "static"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "routeها",
+          "p": [
+            "React با Vite و Bootstrap، `HashRouter`، یک صفحه برای هر بخش جست‌وجو. navbar، خط روز، کنترل اسکرول و پنل دستیار در همه‌ی صفحه‌ها هستند."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "gate",
+          "h": "ورود، فقط وقتی هست",
+          "p": [
+            "`LoginGate` از سرور می‌پرسد رمز لازم است یا نه. در حالت محلی لازم نیست و اپ همان لحظه باز می‌شود؛ روی سرور، فرم رمز تا وقتی کوکی session تنظیم نشده نشان داده می‌شود. اگر خود این پرسش شکست بخورد، به‌جای قفل کردن کاربر محلی باز می‌شود: سرور باز هم چیزی را که session لازم دارد رد می‌کند."
+          ],
+          "examples": ["gate"]
+        },
+        {
+          "id": "served",
+          "h": "سرو شده به دست خود API",
+          "p": [
+            "در production اپ build‌شده را سرور Express سرو می‌کند، پس درخواست‌های API با یک base نسبی same-origin هستند. زیر `vite dev` صفحه روی :5173 اجرا می‌شود و :4310 را صدا می‌زند، و به همین دلیل همین یک origin بیرون از production مجاز است."
+          ],
+          "examples": ["base", "static"]
+        }
+      ],
+      "examples": {
+        "gate": {
+          "title": { "en": "Is a password needed?", "fa": "رمز لازم است؟" },
+          "lang": "javascript",
+          "file": "client/src/components/LoginGate.jsx",
+          "from": "useEffect(() => {",
+          "lines": 5
+        },
+        "base": {
+          "title": { "en": "A relative base in production", "fa": "base نسبی در production" },
+          "lang": "javascript",
+          "file": "client/src/api.js",
+          "from": "const API_BASE",
+          "lines": 1
+        },
+        "static": {
+          "title": { "en": "The built app, and client-side routes", "fa": "اپ build‌شده، و routeهای سمت client" },
+          "lang": "javascript",
+          "file": "server/src/app.js",
+          "from": "// Serve the built React app",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "stores",
+      "group": "data",
+      "title": { "en": "Two stores, one interface", "fa": "دو store، یک interface" },
+      "files": ["server/src/stores/index.js", "server/src/stores/csvStore.js", "server/src/stores/sqlStore.js", "server/src/stores/shape.js"],
+      "en": [
+        {
+          "id": "same",
+          "h": "CSV files or SQL Server",
+          "p": [
+            "`STORE=csv` (the default) keeps using `ledger.csv`, `pipeline.csv`, `target_list.csv` and `pipeline_stages.yml`; `STORE=sql` uses SQL Server. Both return the same rows: dates as `YYYY-MM-DD` strings and empty text as \"\", exactly as the CSV had it, so the rest of the server never knows which one it talks to. The fact bank, the gap dictionary and the application folders stay files either way: they are hand-curated or binary."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "csv",
+          "h": "The CSV store",
+          "p": [
+            "Every read-modify-write runs synchronously inside one method, so two requests in this process can't interleave between the read and the write."
+          ],
+          "examples": ["sync"]
+        },
+        {
+          "id": "sql",
+          "h": "The SQL store",
+          "p": [
+            "A new application, its gap tags and its first draft event go in one transaction. Dates are formatted by SQL Server itself (style 23), so no JavaScript time-zone conversion ever touches them. A value the database refuses (bad date, too long, a constraint) answers 400, not 500."
+          ],
+          "examples": ["create", "select", "errors"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "same",
+          "h": "فایل‌های CSV یا SQL Server",
+          "p": [
+            "`STORE=csv` (پیش‌فرض) همان `ledger.csv`، `pipeline.csv`، `target_list.csv` و `pipeline_stages.yml` را به کار می‌برد؛ `STORE=sql` از SQL Server استفاده می‌کند. هر دو همان ردیف‌ها را برمی‌گردانند: تاریخ‌ها به‌صورت رشته‌ی `YYYY-MM-DD` و متن خالی به‌صورت \"\"، دقیقاً همان‌طور که CSV داشت، پس بقیه‌ی سرور هیچ‌وقت نمی‌داند با کدام حرف می‌زند. fact bank، دیکشنری gap و پوشه‌های درخواست در هر دو حالت فایل می‌مانند: دست‌چین یا باینری‌اند."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "csv",
+          "h": "store از نوع CSV",
+          "p": [
+            "هر خواندن-تغییر-نوشتن در یک متد و به‌صورت synchronous اجرا می‌شود، پس دو درخواست در همین process نمی‌توانند بین خواندن و نوشتن قاطی شوند."
+          ],
+          "examples": ["sync"]
+        },
+        {
+          "id": "sql",
+          "h": "store از نوع SQL",
+          "p": [
+            "درخواست تازه، gap tagهایش و اولین رویداد پیش‌نویسش در یک transaction می‌روند. تاریخ‌ها را خود SQL Server قالب‌بندی می‌کند (style 23)، پس هیچ تبدیل منطقه‌ی زمانی JavaScript هیچ‌وقت به آن‌ها دست نمی‌زند. مقداری که دیتابیس رد کند (تاریخ بد، خیلی طولانی، یک constraint) 400 می‌دهد، نه 500."
+          ],
+          "examples": ["create", "select", "errors"]
+        }
+      ],
+      "examples": {
+        "open": {
+          "title": { "en": "Which store", "fa": "کدام store" },
+          "lang": "javascript",
+          "file": "server/src/stores/index.js",
+          "from": "export async function openStore(cfg) {",
+          "lines": 7
+        },
+        "sync": {
+          "title": { "en": "Why the CSV store needs no lock", "fa": "چرا store CSV قفل لازم ندارد" },
+          "lang": "javascript",
+          "file": "server/src/stores/csvStore.js",
+          "from": "// Every read-modify-write here is synchronous",
+          "lines": 2
+        },
+        "create": {
+          "title": { "en": "All of it, or none of it", "fa": "همه‌اش، یا هیچ‌کدام" },
+          "lang": "javascript",
+          "file": "server/src/stores/sqlStore.js",
+          "from": "async createApplication(row) {",
+          "lines": 13
+        },
+        "select": {
+          "title": { "en": "Dates formatted by SQL Server", "fa": "تاریخ‌هایی که SQL Server قالب می‌دهد" },
+          "lang": "javascript",
+          "file": "server/src/stores/sqlStore.js",
+          "from": "function selectList(columns, alias) {",
+          "lines": 13
+        },
+        "errors": {
+          "title": { "en": "The database said no: 400", "fa": "دیتابیس گفت نه: 400" },
+          "lang": "javascript",
+          "file": "server/src/stores/sqlStore.js",
+          "from": "const VALIDATION_ERROR_NUMBERS",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "schema",
+      "group": "data",
+      "title": { "en": "The SQL Server schema", "fa": "schema در SQL Server" },
+      "files": ["db/01-database.sql", "db/02-service-login.sql", "db/03-schema.sql", "server/src/stores/migrate.js"],
+      "en": [
+        {
+          "id": "scripts",
+          "h": "Numbered, idempotent scripts",
+          "p": [
+            "`01` creates the database, `03` the tables (creating only what is missing, so it re-runs safely, with later columns added by `ALTER TABLE` behind a check), `02` the login the dashboard connects as: read and write data only, no DDL; schema changes go through these scripts. The password is a sqlcmd variable, never in the file."
+          ],
+          "examples": ["svc"]
+        },
+        {
+          "id": "rules",
+          "h": "The server's rules, again in the database",
+          "p": [
+            "The folder name allows the same characters the server does; a gap tag must be a short kebab-case slug (a free-text sentence once shredded 11 ledger rows into comma fragments), and the gap tags moved from one comma-joined column to a table of their own, in display order. Text columns are NOT NULL with \"\" as default, because the API has always used \"\" for an empty field."
+          ],
+          "examples": ["folder", "slug"]
+        },
+        {
+          "id": "migrate",
+          "h": "From CSV, in one transaction",
+          "p": [
+            "`npm run migrate:sql` copies the CSV and YAML data into SQL Server in a single transaction, then compares every field, event, stage and recruiter, and the computed pipeline. It refuses a database that already has data unless told to replace it, and never changes the CSV files: they stay as the backup."
+          ],
+          "examples": ["refuse"]
+        },
+        {
+          "id": "tables",
+          "h": "Tables",
+          "data": { "kind": "tables", "only": ["Stages", "Applications", "ApplicationGapTags", "PipelineEvents", "Recruiters"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "scripts",
+          "h": "اسکریپت‌های شماره‌دار و idempotent",
+          "p": [
+            "`01` دیتابیس را می‌سازد، `03` جدول‌ها را (فقط چیزی را که نیست، پس دوباره اجرا کردنش بی‌خطر است، و ستون‌های بعدی با `ALTER TABLE` پشت یک چک اضافه می‌شوند)، `02` loginی که داشبورد با آن وصل می‌شود: فقط خواندن و نوشتن داده، بدون DDL؛ تغییر schema از همین اسکریپت‌ها می‌رود. رمز یک متغیر sqlcmd است، هیچ‌وقت در فایل."
+          ],
+          "examples": ["svc"]
+        },
+        {
+          "id": "rules",
+          "h": "قانون‌های سرور، دوباره در دیتابیس",
+          "p": [
+            "اسم پوشه همان کاراکترهایی را قبول می‌کند که سرور؛ gap tag باید یک slug کوتاه kebab-case باشد (یک جمله‌ی آزاد یک بار ۱۱ ردیف ledger را به تکه‌های جداشده با ویرگول خرد کرد)، و gap tagها از یک ستون با ویرگول به جدول خودشان، به ترتیب نمایش، منتقل شدند. ستون‌های متنی NOT NULL با پیش‌فرض \"\" هستند، چون API همیشه برای فیلد خالی \"\" به کار برده."
+          ],
+          "examples": ["folder", "slug"]
+        },
+        {
+          "id": "migrate",
+          "h": "از CSV، در یک transaction",
+          "p": [
+            "`npm run migrate:sql` داده‌ی CSV و YAML را در یک transaction به SQL Server کپی می‌کند، بعد هر فیلد، رویداد، مرحله و recruiter، و pipeline محاسبه‌شده را مقایسه می‌کند. دیتابیسی را که از قبل داده دارد رد می‌کند مگر گفته شود جایگزین کند، و هیچ‌وقت فایل‌های CSV را عوض نمی‌کند: به‌عنوان backup می‌مانند."
+          ],
+          "examples": ["refuse"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["Stages", "Applications", "ApplicationGapTags", "PipelineEvents", "Recruiters"] }
+        }
+      ],
+      "examples": {
+        "svc": {
+          "title": { "en": "Data only, no DDL", "fa": "فقط داده، بدون DDL" },
+          "lang": "sql",
+          "file": "db/02-service-login.sql",
+          "from": "IF USER_ID(N'ledger_svc') IS NULL",
+          "lines": 3
+        },
+        "folder": {
+          "title": { "en": "The folder name, checked here too", "fa": "اسم پوشه، این‌جا هم چک می‌شود" },
+          "lang": "sql",
+          "file": "db/03-schema.sql",
+          "from": "Folder        NVARCHAR(150)",
+          "lines": 4
+        },
+        "slug": {
+          "title": { "en": "Only short slugs", "fa": "فقط slugهای کوتاه" },
+          "lang": "sql",
+          "file": "db/03-schema.sql",
+          "from": "-- Gap tags per application, in display order",
+          "lines": 17
+        },
+        "refuse": {
+          "title": { "en": "Not into a database with data", "fa": "نه در دیتابیسی که داده دارد" },
+          "lang": "javascript",
+          "file": "server/src/stores/migrate.js",
+          "from": "if (recordset[0].n > 0) {",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "reporting",
+      "group": "data",
+      "title": { "en": "Views for other systems, and Power BI", "fa": "viewها برای سیستم‌های دیگر، و Power BI" },
+      "files": ["db/04-views.sql", "db/05-reader-login.sql", "db/06-report-views.sql", "reports/LedgerDashboard.pbip"],
+      "en": [
+        {
+          "id": "same",
+          "h": "The dashboard's numbers, in SQL",
+          "p": [
+            "`vApplicationCurrentStage`, `vFollowupsDue`, `vFunnelBySource` and `vGapTagStats` compute in SQL what the dashboard computes in JavaScript (the current stage, the 7-day follow-up rule, outcomes by source, gap tags against rejections), and give the same numbers. Control Panel's `ledgerdash-adapter` reads them."
+          ],
+          "examples": ["current", "due"]
+        },
+        {
+          "id": "reader",
+          "h": "A login that sees only the views",
+          "p": [
+            "`ledger_reader` can SELECT those views and nothing else, not even the tables: the views are owned by dbo like the tables they read, so ownership chaining lets them work without any grant on the tables."
+          ],
+          "examples": ["reader"]
+        },
+        {
+          "id": "rpt",
+          "h": "The rpt schema and the Power BI report",
+          "p": [
+            "`06` adds a reporting schema, `rpt`: model tables for the Power BI project in `reports/` (one row per application with every attribute a report slices by, plus events, gap tags and recruiters without names or profile URLs) and ready-made summaries for plain SQL. Weeks start on Monday whatever `DATEFIRST` the server has."
+          ],
+          "examples": ["kinds", "week"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "same",
+          "h": "عددهای داشبورد، در SQL",
+          "p": [
+            "`vApplicationCurrentStage`، `vFollowupsDue`، `vFunnelBySource` و `vGapTagStats` در SQL همان چیزی را حساب می‌کنند که داشبورد در JavaScript (مرحله‌ی فعلی، قانون پیگیری ۷ روزه، نتیجه بر اساس منبع، gap tagها در برابر ردشدن‌ها)، و همان عددها را می‌دهند. `ledgerdash-adapter` در Control Panel آن‌ها را می‌خواند."
+          ],
+          "examples": ["current", "due"]
+        },
+        {
+          "id": "reader",
+          "h": "loginی که فقط viewها را می‌بیند",
+          "p": [
+            "`ledger_reader` می‌تواند آن viewها را SELECT کند و هیچ چیز دیگر، حتی جدول‌ها را نه: مالک viewها مثل جدول‌هایی که می‌خوانند dbo است، پس ownership chaining آن‌ها را بدون هیچ grantی روی جدول‌ها به کار می‌اندازد."
+          ],
+          "examples": ["reader"]
+        },
+        {
+          "id": "rpt",
+          "h": "schema rpt و گزارش Power BI",
+          "p": [
+            "`06` یک schema گزارش‌گیری اضافه می‌کند، `rpt`: جدول‌های مدل برای پروژه‌ی Power BI در `reports/` (یک ردیف برای هر درخواست با هر ویژگی‌ای که گزارش بر اساسش برش می‌زند، به‌علاوه‌ی رویدادها، gap tagها و recruiterها بدون اسم یا URL پروفایل) و خلاصه‌های آماده برای SQL ساده. هفته‌ها، هر `DATEFIRST`ی که سرور داشته باشد، از دوشنبه شروع می‌شوند."
+          ],
+          "examples": ["kinds", "week"]
+        }
+      ],
+      "examples": {
+        "current": {
+          "title": { "en": "The current stage in SQL", "fa": "مرحله‌ی فعلی در SQL" },
+          "lang": "sql",
+          "file": "db/04-views.sql",
+          "from": "CREATE OR ALTER VIEW dbo.vApplicationCurrentStage AS",
+          "lines": 8
+        },
+        "due": {
+          "title": { "en": "Follow-ups due, the same 7 days", "fa": "پیگیری‌های لازم، همان ۷ روز" },
+          "lang": "sql",
+          "file": "db/04-views.sql",
+          "from": "CREATE OR ALTER VIEW dbo.vFollowupsDue AS",
+          "lines": 8
+        },
+        "reader": {
+          "title": { "en": "Views only", "fa": "فقط viewها" },
+          "lang": "sql",
+          "file": "db/05-reader-login.sql",
+          "from": "-- The views are owned by dbo",
+          "lines": 6
+        },
+        "kinds": {
+          "title": { "en": "Two kinds of views", "fa": "دو نوع view" },
+          "lang": "sql",
+          "file": "db/06-report-views.sql",
+          "from": "-- Two kinds of views:",
+          "lines": 8
+        },
+        "week": {
+          "title": { "en": "Monday, whatever DATEFIRST is", "fa": "دوشنبه، هر چه DATEFIRST باشد" },
+          "lang": "sql",
+          "file": "db/06-report-views.sql",
+          "from": "DATEADD(day, -((DATEPART(weekday, ev.SentDate)",
+          "lines": 1
+        }
+      }
+    }
+  ]
+}

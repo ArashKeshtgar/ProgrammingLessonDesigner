@@ -4,6 +4,7 @@ import csharp from 'highlight.js/lib/languages/csharp'
 import dockerfile from 'highlight.js/lib/languages/dockerfile'
 import ini from 'highlight.js/lib/languages/ini'
 import java from 'highlight.js/lib/languages/java'
+import javascript from 'highlight.js/lib/languages/javascript'
 import json from 'highlight.js/lib/languages/json'
 import nginx from 'highlight.js/lib/languages/nginx'
 import plaintext from 'highlight.js/lib/languages/plaintext'
@@ -21,6 +22,7 @@ hljs.registerLanguage('csharp', csharp)
 hljs.registerLanguage('dockerfile', dockerfile)
 hljs.registerLanguage('ini', ini)
 hljs.registerLanguage('java', java)
+hljs.registerLanguage('javascript', javascript)
 hljs.registerLanguage('json', json)
 hljs.registerLanguage('nginx', nginx)
 // The core build has no plaintext of its own: the fallback below needs it.

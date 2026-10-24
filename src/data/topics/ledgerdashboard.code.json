@@ -1,0 +1,1541 @@
+{
+  "project": "ledgerdashboard",
+  "repo": "LedgerDashboard",
+  "files": {
+    "README.md": 159,
+    "server/index.js": 33,
+    "server/src/config.js": 127,
+    "Dockerfile": 62,
+    "server/.env.example": 43,
+    "server/test/api.test.js": 983,
+    "server/test/fixture.js": 135,
+    ".github/workflows/ci.yml": 72,
+    ".github/workflows/release.yml": 30,
+    "server/src/security.js": 73,
+    "server/src/app.js": 1572,
+    "server/src/paths.js": 31,
+    "server/src/csv.js": 63,
+    "server/src/process.js": 63,
+    "client/src/pages/ApplicationsList.jsx": 576,
+    "client/src/pages/ApplicationDetail.jsx": 993,
+    "server/src/pipeline.js": 109,
+    "server/src/stores/csvStore.js": 154,
+    "server/src/stores/sqlStore.js": 351,
+    "client/src/pages/PipelineBoard.jsx": 500,
+    "server/src/contact.js": 64,
+    "db/03-schema.sql": 143,
+    "client/src/components/ContactEditor.jsx": 76,
+    "server/src/funnel.js": 230,
+    "server/src/rejections.js": 215,
+    "server/src/recruiterNext.js": 81,
+    "server/src/evaluation.js": 94,
+    "client/src/pages/NewPackage.jsx": 279,
+    "server/src/combinePackage.js": 66,
+    "server/scripts/combine_docx.py": 87,
+    "server/src/assistant.js": 166,
+    "client/src/components/AssistantPanel.jsx": 215,
+    "server/src/aiUsage.js": 113,
+    "client/src/pages/CostsPage.jsx": 153,
+    "client/src/api.js": 293,
+    "server/src/truthBank.js": 342,
+    "server/src/truthRoutes.js": 412,
+    "server/src/engineGit.js": 74,
+    "client/src/pages/TruthBankPage.jsx": 446,
+    "server/src/health.js": 273,
+    "client/src/pages/HealthPage.jsx": 187,
+    "client/src/pages/GapsPage.jsx": 309,
+    "client/src/App.jsx": 61,
+    "client/src/components/LoginGate.jsx": 56,
+    "client/vite.config.js": 7,
+    "server/src/stores/index.js": 13,
+    "server/src/stores/shape.js": 37,
+    "db/01-database.sql": 4,
+    "db/02-service-login.sql": 20,
+    "server/src/stores/migrate.js": 224,
+    "db/04-views.sql": 81,
+    "db/05-reader-login.sql": 23,
+    "db/06-report-views.sql": 187,
+    "reports/LedgerDashboard.pbip": 13
+  },
+  "examples": {
+    "run/host": {
+      "file": "server/src/config.js",
+      "start": 23,
+      "end": 29,
+      "code": "const host = env.HOST || (password ? \"0.0.0.0\" : \"127.0.0.1\");\nif (!password && !LOOPBACK_HOSTS.has(host)) {\n  throw new Error(\n    `Refusing to listen on HOST=${host} without DASHBOARD_PASSWORD — ` +\n      \"with no password the API is unauthenticated, so it only binds to 127.0.0.1.\"\n  );\n}"
+    },
+    "run/start": {
+      "file": "server/index.js",
+      "start": 9,
+      "end": 17,
+      "code": "let cfg;\nlet store;\ntry {\n  cfg = loadConfig();\n  store = await openStore(cfg);\n} catch (err) {\n  console.error(`\\n  Ledger Dashboard did not start: ${err.message}\\n`);\n  process.exit(1);\n}"
+    },
+    "run/image": {
+      "file": "Dockerfile",
+      "start": 46,
+      "end": 56,
+      "code": "ENV NODE_ENV=production \\\n    HOST=0.0.0.0 \\\n    JOBSEARCH_DATA_DIR=/data/JobSearch \\\n    PYTHON=python3 \\\n    GIT_CONFIG_COUNT=1 \\\n    GIT_CONFIG_KEY_0=safe.directory \\\n    GIT_CONFIG_VALUE_0=* \\\n    GIT_AUTHOR_NAME=\"Ledger Dashboard\" \\\n    GIT_AUTHOR_EMAIL=dashboard@ledger.local \\\n    GIT_COMMITTER_NAME=\"Ledger Dashboard\" \\\n    GIT_COMMITTER_EMAIL=dashboard@ledger.local"
+    },
+    "tests/origin": {
+      "file": "server/test/api.test.js",
+      "start": 92,
+      "end": 98,
+      "code": "it(\"refuses a read from a foreign website\", async () => {\n  const res = await server.call(\"GET\", \"/api/applications\", {\n    headers: { Origin: \"https://evil.example\" },\n  });\n  expect(res.status).toBe(403);\n  expect(res.headers.get(\"access-control-allow-origin\")).toBeNull();\n});"
+    },
+    "tests/ci": {
+      "file": ".github/workflows/ci.yml",
+      "start": 14,
+      "end": 28,
+      "code": "services:\n  mssql:\n    image: mcr.microsoft.com/mssql/server:2022-latest\n    env:\n      ACCEPT_EULA: \"Y\"\n      MSSQL_SA_PASSWORD: Ci-only_Throwaway1!\n    ports:\n      - 1433:1433\n    options: >-\n      --health-cmd \"/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Ci-only_Throwaway1!' -Q 'SELECT 1' -b -o /dev/null\"\n      --health-interval 5s --health-timeout 5s --health-retries 30 --health-start-period 20s\nenv:\n  TEST_SQL_SERVER: localhost\n  TEST_SQL_USER: sa\n  TEST_SQL_PASSWORD: Ci-only_Throwaway1!"
+    },
+    "tests/release": {
+      "file": ".github/workflows/release.yml",
+      "start": 25,
+      "end": 30,
+      "code": "- name: Package\n  run: tar -czf ledger-dashboard-client-${GITHUB_REF_NAME}.tar.gz -C client dist\n- name: Publish release\n  env:\n    GH_TOKEN: ${{ github.token }}\n  run: gh release create \"$GITHUB_REF_NAME\" ledger-dashboard-client-*.tar.gz --title \"$GITHUB_REF_NAME\" --generate-notes"
+    },
+    "login/secret": {
+      "file": "server/src/config.js",
+      "start": 37,
+      "end": 46,
+      "code": "  if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {\n    throw new Error(\n      `SESSION_SECRET must be set to a random value of at least ${MIN_SESSION_SECRET_LENGTH} ` +\n        \"characters whenever DASHBOARD_PASSWORD is set.\"\n    );\n  }\n  if (sessionSecret === password) {\n    throw new Error(\"SESSION_SECRET must be different from DASHBOARD_PASSWORD.\");\n  }\n}"
+    },
+    "login/cookie": {
+      "file": "server/src/app.js",
+      "start": 97,
+      "end": 104,
+      "code": "cookieSession({\n  name: \"ld_session\",\n  keys: [cfg.sessionSecret],\n  maxAge: 30 * 24 * 60 * 60 * 1000,\n  sameSite: \"lax\",\n  httpOnly: true,\n  secure: cfg.secureCookies ?? cfg.production,\n})"
+    },
+    "login/compare": {
+      "file": "server/src/security.js",
+      "start": 6,
+      "end": 10,
+      "code": "export function passwordMatches(candidate, expected) {\n  const a = createHash(\"sha256\").update(String(candidate ?? \"\")).digest();\n  const b = createHash(\"sha256\").update(String(expected ?? \"\")).digest();\n  return timingSafeEqual(a, b);\n}"
+    },
+    "login/login": {
+      "file": "server/src/app.js",
+      "start": 109,
+      "end": 126,
+      "code": "app.post(\"/api/login\", (req, res) => {\n  const ip = req.ip;\n  const wait = limiter.retryAfterSeconds(ip);\n  if (wait > 0) {\n    res.set(\"Retry-After\", String(wait));\n    return res\n      .status(429)\n      .json({ error: `Too many wrong passwords — try again in ${Math.ceil(wait / 60)} min.` });\n  }\n  const { password } = req.body || {};\n  if (!passwordMatches(password, cfg.password)) {\n    limiter.recordFailure(ip);\n    return res.status(401).json({ error: \"Wrong password\" });\n  }\n  limiter.recordSuccess(ip);\n  req.session.authed = true;\n  res.json({ authed: true });\n});"
+    },
+    "login/token": {
+      "file": "server/src/app.js",
+      "start": 135,
+      "end": 139,
+      "code": "const hasApiToken = (req) => {\n  if (!cfg.apiToken) return false;\n  const m = /^Bearer (.+)$/.exec(req.get(\"authorization\") || \"\");\n  return !!m && passwordMatches(m[1], cfg.apiToken);\n};"
+    },
+    "login/gate": {
+      "file": "server/src/app.js",
+      "start": 145,
+      "end": 149,
+      "code": "app.use(\"/api\", (req, res, next) => {\n  if (req.path === \"/login\" || req.path === \"/session\") return next();\n  if (req.session?.authed || hasApiToken(req)) return next();\n  res.status(401).json({ error: \"Login required\" });\n});"
+    },
+    "origin/guard": {
+      "file": "server/src/security.js",
+      "start": 52,
+      "end": 72,
+      "code": "export function originGuard(allowedOrigins) {\n  const allowed = new Set(allowedOrigins);\n  return (req, res, next) => {\n    const origin = req.get(\"origin\");\n    if (!origin) return next(); // non-browser client, or a same-origin GET\n    const self = `${req.protocol}://${req.get(\"host\")}`;\n    if (origin === self) return next();\n    if (!allowed.has(origin)) {\n      return res.status(403).json({ error: \"Cross-origin request refused\" });\n    }\n\n    res.set(\"Access-Control-Allow-Origin\", origin);\n    res.set(\"Access-Control-Allow-Credentials\", \"true\");\n    res.set(\"Vary\", \"Origin\");\n    if (req.method === \"OPTIONS\") {\n      res.set(\"Access-Control-Allow-Methods\", \"GET,POST,PATCH,DELETE\");\n      res.set(\"Access-Control-Allow-Headers\", \"Content-Type\");\n      return res.sendStatus(204);\n    }\n    next();\n  };"
+    },
+    "origin/dev": {
+      "file": "server/src/config.js",
+      "start": 13,
+      "end": 13,
+      "code": "const DEV_ORIGINS = [\"http://localhost:5173\", \"http://127.0.0.1:5173\"];"
+    },
+    "origin/allowed": {
+      "file": "server/src/config.js",
+      "start": 99,
+      "end": 99,
+      "code": "allowedOrigins: [...(production ? [] : DEV_ORIGINS), ...extraOrigins],"
+    },
+    "safety/name": {
+      "file": "server/src/paths.js",
+      "start": 6,
+      "end": 10,
+      "code": "const FOLDER_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;\n\nexport function isSafeFolderName(name) {\n  return typeof name === \"string\" && FOLDER_NAME_RE.test(name) && !name.includes(\"..\");\n}"
+    },
+    "safety/resolve": {
+      "file": "server/src/paths.js",
+      "start": 16,
+      "end": 24,
+      "code": "export function resolveApplicationFolder(applicationsDir, name) {\n  if (!isSafeFolderName(name)) {\n    throw new UnsafeFolderError(name);\n  }\n  const root = path.resolve(applicationsDir);\n  const resolved = path.resolve(root, name);\n  if (path.dirname(resolved) !== root) throw new UnsafeFolderError(name);\n  return resolved;\n}"
+    },
+    "safety/atomic": {
+      "file": "server/src/csv.js",
+      "start": 44,
+      "end": 54,
+      "code": "export function writeFileAtomic(file, content) {\n  const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;\n  writeFileSync(tmp, content, \"utf-8\");\n  try {\n    renameSync(tmp, file);\n  } catch (err) {\n    rmSync(tmp, { force: true });\n    if (LOCK_CODES.has(err.code)) throw new FileLockedError(file);\n    throw err;\n  }\n}"
+    },
+    "safety/locked": {
+      "file": "server/src/csv.js",
+      "start": 31,
+      "end": 37,
+      "code": "export class FileLockedError extends Error {\n  constructor(file) {\n    super(`${file} is open in another program (close it in Excel and try again).`);\n    this.name = \"FileLockedError\";\n    this.file = file;\n  }\n}"
+    },
+    "safety/timer": {
+      "file": "server/src/process.js",
+      "start": 25,
+      "end": 28,
+      "code": "const timer = setTimeout(() => {\n  timedOut = true;\n  killTree(child.pid, isWindows);\n}, timeoutMs);"
+    },
+    "safety/kill": {
+      "file": "server/src/process.js",
+      "start": 41,
+      "end": 51,
+      "code": "function killTree(pid, isWindows) {\n  if (!pid) return;\n  try {\n    // Not spawnSync: taskkill can take seconds, and every other request would\n    // wait on it. The child's own \"close\" event still ends runProcess.\n    if (isWindows) spawn(\"taskkill\", [\"/pid\", String(pid), \"/T\", \"/F\"], { windowsHide: true }).on(\"error\", () => {});\n    else process.kill(-pid, \"SIGKILL\");\n  } catch {\n    // already gone\n  }\n}"
+    },
+    "safety/errors": {
+      "file": "server/src/app.js",
+      "start": 65,
+      "end": 86,
+      "code": "function sendError(res, err) {\n  if (err instanceof FileLockedError) return res.status(423).json({ error: err.message });\n  if (err instanceof UnsafeFolderError) return res.status(400).json({ error: err.message });\n  if (err instanceof ContactValidationError) return res.status(400).json({ error: err.message });\n  // A value the database refused (bad date, too long, duplicate, constraint).\n  if (isStoreValidationError(err)) return res.status(400).json({ error: `Invalid value: ${err.message}` });\n  // Claude's own errors say what to fix (a revoked key, no credit) and hold\n  // no server paths, so they're shown even in production.\n  if (err instanceof Anthropic.RateLimitError) {\n    return res.status(429).json({ error: \"Claude is busy right now (rate limit). Try again in a minute.\" });\n  }\n  if (err instanceof Anthropic.AuthenticationError) {\n    console.error(\"[claude]\", err.status, err.message);\n    return res.status(502).json({ error: \"Claude rejected the API key (401) — put a valid ANTHROPIC_API_KEY in server/.env and restart.\" });\n  }\n  if (err instanceof Anthropic.APIError) {\n    console.error(\"[claude]\", err.status, err.message);\n    return res.status(502).json({ error: `Claude API error${err.status ? ` (${err.status})` : \"\"}: ${err.message}` });\n  }\n  console.error(err);\n  res.status(500).json({ error: cfg.production ? \"Internal server error\" : err.message });\n}"
+    },
+    "applications/folder": {
+      "file": "server/src/app.js",
+      "start": 286,
+      "end": 292,
+      "code": "const base = `${date}__${slugify(company) || \"Company\"}__${slugify(role) || \"Role\"}`;\nconst existingFolders = new Set(rows.map((r) => r.folder));\nlet folder = base;\nlet n = 2;\nwhile (existingFolders.has(folder) || existsSync(path.join(APPLICATIONS_DIR, folder))) {\n  folder = `${base}-${n++}`;\n}"
+    },
+    "applications/editable": {
+      "file": "server/src/app.js",
+      "start": 369,
+      "end": 371,
+      "code": "const EDITABLE_LEDGER_FIELDS = new Set([\n  \"notes\", \"next_action\", \"last_contact\", \"outcome\", \"gap_tags\", ...CONTACT_FIELDS,\n]);"
+    },
+    "applications/delete": {
+      "file": "server/src/app.js",
+      "start": 413,
+      "end": 430,
+      "code": "app.delete(\"/api/applications/:id\", async (req, res) => {\n  try {\n    const folder = req.params.id;\n    const row = await findLedgerRow(folder);\n    if (!row) return res.status(404).json({ error: \"Not found\" });\n    if (buildsInFlight.has(folder)) {\n      return res.status(409).json({ error: \"A build is running for this application\" });\n    }\n\n    const folderPath = resolveApplicationFolder(APPLICATIONS_DIR, row.folder);\n    await store.deleteApplication(folder);\n    if (existsSync(folderPath)) rmSync(folderPath, { recursive: true, force: true });\n\n    res.json({ deleted: true, folder });\n  } catch (err) {\n    sendError(res, err);\n  }\n});"
+    },
+    "applications/download": {
+      "file": "server/src/app.js",
+      "start": 598,
+      "end": 600,
+      "code": "const listed = existsSync(folderPath) ? readdirSync(folderPath) : [];\nif (!listed.includes(name)) return res.status(404).json({ error: \"No such file\" });\nres.download(path.join(folderPath, name), name);"
+    },
+    "pipeline/append": {
+      "file": "server/src/stores/csvStore.js",
+      "start": 38,
+      "end": 44,
+      "code": "function appendEventLine({ folder, company, stage, date, note }) {\n  const raw = existsSync(PIPELINE_PATH) ? readFileSync(PIPELINE_PATH, \"utf-8\") : \"\";\n  const needsNewline = raw.length > 0 && !raw.endsWith(\"\\n\");\n  const eventDate = date && ISO_DATE_RE.test(date) ? date : todayISO();\n  const line = [folder, company, stage, eventDate, note || \"\"].map(csvField).join(\",\");\n  appendLine(PIPELINE_PATH, (needsNewline ? \"\\n\" : \"\") + line + \"\\n\");\n}"
+    },
+    "pipeline/current": {
+      "file": "server/src/pipeline.js",
+      "start": 48,
+      "end": 50,
+      "code": "const stageEvents = history.filter((h) => h.stage !== FOLLOWUP_KEY);\nconst last = stageEvents.length ? stageEvents[stageEvents.length - 1] : null;\nconst stage = last ? last.stage : r.status || \"draft\";"
+    },
+    "pipeline/since": {
+      "file": "server/src/pipeline.js",
+      "start": 66,
+      "end": 75,
+      "code": "const lastActionDate =\n  lastFollowupDate && (!last || lastFollowupDate >= last.date)\n    ? lastFollowupDate\n    : last?.date || null;\nconst { days: daysSinceAction } = daysSince(lastActionDate);\n\nconst needsFollowup =\n  waitingKeys.has(stage) &&\n  daysSinceAction !== null &&\n  daysSinceAction > FOLLOWUP_THRESHOLD_DAYS;"
+    },
+    "pipeline/local": {
+      "file": "server/src/pipeline.js",
+      "start": 99,
+      "end": 105,
+      "code": "export function parseLocalDate(value) {\n  const m = /^(\\d{4})-(\\d{2})-(\\d{2})(?:T(\\d{2}):(\\d{2})(?::(\\d{2}))?)?$/.exec(String(value || \"\"));\n  if (!m) return null;\n  const [, y, mo, d, h = 0, mi = 0, s = 0] = m;\n  const date = new Date(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));\n  return isNaN(date) ? null : date;\n}"
+    },
+    "pipeline/undo": {
+      "file": "server/src/stores/sqlStore.js",
+      "start": 269,
+      "end": 283,
+      "code": "async removeEvents(folder, { all = false } = {}) {\n  const { recordset } = await pool.request()\n    .input(\"folder\", sql.NVarChar(150), folder)\n    .input(\"all\", sql.Bit, all ? 1 : 0)\n    .query(`\n      DELETE e\n      OUTPUT DELETED.StageKey AS stage, CONVERT(varchar(10), DELETED.EventDate, 23) AS [date],\n             DELETED.Note AS note\n      FROM dbo.PipelineEvents e\n      JOIN dbo.Applications a ON a.Id = e.ApplicationId\n      WHERE a.Folder = @folder\n        AND e.Id > (SELECT MIN(Id) FROM dbo.PipelineEvents WHERE ApplicationId = a.Id)\n        AND (@all = 1 OR e.Id = (SELECT MAX(Id) FROM dbo.PipelineEvents WHERE ApplicationId = a.Id))`);\n  return recordset;\n},"
+    },
+    "contact/sources": {
+      "file": "server/src/contact.js",
+      "start": 13,
+      "end": 18,
+      "code": "export const CONTACT_SOURCES = {\n  posting: { label: \"Listed in the posting\", published: true },\n  ats_email: { label: \"Reply-to of the ATS confirmation\", published: true },\n  recruiter_reply: { label: \"They emailed me\", published: true },\n  found: { label: \"Found it myself (company site, hiring team)\", published: false },\n};"
+    },
+    "contact/resolve": {
+      "file": "server/src/contact.js",
+      "start": 51,
+      "end": 57,
+      "code": "const verified = CONTACT_SOURCES[source].published || isTrue(merged.contact_verified);\nif (!verified) {\n  throw new ContactValidationError(\n    \"Only published or verified addresses are saved. Check this one exists first — a guessed address usually bounces.\"\n  );\n}\nreturn { contact_name: name, contact_email: email, contact_source: source, contact_verified: \"true\" };"
+    },
+    "contact/patch": {
+      "file": "server/src/app.js",
+      "start": 387,
+      "end": 389,
+      "code": "if (CONTACT_FIELDS.some((f) => f in updates)) {\n  Object.assign(updates, resolveContact(current, updates));\n}"
+    },
+    "contact/check": {
+      "file": "db/03-schema.sql",
+      "start": 75,
+      "end": 79,
+      "code": "ALTER TABLE dbo.Applications ADD CONSTRAINT CK_Applications_Contact CHECK (\n    (ContactEmail = N'' AND ContactSource = N'')\n    OR (ContactEmail LIKE N'_%@_%._%'\n        AND ContactSource IN (N'posting', N'ats_email', N'recruiter_reply', N'found')\n        AND ContactVerified = 1));"
+    },
+    "boards/prior": {
+      "file": "server/src/funnel.js",
+      "start": 15,
+      "end": 20,
+      "code": "// Benchmarks before any of the user's own data (newcomer, cold applications):\n// ~3% of applications reach a recruiter screen, ~15% of screens end in an\n// offer. Beta(1.5, 48.5) and Beta(3, 17) are those means with a weak weight,\n// so a few weeks of real results move them quickly.\nconst SCREEN_PRIOR = [1.5, 48.5];\nconst OFFER_PRIOR = [3, 17];"
+    },
+    "boards/caps": {
+      "file": "server/src/recruiterNext.js",
+      "start": 5,
+      "end": 13,
+      "code": "// LinkedIn (free) allows only a few personalised invites a month but ~100\n// plain invites a week, so connects go out WITHOUT a note and the real\n// message waits until they accept (1st-degree messages are unlimited).\nexport const CONNECT_DAILY_CAP = 12;\nexport const CONNECT_WEEKLY_CAP = 60;\nexport const FIRST_MESSAGE_AFTER_DAYS = 1;  // after the connect is accepted\nexport const FOLLOWUP_AFTER_DAYS = 7;       // no reply to the message\nexport const STALE_CONNECT_DAYS = 14;       // connect never accepted\nexport const CHECKIN_AFTER_DAYS = 28;       // monthly check-in once they replied"
+    },
+    "boards/confusion": {
+      "file": "server/src/evaluation.js",
+      "start": 16,
+      "end": 37,
+      "code": "export function confusion(items, threshold) {\n  const m = { tp: 0, fp: 0, fn: 0, tn: 0 };\n  for (const it of items) {\n    const predicted = it.score >= threshold;\n    const actual = it.label === \"apply\";\n    if (predicted && actual) m.tp++;\n    else if (predicted) m.fp++;\n    else if (actual) m.fn++;\n    else m.tn++;\n  }\n  const n = m.tp + m.fp + m.fn + m.tn;\n  return {\n    threshold,\n    n,\n    ...m,\n    accuracy: pct(m.tp + m.tn, n),\n    // Of the postings the model said to apply to, how many were worth it.\n    precision: pct(m.tp, m.tp + m.fp),\n    // Of the postings worth applying to, how many the model caught.\n    recall: pct(m.tp, m.tp + m.fn),\n  };\n}"
+    },
+    "analyze/strict": {
+      "file": "server/src/app.js",
+      "start": 700,
+      "end": 708,
+      "code": "// strict: the API then guarantees the input matches this schema. Without it\n// the model sometimes dropped gap_tags, or put the gap_tags array inside\n// the `gaps` string, so the row was saved with no tags. Strict mode doesn't\n// allow minimum/maximum, so normalizeAnalysis clamps match_score instead.\nconst ANALYZE_TOOL = {\n  name: \"submit_analysis\",\n  description: \"Submit the match analysis for this job posting against the candidate's fact bank.\",\n  strict: true,\n  input_schema: {"
+    },
+    "analyze/normalize": {
+      "file": "server/src/app.js",
+      "start": 770,
+      "end": 780,
+      "code": "if (message.stop_reason === \"max_tokens\") {\n  throw new Error(\"Analysis was cut off (max_tokens) — nothing was saved, try again\");\n}\nconst toolUse = message.content.find((b) => b.type === \"tool_use\");\nif (!toolUse) throw new Error(\"Model did not return a structured analysis\");\nconst a = toolUse.input;\nconst gaps = Array.isArray(a.gaps) ? a.gaps : [];\nconst allTags = toGapTagList(a.gap_tags);\nif (gaps.length > 0 && allTags.length === 0) {\n  throw new Error(\"Analysis listed gaps but no gap_tags — nothing was saved, try again\");\n}"
+    },
+    "analyze/closed": {
+      "file": "server/src/app.js",
+      "start": 759,
+      "end": 764,
+      "code": "function withoutClosedGaps(rawTags) {\n  const tags = resolveGapAliases(rawTags, readGapAliases(GAP_ALIASES_PATH));\n  const dict = loadGapTagsDict();\n  const isClosed = (t) => dict[t] != null && gapStatus(String(dict[t])) === \"closed\";\n  return { kept: tags.filter((t) => !isClosed(t)), dropped: tags.filter(isClosed) };\n}"
+    },
+    "analyze/cached": {
+      "file": "server/src/app.js",
+      "start": 833,
+      "end": 837,
+      "code": "function cachedSystem(text, tail = \"\") {\n  const blocks = [{ type: \"text\", text, cache_control: { type: \"ephemeral\" } }];\n  if (tail) blocks.push({ type: \"text\", text: tail });\n  return blocks;\n}"
+    },
+    "analyze/draftOnly": {
+      "file": "server/src/app.js",
+      "start": 1011,
+      "end": 1013,
+      "code": "if (row.stage !== \"draft\") {\n  return res.status(409).json({ error: \"Only drafts can be re-analyzed — this one was already sent\" });\n}"
+    },
+    "build/enum": {
+      "file": "server/src/app.js",
+      "start": 1050,
+      "end": 1060,
+      "code": "bullets: {\n  type: \"array\",\n  items: {\n    type: \"object\",\n    properties: {\n      fact_id: { type: \"string\", enum: selectableFactIds(facts, variant) },\n      text: { type: \"string\" },\n    },\n    required: [\"fact_id\", \"text\"],\n  },\n  minItems: 8,"
+    },
+    "build/roles": {
+      "file": "server/src/app.js",
+      "start": 1214,
+      "end": 1223,
+      "code": "validation = missingRoles.length\n  ? {\n      status: 1,\n      stdout:\n        `ERROR: employment role(s) missing from the résumé: ${missingRoles.join(\", \")} — ` +\n        \"every role needs at least one bullet, or the timeline shows a gap\\n\",\n    }\n  : await runProcess(python, [path.join(ENGINE_DIR, \"validate.py\"), planPath], {\n      timeoutMs: cfg.validateTimeoutMs ?? VALIDATE_TIMEOUT_MS,\n    });"
+    },
+    "build/repair": {
+      "file": "server/src/app.js",
+      "start": 1189,
+      "end": 1195,
+      "code": "for (let attempt = 0; attempt < 2; attempt++) {\n  const message = await client.messages.create(request);\n  logUsage(\"build\", message);\n  recordUsage(folderPath, usageRecord(attempt ? \"build-repair\" : \"build\", message, request.model));\n  const toolUse = message.content.find((b) => b.type === \"tool_use\");\n  if (!toolUse) throw new Error(\"Model did not return a structured package\");\n  generated = toolUse.input;"
+    },
+    "build/warnings": {
+      "file": "server/src/app.js",
+      "start": 1268,
+      "end": 1274,
+      "code": "let guardianWarnings = [];\nif (validation.status !== 0) {\n  guardianWarnings = (validation.stdout || validation.stderr || \"\").split(\"\\n\").filter(Boolean);\n  saveBuildError(\"guardian-warning\", guardianWarnings);\n} else if (existsSync(buildErrorPath)) {\n  unlinkSync(buildErrorPath);\n}"
+    },
+    "build/inflight": {
+      "file": "server/src/app.js",
+      "start": 1373,
+      "end": 1389,
+      "code": "app.post(\"/api/packages/build\", async (req, res) => {\n  const { folder } = req.body || {};\n  if (!isSafeFolderName(folder) || !(await findLedgerRow(folder))) {\n    return res.status(404).json({\n      error: `Unknown folder: ${folder} — call /api/packages/analyze first, it creates this`,\n    });\n  }\n  if (buildsInFlight.has(folder)) {\n    return res.status(409).json({ error: \"This application is already being built\" });\n  }\n  buildsInFlight.add(folder);\n  try {\n    await buildPackage(req, res);\n  } finally {\n    buildsInFlight.delete(folder);\n  }\n});"
+    },
+    "assistant/snapshot": {
+      "file": "server/src/assistant.js",
+      "start": 64,
+      "end": 89,
+      "code": "export function ledgerSnapshot(rows, now = new Date()) {\n  const apps = rows.map((r) => {\n    return {\n      folder: r.folder,\n      date: r.date,\n      company: r.company,\n      role: r.role,\n      location: r.location || undefined,\n      source: r.source || undefined,\n      track: r.track,\n      match: r.match_score === \"\" || r.match_score == null ? undefined : Number(r.match_score),\n      stage: r.stage,\n      days_in_stage: r.daysInStage ?? undefined,\n      days_until_stage: r.daysUntilStage ?? undefined,\n      days_since_action: r.daysSinceAction ?? undefined,\n      followup_due: r.needsFollowup || undefined,\n      followups: r.followupCount || undefined,\n      next_action: r.next_action || undefined,\n      outcome: r.outcome || undefined,\n      gaps: r.gap_tags || undefined,\n      notes: r.notes ? String(r.notes).slice(0, NOTES_MAX) : undefined,\n    };\n  });\n  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);\n  return { today: local.toISOString().slice(0, 10), applications: apps };\n}"
+    },
+    "assistant/schema": {
+      "file": "server/src/assistant.js",
+      "start": 33,
+      "end": 36,
+      "code": "folder: {\n  type: [\"string\", \"null\"],\n  description: \"The application's folder exactly as in the snapshot, or null when the step is not about one application.\",\n},"
+    },
+    "assistant/call": {
+      "file": "server/src/assistant.js",
+      "start": 120,
+      "end": 134,
+      "code": "const message = await client.beta.messages.create({\n  model: ASSISTANT_MODEL,\n  max_tokens: 16000,\n  // On a safety decline, the API retries on a fallback model it picks.\n  betas: [\"server-side-fallback-2026-07-01\"],\n  fallbacks: \"default\",\n  output_config: { effort: \"medium\", format: { type: \"json_schema\", schema: ANSWER_SCHEMA } },\n  system: [\n    { type: \"text\", text: SYSTEM_PROMPT },\n    // The snapshot changes only when the ledger does, so follow-up\n    // questions read it from the cache.\n    { type: \"text\", text: \"LEDGER SNAPSHOT:\\n\" + JSON.stringify(snapshot), cache_control: { type: \"ephemeral\" } },\n  ],\n  messages,\n});"
+    },
+    "assistant/known": {
+      "file": "server/src/assistant.js",
+      "start": 158,
+      "end": 164,
+      "code": "const known = new Set(snapshot.applications.map((a) => a.folder));\nconst actions = (Array.isArray(parsed.actions) ? parsed.actions : []).map((a) => ({\n  title: String(a.title || \"\"),\n  why: String(a.why || \"\"),\n  priority: [\"high\", \"medium\", \"low\"].includes(a.priority) ? a.priority : \"medium\",\n  folder: a.folder && known.has(a.folder) ? a.folder : null,\n}));"
+    },
+    "costs/prices": {
+      "file": "server/src/aiUsage.js",
+      "start": 13,
+      "end": 18,
+      "code": "const PRICES = {\n  \"claude-sonnet-5\": { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },\n  \"claude-sonnet-5-5\": { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },\n  \"claude-haiku-4-5\": { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 },\n  \"claude-opus-5-5\": { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },\n};"
+    },
+    "costs/before": {
+      "file": "server/src/app.js",
+      "start": 886,
+      "end": 888,
+      "code": "// Filed before normalizeAnalysis, which can still throw: a failed call\n// was paid for all the same.\nif (folder) recordUsage(resolveApplicationFolder(APPLICATIONS_DIR, folder), usage);"
+    },
+    "costs/cost": {
+      "file": "server/src/aiUsage.js",
+      "start": 20,
+      "end": 30,
+      "code": "export function costOf(model, usage) {\n  const p = PRICES[model] || PRICES[\"claude-sonnet-5\"];\n  const u = usage || {};\n  const usd =\n    ((u.input_tokens || 0) * p.input +\n      (u.cache_read_input_tokens || 0) * p.cacheRead +\n      (u.cache_creation_input_tokens || 0) * p.cacheWrite +\n      (u.output_tokens || 0) * p.output) /\n    1e6;\n  return Math.round(usd * 1e6) / 1e6;\n}"
+    },
+    "costs/brake": {
+      "file": "server/src/app.js",
+      "start": 897,
+      "end": 913,
+      "code": "const AI_ROUTES = {\n  \"/api/packages/analyze\": \"analyze\",\n  \"/api/packages/reanalyze\": \"analyze\",\n  \"/api/packages/build\": \"build\",\n  \"/api/assistant\": \"assistant\",\n};\napp.post(Object.keys(AI_ROUTES), (req, res, next) => {\n  if (req.get(\"x-ai-request\") === \"app\") return next();\n  const allowed = cfg.aiScriptCalls === \"all\" || (cfg.aiScriptCalls === \"analyze\" && AI_ROUTES[req.path] === \"analyze\");\n  if (allowed) return next();\n  res.status(403).json({\n    error:\n      \"Claude calls only start from a button in the dashboard (they spend API credit). \" +\n      \"Save the posting as a draft with POST /api/applications { postingText } and analyze it from its page.\",\n    code: \"ai_manual_only\",\n  });\n});"
+    },
+    "costs/header": {
+      "file": "client/src/api.js",
+      "start": 133,
+      "end": 133,
+      "code": "const AI_HEADERS = { \"Content-Type\": \"application/json\", \"X-AI-Request\": \"app\" };"
+    },
+    "truth-bank/spans": {
+      "file": "server/src/truthBank.js",
+      "start": 156,
+      "end": 168,
+      "code": "function itemSpans(lines) {\n  const spans = [];\n  for (let i = 0; i < lines.length; i++) {\n    const m = /^- id:\\s*(\\S+)\\s*$/.exec(lines[i]);\n    if (!m) continue;\n    let end = i;\n    for (let j = i + 1; j < lines.length && !/^\\S/.test(lines[j]); j++) {\n      if (lines[j].trim()) end = j;\n    }\n    spans.push({ id: m[1], start: i, end });\n  }\n  return spans;\n}"
+    },
+    "truth-bank/rename": {
+      "file": "server/src/truthBank.js",
+      "start": 191,
+      "end": 193,
+      "code": "if (!create && fact.id !== id) {\n  throw new TruthBankError(\"A fact's id can't be renamed — gaps and built résumés refer to it\", 400);\n}"
+    },
+    "truth-bank/checked": {
+      "file": "server/src/truthBank.js",
+      "start": 214,
+      "end": 221,
+      "code": "writeChecked(filePath, lines.join(\"\\n\"), (parsed) => {\n  const back = parsed.find((f) => f?.id === fact.id);\n  if (!back || !sameFact(back, fact)) throw new Error(`Rendered YAML for ${fact.id} didn't read back the same — nothing was written`);\n  const before = loadYaml(src) || [];\n  if (parsed.length !== before.length + (create ? 1 : 0)) {\n    throw new Error(`Saving ${fact.id} would have changed other facts in ${file} — nothing was written`);\n  }\n}, src);"
+    },
+    "truth-bank/commit": {
+      "file": "server/src/engineGit.js",
+      "start": 16,
+      "end": 32,
+      "code": "async function commit(paths, message) {\n  if (!enabled()) return null;\n  const add = await git([\"add\", \"--\", ...paths]);\n  // No git binary (an image built without it): the file is already saved,\n  // so the save shouldn't answer 500 — it just goes unrecorded.\n  if (add.status === null && /ENOENT/.test(add.stderr)) {\n    console.warn(`[engine-git] git not found — \"${message}\" saved without a commit`);\n    return null;\n  }\n  if (add.status !== 0) throw new Error(`git add failed: ${add.stderr || add.stdout}`);\n  const staged = await git([\"diff\", \"--cached\", \"--quiet\", \"--\", ...paths]);\n  if (staged.status === 0) return null; // nothing actually changed\n  const res = await git([\"commit\", \"-q\", \"-m\", message, \"--\", ...paths]);\n  if (res.status !== 0) throw new Error(`git commit failed: ${res.stderr || res.stdout}`);\n  const head = await git([\"rev-parse\", \"--short\", \"HEAD\"]);\n  return head.stdout.trim();\n}"
+    },
+    "health/status": {
+      "file": "server/src/truthBank.js",
+      "start": 55,
+      "end": 60,
+      "code": "export function gapStatus(label) {\n  const t = label || \"\";\n  if (t.includes(\"کامل بسته شد\")) return \"closed\";\n  if (t.includes(\"بسته شد\")) return /همچنان|باقی|هنوز/.test(t) ? \"partial\" : \"closed\";\n  return \"open\";\n}"
+    },
+    "health/why": {
+      "file": "server/src/health.js",
+      "start": 1,
+      "end": 8,
+      "code": "// Consistency checks across the truth bank, the gap dictionary, the résumé\n// templates and the drafts built from them. Each rule exists because the\n// mismatch it describes actually happened and had to be found by hand:\n//   - a fact tagged mongodb whose claim never said \"MongoDB\" (the build model\n//     only reads claim text, so the posting was told there was no MongoDB);\n//   - a gap label still saying \"all relational\" after MongoDB facts landed;\n//   - drafts scored before newer evidence was added (gap_tags are a snapshot).\n// Pure: everything it needs is passed in, so it's tested without files."
+    },
+    "health/stem": {
+      "file": "server/src/health.js",
+      "start": 30,
+      "end": 41,
+      "code": "const stemLast = (tag) => tag.replace(/([a-z]{4,}?)(?:ing|es|ed|s)$/, \"$1\");\nconst spellings = (tag) =>\n  [tag, stemLast(tag)].flatMap((t) => [\n    t.replace(/_/g, \" \"),\n    t.replace(/_/g, \"\"),\n    t.replace(/_/g, \"-\"),\n    t.replace(/_/g, \".\"),\n  ]);\nexport const mentions = (tag, text) => {\n  const t = String(text || \"\").toLowerCase();\n  return spellings(tag.toLowerCase()).some((s) => t.includes(s));\n};"
+    },
+    "health/fingerprint": {
+      "file": "server/src/truthBank.js",
+      "start": 256,
+      "end": 263,
+      "code": "export function bankFingerprint(factsDir, gapTagsPath) {\n  const { facts } = readFacts(factsDir);\n  return createHash(\"sha1\")\n    .update(JSON.stringify(facts.map(({ index, file, ...f }) => f)))\n    .update(JSON.stringify(readGaps(gapTagsPath)))\n    .digest(\"hex\")\n    .slice(0, 12);\n}"
+    },
+    "health/staleFlag": {
+      "file": "server/src/truthRoutes.js",
+      "start": 67,
+      "end": 69,
+      "code": "// Old drafts have no saved fingerprint: if they have a posting at\n// all, they were analyzed before tracking began, so treat as stale.\nanalysisStale: files.includes(\"posting.txt\") && analysis?.bank_fingerprint !== fingerprint,"
+    },
+    "fe-app/gate": {
+      "file": "client/src/components/LoginGate.jsx",
+      "start": 10,
+      "end": 14,
+      "code": "useEffect(() => {\n  checkSession()\n    .then((s) => setStatus(s.passwordRequired && !s.authed ? \"needed\" : \"ok\"))\n    .catch(() => setStatus(\"ok\")); // fail open locally rather than lock the user out\n}, []);"
+    },
+    "fe-app/base": {
+      "file": "client/src/api.js",
+      "start": 3,
+      "end": 3,
+      "code": "const API_BASE = import.meta.env.DEV ? \"http://localhost:4310\" : \"\";"
+    },
+    "fe-app/static": {
+      "file": "server/src/app.js",
+      "start": 1562,
+      "end": 1569,
+      "code": "// Serve the built React app (so no dev server / Vite is needed to use this)\nif (existsSync(cfg.clientDist)) {\n  app.use(express.static(cfg.clientDist));\n  app.get(\"*\", (req, res, next) => {\n    if (req.path.startsWith(\"/api/\")) return next();\n    res.sendFile(path.join(cfg.clientDist, \"index.html\"));\n  });\n}"
+    },
+    "stores/open": {
+      "file": "server/src/stores/index.js",
+      "start": 7,
+      "end": 13,
+      "code": "export async function openStore(cfg) {\n  if (cfg.store === \"sql\") {\n    const pool = await connectSqlPool(cfg.db);\n    return createSqlStore(pool);\n  }\n  return createCsvStore(path.join(cfg.jobsearchDir, \"engine\"));\n}"
+    },
+    "stores/sync": {
+      "file": "server/src/stores/csvStore.js",
+      "start": 12,
+      "end": 13,
+      "code": "// Every read-modify-write here is synchronous inside the method, so two\n// requests in this process can't interleave between the read and the write."
+    },
+    "stores/create": {
+      "file": "server/src/stores/sqlStore.js",
+      "start": 204,
+      "end": 216,
+      "code": "async createApplication(row) {\n  await inTransaction(async (request) => {\n    const r = request().input(\"folder\", sql.NVarChar(150), row.folder);\n    const fields = Object.entries(APPLICATION_COLUMNS);\n    fields.forEach(([field, { type }], i) => bindColumn(r, `p${i}`, row[field], type));\n    const { recordset } = await r.query(`\n      INSERT INTO dbo.Applications (Folder, ${fields.map(([, c]) => c.column).join(\", \")})\n      OUTPUT INSERTED.Id\n      VALUES (@folder, ${fields.map(([, { type }], i) => valueExpr(`p${i}`, type)).join(\", \")})`);\n    const applicationId = recordset[0].Id;\n    await replaceGapTags(request, applicationId, row.gap_tags);\n    await insertEvent(request, { applicationId, stage: \"draft\", date: todayISO(), note: \"\" });\n  });"
+    },
+    "stores/select": {
+      "file": "server/src/stores/sqlStore.js",
+      "start": 58,
+      "end": 70,
+      "code": "function selectList(columns, alias) {\n  return Object.entries(columns)\n    .map(([field, { column, type }]) => {\n      const ref = `${alias}.${column}`;\n      // varchar, not char: ISNULL takes the first argument's type, and a\n      // char(10) would turn the \"\" fallback into ten spaces (truthy).\n      if (type === \"date\") return `ISNULL(CONVERT(varchar(10), ${ref}, 23), '') AS [${field}]`;\n      if (type === \"score\") return `ISNULL(CAST(${ref} AS nvarchar(3)), '') AS [${field}]`;\n      if (type === \"flag\") return `CASE WHEN ${ref} = 1 THEN 'true' ELSE '' END AS [${field}]`;\n      return `${ref} AS [${field}]`;\n    })\n    .join(\",\\n      \");\n}"
+    },
+    "stores/errors": {
+      "file": "server/src/stores/sqlStore.js",
+      "start": 108,
+      "end": 111,
+      "code": "const VALIDATION_ERROR_NUMBERS = new Set([220, 241, 242, 245, 547, 2601, 2627, 2628, 8114, 8115, 8152]);\nexport function isStoreValidationError(err) {\n  return !!err && typeof err.number === \"number\" && VALIDATION_ERROR_NUMBERS.has(err.number);\n}"
+    },
+    "schema/svc": {
+      "file": "db/02-service-login.sql",
+      "start": 17,
+      "end": 19,
+      "code": "IF USER_ID(N'ledger_svc') IS NULL CREATE USER ledger_svc FOR LOGIN ledger_svc;\nALTER ROLE db_datareader ADD MEMBER ledger_svc;\nALTER ROLE db_datawriter ADD MEMBER ledger_svc;"
+    },
+    "schema/folder": {
+      "file": "db/03-schema.sql",
+      "start": 34,
+      "end": 37,
+      "code": "Folder        NVARCHAR(150) NOT NULL CONSTRAINT UQ_Applications_Folder UNIQUE\n              CONSTRAINT CK_Applications_Folder CHECK (\n                  Folder <> N'' AND Folder NOT LIKE N'%..%'\n                  AND Folder COLLATE Latin1_General_BIN NOT LIKE N'%[^-A-Za-z0-9._]%'),"
+    },
+    "schema/slug": {
+      "file": "db/03-schema.sql",
+      "start": 82,
+      "end": 98,
+      "code": "-- Gap tags per application, in display order (was the comma-joined gap_tags\n-- column). The CHECK only admits short kebab-case slugs, so a free-text\n-- sentence can never be stored as a \"tag\" again, which is the bug that once\n-- shredded 11 ledger rows into comma fragments. The slug dictionary itself\n-- stays in JobSearch/engine/gap_tags.yml (hand-curated, part of the fact\n-- bank workflow), so there is deliberately no foreign key to it.\nIF OBJECT_ID(N'dbo.ApplicationGapTags', N'U') IS NULL\nCREATE TABLE dbo.ApplicationGapTags (\n    ApplicationId INT          NOT NULL CONSTRAINT FK_ApplicationGapTags_Applications\n                  REFERENCES dbo.Applications (Id) ON DELETE CASCADE,\n    Slug          NVARCHAR(60) NOT NULL CONSTRAINT CK_ApplicationGapTags_Slug CHECK (\n                      Slug <> N'' AND Slug COLLATE Latin1_General_BIN NOT LIKE N'%[^-a-z0-9]%'\n                      AND Slug NOT LIKE N'-%' AND Slug NOT LIKE N'%-'),\n    Position      TINYINT      NOT NULL,\n    CONSTRAINT PK_ApplicationGapTags PRIMARY KEY (ApplicationId, Slug),\n    CONSTRAINT UQ_ApplicationGapTags_Position UNIQUE (ApplicationId, Position)\n);"
+    },
+    "schema/refuse": {
+      "file": "server/src/stores/migrate.js",
+      "start": 41,
+      "end": 48,
+      "code": "if (recordset[0].n > 0) {\n  if (!replace) {\n    throw new Error(\"The SQL database already has data. Re-run with --replace to clear it and copy again.\");\n  }\n  await request().query(`\n    DELETE FROM dbo.PipelineEvents; DELETE FROM dbo.ApplicationGapTags;\n    DELETE FROM dbo.Applications;   DELETE FROM dbo.Recruiters; DELETE FROM dbo.Stages;`);\n}"
+    },
+    "reporting/current": {
+      "file": "db/04-views.sql",
+      "start": 15,
+      "end": 22,
+      "code": "CREATE OR ALTER VIEW dbo.vApplicationCurrentStage AS\nWITH LastStage AS (\n    SELECT e.ApplicationId, e.StageKey, e.EventDate,\n           ROW_NUMBER() OVER (PARTITION BY e.ApplicationId ORDER BY e.Id DESC) AS rn\n    FROM dbo.PipelineEvents e\n    JOIN dbo.Stages s ON s.StageKey = e.StageKey\n    WHERE s.Kind <> N'action'\n)"
+    },
+    "reporting/due": {
+      "file": "db/04-views.sql",
+      "start": 44,
+      "end": 51,
+      "code": "CREATE OR ALTER VIEW dbo.vFollowupsDue AS\nSELECT c.Folder, c.Company, c.Role, c.CurrentStage, c.HasContactEmail,\n       COALESCE(c.LastFollowupDate, c.StageSince) AS LastActionDate,\n       DATEDIFF(day, COALESCE(c.LastFollowupDate, c.StageSince), CAST(SYSDATETIME() AS date)) AS DaysSinceAction\nFROM dbo.vApplicationCurrentStage c\nWHERE c.IsWaiting = 1\n  AND c.StageSince IS NOT NULL\n  AND DATEDIFF(day, COALESCE(c.LastFollowupDate, c.StageSince), CAST(SYSDATETIME() AS date)) > 7;"
+    },
+    "reporting/reader": {
+      "file": "db/05-reader-login.sql",
+      "start": 17,
+      "end": 22,
+      "code": "-- The views are owned by dbo like the tables they read, so ownership\n-- chaining lets them work without granting anything on the tables.\nGRANT SELECT ON dbo.vApplicationCurrentStage TO ledger_reader;\nGRANT SELECT ON dbo.vFollowupsDue TO ledger_reader;\nGRANT SELECT ON dbo.vFunnelBySource TO ledger_reader;\nGRANT SELECT ON dbo.vGapTagStats TO ledger_reader;"
+    },
+    "reporting/kinds": {
+      "file": "db/06-report-views.sql",
+      "start": 4,
+      "end": 11,
+      "code": "-- Two kinds of views:\n--   * Model tables for Power BI (reports/LedgerDashboard.pbip): one row per\n--     application with every attribute a report slices by, plus events,\n--     gap tags and recruiters. Measures live in the Power BI model.\n--   * Ready-made summaries for plain SQL / the Control Panel assistant.\n--\n-- No personal data beyond what the dashboard already shows about the\n-- employer: contact emails and recruiter names/LinkedIn URLs stay out."
+    },
+    "reporting/week": {
+      "file": "db/06-report-views.sql",
+      "start": 65,
+      "end": 65,
+      "code": "DATEADD(day, -((DATEPART(weekday, ev.SentDate) + @@DATEFIRST - 2) % 7), ev.SentDate) AS SentWeek,"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "login",
+      "method": "POST",
+      "path": "/api/login",
+      "access": "public",
+      "file": "server/src/app.js",
+      "line": 109
+    },
+    {
+      "area": "logout",
+      "method": "POST",
+      "path": "/api/logout",
+      "access": "public",
+      "file": "server/src/app.js",
+      "line": 128
+    },
+    {
+      "area": "session",
+      "method": "GET",
+      "path": "/api/session",
+      "access": "public",
+      "file": "server/src/app.js",
+      "line": 141
+    },
+    {
+      "area": "motivation",
+      "method": "GET",
+      "path": "/api/motivation",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 182
+    },
+    {
+      "area": "pipeline-stages",
+      "method": "GET",
+      "path": "/api/pipeline-stages",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 203
+    },
+    {
+      "area": "pipeline-events",
+      "method": "POST",
+      "path": "/api/pipeline-events",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 213
+    },
+    {
+      "area": "pipeline-events",
+      "method": "POST",
+      "path": "/api/pipeline-events/followup",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 241
+    },
+    {
+      "area": "pipeline-events",
+      "method": "POST",
+      "path": "/api/pipeline-events/undo",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 260
+    },
+    {
+      "area": "applications",
+      "method": "POST",
+      "path": "/api/applications",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 325
+    },
+    {
+      "area": "applications",
+      "method": "PATCH",
+      "path": "/api/applications/:id",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 372
+    },
+    {
+      "area": "applications",
+      "method": "DELETE",
+      "path": "/api/applications/:id",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 413
+    },
+    {
+      "area": "applications",
+      "method": "GET",
+      "path": "/api/applications",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 433
+    },
+    {
+      "area": "applications",
+      "method": "GET",
+      "path": "/api/applications/:id",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 442
+    },
+    {
+      "area": "usage",
+      "method": "GET",
+      "path": "/api/usage",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 480
+    },
+    {
+      "area": "usage",
+      "method": "GET",
+      "path": "/api/usage/calls",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 499
+    },
+    {
+      "area": "funnel",
+      "method": "GET",
+      "path": "/api/funnel",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 512
+    },
+    {
+      "area": "rejections",
+      "method": "GET",
+      "path": "/api/rejections",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 528
+    },
+    {
+      "area": "rejections",
+      "method": "POST",
+      "path": "/api/rejections/review",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 546
+    },
+    {
+      "area": "applications",
+      "method": "GET",
+      "path": "/api/applications/:id/similar",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 568
+    },
+    {
+      "area": "applications",
+      "method": "GET",
+      "path": "/api/applications/:id/files/:name",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 593
+    },
+    {
+      "area": "gap-tags",
+      "method": "GET",
+      "path": "/api/gap-tags",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 607
+    },
+    {
+      "area": "assistant",
+      "method": "POST",
+      "path": "/api/assistant",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 919
+    },
+    {
+      "area": "packages",
+      "method": "POST",
+      "path": "/api/packages/analyze",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 961
+    },
+    {
+      "area": "packages",
+      "method": "POST",
+      "path": "/api/packages/reanalyze",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1002
+    },
+    {
+      "area": "packages",
+      "method": "POST",
+      "path": "/api/packages/build",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1373
+    },
+    {
+      "area": "recruiters",
+      "method": "GET",
+      "path": "/api/recruiters",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1418
+    },
+    {
+      "area": "recruiters",
+      "method": "GET",
+      "path": "/api/recruiters/candidates",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1463
+    },
+    {
+      "area": "recruiters",
+      "method": "POST",
+      "path": "/api/recruiters/lookups",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1475
+    },
+    {
+      "area": "recruiters",
+      "method": "POST",
+      "path": "/api/recruiters",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1494
+    },
+    {
+      "area": "recruiters",
+      "method": "POST",
+      "path": "/api/recruiters/:id",
+      "access": "signed-in",
+      "file": "server/src/app.js",
+      "line": 1534
+    },
+    {
+      "area": "eval",
+      "method": "GET",
+      "path": "/api/eval/items",
+      "access": "signed-in",
+      "file": "server/src/evalRoutes.js",
+      "line": 39
+    },
+    {
+      "area": "eval",
+      "method": "PUT",
+      "path": "/api/eval/labels/:folder",
+      "access": "signed-in",
+      "file": "server/src/evalRoutes.js",
+      "line": 61
+    },
+    {
+      "area": "eval",
+      "method": "GET",
+      "path": "/api/eval/report",
+      "access": "signed-in",
+      "file": "server/src/evalRoutes.js",
+      "line": 94
+    },
+    {
+      "area": "truth-bank",
+      "method": "GET",
+      "path": "/api/truth-bank",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 106
+    },
+    {
+      "area": "truth-bank",
+      "method": "POST",
+      "path": "/api/truth-bank/facts",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 141
+    },
+    {
+      "area": "truth-bank",
+      "method": "PUT",
+      "path": "/api/truth-bank/facts/:id",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 152
+    },
+    {
+      "area": "truth-bank",
+      "method": "DELETE",
+      "path": "/api/truth-bank/facts/:id",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 163
+    },
+    {
+      "area": "truth-bank",
+      "method": "GET",
+      "path": "/api/truth-bank/history",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 181
+    },
+    {
+      "area": "truth-bank",
+      "method": "GET",
+      "path": "/api/truth-bank/history/:hash",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 190
+    },
+    {
+      "area": "truth-bank",
+      "method": "POST",
+      "path": "/api/truth-bank/commit",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 201
+    },
+    {
+      "area": "gaps",
+      "method": "GET",
+      "path": "/api/gaps",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 214
+    },
+    {
+      "area": "gaps",
+      "method": "POST",
+      "path": "/api/gaps",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 247
+    },
+    {
+      "area": "gaps",
+      "method": "PUT",
+      "path": "/api/gaps/:slug",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 257
+    },
+    {
+      "area": "gaps",
+      "method": "POST",
+      "path": "/api/gaps/:slug/merge",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 273
+    },
+    {
+      "area": "resume",
+      "method": "GET",
+      "path": "/api/resume/templates",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 299
+    },
+    {
+      "area": "resume",
+      "method": "GET",
+      "path": "/api/resume/builds",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 310
+    },
+    {
+      "area": "applications",
+      "method": "GET",
+      "path": "/api/applications/:id/resume",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 327
+    },
+    {
+      "area": "health",
+      "method": "GET",
+      "path": "/api/health",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 367
+    },
+    {
+      "area": "health",
+      "method": "POST",
+      "path": "/api/health/dismiss",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 390
+    },
+    {
+      "area": "health",
+      "method": "DELETE",
+      "path": "/api/health/dismiss",
+      "access": "signed-in",
+      "file": "server/src/truthRoutes.js",
+      "line": 403
+    }
+  ],
+  "tables": [
+    {
+      "database": "LedgerDashboard",
+      "table": "Stages",
+      "file": "db/03-schema.sql",
+      "line": 16,
+      "columns": [
+        {
+          "name": "StageKey",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "check Kind IN (N'stage', N'terminal', N'action')"
+          ]
+        },
+        {
+          "name": "SortOrder",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Label",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LabelFa",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Icon",
+          "type": "NVARCHAR(16)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "IsWaiting",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LedgerDashboard",
+      "table": "Applications",
+      "file": "db/03-schema.sql",
+      "line": 29,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Folder",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": [
+            "unique",
+            "check Folder <> N'' AND Folder NOT LIKE N'%..%' AND Folder COLLATE Latin1_General_BIN NOT LIKE N'%[^-A-Za-z0-9._]%'"
+          ]
+        },
+        {
+          "name": "AppliedDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Company",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Role",
+          "type": "NVARCHAR(300)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Branch",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Source",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "SourceDetail",
+          "type": "NVARCHAR(500)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "PosterType",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "PosterName",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "EndClient",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "AppliedVia",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "PostingUrl",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "DatePosted",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DateSeen",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Location",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "MatchScore",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": [
+            "check MatchScore BETWEEN 0 AND 100"
+          ]
+        },
+        {
+          "name": "Variant",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": [
+            "default N'draft'"
+          ]
+        },
+        {
+          "name": "LastContact",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "NextAction",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Outcome",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "ContactName",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "ContactEmail",
+          "type": "NVARCHAR(254)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "ContactSource",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "ContactVerified",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "(ContactEmail = N'' AND ContactSource = N'') OR (ContactEmail LIKE N'_%@_%._%' AND ContactSource IN (N'posting', N'ats_email', N'recruiter_reply', N'found') AND ContactVerified = 1)"
+      ]
+    },
+    {
+      "database": "LedgerDashboard",
+      "table": "ApplicationGapTags",
+      "file": "db/03-schema.sql",
+      "line": 89,
+      "columns": [
+        {
+          "name": "ApplicationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "→ Applications"
+          ]
+        },
+        {
+          "name": "Slug",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "check Slug <> N'' AND Slug COLLATE Latin1_General_BIN NOT LIKE N'%[^-a-z0-9]%' AND Slug NOT LIKE N'-%' AND Slug NOT LIKE N'%-'"
+          ]
+        },
+        {
+          "name": "Position",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LedgerDashboard",
+      "table": "PipelineEvents",
+      "file": "db/03-schema.sql",
+      "line": 105,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ApplicationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ Applications"
+          ]
+        },
+        {
+          "name": "StageKey",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": [
+            "→ Stages"
+          ]
+        },
+        {
+          "name": "EventDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EventTime",
+          "type": "TIME(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Note",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LedgerDashboard",
+      "table": "Recruiters",
+      "file": "db/03-schema.sql",
+      "line": 123,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Title",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "Company",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "LinkedInUrl",
+          "type": "NVARCHAR(400)",
+          "nullable": false,
+          "notes": [
+            "default N''",
+            "unique where LinkedInUrl <> N''"
+          ]
+        },
+        {
+          "name": "Source",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "DateAdded",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ConnectNote",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "ConnectSentOn",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ConnectAcceptedOn",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FollowupNote",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        },
+        {
+          "name": "FollowupSentOn",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RepliedOn",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Notes",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": [
+            "default N''"
+          ]
+        }
+      ],
+      "denies": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "ApplicationsList",
+      "guards": []
+    },
+    {
+      "path": "/applications/new",
+      "component": "NewApplication",
+      "guards": []
+    },
+    {
+      "path": "/packages/new",
+      "component": "NewPackage",
+      "guards": []
+    },
+    {
+      "path": "/applications/:id",
+      "component": "ApplicationDetail",
+      "guards": []
+    },
+    {
+      "path": "/pipeline",
+      "component": "PipelineBoard",
+      "guards": []
+    },
+    {
+      "path": "/stats",
+      "component": "StatsPage",
+      "guards": []
+    },
+    {
+      "path": "/funnel",
+      "component": "FunnelPage",
+      "guards": []
+    },
+    {
+      "path": "/rejections",
+      "component": "RejectionsPage",
+      "guards": []
+    },
+    {
+      "path": "/recruiters",
+      "component": "RecruitersBoard",
+      "guards": []
+    },
+    {
+      "path": "/truth",
+      "component": "TruthBankPage",
+      "guards": []
+    },
+    {
+      "path": "/gaps",
+      "component": "GapsPage",
+      "guards": []
+    },
+    {
+      "path": "/resume",
+      "component": "ResumePage",
+      "guards": []
+    },
+    {
+      "path": "/resume/:folder",
+      "component": "BuiltResumePage",
+      "guards": []
+    },
+    {
+      "path": "/health",
+      "component": "HealthPage",
+      "guards": []
+    },
+    {
+      "path": "/costs",
+      "component": "CostsPage",
+      "guards": []
+    },
+    {
+      "path": "/eval",
+      "component": "EvalPage",
+      "guards": []
+    }
+  ]
+}
