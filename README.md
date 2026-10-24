@@ -13,6 +13,10 @@ https://arashkeshtgar.github.io/ProgrammingLessonDesigner/ (GitHub Pages, with t
 | Frontend | 4: components, HTTP with token refresh, route guards, forms | Blazor · Angular · React · Vue |
 | Ops | 8: strict scripts, server setup, release, deploy, nightly backup, restore test, CI/CD, reverse proxy | Bash · PowerShell · Python (CI/CD: GitHub Actions · Azure Pipelines; proxy: Caddy · nginx) |
 
+The **Projects** tab (`#/projects/fa`, `#/projects/en`) is a bilingual reference for the
+whole portfolio, laid out like a docs site: a system map of every project and what it
+talks to, one page per project, and a page on how this site is styled.
+
 Each booklet is also a page (`#/booklet/<tag>`) and a PDF built by CI (`pdf/<tag>.pdf`).
 The review page turns compare rows, pitfalls and exercises into spaced-repetition cards.
 
@@ -33,6 +37,19 @@ A code sample is one of:
 `npm run check` validates every lesson: required fields, every language present, every
 `examples/` file and region exists, and (locally, where `D:/E/Projects` exists) every ref
 points at an existing file and line.
+
+## Projects tab
+
+- `src/data/project-map.json` is generated, never edited: `npm run map` reads Control
+  Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template (read
+  only) and writes it. `npm run check` fails locally when it no longer matches them.
+- `src/data/projects/<id>.json`: the hand-written page of a project, a summary and
+  optionally sections in both `fa` and `en` (same section ids), with code examples shared
+  by the two languages and `refs` into the real projects. `npm run check` validates them.
+- Styles are Sass in `src/styles/`: `abstracts/` (tokens, functions, mixins; no CSS of
+  their own), `base/`, `components/`, `projects/`. Colours exist only in
+  `abstracts/_tokens.scss`, and the build stops when a text colour pair, in either theme,
+  is below WCAG's 4.5:1. `npm run lint:css` runs stylelint.
 
 ## Examples
 
@@ -67,7 +84,8 @@ examples/ops/proxy/test.sh
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run check
+npm run check    # lessons, Projects pages, and the map against Control Panel
+npm run lint:css # stylelint
 npm run build
 npm run pdf      # needs a served build: npx vite preview, then SITE_URL=http://localhost:4173/ npm run pdf
 ```

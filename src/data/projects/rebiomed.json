@@ -1,0 +1,18 @@
+{
+  "id": "rebiomed",
+  "summary": {
+    "fa": "بازار کانادایی تجهیزات پزشکی دست‌دوم: MongoDB، Express، React و Node، با TypeScript در بک‌اند و پرداخت آزمایشی Stripe به دلار کانادا.",
+    "en": "A Canadian marketplace for pre-owned medical equipment: MongoDB, Express, React and Node, TypeScript on the back end, and a Stripe test-mode checkout in CAD."
+  },
+  "refs": [
+    {
+      "project": "mern-animation-project",
+      "file": "README.md",
+      "line": 5,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

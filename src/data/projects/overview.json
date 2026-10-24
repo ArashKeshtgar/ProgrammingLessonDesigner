@@ -1,0 +1,23 @@
+{
+  "id": "overview",
+  "en": [
+    {
+      "id": "intro",
+      "h": "The portfolio as one system",
+      "p": [
+        "Every project, one server. Caddy is the only thing that faces the internet; behind it each site goes to its own containers, three of the apps share one SQL Server, and Control Panel watches all of them through small adapters.",
+        "Each box is a project. A solid outline runs on the VPS, a dashed one only on the PC, a dotted one is outside this compose and is reached over the network. Click a box for its page: its services, what it talks to, and how to work with it."
+      ]
+    }
+  ],
+  "fa": [
+    {
+      "id": "intro",
+      "h": "همه‌ی پروژه‌ها به‌عنوان یک سیستم",
+      "p": [
+        "همه‌ی پروژه‌ها، یک سرور. Caddy تنها چیزی است که رو به اینترنت است؛ پشت آن هر سایت به کانتینرهای خودش می‌رود، سه اپ یک SQL Server مشترک دارند، و کنترل پنل همه را از طریق adapterهای کوچک زیر نظر دارد.",
+        "هر جعبه یک پروژه است. خط کامل یعنی روی VPS اجرا می‌شود، خط‌چین یعنی فقط روی PC، و نقطه‌چین یعنی بیرون از این compose است و از طریق شبکه به آن وصل می‌شوند. روی هر جعبه کلیک کنید تا صفحه‌اش باز شود: سرویس‌هایش، با چه چیزهایی حرف می‌زند، و چطور با آن کار کنید."
+      ]
+    }
+  ]
+}

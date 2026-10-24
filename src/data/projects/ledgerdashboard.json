@@ -1,0 +1,7 @@
+{
+  "id": "ledgerdashboard",
+  "summary": {
+    "fa": "ردیاب جست‌وجوی شغل و رزومه‌ساز با هوش مصنوعی: رابط React و API با Node/Express، روی فایل‌های واقعی جست‌وجوی شغل و دیتابیس SQL Server خودش.",
+    "en": "A job-search tracker and AI résumé builder: a React front end and a Node/Express API over the real job-search files and its own SQL Server database."
+  }
+}

@@ -1,0 +1,65 @@
+@use '../abstracts' as *;
+@use '../components/code';
+
+// The booklet pages are printed to PDF by CI (scripts/pdf.mjs).
+@media print {
+  .topbar,
+  .lesson-nav,
+  .tabs,
+  .filters,
+  .booklet-links,
+  .docs-side,
+  .docs-pager,
+  .lang-switch {
+    display: none !important;
+  }
+
+  body {
+    background: print-color(paper);
+    color: print-color(ink);
+    font-size: 10.5pt;
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .code-tabs pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: print-color(code-bg);
+    color: print-color(code-ink);
+    border: 1px solid print-color(code-line);
+    font-size: 8pt;
+  }
+
+  // The same highlight.js selectors as on screen, in ink a printer can do.
+  @each $token, $selector in code.$hljs {
+    #{$selector} {
+      color: print-color($token);
+    }
+  }
+
+  .compare-wrap {
+    overflow: visible;
+  }
+
+  .hero,
+  .topics {
+    break-inside: avoid;
+  }
+
+  .booklet-lesson {
+    break-before: page;
+    border: 0;
+  }
+
+  .pitfall,
+  .concept,
+  .exercise,
+  .sample,
+  .compare tr {
+    break-inside: avoid;
+  }
+}

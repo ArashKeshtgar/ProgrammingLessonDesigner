@@ -1,0 +1,18 @@
+{
+  "id": "pharmaflow",
+  "summary": {
+    "fa": "داروخانه‌ی محلی برای یک گروه کلینیک در انتاریو، بخشی از پلتفرم ClinicHub: نسخه‌ی انتاریویی یک سیستم قدیمی داروخانه‌ی بیمارستان.",
+    "en": "A community pharmacy for an Ontario clinic group, part of the ClinicHub platform: the Ontario version of a legacy hospital pharmacy system."
+  },
+  "refs": [
+    {
+      "project": "PharmaFlow",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import '@fontsource/vazirmatn/400.css'
 import '@fontsource/vazirmatn/600.css'
 import '@fontsource/jetbrains-mono/400.css'
-import './assets/app.css'
+import './styles/main.scss'
 import App from './App.vue'
 import router from './router'
 

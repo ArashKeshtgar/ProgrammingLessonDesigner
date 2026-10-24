@@ -1,0 +1,63 @@
+@use '../abstracts' as *;
+
+.page {
+  max-width: layout(page);
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.lead {
+  color: var(--muted);
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+// #region placeholders
+// Every small button of the site: filters, code tabs, review actions.
+%button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: radius(sm);
+  padding: 0.2rem 0.8rem;
+}
+
+%button-on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.filters button,
+.tabs button,
+.card-actions button {
+  @extend %button;
+}
+
+.filters button.on,
+.tabs button.on,
+.card-actions .primary {
+  @extend %button-on;
+}
+
+// #endregion
+
+.btn-link {
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  padding: 0;
+
+  &.danger {
+    color: var(--warn);
+    margin-top: 2rem;
+  }
+}

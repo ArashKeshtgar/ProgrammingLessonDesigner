@@ -1,0 +1,18 @@
+{
+  "id": "shared",
+  "summary": {
+    "fa": "یک SQL Server Express در کانتینر، مشترک بین کنترل پنل، LedgerDashboard و LabFlow. هر اپ دیتابیس و login کم‌دسترسی خودش را دارد، و همه هر شب بکاپ گرفته می‌شوند.",
+    "en": "One SQL Server Express in a container, shared by Control Panel, LedgerDashboard and LabFlow. Each app has its own database and its own least-privilege login, and all of them are backed up nightly."
+  },
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "deploy/vps/compose.vps.yml",
+      "line": 55,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

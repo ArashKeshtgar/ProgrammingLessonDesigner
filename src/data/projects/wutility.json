@@ -1,0 +1,18 @@
+{
+  "id": "wutility",
+  "summary": {
+    "fa": "wUtility Web، ابزاری با .NET که دیتابیس‌های SQL Server را همگام می‌کند. API آن به‌جای این compose روی Azure اجرا می‌شود، چون با Windows authentication وصل می‌شود؛ کنترل پنل از طریق wutility-adapter و با کلید API به آن می‌رسد.",
+    "en": "wUtility Web, a .NET tool that syncs SQL Server databases. Its API runs on Azure rather than in this compose, because it connects with Windows authentication; Control Panel reaches it through wutility-adapter with an API key."
+  },
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "README.md",
+      "line": 119,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

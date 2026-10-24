@@ -1,0 +1,18 @@
+{
+  "id": "clinichub",
+  "summary": {
+    "fa": "پلتفرم کلینیک برای کلینیک‌های سرپایی و خانوادگی انتاریو: بیمار و کارت سلامت، نوبت و صف، ویزیت، صورت‌حساب OHIP و سفارش به آزمایشگاه. بقیه‌ی پروژه‌های کلینیکی به آن وصل می‌شوند و از طریق آن وارد می‌شوند.",
+    "en": "A clinic platform for Ontario walk-in and family practices: patients and health cards, booking and walk-in queues, the visit, OHIP billing and orders to the lab. The other clinic projects connect to it, and sign in through it."
+  },
+  "refs": [
+    {
+      "project": "ClinicHub",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

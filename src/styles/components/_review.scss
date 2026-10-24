@@ -1,0 +1,50 @@
+@use '../abstracts' as *;
+
+.review .stats {
+  color: var(--muted);
+}
+
+.card {
+  @include surface(lg);
+
+  padding: 1.2rem;
+  margin: 1rem 0;
+
+  .front {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+  }
+
+  .back {
+    border-top: 1px dashed var(--line);
+    margin-top: 0.8rem;
+    padding-top: 0.5rem;
+
+    p {
+      margin: 0.3rem 0;
+    }
+  }
+
+  &.empty {
+    text-align: center;
+    color: var(--muted);
+  }
+}
+
+.card-kind {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}

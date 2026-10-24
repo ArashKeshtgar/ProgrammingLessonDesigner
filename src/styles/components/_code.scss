@@ -1,0 +1,98 @@
+@use '../abstracts' as *;
+
+.code-tabs {
+  @include surface;
+
+  margin: 1rem 0;
+  overflow: hidden;
+
+  figcaption {
+    padding: 0.5rem 0.8rem 0;
+  }
+
+  &.all .sample + .sample {
+    border-top: 1px solid var(--line);
+    padding-top: 0.5rem;
+  }
+
+  pre {
+    margin: 0;
+    padding: 1rem;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    text-align: left;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.5rem 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+  direction: ltr;
+}
+
+.sample-head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 0.8rem 0.4rem;
+
+  .lang {
+    font-weight: 600;
+    direction: ltr;
+  }
+
+  .path {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+}
+
+// #region origins
+// Where a sample comes from: real project code, a tested example, or a port.
+$-origins: (
+  real: accent,
+  tested: info,
+  port: warn,
+);
+
+.origin {
+  font-size: 0.78rem;
+  border-radius: radius(sm);
+  padding: 0 0.5rem;
+
+  @each $origin, $tone in $-origins {
+    &.#{$origin} {
+      background: var(--#{$tone}-soft);
+      color: var(--#{$tone});
+    }
+  }
+}
+
+// #endregion
+
+// highlight.js classes -> theme tokens. One map, used again by print.
+$hljs: (
+  keyword: '.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-meta .hljs-keyword',
+  string: '.hljs-string, .hljs-regexp, .hljs-meta .hljs-string',
+  number: '.hljs-number',
+  comment: '.hljs-comment',
+  title: '.hljs-title, .hljs-title.function_, .hljs-attr, .hljs-attribute',
+  type: '.hljs-type, .hljs-title.class_, .hljs-meta, .hljs-tag, .hljs-name',
+);
+
+@each $token, $selector in $hljs {
+  #{$selector} {
+    color: var(--hl-#{$token});
+  }
+}
+
+.hljs-comment {
+  font-style: italic;
+}

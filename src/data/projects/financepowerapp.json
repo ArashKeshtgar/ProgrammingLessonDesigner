@@ -1,0 +1,18 @@
+{
+  "id": "financepowerapp",
+  "summary": {
+    "fa": "حسابداری یک گروه کلینیک در انتاریو: دفاتر هر کلینیک، آزمایشگاه و داروخانه، با داده از اپ‌های پلتفرم ClinicHub. کارش را به‌صورت یک canvas app در Power Apps روی Azure SQL شروع کرد.",
+    "en": "Accounting for an Ontario clinic group: the books of each clinic, the lab and the pharmacy, fed by the ClinicHub platform's applications. It started as a Power Apps canvas app over Azure SQL."
+  },
+  "refs": [
+    {
+      "project": "FinancePowerApp",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

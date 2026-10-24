@@ -1,0 +1,18 @@
+{
+  "id": "clinicreport",
+  "summary": {
+    "fa": "گزارش‌نویسی ساخت‌یافته‌ی متن‌باز برای کلینیک‌ها: مدیر برای هر خدمت (اکو، نوار قلب، هولتر، سونوگرافی) یک قالب می‌سازد، تایپیست هنگام دیکته‌ی پزشک آن را پر می‌کند و پزشک امضا می‌کند. .NET و React روی SQLite.",
+    "en": "Open-source structured reporting for clinics: an administrator designs a template per service (echo, ECG, Holter, ultrasound), a typist fills it while the physician dictates, and the physician signs. .NET and React on SQLite."
+  },
+  "refs": [
+    {
+      "project": "ClinicReport",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

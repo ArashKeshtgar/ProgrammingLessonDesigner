@@ -1,0 +1,910 @@
+{
+  "sources": [
+    "ControlPanel/docker-compose.yml",
+    "ControlPanel/compose.apps.yml",
+    "ControlPanel/deploy/vps/compose.vps.yml",
+    "ControlPanel/deploy/vps/Caddyfile",
+    "ControlPanel/deploy/vps/.env.vps.example"
+  ],
+  "projects": [
+    {
+      "id": "analytics",
+      "name": "Analytics",
+      "repo": "Analytics",
+      "inCompose": true,
+      "onVps": false,
+      "services": [
+        "analytics-api",
+        "analytics-consumer",
+        "analytics-scheduler",
+        "analytics-web"
+      ],
+      "domains": []
+    },
+    {
+      "id": "clinichub",
+      "name": "ClinicHub",
+      "repo": "ClinicHub",
+      "inCompose": false,
+      "onVps": false,
+      "services": [],
+      "domains": []
+    },
+    {
+      "id": "clinicreport",
+      "name": "ClinicReport",
+      "repo": "ClinicReport",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "clinicreport"
+      ],
+      "domains": [
+        "report.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "controlpanel",
+      "name": "Control Panel",
+      "repo": "ControlPanel",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "core-api",
+        "db-init",
+        "frontend",
+        "hisplus-adapter",
+        "ledgerdash-adapter",
+        "seed-users",
+        "socket-proxy",
+        "wutility-adapter"
+      ],
+      "domains": [
+        "panel.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "edge",
+      "name": "Caddy",
+      "repo": "ControlPanel",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "caddy"
+      ],
+      "domains": []
+    },
+    {
+      "id": "financepowerapp",
+      "name": "FinancePowerApp",
+      "repo": "FinancePowerApp",
+      "inCompose": false,
+      "onVps": false,
+      "services": [],
+      "domains": []
+    },
+    {
+      "id": "integrationhub",
+      "name": "IntegrationHub",
+      "repo": "IntegrationHub",
+      "inCompose": true,
+      "onVps": false,
+      "services": [
+        "integrationhub",
+        "integrationhub-db",
+        "integrationhub-mq",
+        "integrationhub-web"
+      ],
+      "domains": []
+    },
+    {
+      "id": "labflow",
+      "name": "LabFlow",
+      "repo": "LabFlow",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "labflow-api",
+        "labflow-web"
+      ],
+      "domains": [
+        "labflow.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "languagelessondesigner",
+      "name": "English lessons",
+      "repo": "LanguageLessonDesigner",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "lessons-sync",
+        "lessons-web"
+      ],
+      "domains": [
+        "ctx.arashkeshtgar.ca",
+        "english.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "ledgerdashboard",
+      "name": "LedgerDashboard",
+      "repo": "LedgerDashboard",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "ledgerdashboard"
+      ],
+      "domains": [
+        "ledger.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "pharmaflow",
+      "name": "PharmaFlow",
+      "repo": "PharmaFlow",
+      "inCompose": false,
+      "onVps": false,
+      "services": [],
+      "domains": []
+    },
+    {
+      "id": "programminglessondesigner",
+      "name": "Programming lessons",
+      "repo": "ProgrammingLessonDesigner",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "programming-web"
+      ],
+      "domains": [
+        "code.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "rebiomed",
+      "name": "ReBiomed",
+      "repo": "Rebiomed",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "rebiomed-api",
+        "rebiomed-mongo",
+        "rebiomed-seed",
+        "rebiomed-web"
+      ],
+      "domains": [
+        "rebiomed.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "id": "shared",
+      "name": "SQL Server",
+      "repo": "ControlPanel",
+      "inCompose": true,
+      "onVps": true,
+      "services": [
+        "sqlserver"
+      ],
+      "domains": []
+    },
+    {
+      "id": "wutility",
+      "name": "wUtility Web",
+      "repo": "wUtility",
+      "inCompose": false,
+      "onVps": false,
+      "services": [],
+      "domains": []
+    }
+  ],
+  "links": [
+    {
+      "from": "analytics",
+      "to": "clinichub",
+      "via": [
+        "analytics-api",
+        "analytics-consumer",
+        "analytics-scheduler"
+      ]
+    },
+    {
+      "from": "controlpanel",
+      "to": "ledgerdashboard",
+      "via": [
+        "ledgerdash-adapter → LedgerDashboard database"
+      ]
+    },
+    {
+      "from": "controlpanel",
+      "to": "shared",
+      "via": [
+        "core-api → sqlserver",
+        "db-init → sqlserver",
+        "hisplus-adapter → sqlserver",
+        "ledgerdash-adapter → sqlserver",
+        "seed-users → sqlserver"
+      ]
+    },
+    {
+      "from": "controlpanel",
+      "to": "wutility",
+      "via": [
+        "wutility-adapter"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "clinicreport",
+      "via": [
+        "caddy → clinicreport"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "controlpanel",
+      "via": [
+        "caddy → frontend"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "labflow",
+      "via": [
+        "caddy → labflow-web"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "languagelessondesigner",
+      "via": [
+        "caddy → lessons-sync",
+        "caddy → lessons-web"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "ledgerdashboard",
+      "via": [
+        "caddy → ledgerdashboard"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "programminglessondesigner",
+      "via": [
+        "caddy → programming-web"
+      ]
+    },
+    {
+      "from": "edge",
+      "to": "rebiomed",
+      "via": [
+        "caddy → rebiomed-web"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "clinichub",
+      "via": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "clinicreport",
+      "via": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "financepowerapp",
+      "via": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "labflow",
+      "via": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "pharmaflow",
+      "via": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "labflow",
+      "to": "shared",
+      "via": [
+        "labflow-api → sqlserver"
+      ]
+    },
+    {
+      "from": "ledgerdashboard",
+      "to": "shared",
+      "via": [
+        "ledgerdashboard → sqlserver"
+      ]
+    }
+  ],
+  "services": [
+    {
+      "id": "analytics-api",
+      "project": "analytics",
+      "kind": "service",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "Analytics API"
+    },
+    {
+      "id": "analytics-consumer",
+      "project": "analytics",
+      "kind": "service",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "Analytics events"
+    },
+    {
+      "id": "analytics-scheduler",
+      "project": "analytics",
+      "kind": "service",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "Analytics scheduler"
+    },
+    {
+      "id": "analytics-web",
+      "project": "analytics",
+      "kind": "web",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "Analytics web"
+    },
+    {
+      "id": "caddy",
+      "project": "edge",
+      "kind": "proxy",
+      "vps": true
+    },
+    {
+      "id": "clinicreport",
+      "project": "clinicreport",
+      "kind": "service",
+      "vps": true,
+      "managed": "ClinicReport"
+    },
+    {
+      "id": "core-api",
+      "project": "controlpanel",
+      "kind": "service",
+      "vps": true
+    },
+    {
+      "id": "db-init",
+      "project": "controlpanel",
+      "kind": "database",
+      "vps": true
+    },
+    {
+      "id": "frontend",
+      "project": "controlpanel",
+      "kind": "web",
+      "vps": true
+    },
+    {
+      "id": "hisplus-adapter",
+      "project": "controlpanel",
+      "kind": "service",
+      "vps": true,
+      "managed": "HIS+ adapter"
+    },
+    {
+      "id": "integrationhub",
+      "project": "integrationhub",
+      "kind": "service",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "IntegrationHub"
+    },
+    {
+      "id": "integrationhub-db",
+      "project": "integrationhub",
+      "kind": "database",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "IntegrationHub database"
+    },
+    {
+      "id": "integrationhub-mq",
+      "project": "integrationhub",
+      "kind": "queue",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "IntegrationHub RabbitMQ"
+    },
+    {
+      "id": "integrationhub-web",
+      "project": "integrationhub",
+      "kind": "web",
+      "vps": false,
+      "profiles": [
+        "local-only"
+      ],
+      "managed": "IntegrationHub web"
+    },
+    {
+      "id": "labflow-api",
+      "project": "labflow",
+      "kind": "service",
+      "vps": true,
+      "managed": "LabFlow API"
+    },
+    {
+      "id": "labflow-web",
+      "project": "labflow",
+      "kind": "web",
+      "vps": true,
+      "managed": "LabFlow web"
+    },
+    {
+      "id": "ledgerdash-adapter",
+      "project": "controlpanel",
+      "kind": "service",
+      "vps": true,
+      "managed": "LedgerDashboard adapter"
+    },
+    {
+      "id": "ledgerdashboard",
+      "project": "ledgerdashboard",
+      "kind": "service",
+      "vps": true,
+      "managed": "LedgerDashboard"
+    },
+    {
+      "id": "lessons-sync",
+      "project": "languagelessondesigner",
+      "kind": "service",
+      "vps": true,
+      "managed": "English lessons sync"
+    },
+    {
+      "id": "lessons-web",
+      "project": "languagelessondesigner",
+      "kind": "web",
+      "vps": true,
+      "managed": "English lessons"
+    },
+    {
+      "id": "programming-web",
+      "project": "programminglessondesigner",
+      "kind": "web",
+      "vps": true,
+      "managed": "Programming lessons"
+    },
+    {
+      "id": "rebiomed-api",
+      "project": "rebiomed",
+      "kind": "service",
+      "vps": true,
+      "managed": "ReBiomed API"
+    },
+    {
+      "id": "rebiomed-mongo",
+      "project": "rebiomed",
+      "kind": "database",
+      "vps": true
+    },
+    {
+      "id": "rebiomed-seed",
+      "project": "rebiomed",
+      "kind": "job",
+      "vps": false,
+      "profiles": [
+        "seed"
+      ]
+    },
+    {
+      "id": "rebiomed-web",
+      "project": "rebiomed",
+      "kind": "web",
+      "vps": true,
+      "managed": "ReBiomed web"
+    },
+    {
+      "id": "seed-users",
+      "project": "controlpanel",
+      "kind": "job",
+      "vps": true
+    },
+    {
+      "id": "socket-proxy",
+      "project": "controlpanel",
+      "kind": "proxy",
+      "vps": true
+    },
+    {
+      "id": "sqlserver",
+      "project": "shared",
+      "kind": "database",
+      "vps": true
+    },
+    {
+      "id": "wutility-adapter",
+      "project": "controlpanel",
+      "kind": "service",
+      "vps": true,
+      "managed": "wUtility adapter"
+    }
+  ],
+  "edges": [
+    {
+      "from": "analytics-api",
+      "to": "project:clinichub",
+      "labels": [
+        "ANALYTICS_OIDC_JWKS_URI"
+      ]
+    },
+    {
+      "from": "analytics-consumer",
+      "to": "analytics-api"
+    },
+    {
+      "from": "analytics-consumer",
+      "to": "project:clinichub",
+      "labels": [
+        "ANALYTICS_OIDC_JWKS_URI"
+      ]
+    },
+    {
+      "from": "analytics-scheduler",
+      "to": "analytics-api"
+    },
+    {
+      "from": "analytics-scheduler",
+      "to": "project:clinichub",
+      "labels": [
+        "ANALYTICS_OIDC_JWKS_URI"
+      ]
+    },
+    {
+      "from": "analytics-web",
+      "to": "analytics-api"
+    },
+    {
+      "from": "caddy",
+      "to": "clinicreport",
+      "labels": [
+        "report.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "frontend",
+      "labels": [
+        "panel.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "labflow-web",
+      "labels": [
+        "labflow.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "ledgerdashboard",
+      "labels": [
+        "ledger.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "lessons-sync",
+      "labels": [
+        "ctx.arashkeshtgar.ca",
+        "english.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "lessons-web",
+      "labels": [
+        "ctx.arashkeshtgar.ca",
+        "english.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "programming-web",
+      "labels": [
+        "code.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "caddy",
+      "to": "rebiomed-web",
+      "labels": [
+        "rebiomed.arashkeshtgar.ca"
+      ]
+    },
+    {
+      "from": "core-api",
+      "to": "hisplus-adapter",
+      "labels": [
+        "ADAPTER_ALLOWED_HOSTS"
+      ]
+    },
+    {
+      "from": "core-api",
+      "to": "ledgerdash-adapter",
+      "labels": [
+        "ADAPTER_ALLOWED_HOSTS"
+      ]
+    },
+    {
+      "from": "core-api",
+      "to": "seed-users"
+    },
+    {
+      "from": "core-api",
+      "to": "socket-proxy",
+      "labels": [
+        "DOCKER_PROXY_URL"
+      ]
+    },
+    {
+      "from": "core-api",
+      "to": "sqlserver",
+      "labels": [
+        "ControlPanelDb"
+      ]
+    },
+    {
+      "from": "core-api",
+      "to": "wutility-adapter",
+      "labels": [
+        "ADAPTER_ALLOWED_HOSTS"
+      ]
+    },
+    {
+      "from": "db-init",
+      "to": "hisplus-adapter",
+      "labels": [
+        "HISPLUS_ADAPTER"
+      ]
+    },
+    {
+      "from": "db-init",
+      "to": "ledgerdash-adapter",
+      "labels": [
+        "LEDGERDASH_ADAPTER"
+      ]
+    },
+    {
+      "from": "db-init",
+      "to": "sqlserver"
+    },
+    {
+      "from": "db-init",
+      "to": "wutility-adapter",
+      "labels": [
+        "WUTILITY_ADAPTER"
+      ]
+    },
+    {
+      "from": "frontend",
+      "to": "core-api"
+    },
+    {
+      "from": "hisplus-adapter",
+      "to": "db-init"
+    },
+    {
+      "from": "hisplus-adapter",
+      "to": "sqlserver",
+      "labels": [
+        "HisPlusDemo"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "integrationhub-db",
+      "labels": [
+        "integrationhub"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "integrationhub-mq",
+      "labels": [
+        "HUB_RABBITMQ_HOST"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "project:clinichub",
+      "labels": [
+        "HUB_AUTH_JWKS_URI",
+        "HUB_ROUTE_CLINICHUB_UPSTREAM"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "project:clinicreport",
+      "labels": [
+        "HUB_ROUTE_CLINICREPORT_UPSTREAM"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "project:financepowerapp",
+      "labels": [
+        "HUB_ROUTE_FINANCE_UPSTREAM"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "project:labflow",
+      "labels": [
+        "HUB_ROUTE_LABFLOW_UPSTREAM"
+      ]
+    },
+    {
+      "from": "integrationhub",
+      "to": "project:pharmaflow",
+      "labels": [
+        "HUB_ROUTE_PHARMAFLOW_UPSTREAM"
+      ]
+    },
+    {
+      "from": "integrationhub-db",
+      "to": "integrationhub",
+      "labels": [
+        "POSTGRES_DB",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_USER"
+      ]
+    },
+    {
+      "from": "integrationhub-web",
+      "to": "integrationhub"
+    },
+    {
+      "from": "labflow-api",
+      "to": "sqlserver",
+      "labels": [
+        "LabFlow"
+      ]
+    },
+    {
+      "from": "labflow-web",
+      "to": "labflow-api"
+    },
+    {
+      "from": "ledgerdash-adapter",
+      "to": "sqlserver",
+      "labels": [
+        "LedgerDashboard"
+      ]
+    },
+    {
+      "from": "ledgerdashboard",
+      "to": "sqlserver"
+    },
+    {
+      "from": "rebiomed-api",
+      "to": "rebiomed-mongo",
+      "labels": [
+        "rebiomed"
+      ]
+    },
+    {
+      "from": "rebiomed-seed",
+      "to": "rebiomed-mongo",
+      "labels": [
+        "rebiomed"
+      ]
+    },
+    {
+      "from": "rebiomed-web",
+      "to": "rebiomed-api"
+    },
+    {
+      "from": "seed-users",
+      "to": "db-init"
+    },
+    {
+      "from": "seed-users",
+      "to": "sqlserver"
+    },
+    {
+      "from": "wutility-adapter",
+      "to": "project:wutility",
+      "labels": [
+        "WUTILITY_API_BASE"
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "domain": "code.arashkeshtgar.ca",
+      "services": [
+        "programming-web"
+      ],
+      "private": false
+    },
+    {
+      "domain": "ctx.arashkeshtgar.ca",
+      "services": [
+        "lessons-sync",
+        "lessons-web"
+      ],
+      "private": true,
+      "files": true
+    },
+    {
+      "domain": "english.arashkeshtgar.ca",
+      "services": [
+        "lessons-sync",
+        "lessons-web"
+      ],
+      "private": false
+    },
+    {
+      "domain": "labflow.arashkeshtgar.ca",
+      "services": [
+        "labflow-web"
+      ],
+      "private": true
+    },
+    {
+      "domain": "ledger.arashkeshtgar.ca",
+      "services": [
+        "ledgerdashboard"
+      ],
+      "private": true
+    },
+    {
+      "domain": "panel.arashkeshtgar.ca",
+      "services": [
+        "frontend"
+      ],
+      "private": false
+    },
+    {
+      "domain": "rebiomed.arashkeshtgar.ca",
+      "services": [
+        "rebiomed-web"
+      ],
+      "private": false
+    },
+    {
+      "domain": "report.arashkeshtgar.ca",
+      "services": [
+        "clinicreport"
+      ],
+      "private": false
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "id": "controlpanel",
+  "summary": {
+    "en": "A central status portal for the portfolio: every project sits behind its own small adapter, core-api gathers their live status into one dashboard, an Admin can start and stop the containers, and an optional AI assistant answers questions about the live data through read-only tools.",
+    "fa": "درگاه مرکزی وضعیت برای همه‌ی پروژه‌ها: هر پروژه پشت یک adapter کوچک خودش است، core-api وضعیت زنده‌ی همه را در یک داشبورد جمع می‌کند، Admin می‌تواند کانتینرها را روشن و خاموش کند، و یک دستیار هوش مصنوعی اختیاری با ابزارهای فقط‌خواندنی به سؤال‌ها درباره‌ی همین داده‌ها جواب می‌دهد."
+  },
+  "en": [
+    {
+      "id": "architecture",
+      "h": "Architecture: one contract per project",
+      "p": [
+        "The Angular front end talks only to `core-api` (NestJS, TypeScript, SQL Server). `core-api` keeps a registry of projects and, for `GET /projects`, calls every adapter's `/status` in parallel.",
+        "Every adapter answers the same contract, so `core-api` and the front end never learn how a project works inside. Adding a project means adding an adapter; neither `core-api` nor the front end changes."
+      ],
+      "examples": ["contract"]
+    },
+    {
+      "id": "adapters",
+      "h": "Two adapter patterns",
+      "list": [
+        "**Proxy**: `wutility-adapter` calls a project that already has an HTTP API (wUtility Web on Azure, with an API key) and normalizes the answer.",
+        "**Direct database read**: `hisplus-adapter` reads HIS+'s tables (a WinForms app with no API), and `ledgerdash-adapter` reads LedgerDashboard's database only through its reporting views, with a login that cannot see the tables, so its numbers match the dashboard's own."
+      ]
+    },
+    {
+      "id": "containers",
+      "h": "Starting and stopping containers safely",
+      "p": [
+        "`core-api` never mounts the Docker socket. It talks to `socket-proxy` on an internal network that only it joins, and the proxy allows container list, logs, start and stop, nothing else. Only containers labelled `controlpanel.managed=true` can be controlled, every attempt is written to an insert-only audit table, and stop and restart need the service name typed back.",
+        "To put a service under the panel's control, give it three labels:"
+      ],
+      "examples": ["labels"]
+    },
+    {
+      "id": "security",
+      "h": "Security in short",
+      "list": [
+        "JWT with `Admin` and `Viewer` roles: a 15-minute access token, a 7-day refresh token signed with a separate secret, and logout that revokes every refresh token of the user.",
+        "An allowlist of adapter hosts (`ADAPTER_ALLOWED_HOSTS`): the registry is a list of URLs the server fetches, so only those hosts are allowed, and redirects are not followed.",
+        "A least-privilege database login, `controlpanel_svc`, and no committed secrets: each service refuses to start without the ones it needs.",
+        "The AI assistant is read-only by construction: no tool writes, runs SQL or takes a URL."
+      ]
+    },
+    {
+      "id": "run",
+      "h": "Run it",
+      "p": [
+        "With Docker (recommended): copy the env template, fill in every value, and start. SQL Server, the database scripts, the users, `core-api`, the adapters and the front end come up in order, on http://localhost:4100. Compose stops with a clear message when a variable is missing."
+      ],
+      "examples": ["compose"]
+    },
+    {
+      "id": "test",
+      "h": "Test it",
+      "p": [
+        "Three test suites, all run by CI on every push, together with the production builds and the Docker images."
+      ],
+      "examples": ["tests"]
+    },
+    {
+      "id": "deploy",
+      "h": "Ship it to the server",
+      "p": [
+        "From the PC, `release.ps1` checks every repo, shows the plan, asks, pushes, tags a release, then runs `deploy.sh` on the server and smoke-tests every site. `deploy.sh` alone (on the server) pulls every repo with fast-forward only, rebuilds, and waits for the health checks."
+      ],
+      "examples": ["release"]
+    },
+    {
+      "id": "troubleshoot",
+      "h": "When something is off",
+      "list": [
+        "The wUtility card says “unreachable”: its API is not in compose; start wUtility Web's API with the same `WUTILITY_API_KEY`.",
+        "Port 4100 is taken: set `FRONTEND_PORT` in `.env`; `core-api` allows that origin by itself.",
+        "A new adapter's URL is refused: add its host to `ADAPTER_ALLOWED_HOSTS` first.",
+        "A service's logs: from the Services page (Admin), or `docker compose logs -f --tail 100 <service>`."
+      ]
+    }
+  ],
+  "fa": [
+    {
+      "id": "architecture",
+      "h": "معماری: یک قرارداد برای هر پروژه",
+      "p": [
+        "رابط Angular فقط با `core-api` حرف می‌زند (NestJS، TypeScript و SQL Server). `core-api` فهرستی از پروژه‌ها دارد و برای `GET /projects` به‌طور هم‌زمان `/status` همه‌ی adapterها را صدا می‌زند.",
+        "همه‌ی adapterها به یک قرارداد جواب می‌دهند، پس `core-api` و رابط هیچ‌وقت نمی‌فهمند هر پروژه از داخل چطور کار می‌کند. اضافه کردن یک پروژه یعنی اضافه کردن یک adapter؛ نه `core-api` عوض می‌شود، نه رابط."
+      ],
+      "examples": ["contract"]
+    },
+    {
+      "id": "adapters",
+      "h": "دو الگوی adapter",
+      "list": [
+        "**پراکسی**: `wutility-adapter` پروژه‌ای را صدا می‌زند که از قبل API دارد (wUtility Web روی Azure، با کلید API) و جوابش را یکدست می‌کند.",
+        "**خواندن مستقیم از دیتابیس**: `hisplus-adapter` جدول‌های HIS+ را می‌خواند (یک اپ WinForms بدون API)، و `ledgerdash-adapter` دیتابیس LedgerDashboard را فقط از طریق viewهای گزارش‌گیری‌اش می‌خواند، با loginی که جدول‌ها را اصلاً نمی‌بیند؛ برای همین عددهایش با خود داشبورد یکی است."
+      ]
+    },
+    {
+      "id": "containers",
+      "h": "روشن و خاموش کردن امن کانتینرها",
+      "p": [
+        "`core-api` هیچ‌وقت سوکت Docker را mount نمی‌کند. با `socket-proxy` روی یک شبکه‌ی داخلی حرف می‌زند که فقط خودش به آن وصل است، و پراکسی فقط فهرست، لاگ، روشن و خاموش کردن کانتینر را اجازه می‌دهد. فقط کانتینرهایی با برچسب `controlpanel.managed=true` کنترل می‌شوند، هر تلاش در یک جدول audit فقط‌درج ثبت می‌شود، و برای stop و restart باید نام سرویس دوباره تایپ شود.",
+        "برای اینکه سرویسی زیر کنترل پنل برود، سه برچسب به آن بدهید:"
+      ],
+      "examples": ["labels"]
+    },
+    {
+      "id": "security",
+      "h": "امنیت به‌طور خلاصه",
+      "list": [
+        "JWT با نقش‌های `Admin` و `Viewer`: توکن دسترسی ۱۵ دقیقه‌ای، توکن refresh هفت‌روزه با secret جدا، و logout که همه‌ی توکن‌های refresh آن کاربر را باطل می‌کند.",
+        "فهرست مجاز میزبان‌های adapter (`ADAPTER_ALLOWED_HOSTS`): فهرست پروژه‌ها در واقع فهرست URLهایی است که سرور صدا می‌زند، پس فقط همین میزبان‌ها مجازند و redirect دنبال نمی‌شود.",
+        "login دیتابیس با کمترین دسترسی، `controlpanel_svc`، و هیچ secret‌ی در git نیست: هر سرویس بدون secretهای لازمش بالا نمی‌آید.",
+        "دستیار هوش مصنوعی از پایه فقط‌خواندنی است: هیچ ابزاری چیزی نمی‌نویسد، SQL اجرا نمی‌کند یا URL نمی‌گیرد."
+      ]
+    },
+    {
+      "id": "run",
+      "h": "اجرا",
+      "p": [
+        "با Docker (پیشنهادی): قالب env را کپی کنید، همه‌ی مقدارها را پر کنید و اجرا کنید. SQL Server، اسکریپت‌های دیتابیس، کاربرها، `core-api`، adapterها و رابط به ترتیب بالا می‌آیند، روی http://localhost:4100. اگر متغیری کم باشد، Compose با پیام روشن متوقف می‌شود."
+      ],
+      "examples": ["compose"]
+    },
+    {
+      "id": "test",
+      "h": "تست",
+      "p": [
+        "سه مجموعه تست، که CI همه را در هر push اجرا می‌کند، همراه با buildهای production و imageهای Docker."
+      ],
+      "examples": ["tests"]
+    },
+    {
+      "id": "deploy",
+      "h": "فرستادن به سرور",
+      "p": [
+        "از PC، `release.ps1` همه‌ی repoها را چک می‌کند، نقشه را نشان می‌دهد، می‌پرسد، push می‌کند، tag انتشار می‌زند، بعد `deploy.sh` را روی سرور اجرا می‌کند و همه‌ی سایت‌ها را smoke test می‌کند. خود `deploy.sh` (روی سرور) همه‌ی repoها را فقط با fast-forward می‌کشد، دوباره می‌سازد و منتظر health checkها می‌ماند."
+      ],
+      "examples": ["release"]
+    },
+    {
+      "id": "troubleshoot",
+      "h": "وقتی چیزی درست نیست",
+      "list": [
+        "کارت wUtility می‌گوید «unreachable»: API آن در compose نیست؛ API خود wUtility Web را با همان `WUTILITY_API_KEY` اجرا کنید.",
+        "پورت ۴۱۰۰ گرفته شده: `FRONTEND_PORT` را در `.env` عوض کنید؛ `core-api` آن origin را خودش مجاز می‌کند.",
+        "آدرس adapter تازه رد می‌شود: اول میزبانش را به `ADAPTER_ALLOWED_HOSTS` اضافه کنید.",
+        "لاگ یک سرویس: از صفحه‌ی Services (برای Admin)، یا `docker compose logs -f --tail 100 <service>`."
+      ]
+    }
+  ],
+  "examples": {
+    "contract": {
+      "title": { "en": "The one thing every adapter implements: GET /status", "fa": "تنها چیزی که هر adapter پیاده می‌کند: GET /status" },
+      "lang": "typescript",
+      "code": "{ healthy: boolean; summary?: string; metrics?: Record<string, string | number>; error?: string }"
+    },
+    "labels": {
+      "title": { "en": "Labels in the service's compose definition", "fa": "برچسب‌ها در تعریف compose سرویس" },
+      "lang": "yaml",
+      "code": "labels:\n  controlpanel.managed: \"true\"\n  controlpanel.service: my-service        # lowercase, digits, - _ .\n  controlpanel.display: \"My service\""
+    },
+    "compose": {
+      "title": { "en": "Start everything with Docker Compose", "fa": "اجرای همه‌چیز با Docker Compose" },
+      "lang": "bash",
+      "code": "cp .env.example .env   # fill in every value; the file shows how to generate secrets\ndocker compose up --build"
+    },
+    "tests": {
+      "title": { "en": "The three suites", "fa": "سه مجموعه تست" },
+      "lang": "bash",
+      "code": "cd services/core-api && npm test                     # Jest: auth, RBAC, SSRF allowlist, service control, assistant loop\ncd services/adapters/hisplus-adapter && npm test     # Jest: /status over real HTTP, upstream faked\ncd frontend && npm run test:ci                       # Karma: token refresh, route guard, assistant panel"
+    },
+    "release": {
+      "title": { "en": "From the PC: see the plan first, then ship", "fa": "از PC: اول نقشه را ببینید، بعد بفرستید" },
+      "lang": "powershell",
+      "code": "cd D:\\E\\Projects\\ControlPanel\n.\\deploy\\vps\\release.ps1 -DryRun   # checks and plan only\n.\\deploy\\vps\\release.ps1          # asks, then pushes, tags and deploys"
+    }
+  },
+  "refs": [
+    { "project": "ControlPanel", "file": "README.md", "line": 5, "note": { "en": "Architecture and the /status contract", "fa": "معماری و قرارداد /status" } },
+    { "project": "ControlPanel", "file": "README.md", "line": 31, "note": { "en": "The two adapter patterns", "fa": "دو الگوی adapter" } },
+    { "project": "ControlPanel", "file": "README.md", "line": 86, "note": { "en": "Service control through socket-proxy", "fa": "کنترل سرویس‌ها از طریق socket-proxy" } },
+    { "project": "ControlPanel", "file": "README.md", "line": 148, "note": { "en": "Running with Docker Compose", "fa": "اجرا با Docker Compose" } },
+    { "project": "ControlPanel", "file": "README.md", "line": 186, "note": { "en": "Tests", "fa": "تست‌ها" } },
+    { "project": "ControlPanel", "file": "deploy/vps/release.ps1", "line": 1, "note": { "en": "The release script", "fa": "اسکریپت انتشار" } }
+  ]
+}

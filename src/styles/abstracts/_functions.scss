@@ -1,0 +1,74 @@
+@use 'sass:color';
+@use 'sass:map';
+@use 'sass:math';
+@use 'tokens';
+
+// #region contrast
+// WCAG 2 relative luminance of one sRGB channel (0-255).
+@function -linear($channel) {
+  $c: math.div($channel, 255);
+
+  @if $c <= 0.04045 {
+    @return math.div($c, 12.92);
+  }
+
+  @return math.pow(math.div($c + 0.055, 1.055), 2.4);
+}
+
+@function luminance($color) {
+  $r: -linear(color.channel($color, 'red', $space: rgb));
+  $g: -linear(color.channel($color, 'green', $space: rgb));
+  $b: -linear(color.channel($color, 'blue', $space: rgb));
+
+  @return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
+}
+
+// Contrast ratio between two colours, 1 to 21.
+@function contrast($a, $b) {
+  $la: luminance($a) + 0.05;
+  $lb: luminance($b) + 0.05;
+
+  @return math.div(math.max($la, $lb), math.min($la, $lb));
+}
+
+// Stops the build when two colours that carry text are too close.
+@function require-contrast($fg, $bg, $min, $what) {
+  $ratio: contrast($fg, $bg);
+
+  @if $ratio < $min {
+    @error '#{$what}: contrast #{math.div(math.round($ratio * 100), 100)} is below #{$min}.';
+  }
+
+  @return $ratio;
+}
+
+// #endregion
+
+// A token by name; an unknown name is a build error, not a silent empty value.
+@function -lookup($map, $key, $what) {
+  @if not map.has-key($map, $key) {
+    @error 'Unknown #{$what} "#{$key}". Known: #{map.keys($map)}.';
+  }
+
+  @return map.get($map, $key);
+}
+
+@function radius($size) {
+  @return -lookup(tokens.$radius, $size, 'radius');
+}
+
+@function bp($name) {
+  @return -lookup(tokens.$breakpoints, $name, 'breakpoint');
+}
+
+@function font($name) {
+  @return -lookup(tokens.$fonts, $name, 'font');
+}
+
+@function layout($name) {
+  @return -lookup(tokens.$layout, $name, 'layout size');
+}
+
+@function print-color($name) {
+  @return -lookup(tokens.$print, $name, 'print colour');
+}

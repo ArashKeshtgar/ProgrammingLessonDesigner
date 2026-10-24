@@ -1,0 +1,78 @@
+@use '../abstracts' as *;
+
+.booklet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  margin-top: 1.5rem;
+
+  h2 {
+    border: 0;
+    margin: 0;
+  }
+
+  small {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+}
+
+.booklet-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+
+  a {
+    @include surface;
+
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    text-decoration: none;
+    color: var(--ink);
+
+    &:hover {
+      border-color: var(--accent);
+    }
+  }
+}
+
+.num {
+  background: var(--accent-soft);
+  color: var(--accent);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  flex: none;
+}
+
+.titles {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+
+  small {
+    color: var(--muted);
+  }
+}
+
+.tagchip {
+  @include chip(accent-soft, accent);
+
+  direction: ltr;
+  display: inline-block;
+}

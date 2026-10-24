@@ -1,0 +1,173 @@
+{
+  "id": "styling",
+  "summary": {
+    "en": "Sass where it earns its place: tokens with names, a build that refuses unreadable colours, a few mixins, and one set of rules for both reading directions. Every example below is the real file, read at build time.",
+    "fa": "Sass هر جا که واقعاً به کار می‌آید: tokenهای نام‌دار، buildی که رنگ ناخوانا را رد می‌کند، چند mixin، و یک مجموعه قاعده برای هر دو جهت نوشتن. همه‌ی مثال‌های پایین خود فایل واقعی‌اند که موقع build خوانده می‌شوند."
+  },
+  "en": [
+    {
+      "id": "split",
+      "h": "What Sass does, and what CSS variables do",
+      "p": [
+        "Sass runs once, at build time, and is gone when the page opens. So everything that changes while you look at the page, the dark theme and the text direction here, stays a CSS custom property. Sass writes those properties from its maps and checks them; the browser switches them."
+      ],
+      "examples": ["theme"]
+    },
+    {
+      "id": "structure",
+      "h": "Structure: modules, not one big file",
+      "list": [
+        "`abstracts/`: tokens, functions and mixins. They emit no CSS, and every partial loads them with `@use '../abstracts' as *`.",
+        "`base/`: the theme, element defaults and print. `components/`: one partial per part of the lesson pages. `projects/`: this tab.",
+        "`@use` and `@forward` only. The old `@import` is deprecated in Dart Sass, and stylelint refuses it.",
+        "Nesting stops at three levels: deeper selectors are harder to override and say more about the HTML than they should."
+      ]
+    },
+    {
+      "id": "tokens",
+      "h": "Tokens: one name per colour",
+      "p": [
+        "Colours exist in one file only, `_tokens.scss`; stylelint rejects a hex value anywhere else. The dark theme does not repeat the light one: `map.merge` takes the light map and changes only what differs."
+      ],
+      "examples": ["themes"]
+    },
+    {
+      "id": "contrast",
+      "h": "A build that refuses unreadable colours",
+      "p": [
+        "A Sass function computes the WCAG contrast ratio of two colours. Every pair that carries text is checked in both themes, and a pair below 4.5:1 stops the build with its name and its ratio. The lowest pair today is muted text on the light background, at 5.46."
+      ],
+      "examples": ["contrast"]
+    },
+    {
+      "id": "accents",
+      "h": "Each project's colour, checked too",
+      "p": [
+        "Every project has a colour in a map; a loop turns it into an `.accent-<id>` class for the map and the project pages, lifted for the dark theme. The box colour is mixed from it, so the text inside the box is checked as well: 3:1 for the outline (a graphic), 4.5:1 for the text."
+      ],
+      "examples": ["accents"]
+    },
+    {
+      "id": "mixins",
+      "h": "Mixins and one placeholder",
+      "p": [
+        "A mixin where the same few lines repeat: the bordered card (`surface`, behind every card on the site) and the breakpoints. One `%placeholder` with `@extend`, for the small buttons, because there it joins selectors instead of copying lines. Everything else is plain rules."
+      ],
+      "examples": ["surface", "below", "placeholders"]
+    },
+    {
+      "id": "maps",
+      "h": "Maps and loops instead of repeated rules",
+      "p": [
+        "Where rules differ only by a name, a map and `@each` write them: the three origin labels of a code sample, the highlight.js colours (used again by the print styles), and the arrows of the pager."
+      ],
+      "examples": ["origins"]
+    },
+    {
+      "id": "direction",
+      "h": "Persian and English with the same rules",
+      "p": [
+        "This tab switches between right to left and left to right. Only logical properties are used (`border-inline-start`, `margin-inline-start`), so the contents list and its marker move to the right side by themselves. The one thing that must know the direction, the arrow on Previous and Next, comes from a map with both."
+      ],
+      "examples": ["sidebar", "pager"]
+    },
+    {
+      "id": "checks",
+      "h": "What CI checks",
+      "list": [
+        "`npm run lint:css`: stylelint with the SCSS standard rules, plus no `@import`, no hex colours outside the tokens, no named colours.",
+        "The contrast checks above, on every build.",
+        "`npm run check`: every project in the map has a colour, and both languages of every page have the same sections."
+      ]
+    }
+  ],
+  "fa": [
+    {
+      "id": "split",
+      "h": "کار Sass و کار متغیرهای CSS",
+      "p": [
+        "Sass یک بار و فقط موقع build اجرا می‌شود و وقتی صفحه باز است دیگر وجود ندارد. پس هر چیزی که وقتی صفحه جلوی شماست عوض می‌شود، یعنی تم تاریک و جهت متن در همین تب، custom property در CSS می‌ماند. Sass این propertyها را از mapهایش می‌نویسد و چکشان می‌کند؛ مرورگر عوضشان می‌کند."
+      ],
+      "examples": ["theme"]
+    },
+    {
+      "id": "structure",
+      "h": "ساختار: ماژول‌ها، نه یک فایل بزرگ",
+      "list": [
+        "`abstracts/`: tokenها، functionها و mixinها. هیچ CSSی تولید نمی‌کنند، و هر partial آن‌ها را با `@use '../abstracts' as *` می‌آورد.",
+        "`base/`: تم، پیش‌فرض‌های عناصر و چاپ. `components/`: یک partial برای هر بخش صفحه‌های درس. `projects/`: همین تب.",
+        "فقط `@use` و `@forward`. `@import` قدیمی در Dart Sass منسوخ شده و stylelint آن را رد می‌کند.",
+        "تودرتویی حداکثر سه سطح: selectorهای عمیق‌تر سخت‌تر override می‌شوند و بیش از اندازه به ساختار HTML وابسته‌اند."
+      ]
+    },
+    {
+      "id": "tokens",
+      "h": "Tokenها: برای هر رنگ یک نام",
+      "p": [
+        "رنگ‌ها فقط در یک فایل هستند، `_tokens.scss`؛ stylelint مقدار hex را هر جای دیگر رد می‌کند. تم تاریک تم روشن را تکرار نمی‌کند: `map.merge` map روشن را می‌گیرد و فقط تفاوت‌ها را عوض می‌کند."
+      ],
+      "examples": ["themes"]
+    },
+    {
+      "id": "contrast",
+      "h": "buildی که رنگ ناخوانا را رد می‌کند",
+      "p": [
+        "یک function در Sass نسبت کنتراست WCAG دو رنگ را حساب می‌کند. هر جفت رنگی که متن رویش است در هر دو تم چک می‌شود، و جفتی زیر ۴.۵ به ۱ build را با نام و نسبتش متوقف می‌کند. کم‌کنتراست‌ترین جفت فعلی متن کم‌رنگ روی پس‌زمینه‌ی روشن است، با نسبت ۵.۴۶."
+      ],
+      "examples": ["contrast"]
+    },
+    {
+      "id": "accents",
+      "h": "رنگ هر پروژه هم چک می‌شود",
+      "p": [
+        "هر پروژه یک رنگ در یک map دارد؛ یک حلقه آن را به کلاس `.accent-<id>` برای نقشه و صفحه‌های پروژه تبدیل می‌کند، و برای تم تاریک روشن‌ترش می‌کند. رنگ جعبه از همین رنگ ترکیب می‌شود، پس متن داخل جعبه هم چک می‌شود: ۳ به ۱ برای خط دور (یک گرافیک)، ۴.۵ به ۱ برای متن."
+      ],
+      "examples": ["accents"]
+    },
+    {
+      "id": "mixins",
+      "h": "Mixinها و یک placeholder",
+      "p": [
+        "Mixin جایی که همان چند خط تکرار می‌شود: کارت حاشیه‌دار (`surface`، پشت همه‌ی کارت‌های سایت) و breakpointها. یک `%placeholder` با `@extend`، برای دکمه‌های کوچک، چون آنجا selectorها را کنار هم می‌گذارد به‌جای کپی کردن خط‌ها. بقیه قاعده‌های ساده‌اند."
+      ],
+      "examples": ["surface", "below", "placeholders"]
+    },
+    {
+      "id": "maps",
+      "h": "Map و حلقه به‌جای قاعده‌های تکراری",
+      "p": [
+        "جایی که قاعده‌ها فقط در یک نام فرق دارند، یک map و `@each` آن‌ها را می‌نویسند: سه برچسب منشأ نمونه‌کد، رنگ‌های highlight.js (که استایل چاپ هم دوباره از آن‌ها استفاده می‌کند)، و فلش‌های دکمه‌های قبلی و بعدی."
+      ],
+      "examples": ["origins"]
+    },
+    {
+      "id": "direction",
+      "h": "فارسی و انگلیسی با همان قاعده‌ها",
+      "p": [
+        "این تب بین راست‌به‌چپ و چپ‌به‌راست عوض می‌شود. فقط خاصیت‌های منطقی به کار رفته‌اند (`border-inline-start`، `margin-inline-start`)، پس فهرست کناری و نشانه‌اش خودشان به سمت راست می‌روند. تنها چیزی که باید جهت را بداند، فلش دکمه‌های قبلی و بعدی، از یک map با هر دو جهت می‌آید."
+      ],
+      "examples": ["sidebar", "pager"]
+    },
+    {
+      "id": "checks",
+      "h": "چیزهایی که CI چک می‌کند",
+      "list": [
+        "`npm run lint:css`: stylelint با قاعده‌های استاندارد SCSS، به‌اضافه‌ی ممنوعیت `@import`، رنگ hex بیرون از tokenها، و رنگ با نام.",
+        "چک‌های کنتراست بالا، در هر build.",
+        "`npm run check`: هر پروژه‌ی نقشه یک رنگ دارد، و هر دو زبانِ هر صفحه بخش‌های یکسان دارند."
+      ]
+    }
+  ],
+  "examples": {
+    "theme": { "title": { "en": "Sass writes the custom properties; the browser switches them", "fa": "Sass propertyها را می‌نویسد؛ مرورگر عوضشان می‌کند" }, "lang": "scss", "file": "styles/base/_theme.scss", "region": "theme" },
+    "themes": { "title": { "en": "The dark theme says only what differs", "fa": "تم تاریک فقط تفاوت‌ها را می‌گوید" }, "lang": "scss", "file": "styles/abstracts/_tokens.scss", "region": "themes" },
+    "contrast": { "title": { "en": "WCAG contrast in Sass, and the error that stops the build", "fa": "کنتراست WCAG در Sass، و خطایی که build را متوقف می‌کند" }, "lang": "scss", "file": "styles/abstracts/_functions.scss", "region": "contrast" },
+    "accents": { "title": { "en": "Every project colour, checked in both themes", "fa": "رنگ هر پروژه، چک‌شده در هر دو تم" }, "lang": "scss", "file": "styles/projects/_accents.scss", "region": "accents-check" },
+    "surface": { "title": { "en": "The card mixin", "fa": "mixin کارت" }, "lang": "scss", "file": "styles/abstracts/_mixins.scss", "region": "surface" },
+    "below": { "title": { "en": "A breakpoint mixin that can include paper", "fa": "mixin breakpoint که کاغذ چاپی را هم می‌گیرد" }, "lang": "scss", "file": "styles/abstracts/_mixins.scss", "region": "below" },
+    "placeholders": { "title": { "en": "The one placeholder: small buttons", "fa": "تنها placeholder: دکمه‌های کوچک" }, "lang": "scss", "file": "styles/components/_controls.scss", "region": "placeholders" },
+    "origins": { "title": { "en": "A map and @each for the origin labels", "fa": "یک map و @each برای برچسب‌های منشأ" }, "lang": "scss", "file": "styles/components/_code.scss", "region": "origins" },
+    "sidebar": { "title": { "en": "The contents list: logical properties only", "fa": "فهرست کناری: فقط خاصیت‌های منطقی" }, "lang": "scss", "file": "styles/projects/_docs.scss", "region": "sidebar" },
+    "pager": { "title": { "en": "Arrows that follow the reading direction", "fa": "فلش‌هایی که جهت خواندن را دنبال می‌کنند" }, "lang": "scss", "file": "styles/projects/_docs.scss", "region": "pager" }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "edge",
+  "summary": {
+    "fa": "تنها چیزی که رو به اینترنت است: Caddy روی پورت‌های ۸۰ و ۴۴۳، با HTTPS خودکار، هدرهای امنیتی و basic auth برای سایت‌های خصوصی. هیچ چیز دیگری روی سرور پورتی باز نمی‌کند.",
+    "en": "The only thing that faces the internet: Caddy on ports 80 and 443, with automatic HTTPS, security headers and basic auth for the private sites. Nothing else on the server publishes a port."
+  },
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "deploy/vps/Caddyfile",
+      "line": 1,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "analytics",
+  "summary": {
+    "fa": "گزارش و پیش‌بینی برای پلتفرم ClinicHub: پول گروه از FinancePowerApp و عملیات کلینیک‌ها از رویدادهای بی‌نام IntegrationHub، در یک انبار داده. FastAPI، DuckDB و React؛ فقط‌خواندنی.",
+    "en": "Reporting and forecasting for the ClinicHub platform: the group's money from FinancePowerApp and the clinics' operations from IntegrationHub's de-identified event feed, in one warehouse. FastAPI, DuckDB and React; read-only."
+  },
+  "refs": [
+    {
+      "project": "Analytics",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

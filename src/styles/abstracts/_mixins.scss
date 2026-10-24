@@ -1,0 +1,52 @@
+@use 'functions' as fn;
+
+// #region below
+// Narrower than a breakpoint. With $print, paper gets the same layout (A4 is
+// about as narrow as a phone for a table).
+@mixin below($name, $print: false) {
+  @if $print {
+    @media (max-width: fn.bp($name)), print {
+      @content;
+    }
+  } @else {
+    @media (max-width: fn.bp($name)) {
+      @content;
+    }
+  }
+}
+
+// #endregion
+
+@mixin from($name) {
+  @media (min-width: fn.bp($name) + 1px) {
+    @content;
+  }
+}
+
+// #region surface
+// The bordered card every block of the site sits in.
+@mixin surface($radius: md) {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: fn.radius($radius);
+}
+
+// #endregion
+
+// A small rounded label (tags, origins, chips).
+@mixin chip($bg, $fg) {
+  background: var(--#{$bg});
+  color: var(--#{$fg});
+  border-radius: fn.radius(pill);
+  padding: 0 0.7rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+// Keyboard focus that shows on every background, in both themes.
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}

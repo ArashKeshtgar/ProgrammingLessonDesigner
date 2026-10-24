@@ -1,0 +1,18 @@
+{
+  "id": "integrationhub",
+  "summary": {
+    "fa": "موتور واسط پلتفرم ClinicHub: سفارش‌ها، لغوها، نتیجه‌ها و اسناد مالی بین ClinicHub، LabFlow، ClinicReport، FinancePowerApp و PharmaFlow از آن رد می‌شوند، با یک لاگ واحد از هر چه فرستاده شد. PostgreSQL و RabbitMQ.",
+    "en": "The interface engine of the ClinicHub platform: orders, cancels, results and financial documents between ClinicHub, LabFlow, ClinicReport, FinancePowerApp and PharmaFlow pass through it, with one log of what was sent. PostgreSQL and RabbitMQ."
+  },
+  "refs": [
+    {
+      "project": "IntegrationHub",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

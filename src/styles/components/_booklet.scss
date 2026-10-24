@@ -1,0 +1,24 @@
+@use '../abstracts' as *;
+
+.cover {
+  padding: 2rem 0 1rem;
+
+  .kicker {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2.2rem;
+  }
+}
+
+.toc {
+  padding-inline-start: 1.4rem;
+}
+
+.booklet-lesson {
+  border-top: 2px solid var(--accent);
+  margin-top: 2rem;
+}

@@ -1,0 +1,105 @@
+@use '../abstracts' as *;
+
+// The system map (SystemMap.vue): boxes in each project's colour, outlines that
+// say where a thing runs, arrows for "talks to".
+$-where: (
+  vps: none,
+  pc: 6 4,
+  external: 2 3,
+);
+
+.system-map {
+  @include surface;
+
+  margin: 1rem 0;
+  padding: 0.8rem;
+
+  // Wide graphs scroll inside their frame, never the page.
+  overflow-x: auto;
+
+  svg {
+    display: block;
+    width: 100%;
+    min-width: 40rem;
+    height: auto;
+  }
+}
+
+.node {
+  rect {
+    fill: var(--project-soft);
+    stroke: var(--project);
+    stroke-width: 1.5;
+  }
+
+  @each $where, $dash in $-where {
+    &.is-#{$where} rect {
+      stroke-dasharray: $dash;
+    }
+  }
+
+  &.is-current rect {
+    stroke-width: 3;
+  }
+
+  &.is-link {
+    cursor: pointer;
+
+    &:hover rect,
+    &:focus-visible rect {
+      stroke-width: 3;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}
+
+.node-label {
+  fill: var(--ink);
+  font: 600 13px font(text);
+}
+
+.node-sub {
+  fill: var(--muted);
+  font: 11px font(text);
+}
+
+.arrow {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+  opacity: 0.75;
+}
+
+.arrow-head {
+  fill: var(--muted);
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+
+  li::before {
+    display: inline-block;
+    width: 1.6rem;
+    margin-inline-end: 0.4rem;
+    vertical-align: middle;
+    content: '';
+    border-top: 2px solid var(--muted);
+  }
+
+  .legend-pc::before {
+    border-top-style: dashed;
+  }
+
+  .legend-external::before {
+    border-top-style: dotted;
+  }
+}

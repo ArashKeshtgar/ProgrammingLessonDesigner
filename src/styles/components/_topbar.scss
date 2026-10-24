@@ -1,0 +1,38 @@
+@use '../abstracts' as *;
+
+.topbar {
+  background: var(--accent);
+  color: var(--accent-ink);
+
+  a {
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+
+  .brand {
+    font-weight: 600;
+    direction: ltr;
+    margin-inline-end: auto;
+  }
+
+  .tab {
+    opacity: 0.8;
+    padding: 0.1rem 0.5rem;
+    border-radius: radius(sm);
+
+    &.on {
+      opacity: 1;
+      background: color-mix(in srgb, var(--accent-ink) 18%, transparent);
+    }
+  }
+}
+
+.topbar-in {
+  max-width: layout(page);
+  margin: 0 auto;
+  padding: 0.6rem 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,18 @@
+{
+  "id": "programminglessondesigner",
+  "summary": {
+    "fa": "همین سایت: درس‌های برنامه‌نویسی روی کد واقعی پروژه‌ها، هر مفهوم کنار هم در چند زبان، و همین تب پروژه‌ها.",
+    "en": "This site: programming lessons built on real project code, each concept compared side by side, and this Projects tab."
+  },
+  "refs": [
+    {
+      "project": "ProgrammingLessonDesigner",
+      "file": "README.md",
+      "line": 1,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

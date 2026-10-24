@@ -1,0 +1,48 @@
+@use '../abstracts' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.8 font(text);
+}
+
+a {
+  color: var(--accent);
+
+  @include focus-ring;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.4;
+}
+
+h2 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+h3 {
+  margin: 1rem 0 0.2rem;
+  font-size: 1.05rem;
+}
+
+code,
+pre {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+
+button {
+  font: inherit;
+
+  @include focus-ring;
+}

@@ -1,0 +1,52 @@
+{
+  "extends": [
+    "stylelint-config-standard-scss"
+  ],
+  "rules": {
+    "at-rule-disallowed-list": [
+      [
+        "import"
+      ],
+      {
+        "message": "Use @use / @forward: @import is deprecated in Dart Sass"
+      }
+    ],
+    "color-no-hex": [
+      true,
+      {
+        "message": "Colours live in src/styles/abstracts/_tokens.scss; use a token"
+      }
+    ],
+    "color-named": "never",
+    "max-nesting-depth": [
+      3,
+      {
+        "ignoreAtRules": [
+          "include",
+          "media",
+          "each",
+          "if",
+          "else"
+        ]
+      }
+    ],
+    "selector-class-pattern": [
+      "^[a-z][a-z0-9_-]*$",
+      {
+        "message": "Class names are lowercase with - or _ (highlight.js uses function_ and class_)"
+      }
+    ],
+    "number-max-precision": 5,
+    "no-descending-specificity": null
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/styles/abstracts/_tokens.scss"
+      ],
+      "rules": {
+        "color-no-hex": null
+      }
+    }
+  ]
+}

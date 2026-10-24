@@ -1,0 +1,47 @@
+@use 'sass:color';
+@use 'sass:map';
+@use '../abstracts' as *;
+
+// One colour per project (tokens.$project-accents) becomes .accent-<id>, which
+// sets --project and --project-soft for the map boxes and the project pages.
+// In the dark theme the same hue is lifted so it still stands out.
+@function -on-dark($c) {
+  @return color.scale($c, $lightness: 42%);
+}
+
+@function -soft($c, $card, $amount) {
+  @return color.mix($c, $card, $amount);
+}
+
+// #region accents-check
+// The outline is a graphic (WCAG asks 3:1); the text in the box is body text
+// (4.5:1). The box colour is mixed from the accent, so it is checked too.
+@each $id, $c in $project-accents {
+  $card: map.get($light, card);
+  $dark-c: -on-dark($c);
+  $dark-card: map.get($dark, card);
+  $ok: require-contrast($c, $card, 3, 'project #{$id}: outline, light');
+  $ok: require-contrast($dark-c, $dark-card, 3, 'project #{$id}: outline, dark');
+  $ok: require-contrast(map.get($light, ink), -soft($c, $card, 12%), 4.5, 'project #{$id}: text on its box, light');
+  $ok: require-contrast(map.get($light, muted), -soft($c, $card, 12%), 4.5, 'project #{$id}: muted text on its box, light');
+  $ok: require-contrast(map.get($dark, ink), -soft($dark-c, $dark-card, 16%), 4.5, 'project #{$id}: text on its box, dark');
+  $ok: require-contrast(map.get($dark, muted), -soft($dark-c, $dark-card, 16%), 4.5, 'project #{$id}: muted text on its box, dark');
+}
+
+// #endregion
+
+@each $id, $c in $project-accents {
+  .accent-#{$id} {
+    --project: #{$c};
+    --project-soft: #{-soft($c, map.get($light, card), 12%)};
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @each $id, $c in $project-accents {
+    .accent-#{$id} {
+      --project: #{-on-dark($c)};
+      --project-soft: #{-soft(-on-dark($c), map.get($dark, card), 16%)};
+    }
+  }
+}

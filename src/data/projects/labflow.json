@@ -1,0 +1,18 @@
+{
+  "id": "labflow",
+  "summary": {
+    "fa": "سیستم اطلاعات آزمایشگاه برای یک آزمایشگاه محلی در انتاریو: نوبت، پذیرش، نمونه‌گیری، نتیجه، گزارش آنلاین و ایمیل، با تفسیر کمکی هوش مصنوعی که پزشک بازبینی می‌کند. ASP.NET Core و React.",
+    "en": "A lab information system for an Ontario community lab: booking, reception, collection, results, online reports and email, with AI-assisted interpretation that a clinician reviews. ASP.NET Core and React."
+  },
+  "refs": [
+    {
+      "project": "LabFlow",
+      "file": "README.md",
+      "line": 3,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

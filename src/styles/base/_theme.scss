@@ -1,0 +1,33 @@
+@use 'sass:map';
+@use '../abstracts' as *;
+
+// #region theme
+// Sass builds the custom properties; the browser switches them. Anything that
+// changes while the page is open (the theme here, the text direction in the
+// Projects tab) has to be a CSS variable: Sass is gone by then.
+@mixin -emit($theme) {
+  @each $name, $value in $theme {
+    --#{$name}: #{$value};
+  }
+}
+
+// Every pair in tokens.$contrast-pairs, in every theme. A failure stops the build.
+@each $theme-name, $theme in $themes {
+  @each $fg, $bg, $min in $contrast-pairs {
+    $ratio: require-contrast(map.get($theme, $fg), map.get($theme, $bg), $min, '#{$theme-name} theme: #{$fg} on #{$bg}');
+  }
+}
+
+:root {
+  @include -emit($light);
+
+  --mono: #{font(mono)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include -emit($dark);
+  }
+}
+
+// #endregion

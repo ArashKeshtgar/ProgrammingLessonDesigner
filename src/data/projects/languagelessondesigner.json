@@ -1,0 +1,18 @@
+{
+  "id": "languagelessondesigner",
+  "summary": {
+    "fa": "درس‌های collocation انگلیسی، با یک سرویس کوچک همگام‌سازی که پیشرفت مرور را روی سرور نگه می‌دارد. همین اپ، پشت basic auth روی ctx، خواننده‌ی خصوصی Context صاحبش است.",
+    "en": "The English collocation lessons, with a small sync service that keeps review progress on the server. The same app, behind basic auth on ctx, is the owner's private Context reader."
+  },
+  "refs": [
+    {
+      "project": "ControlPanel",
+      "file": "deploy/vps/Caddyfile",
+      "line": 46,
+      "note": {
+        "fa": "منبع این خلاصه",
+        "en": "Where this summary comes from"
+      }
+    }
+  ]
+}

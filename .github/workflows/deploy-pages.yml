@@ -124,6 +124,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run check
+      - run: npm run lint:css
       - run: npx vue-tsc -b && npx vite build --base=/${{ github.event.repository.name }}/
       - name: Print the booklets to PDF
         run: |

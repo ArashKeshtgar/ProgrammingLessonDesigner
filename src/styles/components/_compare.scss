@@ -1,0 +1,107 @@
+@use '../abstracts' as *;
+
+.compare-wrap {
+  @include surface;
+
+  overflow-x: auto;
+}
+
+.compare {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.88rem;
+
+  th,
+  td {
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    text-align: start;
+    min-width: 8rem;
+  }
+
+  thead th {
+    background: var(--accent-soft);
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  .known {
+    background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+  }
+
+  td code {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+  }
+
+  .diff {
+    color: var(--muted);
+    min-width: 13rem;
+  }
+}
+
+// Phones and paper: each row becomes a card with labelled cells, so nothing
+// scrolls or gets cut.
+@include below(phone, $print: true) {
+  .compare-wrap {
+    border: 0;
+    background: none;
+    overflow: visible;
+  }
+
+  .compare {
+    thead {
+      display: none;
+    }
+
+    &,
+    tbody,
+    tr,
+    th,
+    td {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
+    tr {
+      @include surface;
+
+      margin-bottom: 0.7rem;
+      overflow: hidden;
+    }
+
+    tbody th {
+      background: var(--accent-soft);
+    }
+
+    td {
+      display: grid;
+      grid-template-columns: 6.5rem 1fr;
+      gap: 0.5rem;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        font-family: font(text);
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-align: left;
+      }
+
+      &.diff {
+        direction: rtl;
+        text-align: right;
+        grid-template-columns: 1fr;
+
+        &::before {
+          display: none;
+        }
+      }
+    }
+  }
+}

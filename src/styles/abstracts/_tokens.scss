@@ -1,0 +1,130 @@
+@use 'sass:map';
+
+// Design tokens. The only file with raw colours: stylelint refuses a hex value
+// anywhere else, so every colour on the site has a name and a contrast check.
+
+// The light theme in full; the dark one only says what differs (map.merge below).
+$light: (
+  bg: #fafaf7,
+  card: #fff,
+  ink: #1d2327,
+  muted: #5d6870,
+  line: #dfe2e0,
+  accent: #1f4d3a,
+  accent-ink: #fff,
+  accent-soft: #e4efe9,
+  warn: #8a3b12,
+  warn-soft: #fbece3,
+  info: #24507a,
+  info-soft: #e5eef7,
+  code-bg: #14181c,
+  code-ink: #e6edf0,
+  hl-keyword: #ff9b8f,
+  hl-string: #a5d6a7,
+  hl-number: #ffcc80,
+  hl-comment: #8a969e,
+  hl-title: #90caf9,
+  hl-type: #ce93d8,
+);
+
+// #region themes
+$dark: map.merge(
+  $light,
+  (
+    bg: #12161a,
+    card: #1a2025,
+    ink: #e8ecee,
+    muted: #9aa6ad,
+    line: #2c353b,
+    accent: #7fc4a2,
+    accent-ink: #0d1f17,
+    accent-soft: #1e2d27,
+    warn: #f0a77d,
+    warn-soft: #33241c,
+    info: #9cc3ea,
+    info-soft: #1c2733,
+    code-bg: #0b0e10,
+  )
+);
+
+// #endregion
+
+$themes: (
+  light: $light,
+  dark: $dark,
+);
+
+// Text on background that must stay readable (WCAG AA: 4.5 for body text).
+// Checked for both themes at build time (base/_theme.scss).
+$contrast-pairs: (
+  (ink, bg, 4.5),
+  (ink, card, 4.5),
+  (muted, bg, 4.5),
+  (muted, card, 4.5),
+  (accent, card, 4.5),
+  (accent, accent-soft, 4.5),
+  (accent-ink, accent, 4.5),
+  (warn, warn-soft, 4.5),
+  (info, info-soft, 4.5),
+  (code-ink, code-bg, 4.5),
+  (hl-keyword, code-bg, 4.5),
+  (hl-string, code-bg, 4.5),
+  (hl-comment, code-bg, 4.5),
+  (hl-title, code-bg, 4.5),
+  (hl-type, code-bg, 4.5),
+);
+
+// Paper: black on white, and syntax colours dark enough for a laser printer.
+$print: (
+  paper: #fff,
+  ink: #000,
+  code-bg: #f5f5f5,
+  code-ink: #111,
+  code-line: #ddd,
+  keyword: #a3261b,
+  string: #2e6b30,
+  number: #8a4b00,
+  comment: #6b7378,
+  title: #1d4f8a,
+  type: #6a2c80,
+);
+
+// One colour per project, used by the map and the project pages. The ids are the
+// project ids of src/data/project-map.json; `npm run check` fails on a project
+// without a colour here.
+$project-accents: (
+  edge: #4a5560,
+  shared: #5b6470,
+  controlpanel: #2b5c8a,
+  ledgerdashboard: #8a5a12,
+  rebiomed: #a33b5a,
+  labflow: #6b4fa3,
+  languagelessondesigner: #2e7d6b,
+  programminglessondesigner: #1f4d3a,
+  clinicreport: #b2452e,
+  analytics: #2f6e9e,
+  integrationhub: #5f6b1d,
+  clinichub: #8a3b7a,
+  wutility: #3d6b4f,
+  pharmaflow: #b0335f,
+  financepowerapp: #2d6b6b,
+);
+$radius: (
+  sm: 6px,
+  md: 10px,
+  lg: 12px,
+  pill: 999px,
+);
+$breakpoints: (
+  phone: 720px,
+  tablet: 960px,
+);
+$fonts: (
+  text: ('Vazirmatn', 'Tahoma', system-ui, sans-serif),
+  mono: ('JetBrains Mono', ui-monospace, 'Consolas', 'Menlo', monospace),
+);
+$layout: (
+  page: 1000px,
+  docs: 1200px,
+  sidebar: 15rem,
+);
