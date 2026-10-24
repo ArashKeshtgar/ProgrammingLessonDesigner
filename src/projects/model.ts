@@ -138,6 +138,8 @@ export interface SqlTable {
   database: string
   // EF Core tables live in named schemas; SQL scripts here use dbo
   schema?: string
+  // SQLite: no schemas, the database is a file
+  provider?: 'sqlite'
   table: string
   file: string
   line: number

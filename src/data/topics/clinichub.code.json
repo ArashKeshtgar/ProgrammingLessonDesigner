@@ -1685,7 +1685,7 @@
         {
           "name": "Id",
           "type": "NVARCHAR(450)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -1797,7 +1797,7 @@
         {
           "name": "Id",
           "type": "NVARCHAR(450)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -1867,7 +1867,7 @@
         {
           "name": "Id",
           "type": "NVARCHAR(450)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -1937,7 +1937,7 @@
         {
           "name": "Id",
           "type": "NVARCHAR(450)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -2742,7 +2742,7 @@
         {
           "name": "Code",
           "type": "NVARCHAR(4)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -3175,7 +3175,7 @@
         {
           "name": "ServiceCode",
           "type": "NVARCHAR(5)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -3226,7 +3226,7 @@
         {
           "name": "ExternalId",
           "type": "NVARCHAR(200)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]
@@ -4287,7 +4287,7 @@
         {
           "name": "Code",
           "type": "NVARCHAR(2)",
-          "nullable": true,
+          "nullable": false,
           "notes": [
             "PK"
           ]

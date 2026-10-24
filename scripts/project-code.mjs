@@ -239,9 +239,16 @@ function aspnetEndpoints(repo, dir) {
 }
 
 // React Router: <Route path="..." element={<Page />} />, or a <Navigate> to a fixed path
-// (a target computed from the user's permissions shows as Navigate).
+// (a target computed from the user's permissions shows as Navigate). A page behind a check,
+// element={can(me, 'users.manage') ? <Users /> : <Navigate to="/" />}, is that page with the
+// permission as its guard.
 function reactRoutes(repo, file) {
   return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {
+    const guarded = /<Route path="([^"]*)" element=\{(.+?) \? <(\w+)/.exec(l)
+    if (guarded) {
+      const perm = /can\(\w+, '([^']+)'\)/.exec(guarded[2])?.[1]
+      return [{ path: guarded[1], component: guarded[3], guards: [perm ?? guarded[2]] }]
+    }
     const m = /<Route path="([^"]*)" element=\{<(\w+)/.exec(l)
     if (!m) return []
     const to = m[2] === 'Navigate' ? /\bto="([^"]*)"/.exec(l)?.[1] : undefined
@@ -252,7 +259,10 @@ function reactRoutes(repo, file) {
 // EF Core: the model snapshot of each DbContext (Migrations/*ModelSnapshot.cs), which is what
 // the migrations build. One modelBuilder.Entity block per table with its properties, keys,
 // unique indexes and checks; later blocks of the same entity add its foreign keys.
-function efTables(repo, { file, database }) {
+// SQLite ({ provider: 'sqlite' }) has no schemas and few types (TEXT, INTEGER, REAL), so a
+// column also notes its length, its collation and the C# type it holds (DateTime as TEXT...).
+function efTables(repo, { file, database, provider }) {
+  const sqlite = provider === 'sqlite'
   const src = lines(readFileSync(path.join(repo, file), 'utf-8'))
   const rel = file.replace(/\\/g, '/')
   // A chained statement from line i to the line that ends it (`;`).
@@ -288,6 +298,15 @@ function efTables(repo, { file, database }) {
       const def = /HasDefaultValue(?:Sql)?\(([^)]*)\)/.exec(st)?.[1]
       if (def) notes.push(`default ${def.replace(/^"|"$/g, '')}`)
       if (/IsConcurrencyToken\(\)/.test(st)) notes.push('concurrency')
+      if (sqlite) {
+        const clr = p[1].replace('?', '')
+        if (!['string', 'int', 'long'].includes(clr)) notes.push(clr)
+        const max = /HasMaxLength\((\d+)\)/.exec(st)?.[1]
+        if (max) notes.push(`max ${max}`)
+        const collation = /UseCollation\("(\w+)"\)/.exec(st)?.[1]
+        if (collation) notes.push(`collate ${collation}`)
+        if (/ValueGeneratedOnAdd\(\)/.test(st) && (clr === 'int' || clr === 'long')) notes.push('autoincrement')
+      }
       const c = { name: p[2], type: type.toUpperCase(), nullable, notes }
       columns.push(c)
       byName[p[2]] = c
@@ -296,7 +315,12 @@ function efTables(repo, { file, database }) {
       const id = /UseIdentityColumn\(b\.Property<\w+>\("(\w+)"\)\)/.exec(l)
       if (id) byName[id[1]]?.notes.unshift('identity')
       const key = /^\s*b\.HasKey\(([^)]*)\)/.exec(l)
-      if (key) for (const k of key[1].matchAll(/"(\w+)"/g)) byName[k[1]]?.notes.unshift('PK')
+      if (key)
+        for (const k of key[1].matchAll(/"(\w+)"/g)) {
+          byName[k[1]]?.notes.unshift('PK')
+          // A key column is never null, whether or not its CLR type says so (a string key).
+          if (byName[k[1]]) byName[k[1]].nullable = false
+        }
       const ix = /^\s*b\.HasIndex\("(\w+)"\)/.exec(l)
       if (ix && /IsUnique\(\)/.test(statement(b.start + i))) {
         const filter = /HasFilter\("([^"]*)"\)/.exec(statement(b.start + i))?.[1]
@@ -304,7 +328,16 @@ function efTables(repo, { file, database }) {
       }
     })
     const checks = [...body.join('\n').matchAll(/HasCheckConstraint\("\w+", "([^"]*)"\)/g)].map((x) => x[1])
-    tables[b.entity] = { database, schema, table, file: rel, line: b.start + at + 1, columns, denies: [], ...(checks.length ? { checks } : {}) }
+    tables[b.entity] = {
+      database,
+      ...(sqlite ? { provider } : { schema }),
+      table,
+      file: rel,
+      line: b.start + at + 1,
+      columns,
+      denies: [],
+      ...(checks.length ? { checks } : {}),
+    }
   }
 
   // Foreign keys: b.HasOne("Target", ...)...HasForeignKey("Column") in the relationship blocks.

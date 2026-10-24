@@ -1,0 +1,2220 @@
+{
+  "project": "clinicreport",
+  "repo": "ClinicReport",
+  "scan": {
+    "aspnetEndpoints": ["src/ClinicReport.Api"],
+    "efSnapshots": [
+      { "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs", "database": "clinicreport-{clinic}.db", "provider": "sqlite" }
+    ],
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "templates", "title": { "en": "Templates: the form is data", "fa": "قالب‌ها: فرم، داده است" } },
+    { "id": "reports", "title": { "en": "Writing a report", "fa": "نوشتن گزارش" } },
+    { "id": "security", "title": { "en": "Accounts and security", "fa": "حساب‌ها و امنیت" } },
+    { "id": "clinichub", "title": { "en": "With ClinicHub: sign-in, orders, results", "fa": "با ClinicHub: ورود، درخواست‌ها، جواب‌ها" } },
+    { "id": "frontend", "title": { "en": "Frontend (React)", "fa": "فرانت‌اند (React)" } },
+    { "id": "data", "title": { "en": "Data (SQLite)", "fa": "داده (SQLite)" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it: Docker or the PC", "fa": "اجرا: Docker یا PC" },
+      "files": ["README.md", "Dockerfile", "docker-compose.yml", "src/ClinicReport.Api/Properties/launchSettings.json", "src/ClinicReport.Api/Program.cs"],
+      "en": [
+        {
+          "id": "docker",
+          "h": "One container, one volume",
+          "p": [
+            "The image builds the React app with Node, publishes the API with the .NET SDK, and copies both into the ASP.NET runtime image: the API serves the page from `wwwroot`. Everything that must survive a redeploy lives in `/data`: the SQLite database (one file, or one per clinic) and the keys that encrypt the sign-in cookie.",
+            "`docker compose up -d` and then `docker compose logs clinicreport`: the first start prints a generated password for `admin`, who must choose a new one at once."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "pc",
+          "h": "On the PC, three profiles",
+          "p": [
+            "`dotnet run --project src/ClinicReport.Api` serves the API on http://localhost:5290 and `npm --prefix web run dev` the page on http://localhost:5291. The `http` profile is standalone with demo data; `connected` signs in through ClinicHub on :5301 and sends the accounting to FinancePowerApp on :5400; `via-hub` sends results and accounting through IntegrationHub on :5700 instead."
+          ],
+          "examples": ["profile"]
+        },
+        {
+          "id": "start",
+          "h": "What happens at start",
+          "p": [
+            "Standalone, the one database is migrated and seeded before the first request (roles, the bundled templates, the demo, the first admin). Connected, nothing is prepared at start: each clinic's database is created at its first sign-in."
+          ],
+          "examples": ["init"]
+        },
+        {
+          "id": "server",
+          "h": "On the server, twice",
+          "p": [
+            "Control Panel runs it twice. `clinicreport` is the public demo at report.arashkeshtgar.ca: synthetic patients, one-click demo users, wiped every day at 08:00 UTC. `clinicreport-clinic` is the clinic's own, signed in through ClinicHub with its results and accounting going through IntegrationHub. How the server and Caddy are set up is in Control Panel's topics (deploy-vps)."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "docker",
+          "h": "یک container، یک volume",
+          "p": [
+            "image اپ React را با Node build می‌کند، API را با .NET SDK publish می‌کند، و هر دو را در image زمان اجرای ASP.NET کپی می‌کند: API صفحه را از `wwwroot` سرو می‌کند. هر چیزی که باید از یک redeploy جان سالم به در ببرد در `/data` است: دیتابیس SQLite (یک فایل، یا یکی برای هر کلینیک) و کلیدهایی که کوکی ورود را رمز می‌کنند.",
+            "`docker compose up -d` و بعد `docker compose logs clinicreport`: اولین اجرا یک رمز ساخته‌شده برای `admin` چاپ می‌کند، که باید همان اول یک رمز تازه انتخاب کند."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "pc",
+          "h": "روی PC، سه profile",
+          "p": [
+            "`dotnet run --project src/ClinicReport.Api` API را روی http://localhost:5290 بالا می‌آورد و `npm --prefix web run dev` صفحه را روی http://localhost:5291. profile `http` مستقل است و داده‌ی دمو دارد؛ `connected` ورود را از ClinicHub روی :5301 می‌گیرد و حسابداری را به FinancePowerApp روی :5400 می‌فرستد؛ `via-hub` جواب‌ها و حسابداری را به‌جایش از IntegrationHub روی :5700 رد می‌کند."
+          ],
+          "examples": ["profile"]
+        },
+        {
+          "id": "start",
+          "h": "موقع بالا آمدن چه می‌شود",
+          "p": [
+            "در حالت مستقل، تنها دیتابیس قبل از اولین درخواست migrate و seed می‌شود (نقش‌ها، قالب‌های همراه، دمو، اولین admin). در حالت متصل، موقع بالا آمدن هیچ چیز آماده نمی‌شود: دیتابیس هر کلینیک در اولین ورودش ساخته می‌شود."
+          ],
+          "examples": ["init"]
+        },
+        {
+          "id": "server",
+          "h": "روی سرور، دو بار",
+          "p": [
+            "Control Panel آن را دو بار اجرا می‌کند. `clinicreport` دموی عمومی روی report.arashkeshtgar.ca است: بیمارهای ساختگی، کاربران دمو با یک کلیک، و هر روز ساعت 08:00 UTC پاک می‌شود. `clinicreport-clinic` مال خود کلینیک است، با ورود از ClinicHub، و جواب‌ها و حسابداری‌اش از IntegrationHub می‌گذرند. این‌که سرور و Caddy چطور راه افتاده‌اند در topicهای Control Panel آمده (deploy-vps)."
+          ]
+        }
+      ],
+      "examples": {
+        "image": {
+          "title": { "en": "The runtime stage of the Dockerfile", "fa": "مرحله‌ی runtime در Dockerfile" },
+          "lang": "dockerfile",
+          "file": "Dockerfile",
+          "from": "FROM mcr.microsoft.com/dotnet/aspnet:10.0",
+          "to": "ENTRYPOINT"
+        },
+        "profile": {
+          "title": { "en": "The connected profile", "fa": "profile متصل" },
+          "lang": "json",
+          "file": "src/ClinicReport.Api/Properties/launchSettings.json",
+          "from": "\"connected\": {",
+          "lines": 15
+        },
+        "init": {
+          "title": { "en": "One database now, or one per clinic later", "fa": "یک دیتابیس الان، یا یکی برای هر کلینیک بعداً" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Program.cs",
+          "from": "// Standalone: one database, prepared now.",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": { "en": "Tests and CI", "fa": "تست‌ها و CI" },
+      "files": ["tests/ClinicReport.Tests/ApiTests.cs", "tests/ClinicReport.Tests/ConnectedTests.cs", ".github/workflows/ci.yml"],
+      "en": [
+        {
+          "id": "api",
+          "h": "The real API on a throwaway database",
+          "p": [
+            "`dotnet test` runs 60+ tests. Most go over HTTP through `WebApplicationFactory`: each test class gets a fresh SQLite file in the temp folder with the demo data, signs in as a demo user and calls the API the way the page does, CSRF header included. The domain (formulas, renderer, validator) is tested on its own, without I/O."
+          ],
+          "examples": ["factory"]
+        },
+        {
+          "id": "parallel",
+          "h": "Two people typing at once",
+          "p": [
+            "The test that matters most for co-editing: a typist and a physician save ten fields of the same report at the same time. Every value must be kept, and the revision must have gone up once per save."
+          ],
+          "examples": ["parallel"]
+        },
+        {
+          "id": "connected",
+          "h": "ClinicHub, played by the test",
+          "p": [
+            "ClinicHub is another project, so the connected tests stand in for it: a fixed discovery document, a token endpoint whose answer the test chooses, and a receiver that records the results it is sent."
+          ],
+          "examples": ["fakehub"]
+        },
+        {
+          "id": "ci",
+          "h": "CI ends with the image",
+          "p": [
+            "GitHub Actions runs the .NET tests, builds and tests the page, then builds the Docker image and starts it: `/healthz` must answer, `/` must be the React page, and the log must say the echo template was imported."
+          ],
+          "examples": ["smoke"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "api",
+          "h": "API واقعی روی یک دیتابیس دورریختنی",
+          "p": [
+            "`dotnet test` بیش از ۶۰ تست اجرا می‌کند. بیشترشان از HTTP و با `WebApplicationFactory` می‌روند: هر کلاس تست یک فایل SQLite تازه در پوشه‌ی temp با داده‌ی دمو می‌گیرد، با یک کاربر دمو وارد می‌شود و API را همان‌طور صدا می‌زند که صفحه می‌زند، با هدر CSRF. domain (فرمول‌ها، renderer، validator) جدا و بدون I/O تست می‌شود."
+          ],
+          "examples": ["factory"]
+        },
+        {
+          "id": "parallel",
+          "h": "دو نفر هم‌زمان تایپ می‌کنند",
+          "p": [
+            "مهم‌ترین تست برای ویرایش هم‌زمان: یک تایپیست و یک پزشک ده فیلد یک گزارش را هم‌زمان ذخیره می‌کنند. همه‌ی مقدارها باید بمانند، و revision باید به ازای هر ذخیره یک بار بالا رفته باشد."
+          ],
+          "examples": ["parallel"]
+        },
+        {
+          "id": "connected",
+          "h": "ClinicHub، با بازی تست",
+          "p": [
+            "ClinicHub پروژه‌ی دیگری است، پس تست‌های حالت متصل جایش را می‌گیرند: یک discovery document ثابت، یک token endpoint که جوابش را تست انتخاب می‌کند، و گیرنده‌ای که جواب‌هایی را که برایش فرستاده می‌شود ثبت می‌کند."
+          ],
+          "examples": ["fakehub"]
+        },
+        {
+          "id": "ci",
+          "h": "CI با image تمام می‌شود",
+          "p": [
+            "GitHub Actions تست‌های .NET را اجرا می‌کند، صفحه را build و تست می‌کند، بعد image داکر را می‌سازد و اجرا می‌کند: `/healthz` باید جواب بدهد، `/` باید صفحه‌ی React باشد، و log باید بگوید قالب اکو import شده."
+          ],
+          "examples": ["smoke"]
+        }
+      ],
+      "examples": {
+        "factory": {
+          "title": { "en": "A fresh database per test class", "fa": "یک دیتابیس تازه برای هر کلاس تست" },
+          "lang": "csharp",
+          "file": "tests/ClinicReport.Tests/ApiTests.cs",
+          "from": "protected override void ConfigureWebHost(IWebHostBuilder builder)",
+          "lines": 8
+        },
+        "parallel": {
+          "title": { "en": "Ten fields, two people, at once", "fa": "ده فیلد، دو نفر، هم‌زمان" },
+          "lang": "csharp",
+          "file": "tests/ClinicReport.Tests/ApiTests.cs",
+          "from": "public async Task Parallel_edits_to_different_fields_are_all_kept()",
+          "lines": 15
+        },
+        "fakehub": {
+          "title": { "en": "Why ClinicHub is a stand-in", "fa": "چرا ClinicHub جانشین دارد" },
+          "lang": "csharp",
+          "file": "tests/ClinicReport.Tests/ConnectedTests.cs",
+          "from": "/// ClinicReport connected to ClinicHub.",
+          "lines": 4
+        },
+        "smoke": {
+          "title": { "en": "The smoke test", "fa": "smoke test" },
+          "lang": "yaml",
+          "file": ".github/workflows/ci.yml",
+          "from": "- name: Smoke test",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "template-model",
+      "group": "templates",
+      "title": { "en": "A template: sections, fields, phrases", "fa": "یک قالب: بخش‌ها، فیلدها، جمله‌ها" },
+      "files": ["src/ClinicReport.Api/Domain/TemplateDefinition.cs", "templates/echo-tte.json", "docs/templates.md"],
+      "en": [
+        {
+          "id": "idea",
+          "h": "The answer carries the sentence",
+          "p": [
+            "Each service the clinic reports on (echo, ECG…) is a template: JSON, not code. A template has sections; a section has fields; a choice field has options, and each option carries the sentence it adds to the report. Clicking *Stenosis → Moderate* writes “There is moderate mitral stenosis.”; *None* has an empty phrase and writes nothing.",
+            "A field can have children that appear only for some answers (`showIf`): the mean gradient and the valve area are asked only when there is stenosis."
+          ],
+          "examples": ["echo"]
+        },
+        {
+          "id": "types",
+          "h": "Six field types",
+          "p": [
+            "`choice` (one option), `multi` (several), `number` (a typed measurement), `computed` (a formula over other numbers), `text` and `textarea`. Only the first two have options, only numbers have normal ranges, only `computed` has a formula: the validator enforces each of these."
+          ],
+          "examples": ["types"]
+        },
+        {
+          "id": "ranges",
+          "h": "Normal ranges by sex",
+          "p": [
+            "A range can be one pair of bounds or a pair for men and one for women, with its source (e.g. ASE/EACVI 2015) for whoever edits the template. The patient's sex picks the bounds; when there is none for that sex, the common one is used."
+          ],
+          "examples": ["range"]
+        },
+        {
+          "id": "strict",
+          "h": "A typo fails loudly",
+          "p": [
+            "The JSON is read with `UnmappedMemberHandling.Disallow`: a misspelt `\"phrse\"` is an error, not a phrase that silently disappears from every report."
+          ],
+          "examples": ["strict"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "idea",
+          "h": "جواب، جمله‌اش را با خودش دارد",
+          "p": [
+            "هر سرویسی که کلینیک برایش گزارش می‌نویسد (اکو، ECG…) یک قالب است: JSON، نه کد. قالب بخش دارد؛ بخش فیلد دارد؛ فیلد choice گزینه دارد، و هر گزینه جمله‌ای را که به گزارش اضافه می‌کند با خودش دارد. کلیک روی *Stenosis → Moderate* می‌نویسد «There is moderate mitral stenosis.»؛ *None* جمله‌ی خالی دارد و هیچ چیز نمی‌نویسد.",
+            "یک فیلد می‌تواند فرزندانی داشته باشد که فقط برای بعضی جواب‌ها ظاهر می‌شوند (`showIf`): گرادیان میانگین و مساحت دریچه فقط وقتی پرسیده می‌شوند که تنگی باشد."
+          ],
+          "examples": ["echo"]
+        },
+        {
+          "id": "types",
+          "h": "شش نوع فیلد",
+          "p": [
+            "`choice` (یک گزینه)، `multi` (چند گزینه)، `number` (اندازه‌ی تایپ‌شده)، `computed` (فرمولی روی عددهای دیگر)، `text` و `textarea`. فقط دو تای اول گزینه دارند، فقط عددها محدوده‌ی نرمال دارند، فقط `computed` فرمول دارد: validator هر کدام را اجبار می‌کند."
+          ],
+          "examples": ["types"]
+        },
+        {
+          "id": "ranges",
+          "h": "محدوده‌ی نرمال بر اساس جنس",
+          "p": [
+            "محدوده می‌تواند یک جفت حد باشد یا یک جفت برای مردها و یکی برای زن‌ها، همراه منبعش (مثلاً ASE/EACVI 2015) برای کسی که قالب را ویرایش می‌کند. جنس بیمار حدها را انتخاب می‌کند؛ اگر برای آن جنس حدی نباشد، حد مشترک به کار می‌رود."
+          ],
+          "examples": ["range"]
+        },
+        {
+          "id": "strict",
+          "h": "غلط تایپی با صدای بلند خطا می‌دهد",
+          "p": [
+            "JSON با `UnmappedMemberHandling.Disallow` خوانده می‌شود: یک `\"phrse\"` غلط‌املایی خطاست، نه جمله‌ای که بی‌صدا از همه‌ی گزارش‌ها غیب شود."
+          ],
+          "examples": ["strict"]
+        }
+      ],
+      "examples": {
+        "echo": {
+          "title": { "en": "Mitral stenosis in the echo template", "fa": "تنگی میترال در قالب اکو" },
+          "lang": "json",
+          "file": "templates/echo-tte.json",
+          "from": "\"id\": \"ms\", \"label\": \"Stenosis\"",
+          "lines": 20
+        },
+        "types": {
+          "title": { "en": "The field types", "fa": "نوع‌های فیلد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+          "from": "public static class FieldTypes",
+          "lines": 13
+        },
+        "range": {
+          "title": { "en": "The bounds for this patient", "fa": "حدهای این بیمار" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+          "from": "public Bounds? For(string? sex) => sex switch",
+          "lines": 7
+        },
+        "strict": {
+          "title": { "en": "Unknown properties are errors", "fa": "property ناشناخته خطاست" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+          "from": "// A misspelt property",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "formula",
+      "group": "templates",
+      "title": { "en": "Calculated fields: a small, safe language", "fa": "فیلدهای محاسبه‌ای: یک زبان کوچک و امن" },
+      "files": ["src/ClinicReport.Api/Domain/Formula.cs"],
+      "en": [
+        {
+          "id": "why",
+          "h": "Arithmetic, and nothing else",
+          "p": [
+            "BSA, LV mass index, E/e′, RVSP and QTc are formulas in the template, e.g. `sqrt(height * weight / 3600)`. They are parsed by a hand-written recursive-descent parser into a tree of numbers, field names, `+ - * / ^` and six functions. There is no `eval`, no reflection and no way to call anything else, so a template from anywhere can be imported safely."
+          ]
+        },
+        {
+          "id": "grammar",
+          "h": "One method per precedence level",
+          "p": [
+            "`ParseExpression` handles `+ -`, `ParseTerm` `* /`, `ParsePower` `^`, which calls itself on its right, so `2 ^ 3 ^ 2` is 2⁹ as in mathematics. Each function's argument count is checked while parsing, so a mistake shows in the designer, not in a report."
+          ],
+          "examples": ["power", "arity"]
+        },
+        {
+          "id": "null",
+          "h": "Missing is null, not an error",
+          "p": [
+            "A half-filled report is the normal state, so a missing input, a division by zero or the square root of a negative number give null: the computed field stays empty until it can be calculated. `avg` skips blanks, so E/e′ works with only the septal e′ measured."
+          ],
+          "examples": ["binary", "avg"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "حساب، و هیچ چیز دیگر",
+          "p": [
+            "BSA، LV mass index، E/e′، RVSP و QTc فرمول‌هایی در قالب‌اند، مثلاً `sqrt(height * weight / 3600)`. یک parser دست‌نویس recursive-descent آن‌ها را به درختی از عددها، اسم فیلدها، `+ - * / ^` و شش تابع تبدیل می‌کند. `eval` نیست، reflection نیست و راهی برای صدا زدن چیز دیگری نیست، پس قالبی که از هر جا آمده باشد را می‌شود بی‌خطر import کرد."
+          ]
+        },
+        {
+          "id": "grammar",
+          "h": "یک متد برای هر سطح اولویت",
+          "p": [
+            "`ParseExpression` به `+ -` می‌رسد، `ParseTerm` به `* /`، `ParsePower` به `^`، که سمت راستش خودش را صدا می‌زند، پس `2 ^ 3 ^ 2` مثل ریاضی 2⁹ است. تعداد آرگومان هر تابع موقع parse چک می‌شود، پس اشتباه در designer دیده می‌شود، نه در گزارش."
+          ],
+          "examples": ["power", "arity"]
+        },
+        {
+          "id": "null",
+          "h": "نبودن یعنی null، نه خطا",
+          "p": [
+            "گزارش نیمه‌پر حالت عادی است، پس ورودی گم‌شده، تقسیم بر صفر یا جذر عدد منفی null می‌دهند: فیلد محاسبه‌ای تا وقتی قابل حساب نباشد خالی می‌ماند. `avg` جاهای خالی را رد می‌کند، پس E/e′ فقط با e′ سپتال هم کار می‌کند."
+          ],
+          "examples": ["binary", "avg"]
+        }
+      ],
+      "examples": {
+        "power": {
+          "title": { "en": "Power is right associative", "fa": "توان از راست شرکت‌پذیر است" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/Formula.cs",
+          "from": "// power := unary ('^' power)?",
+          "lines": 11
+        },
+        "arity": {
+          "title": { "en": "Argument counts, checked while parsing", "fa": "تعداد آرگومان‌ها، موقع parse" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/Formula.cs",
+          "from": "var (min, max) = name switch",
+          "lines": 8
+        },
+        "binary": {
+          "title": { "en": "A missing side, or a zero divisor: null", "fa": "یک طرف گم، یا مقسوم‌علیه صفر: null" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/Formula.cs",
+          "from": "private sealed record Binary(char Op, Node Left, Node Right) : Node",
+          "lines": 17
+        },
+        "avg": {
+          "title": { "en": "avg ignores blanks", "fa": "avg جای خالی را نمی‌شمارد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/Formula.cs",
+          "from": "case \"avg\":",
+          "lines": 9
+        }
+      }
+    },
+    {
+      "id": "renderer",
+      "group": "templates",
+      "title": { "en": "From answers to a written report", "fa": "از جواب‌ها به گزارش نوشته‌شده" },
+      "files": ["src/ClinicReport.Api/Domain/ReportRenderer.cs", "src/ClinicReport.Api/Domain/ReportValues.cs"],
+      "en": [
+        {
+          "id": "what",
+          "h": "Four things out of one pass",
+          "p": [
+            "`ReportRenderer.Render` takes the template, the answers and the patient (sex, height, weight, age) and returns what the referring physician reads: one paragraph per section, a table of measurements with their ranges and H/L flags, the computed values, the abnormal findings (for the conclusion draft) and the required fields still empty (which block signing). It reads nothing and writes nothing, so the same code serves the editor, the designer's preview and the signature."
+          ]
+        },
+        {
+          "id": "sentence",
+          "h": "The sentence of a field",
+          "p": [
+            "A choice field uses its option's phrase, else the field's, else `{label}: {value}.`. Placeholders are filled, extra spaces and “ .” are removed, the first letter is capitalised and a full stop added if missing, so template authors can be careless about punctuation."
+          ],
+          "examples": ["choice", "fill"]
+        },
+        {
+          "id": "hidden",
+          "h": "Hidden answers say nothing",
+          "p": [
+            "A field is visible when its parent is and its `showIf` holds. A hidden field contributes nothing even if it still holds an old answer (stenosis set back to *None* leaves the gradient typed earlier out of the report), and a hidden number feeds no formula."
+          ],
+          "examples": ["visible", "number"]
+        },
+        {
+          "id": "flags",
+          "h": "H and L",
+          "p": [
+            "A measurement below its range is flagged L, above it H; a flagged number also counts as an abnormal finding."
+          ],
+          "examples": ["flag"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "چهار چیز از یک دور",
+          "p": [
+            "`ReportRenderer.Render` قالب، جواب‌ها و بیمار (جنس، قد، وزن، سن) را می‌گیرد و چیزی را برمی‌گرداند که پزشک ارجاع‌دهنده می‌خواند: یک پاراگراف برای هر بخش، جدول اندازه‌ها با محدوده‌ها و flagهای H/L، مقدارهای محاسبه‌شده، یافته‌های غیرطبیعی (برای پیش‌نویس نتیجه‌گیری) و فیلدهای اجباری هنوز خالی (که جلوی امضا را می‌گیرند). هیچ چیز نمی‌خواند و هیچ چیز نمی‌نویسد، پس همان کد به ویرایشگر، پیش‌نمایش designer و امضا خدمت می‌کند."
+          ]
+        },
+        {
+          "id": "sentence",
+          "h": "جمله‌ی یک فیلد",
+          "p": [
+            "فیلد choice جمله‌ی گزینه‌اش را به کار می‌برد، وگرنه جمله‌ی فیلد، وگرنه `{label}: {value}.`. جای‌نگه‌دارها پر می‌شوند، فاصله‌های اضافه و « .» حذف می‌شوند، حرف اول بزرگ و اگر نقطه نباشد اضافه می‌شود، پس نویسنده‌ی قالب لازم نیست حواسش به نقطه‌گذاری باشد."
+          ],
+          "examples": ["choice", "fill"]
+        },
+        {
+          "id": "hidden",
+          "h": "جواب پنهان چیزی نمی‌گوید",
+          "p": [
+            "فیلد وقتی پیداست که والدش پیدا باشد و `showIf`اش برقرار. فیلد پنهان هیچ سهمی ندارد حتی اگر هنوز جواب قدیمی داشته باشد (تنگی‌ای که به *None* برگشته، گرادیان تایپ‌شده‌ی قبلی را از گزارش بیرون نگه می‌دارد)، و عدد پنهان به هیچ فرمولی نمی‌رسد."
+          ],
+          "examples": ["visible", "number"]
+        },
+        {
+          "id": "flags",
+          "h": "H و L",
+          "p": [
+            "اندازه‌ی کمتر از محدوده‌اش L می‌خورد و بیشتر از آن H؛ عدد flag‌خورده یافته‌ی غیرطبیعی هم حساب می‌شود."
+          ],
+          "examples": ["flag"]
+        }
+      ],
+      "examples": {
+        "choice": {
+          "title": { "en": "A choice field's sentence", "fa": "جمله‌ی فیلد choice" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+          "from": "case FieldTypes.Choice:",
+          "lines": 8
+        },
+        "fill": {
+          "title": { "en": "Tidying the sentence", "fa": "مرتب کردن جمله" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+          "from": "private static string? Fill(string phrase, FieldDef f, string value, string values)",
+          "lines": 15
+        },
+        "visible": {
+          "title": { "en": "Visible: the parent, then the condition", "fa": "پیدا: اول والد، بعد شرط" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+          "from": "var visible = (_parents.GetValueOrDefault(fieldId)",
+          "lines": 2
+        },
+        "number": {
+          "title": { "en": "A number only if its field is showing", "fa": "عدد فقط اگر فیلدش پیدا باشد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+          "from": "/// <summary>A typed or computed number, but only if its field is showing.</summary>",
+          "lines": 7
+        },
+        "flag": {
+          "title": { "en": "The flag", "fa": "flag" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+          "from": "private static string? Flag(Bounds? b, double value) =>",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "designer",
+      "group": "templates",
+      "title": { "en": "Designing, checking and publishing", "fa": "طراحی، بررسی و انتشار" },
+      "files": ["src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs", "src/ClinicReport.Api/Domain/TemplateValidator.cs", "src/ClinicReport.Api/Data/Seeding.cs", "web/src/pages/TemplateDesigner.tsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Reading the list is for anyone signed in (designers see every template; others only the active, published ones of their services). Changing anything needs `templates.design`."
+          ],
+          "data": { "kind": "endpoints", "only": ["Templates"] }
+        },
+        {
+          "id": "versions",
+          "h": "A draft, then a frozen version",
+          "p": [
+            "Editing happens on one draft version. Publishing checks it, freezes it and makes it the version new reports start on; a report keeps the version it was started on, so changing a template never rewrites an old report. The key stays the same for good, since orders and exports refer to it."
+          ],
+          "examples": ["publish", "key"]
+        },
+        {
+          "id": "validator",
+          "h": "What the validator catches",
+          "p": [
+            "Ids in the right shape and unique across the template, options only where they belong, formulas that parse and use only number fields or `height`, `weight`, `age`, no formula that ends up depending on itself, `showIf` values that are options of the field they name, placeholders limited to `{label}`, `{value}`, `{unit}`, `{values}`. A draft may be saved with problems (they come back to the designer); it cannot be published with them."
+          ],
+          "examples": ["placeholders", "cycles"]
+        },
+        {
+          "id": "bundled",
+          "h": "Bundled templates",
+          "p": [
+            "`templates/*.json` are imported at start as published version 1 when their key is not in the database yet. One that does not validate is skipped and logged, not half-imported."
+          ],
+          "examples": ["seed"]
+        },
+        {
+          "id": "fees",
+          "h": "What OHIP pays",
+          "p": [
+            "A template can carry the exam's OHIP technical and professional fees, in dollars and cents up to 10,000. Connected, they are what the accounting receives for each signed report; a template without fees sends nothing."
+          ],
+          "examples": ["fees"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "خواندن فهرست برای هر کسی است که وارد شده (designerها همه‌ی قالب‌ها را می‌بینند؛ بقیه فقط قالب‌های فعال و منتشرشده‌ی سرویس‌های خودشان را). هر تغییری `templates.design` لازم دارد."
+          ],
+          "data": { "kind": "endpoints", "only": ["Templates"] }
+        },
+        {
+          "id": "versions",
+          "h": "یک پیش‌نویس، بعد نسخه‌ی یخ‌زده",
+          "p": [
+            "ویرایش روی یک نسخه‌ی پیش‌نویس انجام می‌شود. انتشار آن را چک می‌کند، یخ می‌زند و نسخه‌ای می‌کند که گزارش‌های تازه رویش شروع می‌شوند؛ هر گزارش نسخه‌ای را که رویش شروع شده نگه می‌دارد، پس تغییر قالب هیچ‌وقت گزارش قدیمی را بازنویسی نمی‌کند. key برای همیشه ثابت می‌ماند، چون درخواست‌ها و exportها به آن اشاره می‌کنند."
+          ],
+          "examples": ["publish", "key"]
+        },
+        {
+          "id": "validator",
+          "h": "validator چه چیزهایی را می‌گیرد",
+          "p": [
+            "idهای با شکل درست و یکتا در کل قالب، گزینه فقط جایی که باید، فرمول‌هایی که parse می‌شوند و فقط از فیلدهای عددی یا `height`، `weight`، `age` استفاده می‌کنند، هیچ فرمولی که آخرش به خودش وابسته شود، مقدارهای `showIf` که گزینه‌ی فیلدی باشند که نام می‌برند، جای‌نگه‌دارها فقط `{label}`، `{value}`، `{unit}`، `{values}`. پیش‌نویس با مشکل هم ذخیره می‌شود (مشکل‌ها به designer برمی‌گردند)؛ با مشکل منتشر نمی‌شود."
+          ],
+          "examples": ["placeholders", "cycles"]
+        },
+        {
+          "id": "bundled",
+          "h": "قالب‌های همراه",
+          "p": [
+            "`templates/*.json` موقع بالا آمدن، اگر key‌شان هنوز در دیتابیس نباشد، به‌عنوان نسخه‌ی منتشرشده‌ی 1 import می‌شوند. قالبی که از validator رد نشود کنار گذاشته و log می‌شود، نه نیمه‌کاره import."
+          ],
+          "examples": ["seed"]
+        },
+        {
+          "id": "fees",
+          "h": "OHIP چقدر می‌پردازد",
+          "p": [
+            "قالب می‌تواند دستمزد فنی و حرفه‌ای OHIP آن معاینه را داشته باشد، به دلار و سنت تا 10,000. در حالت متصل، همین‌هاست که حسابداری برای هر گزارش امضاشده دریافت می‌کند؛ قالب بدون دستمزد چیزی نمی‌فرستد."
+          ],
+          "examples": ["fees"]
+        }
+      ],
+      "examples": {
+        "publish": {
+          "title": { "en": "Publishing: check, then freeze", "fa": "انتشار: چک، بعد یخ زدن" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+          "from": "admin.MapPost(\"/{id:int}/publish\"",
+          "lines": 19
+        },
+        "key": {
+          "title": { "en": "The key never changes", "fa": "key هیچ‌وقت عوض نمی‌شود" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+          "from": "if (def!.Key != t.Key)",
+          "lines": 2
+        },
+        "placeholders": {
+          "title": { "en": "Only known placeholders", "fa": "فقط جای‌نگه‌دارهای شناخته‌شده" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/TemplateValidator.cs",
+          "from": "private static void CheckPlaceholders(string? phrase, string where, List<string> errors)",
+          "lines": 8
+        },
+        "cycles": {
+          "title": { "en": "Formulas that depend on each other in a loop", "fa": "فرمول‌هایی که دوری به هم وابسته‌اند" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Domain/TemplateValidator.cs",
+          "from": "var state = new Dictionary<string, int>(); // 1 = visiting, 2 = done",
+          "to": "computed formulas refer to each other in a loop"
+        },
+        "seed": {
+          "title": { "en": "Importing the bundled templates", "fa": "import قالب‌های همراه" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/Seeding.cs",
+          "from": "foreach (var path in Directory.GetFiles(directory, \"*.json\").Order())",
+          "lines": 22
+        },
+        "fees": {
+          "title": { "en": "Dollars and cents, or none", "fa": "دلار و سنت، یا هیچ" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+          "from": "static bool Bad(decimal? v)",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "report-service",
+      "group": "reports",
+      "title": { "en": "Every change through one service", "fa": "هر تغییر از یک سرویس" },
+      "files": ["src/ClinicReport.Api/Endpoints/ReportEndpoints.cs", "src/ClinicReport.Api/Reports/ReportService.cs", "src/ClinicReport.Api/Program.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Every `/{id}` route goes through two filters: the report must belong to a service the user may work on (otherwise 404, as if it did not exist), and a restricted one must have been opened by this user (see Restricted items)."
+          ],
+          "data": { "kind": "endpoints", "only": ["Reports"] },
+          "examples": ["filter"]
+        },
+        {
+          "id": "one",
+          "h": "One place for the rules",
+          "p": [
+            "The endpoints only pass the request to `ReportService`. Every change, whatever it is (answers, an *All normal* preset, the header, the conclusion, the signature), runs the same steps: load, refuse if signed, apply, record each changed field with who and when in `Changes`, raise the revision, save, broadcast to everyone who has the report open."
+          ]
+        },
+        {
+          "id": "concurrency",
+          "h": "Two people, no lost answers",
+          "p": [
+            "`Revision` is a concurrency token: a save whose revision someone else has already raised fails. The service then forgets what it loaded and applies the same change to the newer report, up to five times. Two people typing in different fields never overwrite each other, because each save only sets the fields it carries."
+          ],
+          "examples": ["mutate", "token"]
+        },
+        {
+          "id": "normalize",
+          "h": "Answers must fit the template",
+          "p": [
+            "A choice must be one of its options, a multi a list of them (kept in template order, so the sentence reads the same however it was clicked), a number a number below a million, a text at most 4,000 characters; a calculated field cannot be typed at all. Breaking a rule throws `ReportRuleException`, which `Program.cs` turns into a ProblemDetails with its status."
+          ],
+          "examples": ["multi", "handler"]
+        },
+        {
+          "id": "sign",
+          "h": "Signing freezes it",
+          "p": [
+            "Only `reports.sign` signs. Required fields and a conclusion are checked first (422); then the rendered text is saved as it is (`SignedSnapshotJson`), so the signed report reads the same even if the code that renders it changes later. After that only addenda can be added, each one also logged."
+          ],
+          "examples": ["sign", "addendum"]
+        },
+        {
+          "id": "tables",
+          "h": "Tables",
+          "data": { "kind": "tables", "only": ["Reports", "Changes", "Addenda"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "هر route با `/{id}` از دو filter رد می‌شود: گزارش باید مال سرویسی باشد که کاربر اجازه‌ی کار رویش را دارد (وگرنه 404، انگار وجود ندارد)، و گزارش محدودشده باید قبلاً به دست همین کاربر باز شده باشد (بخش موارد محدودشده را ببینید)."
+          ],
+          "data": { "kind": "endpoints", "only": ["Reports"] },
+          "examples": ["filter"]
+        },
+        {
+          "id": "one",
+          "h": "یک جا برای قانون‌ها",
+          "p": [
+            "endpointها فقط درخواست را به `ReportService` می‌دهند. هر تغییری، هر چه باشد (جواب‌ها، preset *All normal*، سربرگ، نتیجه‌گیری، امضا)، همان قدم‌ها را می‌رود: بارگذاری، رد اگر امضا شده، اعمال، ثبت هر فیلد عوض‌شده با چه کسی و کی در `Changes`، بالا بردن revision، ذخیره، و پخش برای همه‌ی کسانی که گزارش را باز کرده‌اند."
+          ]
+        },
+        {
+          "id": "concurrency",
+          "h": "دو نفر، بدون جواب گم‌شده",
+          "p": [
+            "`Revision` یک concurrency token است: ذخیره‌ای که revisionش را کس دیگری قبلاً بالا برده شکست می‌خورد. سرویس آن‌وقت چیزی را که بارگذاری کرده فراموش می‌کند و همان تغییر را روی گزارش تازه‌تر اعمال می‌کند، تا پنج بار. دو نفری که در فیلدهای مختلف تایپ می‌کنند هیچ‌وقت روی هم نمی‌نویسند، چون هر ذخیره فقط فیلدهایی را که همراه دارد تنظیم می‌کند."
+          ],
+          "examples": ["mutate", "token"]
+        },
+        {
+          "id": "normalize",
+          "h": "جواب‌ها باید با قالب جور باشند",
+          "p": [
+            "choice باید یکی از گزینه‌هایش باشد، multi فهرستی از آن‌ها (به ترتیب قالب نگه داشته می‌شود، پس جمله هر طور کلیک شده باشد یکی است)، number عددی کمتر از یک میلیون، text حداکثر 4,000 کاراکتر؛ فیلد محاسبه‌ای اصلاً تایپ نمی‌شود. شکستن یک قانون `ReportRuleException` می‌اندازد، که `Program.cs` آن را به ProblemDetails با status خودش تبدیل می‌کند."
+          ],
+          "examples": ["multi", "handler"]
+        },
+        {
+          "id": "sign",
+          "h": "امضا آن را یخ می‌زند",
+          "p": [
+            "فقط `reports.sign` امضا می‌کند. اول فیلدهای اجباری و نتیجه‌گیری چک می‌شوند (422)؛ بعد متن render‌شده همان‌طور که هست ذخیره می‌شود (`SignedSnapshotJson`)، پس گزارش امضاشده حتی اگر کدی که آن را render می‌کند بعداً عوض شود همان‌طور خوانده می‌شود. بعد از آن فقط addendum می‌شود اضافه کرد، که هر کدام هم ثبت می‌شود."
+          ],
+          "examples": ["sign", "addendum"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["Reports", "Changes", "Addenda"] }
+        }
+      ],
+      "examples": {
+        "filter": {
+          "title": { "en": "The filtered group", "fa": "گروه filter‌دار" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+          "from": "// Every /{id} route: the report must exist",
+          "lines": 3
+        },
+        "mutate": {
+          "title": { "en": "Save, or start over from their version", "fa": "ذخیره، یا از نسخه‌ی آن‌ها از نو" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "for (var attempt = 1; ; attempt++)",
+          "to": "continue;"
+        },
+        "token": {
+          "title": { "en": "The concurrency token", "fa": "concurrency token" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/ClinicReportDbContext.cs",
+          "from": "e.Property(r => r.Revision).IsConcurrencyToken();",
+          "lines": 1
+        },
+        "multi": {
+          "title": { "en": "A multi answer, in template order", "fa": "جواب multi، به ترتیب قالب" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "case FieldTypes.Multi:",
+          "lines": 9
+        },
+        "handler": {
+          "title": { "en": "A broken rule becomes ProblemDetails", "fa": "قانون شکسته ProblemDetails می‌شود" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Program.cs",
+          "from": "internal sealed class ReportRuleHandler",
+          "lines": 15
+        },
+        "sign": {
+          "title": { "en": "Before and at the signature", "fa": "قبل از امضا و هنگام آن" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "if (rendered.MissingRequired.Count > 0)",
+          "lines": 8
+        },
+        "addendum": {
+          "title": { "en": "Addenda only after signing", "fa": "addendum فقط بعد از امضا" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "if (report.Status != ReportStatus.Final)",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "live",
+      "group": "reports",
+      "title": { "en": "Live co-editing (SignalR)", "fa": "ویرایش هم‌زمان زنده (SignalR)" },
+      "files": ["src/ClinicReport.Api/Reports/ReportHub.cs", "web/src/live.ts", "web/src/pages/ReportEditor.tsx"],
+      "en": [
+        {
+          "id": "split",
+          "h": "Changes over REST, news over the hub",
+          "p": [
+            "The typist and the physician work on the same report during the exam. Changes still go through the REST API, so they are checked and logged in one place; the SignalR hub only carries who is in the report, which field each one is in, and the new report after every save."
+          ],
+          "examples": ["hub", "broadcast"]
+        },
+        {
+          "id": "presence",
+          "h": "Presence, in memory",
+          "p": [
+            "Joining checks the report exists and belongs to one of the user's services, then adds the connection to the report's group. Who is where is kept in memory: one API instance serves a clinic. Several instances would need a SignalR backplane and a shared store."
+          ],
+          "examples": ["join"]
+        },
+        {
+          "id": "client",
+          "h": "The page ignores its own echo",
+          "p": [
+            "Every tab sends a random `X-Client-Id`; the broadcast carries the id of the tab that made the change, and that tab skips it. After a reconnection the page joins again and reloads the report, since changes may have been missed while offline."
+          ],
+          "examples": ["receive", "reconnect"]
+        },
+        {
+          "id": "typing",
+          "h": "Typing is never overwritten",
+          "p": [
+            "What is typed but not yet sent is kept apart and wins over whatever arrives from the server until it has been sent; an older answer overtaken by a newer revision is dropped. A click saves at once, typing after half a second's pause."
+          ],
+          "examples": ["accept", "debounce"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "split",
+          "h": "تغییرها از REST، خبرها از hub",
+          "p": [
+            "تایپیست و پزشک در طول معاینه روی یک گزارش کار می‌کنند. تغییرها باز هم از REST API می‌روند، پس در یک جا چک و ثبت می‌شوند؛ hub SignalR فقط این را می‌برد که چه کسی در گزارش است، هر کس در کدام فیلد است، و گزارش تازه بعد از هر ذخیره."
+          ],
+          "examples": ["hub", "broadcast"]
+        },
+        {
+          "id": "presence",
+          "h": "حضور، در حافظه",
+          "p": [
+            "پیوستن چک می‌کند که گزارش وجود دارد و مال یکی از سرویس‌های کاربر است، بعد connection را به گروه گزارش اضافه می‌کند. این‌که چه کسی کجاست در حافظه نگه داشته می‌شود: یک نمونه‌ی API به یک کلینیک خدمت می‌کند. چند نمونه یک SignalR backplane و یک store مشترک لازم دارد."
+          ],
+          "examples": ["join"]
+        },
+        {
+          "id": "client",
+          "h": "صفحه پژواک خودش را نادیده می‌گیرد",
+          "p": [
+            "هر tab یک `X-Client-Id` تصادفی می‌فرستد؛ پخش، id تبی را که تغییر را داده همراه دارد و همان tab از آن می‌گذرد. بعد از وصل شدن دوباره، صفحه دوباره می‌پیوندد و گزارش را از نو بار می‌کند، چون ممکن است در قطعی تغییرهایی از دست رفته باشد."
+          ],
+          "examples": ["receive", "reconnect"]
+        },
+        {
+          "id": "typing",
+          "h": "تایپ هیچ‌وقت رونویسی نمی‌شود",
+          "p": [
+            "چیزی که تایپ شده ولی هنوز فرستاده نشده جدا نگه داشته می‌شود و تا فرستاده نشده بر هر چه از سرور می‌آید غلبه می‌کند؛ جواب قدیمی‌تری که revision تازه‌تری از آن جلو زده دور ریخته می‌شود. کلیک همان لحظه ذخیره می‌شود، تایپ بعد از نیم ثانیه مکث."
+          ],
+          "examples": ["accept", "debounce"]
+        }
+      ],
+      "examples": {
+        "hub": {
+          "title": { "en": "The hub, for readers of reports", "fa": "hub، برای خواننده‌های گزارش" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportHub.cs",
+          "from": "/// Live channel for an open report.",
+          "lines": 5
+        },
+        "broadcast": {
+          "title": { "en": "After every save", "fa": "بعد از هر ذخیره" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "private Task BroadcastAsync(ReportDto dto, string? clientId, CancellationToken ct) =>",
+          "lines": 2
+        },
+        "join": {
+          "title": { "en": "Joining a report", "fa": "پیوستن به یک گزارش" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportHub.cs",
+          "from": "public async Task JoinReport(int reportId)",
+          "lines": 15
+        },
+        "receive": {
+          "title": { "en": "Skipping its own change", "fa": "رد شدن از تغییر خودش" },
+          "lang": "typescript",
+          "file": "web/src/live.ts",
+          "from": "conn.on('reportChanged'",
+          "lines": 4
+        },
+        "reconnect": {
+          "title": { "en": "Back online: join and reload", "fa": "برگشت به خط: پیوستن و بارگذاری دوباره" },
+          "lang": "typescript",
+          "file": "web/src/live.ts",
+          "from": "conn.onreconnected(async () => {",
+          "lines": 5
+        },
+        "accept": {
+          "title": { "en": "Taking the server's report, keeping local typing", "fa": "گرفتن گزارش سرور، نگه داشتن تایپ محلی" },
+          "lang": "typescript",
+          "file": "web/src/pages/ReportEditor.tsx",
+          "from": "/** Takes a report from the server",
+          "lines": 14
+        },
+        "debounce": {
+          "title": { "en": "Clicks now, typing after a pause", "fa": "کلیک فوری، تایپ بعد از مکث" },
+          "lang": "typescript",
+          "file": "web/src/pages/ReportEditor.tsx",
+          "from": "// Clicks save at once; typing waits for a pause.",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "patients",
+      "group": "reports",
+      "title": { "en": "Patients", "fa": "بیمارها" },
+      "files": ["src/ClinicReport.Api/Endpoints/PatientEndpoints.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "A minimal register",
+          "p": [
+            "Just enough for the app to work on its own: search by MRN or name, add, correct. Reading needs any of view reports, start reports or manage patients (the `patients.read` policy); changing needs `patients.manage`. Connected, patients arrive with ClinicHub's orders instead, and ClinicHub's demographics win."
+          ],
+          "data": { "kind": "endpoints", "only": ["Patients"] },
+          "examples": ["read", "plausible"]
+        },
+        {
+          "id": "merge",
+          "h": "Two records become one",
+          "p": [
+            "When ClinicHub merges two charts it sends the merged MRN with a link to the surviving one. Known only by the old MRN here, the patient takes the new one; known by both, the old one's reports, orders and log entries move to the survivor and the old record is removed."
+          ],
+          "examples": ["merge"]
+        },
+        {
+          "id": "table",
+          "h": "Table",
+          "data": { "kind": "tables", "only": ["Patients"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "یک فهرست حداقلی",
+          "p": [
+            "فقط به اندازه‌ای که اپ خودش تنها کار کند: جست‌وجو با MRN یا اسم، اضافه کردن، اصلاح. خواندن یکی از مجوزهای دیدن گزارش، شروع گزارش یا مدیریت بیمار را لازم دارد (policy `patients.read`)؛ تغییر `patients.manage` را. در حالت متصل، بیمارها به‌جایش با درخواست‌های ClinicHub می‌آیند، و مشخصات ClinicHub برنده است."
+          ],
+          "data": { "kind": "endpoints", "only": ["Patients"] },
+          "examples": ["read", "plausible"]
+        },
+        {
+          "id": "merge",
+          "h": "دو پرونده یکی می‌شوند",
+          "p": [
+            "وقتی ClinicHub دو پرونده را ادغام می‌کند، MRN ادغام‌شده را با لینکی به پرونده‌ی ماندگار می‌فرستد. اگر این‌جا بیمار فقط با MRN قدیمی شناخته شده باشد، MRN تازه را می‌گیرد؛ اگر با هر دو، گزارش‌ها، درخواست‌ها و ردیف‌های log قدیمی به ماندگار منتقل و پرونده‌ی قدیمی حذف می‌شود."
+          ],
+          "examples": ["merge"]
+        },
+        {
+          "id": "table",
+          "h": "جدول",
+          "data": { "kind": "tables", "only": ["Patients"] }
+        }
+      ],
+      "examples": {
+        "read": {
+          "title": { "en": "Reading patients: any of three permissions", "fa": "خواندن بیمارها: یکی از سه مجوز" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "auth.AddPolicy(PatientsRead",
+          "lines": 2
+        },
+        "plausible": {
+          "title": { "en": "A plausible date of birth", "fa": "تاریخ تولد معقول" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+          "from": "var today = DateOnly.FromDateTime(clock.GetLocalNow().DateTime);",
+          "lines": 4
+        },
+        "merge": {
+          "title": { "en": "Moving to the surviving record", "fa": "انتقال به پرونده‌ی ماندگار" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var old = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == merged);",
+          "lines": 14
+        }
+      }
+    },
+    {
+      "id": "accounts",
+      "group": "security",
+      "title": { "en": "Standalone accounts and sign-in", "fa": "حساب‌های مستقل و ورود" },
+      "files": ["src/ClinicReport.Api/Endpoints/AuthEndpoints.cs", "src/ClinicReport.Api/Auth/AuthSetup.cs", "src/ClinicReport.Api/Data/Seeding.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "Standalone, ClinicReport has its own accounts. Connected to ClinicHub, the password and two-factor endpoints answer 409 (“managed in ClinicHub”) and `/sso/*` take over."
+          ],
+          "data": { "kind": "endpoints", "only": ["Auth"] }
+        },
+        {
+          "id": "cookie",
+          "h": "A cookie that holds almost nothing",
+          "p": [
+            "The cookie (HttpOnly, SameSite=Strict, 12 hours sliding) holds the user id and a security stamp. Roles, permissions and services are read from the database on every request, so an administrator's change applies at once; a new stamp (password reset, deactivation, *sign out everywhere*) ends every other session. An API answers 401 and 403; it never redirects to a login page."
+          ]
+        },
+        {
+          "id": "guess",
+          "h": "Against guessing",
+          "p": [
+            "Five wrong passwords lock the account for 15 minutes; sign-in is limited to 10 attempts a minute per IP address. The password is hashed even for a user name that does not exist, so the time taken does not reveal which names are real."
+          ],
+          "examples": ["lockout", "timing", "rate"]
+        },
+        {
+          "id": "first",
+          "h": "The first sign-in",
+          "p": [
+            "A brand-new database gets one `admin` with a generated password printed in the log (or `Bootstrap:AdminPassword`). That account, and everyone an administrator adds, must choose their own password first: until then the only endpoints that answer are `/api/auth` and `/api/settings`. A password needs 10 characters, four different ones, and not the user name."
+          ],
+          "examples": ["bootstrap", "pending", "password"]
+        },
+        {
+          "id": "table",
+          "h": "Table",
+          "data": { "kind": "tables", "only": ["Users"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "در حالت مستقل، ClinicReport حساب‌های خودش را دارد. وقتی به ClinicHub وصل است، endpointهای رمز و دومرحله‌ای 409 («در ClinicHub مدیریت می‌شود») می‌دهند و `/sso/*` کار را به دست می‌گیرند."
+          ],
+          "data": { "kind": "endpoints", "only": ["Auth"] }
+        },
+        {
+          "id": "cookie",
+          "h": "کوکی‌ای که تقریباً هیچ چیز ندارد",
+          "p": [
+            "کوکی (HttpOnly، SameSite=Strict، ۱۲ ساعت لغزان) id کاربر و یک security stamp را دارد. نقش‌ها، مجوزها و سرویس‌ها در هر درخواست از دیتابیس خوانده می‌شوند، پس تغییری که admin می‌دهد همان لحظه اعمال می‌شود؛ stamp تازه (ریست رمز، غیرفعال کردن، *خروج از همه جا*) همه‌ی session‌های دیگر را تمام می‌کند. API جواب 401 و 403 می‌دهد؛ هیچ‌وقت به صفحه‌ی ورود redirect نمی‌کند."
+          ]
+        },
+        {
+          "id": "guess",
+          "h": "در برابر حدس زدن",
+          "p": [
+            "پنج رمز غلط حساب را ۱۵ دقیقه قفل می‌کند؛ ورود به ۱۰ تلاش در دقیقه برای هر IP محدود است. رمز حتی برای نام کاربری‌ای که وجود ندارد هم hash می‌شود، پس زمانی که طول می‌کشد لو نمی‌دهد کدام نام‌ها واقعی‌اند."
+          ],
+          "examples": ["lockout", "timing", "rate"]
+        },
+        {
+          "id": "first",
+          "h": "اولین ورود",
+          "p": [
+            "یک دیتابیس تازه یک `admin` می‌گیرد با رمزی ساخته‌شده که در log چاپ می‌شود (یا `Bootstrap:AdminPassword`). آن حساب، و هر کسی که admin اضافه می‌کند، اول باید رمز خودش را انتخاب کند: تا آن موقع تنها endpointهایی که جواب می‌دهند `/api/auth` و `/api/settings` هستند. رمز ۱۰ کاراکتر می‌خواهد، چهار کاراکتر متفاوت، و نه نام کاربری."
+          ],
+          "examples": ["bootstrap", "pending", "password"]
+        },
+        {
+          "id": "table",
+          "h": "جدول",
+          "data": { "kind": "tables", "only": ["Users"] }
+        }
+      ],
+      "examples": {
+        "lockout": {
+          "title": { "en": "A locked account", "fa": "حساب قفل‌شده" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "if (user?.LockoutEndUtc is { } until",
+          "lines": 6
+        },
+        "timing": {
+          "title": { "en": "The same work for an unknown name", "fa": "همان کار برای نام ناشناخته" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "// Hash even when the user does not exist",
+          "lines": 4
+        },
+        "rate": {
+          "title": { "en": "Sign-ins per minute per address", "fa": "ورود در دقیقه برای هر آدرس" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Program.cs",
+          "from": "var loginsPerMinute",
+          "lines": 8
+        },
+        "bootstrap": {
+          "title": { "en": "The first admin", "fa": "اولین admin" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/Seeding.cs",
+          "from": "var password = config[\"Bootstrap:AdminPassword\"];",
+          "lines": 4
+        },
+        "pending": {
+          "title": { "en": "Nothing else until the password is chosen", "fa": "هیچ چیز دیگر تا رمز انتخاب شود" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "public static IApplicationBuilder UsePendingActionGate(this IApplicationBuilder app) => app.Use(async (ctx, next) =>",
+          "lines": 13
+        },
+        "password": {
+          "title": { "en": "What a password needs", "fa": "رمز چه لازم دارد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+          "from": "public static string? PasswordProblem(string? password, string? userName = null) =>",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "totp",
+      "group": "security",
+      "title": { "en": "Two-factor sign-in (TOTP)", "fa": "ورود دومرحله‌ای (TOTP)" },
+      "files": ["src/ClinicReport.Api/Auth/Totp.cs", "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs", "web/src/components/TwoFactorSetup.tsx"],
+      "en": [
+        {
+          "id": "rfc",
+          "h": "RFC 6238, in 80 lines",
+          "p": [
+            "The codes any authenticator app shows: HMAC-SHA1 of the number of 30-second steps since 1970, cut to 6 digits. No library: a new secret is 20 random bytes in base32, and the `otpauth://` link the setup page turns into a QR code carries it."
+          ],
+          "examples": ["code", "uri"]
+        },
+        {
+          "id": "verify",
+          "h": "A code works once",
+          "p": [
+            "A code is accepted for the current step or one either side (a phone's clock is rarely exact), compared in constant time. The step it matched is saved, and steps at or before it are refused, so a code seen over someone's shoulder cannot be used again."
+          ],
+          "examples": ["verify"]
+        },
+        {
+          "id": "secret",
+          "h": "The secret is encrypted",
+          "p": [
+            "The secret is stored encrypted with ASP.NET Data Protection (the same keys as the cookie, in `/data/keys` in the container). Turning two-factor off needs the password, and is refused when one of the user's roles requires it."
+          ],
+          "examples": ["protect"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "rfc",
+          "h": "RFC 6238، در ۸۰ خط",
+          "p": [
+            "همان کدهایی که هر اپ authenticator نشان می‌دهد: HMAC-SHA1 تعداد گام‌های ۳۰ ثانیه‌ای از ۱۹۷۰، بریده به ۶ رقم. بدون کتابخانه: secret تازه ۲۰ بایت تصادفی در base32 است، و لینک `otpauth://` که صفحه‌ی راه‌اندازی آن را QR code می‌کند آن را با خودش دارد."
+          ],
+          "examples": ["code", "uri"]
+        },
+        {
+          "id": "verify",
+          "h": "یک کد یک بار کار می‌کند",
+          "p": [
+            "کد برای گام فعلی یا یک گام این‌ور و آن‌ورش قبول می‌شود (ساعت گوشی کم پیش می‌آید دقیق باشد)، با مقایسه‌ی constant-time. گامی که جور شده ذخیره می‌شود، و گام‌های تا آن رد می‌شوند، پس کدی که کسی از پشت شانه دیده دوباره به کار نمی‌آید."
+          ],
+          "examples": ["verify"]
+        },
+        {
+          "id": "secret",
+          "h": "secret رمز شده است",
+          "p": [
+            "secret با ASP.NET Data Protection رمزشده ذخیره می‌شود (همان کلیدهای کوکی، در container در `/data/keys`). خاموش کردن دومرحله‌ای رمز عبور لازم دارد، و وقتی یکی از نقش‌های کاربر آن را اجباری کرده رد می‌شود."
+          ],
+          "examples": ["protect"]
+        }
+      ],
+      "examples": {
+        "code": {
+          "title": { "en": "The code for one step", "fa": "کد یک گام" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/Totp.cs",
+          "from": "public static string Code(string secret, long step)",
+          "lines": 10
+        },
+        "uri": {
+          "title": { "en": "The link for the QR code", "fa": "لینک QR code" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/Totp.cs",
+          "from": "public static string OtpAuthUri(string issuer, string account, string secret) =>",
+          "lines": 3
+        },
+        "verify": {
+          "title": { "en": "One step either side, never twice", "fa": "یک گام این‌ور و آن‌ور، هیچ‌وقت دو بار" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/Totp.cs",
+          "from": "public static long? Verify(string secret, string? code, DateTimeOffset now, long lastUsedStep)",
+          "lines": 15
+        },
+        "protect": {
+          "title": { "en": "Unprotecting the secret at sign-in", "fa": "باز کردن secret موقع ورود" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret!);",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "permissions",
+      "group": "security",
+      "title": { "en": "Permissions, roles and services", "fa": "مجوزها، نقش‌ها و سرویس‌ها" },
+      "files": ["src/ClinicReport.Api/Auth/Permissions.cs", "src/ClinicReport.Api/Auth/AuthSetup.cs", "src/ClinicReport.Api/Endpoints/UserEndpoints.cs"],
+      "en": [
+        {
+          "id": "eight",
+          "h": "Eight permissions, roles built from them",
+          "p": [
+            "Endpoints check permissions, never role names, so a clinic can shape its own roles (“Echo typist”, “Reading physician”) without code. Administrator, Physician and Typist come built in; Administrator always has every permission, including one a later version adds. A role can require two-factor sign-in."
+          ],
+          "examples": ["catalog", "access"]
+        },
+        {
+          "id": "policies",
+          "h": "One policy per permission",
+          "p": [
+            "There is one authorization policy named after each permission, so an endpoint says `.RequireAuthorization(Permissions.ReportsSign)`. The fallback policy requires a signed-in user: an endpoint that names nothing still needs a sign-in, and the public ones (sign-in, settings, health) say `AllowAnonymous`."
+          ],
+          "examples": ["policies"]
+        },
+        {
+          "id": "services",
+          "h": "Limited to some services",
+          "p": [
+            "A user can also be limited to some services (a typist who only does echo). It is a claim like the permissions; outside their services, reports, orders and templates answer 404 as if they did not exist."
+          ],
+          "examples": ["service"]
+        },
+        {
+          "id": "admin",
+          "h": "Endpoints, and the last administrator",
+          "p": [
+            "Managing users and roles needs `users.manage`. A change that would leave no active user able to manage users is refused, or the installation would be locked for good. In the public demo every visitor may be an administrator, so these are read-only there."
+          ],
+          "data": { "kind": "endpoints", "only": ["Users"] },
+          "examples": ["last"]
+        },
+        {
+          "id": "tables",
+          "h": "Tables",
+          "data": { "kind": "tables", "only": ["Roles", "UserRoles"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "eight",
+          "h": "هشت مجوز، و نقش‌هایی ساخته از آن‌ها",
+          "p": [
+            "endpointها مجوز را چک می‌کنند، هیچ‌وقت اسم نقش را، پس کلینیک می‌تواند نقش‌های خودش را بسازد («تایپیست اکو»، «پزشک خواننده») بدون کد. Administrator، Physician و Typist از اول هستند؛ Administrator همیشه همه‌ی مجوزها را دارد، حتی مجوزی که نسخه‌ی بعدی اضافه کند. یک نقش می‌تواند ورود دومرحله‌ای را اجباری کند."
+          ],
+          "examples": ["catalog", "access"]
+        },
+        {
+          "id": "policies",
+          "h": "یک policy برای هر مجوز",
+          "p": [
+            "برای هر مجوز یک authorization policy به همان اسم هست، پس endpoint می‌گوید `.RequireAuthorization(Permissions.ReportsSign)`. fallback policy کاربر واردشده می‌خواهد: endpointی که هیچ چیز نام نبرد هم ورود لازم دارد، و endpointهای عمومی (ورود، تنظیمات، سلامت) `AllowAnonymous` می‌گویند."
+          ],
+          "examples": ["policies"]
+        },
+        {
+          "id": "services",
+          "h": "محدود به بعضی سرویس‌ها",
+          "p": [
+            "کاربر را می‌شود به بعضی سرویس‌ها هم محدود کرد (تایپیستی که فقط اکو کار می‌کند). این هم مثل مجوزها یک claim است؛ بیرون از سرویس‌هایش، گزارش‌ها، درخواست‌ها و قالب‌ها 404 می‌دهند، انگار وجود ندارند."
+          ],
+          "examples": ["service"]
+        },
+        {
+          "id": "admin",
+          "h": "endpointها، و آخرین admin",
+          "p": [
+            "مدیریت کاربران و نقش‌ها `users.manage` لازم دارد. تغییری که هیچ کاربر فعالی را با اجازه‌ی مدیریت کاربران باقی نگذارد رد می‌شود، وگرنه نصب برای همیشه قفل می‌شد. در دموی عمومی هر بازدیدکننده‌ای ممکن است admin باشد، پس این‌ها آن‌جا فقط‌خواندنی‌اند."
+          ],
+          "data": { "kind": "endpoints", "only": ["Users"] },
+          "examples": ["last"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["Roles", "UserRoles"] }
+        }
+      ],
+      "examples": {
+        "catalog": {
+          "title": { "en": "The eight permissions", "fa": "هشت مجوز" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/Permissions.cs",
+          "from": "public const string ReportsView = \"reports.view\";",
+          "lines": 8
+        },
+        "access": {
+          "title": { "en": "What a user may do, from their roles", "fa": "کاربر چه کاری می‌تواند بکند، از نقش‌هایش" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "public static Access For(AppUser user)",
+          "lines": 14
+        },
+        "policies": {
+          "title": { "en": "The fallback, then a policy per permission", "fa": "fallback، بعد یک policy برای هر مجوز" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "var auth = services.AddAuthorizationBuilder()",
+          "lines": 5
+        },
+        "service": {
+          "title": { "en": "May this user work on this service?", "fa": "این کاربر روی این سرویس کار می‌کند؟" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "public static string[]? ServiceScope(this ClaimsPrincipal user)",
+          "lines": 8
+        },
+        "last": {
+          "title": { "en": "Someone must still manage users", "fa": "کسی باید هنوز کاربران را مدیریت کند" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+          "from": "private static async Task<string?> LastAdminProblem(",
+          "lines": 12
+        }
+      }
+    },
+    {
+      "id": "audit",
+      "group": "security",
+      "title": { "en": "The audit log, and CSRF", "fa": "audit log، و CSRF" },
+      "files": ["src/ClinicReport.Api/Auth/SecurityLog.cs", "src/ClinicReport.Api/Auth/AuthSetup.cs", "web/src/pages/Audit.tsx"],
+      "en": [
+        {
+          "id": "two",
+          "h": "Two trails",
+          "p": [
+            "Every change to a report is in `Changes` (see Every change through one service). Apart from that, `SecurityEvents` records sign-ins and failures, lockouts, account and role changes, signatures, broken glass, and who opened which patient's report, the access log PHIPA and HIPAA ask for. Rows are only ever added."
+          ],
+          "examples": ["add"]
+        },
+        {
+          "id": "views",
+          "h": "Opening a report, logged once",
+          "p": [
+            "Opening the same report again within 10 minutes is not logged again, so moving between tabs does not bury the log in duplicates."
+          ],
+          "examples": ["viewed"]
+        },
+        {
+          "id": "endpoint",
+          "h": "Reading it",
+          "p": [
+            "`audit.view`, 200 rows at a time, filtered by type, user, report or dates, newest first."
+          ],
+          "data": { "kind": "endpoints", "only": ["Audit"] }
+        },
+        {
+          "id": "csrf",
+          "h": "CSRF: a header a browser cannot forge",
+          "p": [
+            "On top of SameSite=Strict, every POST, PUT, PATCH or DELETE to `/api` must carry `X-ClinicReport`. A page on another site cannot add a custom header without a CORS preflight, which this API never allows; the page's own client always sends it."
+          ],
+          "examples": ["csrf", "header"]
+        },
+        {
+          "id": "table",
+          "h": "Table",
+          "data": { "kind": "tables", "only": ["SecurityEvents"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "two",
+          "h": "دو رد",
+          "p": [
+            "هر تغییر گزارش در `Changes` است (بخش هر تغییر از یک سرویس را ببینید). جدا از آن، `SecurityEvents` ورودها و شکست‌ها، قفل شدن‌ها، تغییرهای حساب و نقش، امضاها، شکستن شیشه، و این‌که چه کسی گزارش کدام بیمار را باز کرده را ثبت می‌کند؛ همان access log که PHIPA و HIPAA می‌خواهند. ردیف‌ها فقط اضافه می‌شوند."
+          ],
+          "examples": ["add"]
+        },
+        {
+          "id": "views",
+          "h": "باز کردن گزارش، یک بار ثبت می‌شود",
+          "p": [
+            "باز کردن دوباره‌ی همان گزارش در ۱۰ دقیقه دوباره ثبت نمی‌شود، پس جابه‌جا شدن بین tabها log را زیر تکراری‌ها دفن نمی‌کند."
+          ],
+          "examples": ["viewed"]
+        },
+        {
+          "id": "endpoint",
+          "h": "خواندنش",
+          "p": [
+            "`audit.view`، هر بار ۲۰۰ ردیف، با filter نوع، کاربر، گزارش یا تاریخ، تازه‌ترین اول."
+          ],
+          "data": { "kind": "endpoints", "only": ["Audit"] }
+        },
+        {
+          "id": "csrf",
+          "h": "CSRF: هدری که مرورگر نمی‌تواند جعل کند",
+          "p": [
+            "علاوه بر SameSite=Strict، هر POST، PUT، PATCH یا DELETE به `/api` باید `X-ClinicReport` داشته باشد. صفحه‌ای در سایت دیگر بدون CORS preflight نمی‌تواند هدر سفارشی اضافه کند، و این API هیچ‌وقت آن را اجازه نمی‌دهد؛ client خود صفحه همیشه آن را می‌فرستد."
+          ],
+          "examples": ["csrf", "header"]
+        },
+        {
+          "id": "table",
+          "h": "جدول",
+          "data": { "kind": "tables", "only": ["SecurityEvents"] }
+        }
+      ],
+      "examples": {
+        "add": {
+          "title": { "en": "One security event", "fa": "یک رویداد امنیتی" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/SecurityLog.cs",
+          "from": "public void Add(string type, int? actor",
+          "lines": 12
+        },
+        "viewed": {
+          "title": { "en": "A view, once per 10 minutes", "fa": "یک بار دیدن، هر ۱۰ دقیقه یک بار" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/SecurityLog.cs",
+          "from": "public async Task ReportViewedAsync(int userId, int reportId, int patientId, CancellationToken ct)",
+          "lines": 9
+        },
+        "csrf": {
+          "title": { "en": "The header check", "fa": "چک هدر" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "public static IApplicationBuilder UseCsrfHeaderCheck(this IApplicationBuilder app) => app.Use(async (ctx, next) =>",
+          "lines": 11
+        },
+        "header": {
+          "title": { "en": "What the page sends", "fa": "چیزی که صفحه می‌فرستد" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "headers: {",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "clinichub-signin",
+      "group": "clinichub",
+      "title": { "en": "Signing in through ClinicHub", "fa": "ورود از طریق ClinicHub" },
+      "files": ["src/ClinicReport.Api/Auth/ClinicHubConnection.cs", "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs"],
+      "en": [
+        {
+          "id": "switch",
+          "h": "One setting switches it on",
+          "p": [
+            "With `ClinicHub:Authority` set, ClinicReport becomes one of ClinicHub's applications: people sign in there (OpenID Connect, authorization code with PKCE) and choose the clinic there. Without it nothing of this is registered and the app runs with its own accounts. Connected, the local account endpoints answer 409."
+          ],
+          "examples": ["managed"]
+        },
+        {
+          "id": "oidc",
+          "h": "The OpenID Connect client",
+          "p": [
+            "The code comes back in the query string rather than a cross-site form post, so the correlation cookies can stay SameSite=Lax over plain HTTP in development, and the sign-in cookie itself is Lax when connected, since the browser arrives from ClinicHub. Of the tokens, only the refresh token (for the re-checks) and the id token (for the sign-out) are kept: every app's cookies travel together on localhost."
+          ],
+          "examples": ["oidc", "lax"]
+        },
+        {
+          "id": "local",
+          "h": "ClinicHub's person, a local user",
+          "p": [
+            "At sign-in the person becomes a user of that clinic's database, linked by ClinicHub's account id, so signatures, addenda and the access log point at someone. A local account with the same user name from before the clinic connected is taken over with its history. Permissions come from ClinicHub (its `clinicreport:reports.sign` arrives as `reports.sign`), and only those ClinicReport knows are kept; the services a person may work on stay ClinicReport's."
+          ],
+          "examples": ["user", "permissions"]
+        },
+        {
+          "id": "recheck",
+          "h": "ClinicHub has the last word",
+          "p": [
+            "Every request checks the local user is still active. Every few minutes the session is also checked with ClinicHub using the refresh token: a refusal (roles removed, signed out everywhere, account closed) ends it here; ClinicHub being unreachable is tolerated for 30 minutes."
+          ],
+          "examples": ["recheck"]
+        },
+        {
+          "id": "databases",
+          "h": "One SQLite file per clinic",
+          "p": [
+            "The clinic's short name in the session picks the database of each request (`clinicreport-{clinic}.db`), created with the roles and bundled templates the first time. The name is checked (lower-case letters, digits and dashes) before it goes into a file name. One ClinicReport serves several clinics without their reports ever sharing a table."
+          ],
+          "examples": ["create", "scoped"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "switch",
+          "h": "یک تنظیم روشنش می‌کند",
+          "p": [
+            "با تنظیم `ClinicHub:Authority`، ClinicReport یکی از اپ‌های ClinicHub می‌شود: آدم‌ها آن‌جا وارد می‌شوند (OpenID Connect، authorization code با PKCE) و کلینیک را آن‌جا انتخاب می‌کنند. بدون آن هیچ‌کدام از این‌ها ثبت نمی‌شود و اپ با حساب‌های خودش کار می‌کند. در حالت متصل، endpointهای حساب محلی 409 می‌دهند."
+          ],
+          "examples": ["managed"]
+        },
+        {
+          "id": "oidc",
+          "h": "client OpenID Connect",
+          "p": [
+            "code در query string برمی‌گردد نه با form post بین‌سایتی، پس correlation cookieها در development روی HTTP ساده می‌توانند SameSite=Lax بمانند، و خود کوکی ورود در حالت متصل Lax است، چون مرورگر از ClinicHub می‌رسد. از tokenها فقط refresh token (برای چک‌های دوباره) و id token (برای خروج) نگه داشته می‌شوند: روی localhost کوکی‌های همه‌ی اپ‌ها با هم سفر می‌کنند."
+          ],
+          "examples": ["oidc", "lax"]
+        },
+        {
+          "id": "local",
+          "h": "آدمِ ClinicHub، یک کاربر محلی",
+          "p": [
+            "موقع ورود، آن آدم کاربر دیتابیس همان کلینیک می‌شود، با id حسابش در ClinicHub، تا امضاها، addendumها و access log به کسی اشاره کنند. حساب محلی‌ای با همان نام کاربری از قبل از وصل شدن کلینیک با تاریخچه‌اش تحویل گرفته می‌شود. مجوزها از ClinicHub می‌آیند (`clinicreport:reports.sign` آن‌جا این‌جا `reports.sign` می‌شود)، و فقط آن‌هایی که ClinicReport می‌شناسد نگه داشته می‌شوند؛ سرویس‌هایی که آدم روی آن‌ها کار می‌کند مال ClinicReport می‌مانند."
+          ],
+          "examples": ["user", "permissions"]
+        },
+        {
+          "id": "recheck",
+          "h": "حرف آخر را ClinicHub می‌زند",
+          "p": [
+            "هر درخواست چک می‌کند که کاربر محلی هنوز فعال است. هر چند دقیقه هم session با refresh token از ClinicHub پرسیده می‌شود: رد شدن (نقش‌ها گرفته شده، خروج از همه جا، حساب بسته) آن را این‌جا تمام می‌کند؛ در دسترس نبودن ClinicHub تا ۳۰ دقیقه تحمل می‌شود."
+          ],
+          "examples": ["recheck"]
+        },
+        {
+          "id": "databases",
+          "h": "یک فایل SQLite برای هر کلینیک",
+          "p": [
+            "اسم کوتاه کلینیک در session دیتابیس هر درخواست را انتخاب می‌کند (`clinicreport-{clinic}.db`)، که بار اول با نقش‌ها و قالب‌های همراه ساخته می‌شود. اسم قبل از رفتن در اسم فایل چک می‌شود (حروف کوچک، رقم و خط تیره). یک ClinicReport به چند کلینیک خدمت می‌کند بدون این‌که گزارش‌هایشان هیچ‌وقت در یک جدول باشند."
+          ],
+          "examples": ["create", "scoped"]
+        }
+      ],
+      "examples": {
+        "managed": {
+          "title": { "en": "Connected: the local endpoints only say so", "fa": "متصل: endpointهای محلی فقط همین را می‌گویند" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "// Connected to ClinicHub: these exist only to say so",
+          "lines": 5
+        },
+        "oidc": {
+          "title": { "en": "Code flow with PKCE, answer in the query", "fa": "code flow با PKCE، جواب در query" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "auth.AddOpenIdConnect(Scheme, \"ClinicHub\", o =>",
+          "lines": 16
+        },
+        "lax": {
+          "title": { "en": "Lax when connected", "fa": "Lax در حالت متصل" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+          "from": "// Connected: the browser arrives from ClinicHub's sign-in",
+          "lines": 2
+        },
+        "user": {
+          "title": { "en": "Found, taken over, or created", "fa": "پیدا شد، تحویل گرفته شد، یا ساخته شد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "var externalId = $\"clinichub:{hub.FindFirstValue(\"sub\")}\";",
+          "lines": 15
+        },
+        "permissions": {
+          "title": { "en": "Only the permissions ClinicReport knows", "fa": "فقط مجوزهایی که ClinicReport می‌شناسد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "// Only keys ClinicReport knows",
+          "lines": 2
+        },
+        "recheck": {
+          "title": { "en": "Asking ClinicHub again", "fa": "دوباره پرسیدن از ClinicHub" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "if (DateTime.UtcNow - checkedAt >= TimeSpan.FromMinutes(options.RecheckMinutes))",
+          "lines": 20
+        },
+        "create": {
+          "title": { "en": "A checked name, then a file", "fa": "اسم چک‌شده، بعد فایل" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "public ClinicReportDbContext Create(string slug)",
+          "lines": 7
+        },
+        "scoped": {
+          "title": { "en": "The request's database", "fa": "دیتابیس درخواست" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "// The database of the request is the signed-in person's clinic.",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "orders",
+      "group": "clinichub",
+      "title": { "en": "Orders arriving over FHIR", "fa": "درخواست‌هایی که با FHIR می‌رسند" },
+      "files": ["src/ClinicReport.Api/Endpoints/OrderEndpoints.cs", "src/ClinicReport.Api/Auth/ClinicHubConnection.cs", "web/src/pages/Worklist.tsx"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "These exist only when connected. `/fhir` is for ClinicHub itself: a bearer token ClinicHub signed for ClinicReport, with the scope `orders` and a valid clinic name. `/api/orders` is the worklist's *Ordered from ClinicHub*."
+          ],
+          "data": { "kind": "endpoints", "only": ["Order", "Orders"] },
+          "examples": ["policy"]
+        },
+        {
+          "id": "bundle",
+          "h": "One endpoint, three messages",
+          "p": [
+            "ClinicHub posts a FHIR R4 transaction Bundle. A lone Patient with a link is a merge of two records; revoked ServiceRequests withdraw exams; anything else is new orders: a Patient, the requesting Practitioner and one ServiceRequest per exam. A malformed Bundle is answered with an OperationOutcome saying what is wrong."
+          ],
+          "examples": ["dispatch"]
+        },
+        {
+          "id": "codes",
+          "h": "The exam is a template key",
+          "p": [
+            "Each ServiceRequest is coded in `urn:clinicreport:template` with the key of an active template (`echo-tte`, `ecg-12-lead`). One unknown key refuses the whole Bundle, before anything is saved."
+          ],
+          "examples": ["codes"]
+        },
+        {
+          "id": "once",
+          "h": "Sent twice, saved once",
+          "p": [
+            "An order is known by the clinic and ClinicHub's id (`slug:id`, unique in the table), so a retry after a timeout finds the order it already saved and answers the same. ClinicHub's register is the source of truth for the patient's details, which are updated with every order."
+          ],
+          "examples": ["existing"]
+        },
+        {
+          "id": "start",
+          "h": "Starting the exam",
+          "p": [
+            "*Start report* makes a draft on the template's latest published version, with the order's indication and referring physician in the header, and marks the order started. A withdrawal that arrives after that is refused with 409: the clinic has to speak to the reading physician."
+          ],
+          "examples": ["cancel"]
+        },
+        {
+          "id": "table",
+          "h": "Table",
+          "data": { "kind": "tables", "only": ["ReportOrders"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "این‌ها فقط در حالت متصل وجود دارند. `/fhir` برای خود ClinicHub است: bearer tokenی که ClinicHub برای ClinicReport امضا کرده، با scope `orders` و اسم کلینیک معتبر. `/api/orders` همان *Ordered from ClinicHub* در worklist است."
+          ],
+          "data": { "kind": "endpoints", "only": ["Order", "Orders"] },
+          "examples": ["policy"]
+        },
+        {
+          "id": "bundle",
+          "h": "یک endpoint، سه پیام",
+          "p": [
+            "ClinicHub یک transaction Bundle از FHIR R4 می‌فرستد. یک Patient تنها با link ادغام دو پرونده است؛ ServiceRequestهای revoked معاینه را پس می‌گیرند؛ هر چیز دیگر درخواست تازه است: یک Patient، پزشک درخواست‌دهنده (Practitioner) و یک ServiceRequest برای هر معاینه. Bundle بدشکل با یک OperationOutcome جواب می‌گیرد که می‌گوید چه چیزش ایراد دارد."
+          ],
+          "examples": ["dispatch"]
+        },
+        {
+          "id": "codes",
+          "h": "معاینه، key یک قالب است",
+          "p": [
+            "هر ServiceRequest در `urn:clinicreport:template` با key یک قالب فعال کد می‌خورد (`echo-tte`، `ecg-12-lead`). یک key ناشناخته کل Bundle را رد می‌کند، قبل از این‌که چیزی ذخیره شود."
+          ],
+          "examples": ["codes"]
+        },
+        {
+          "id": "once",
+          "h": "دو بار فرستاده، یک بار ذخیره",
+          "p": [
+            "هر درخواست با کلینیک و id ClinicHub شناخته می‌شود (`slug:id`، یکتا در جدول)، پس تلاش دوباره بعد از timeout درخواستی را که قبلاً ذخیره کرده پیدا می‌کند و همان جواب را می‌دهد. فهرست ClinicHub منبع درست مشخصات بیمار است، که با هر درخواست به‌روز می‌شود."
+          ],
+          "examples": ["existing"]
+        },
+        {
+          "id": "start",
+          "h": "شروع معاینه",
+          "p": [
+            "*Start report* یک پیش‌نویس روی آخرین نسخه‌ی منتشرشده‌ی قالب می‌سازد، با indication و پزشک ارجاع‌دهنده‌ی درخواست در سربرگ، و درخواست را شروع‌شده علامت می‌زند. پس گرفتنی که بعد از آن برسد با 409 رد می‌شود: کلینیک باید با پزشک خواننده صحبت کند."
+          ],
+          "examples": ["cancel"]
+        },
+        {
+          "id": "table",
+          "h": "جدول",
+          "data": { "kind": "tables", "only": ["ReportOrders"] }
+        }
+      ],
+      "examples": {
+        "policy": {
+          "title": { "en": "ClinicHub's token, for orders", "fa": "token ClinicHub، برای درخواست‌ها" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+          "from": "services.AddAuthorizationBuilder().AddPolicy(OrdersPolicy",
+          "lines": 3
+        },
+        "dispatch": {
+          "title": { "en": "Which kind of Bundle", "fa": "کدام نوع Bundle" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var entries = bundle[\"entry\"]",
+          "lines": 8
+        },
+        "codes": {
+          "title": { "en": "Every exam must be a template here", "fa": "هر معاینه باید این‌جا قالب داشته باشد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var keys = orders.Select(o =>",
+          "lines": 5
+        },
+        "existing": {
+          "title": { "en": "The same order again", "fa": "همان درخواست دوباره" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var existing = await db.ReportOrders.SingleOrDefaultAsync(x => x.ExternalId == externalId);",
+          "lines": 6
+        },
+        "cancel": {
+          "title": { "en": "Too late to withdraw", "fa": "برای پس گرفتن دیر شده" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "if (order.Status == ReportOrderStatus.Started)",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "restricted",
+      "group": "clinichub",
+      "title": { "en": "Restricted items: breaking the glass", "fa": "موارد محدودشده: شکستن شیشه" },
+      "files": ["src/ClinicReport.Api/Auth/ConfidentialityGate.cs", "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs", "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs", "web/src/components/RestrictedGate.tsx"],
+      "en": [
+        {
+          "id": "label",
+          "h": "The label comes with the order",
+          "p": [
+            "When the patient has a consent directive at the clinic, ClinicHub labels the order (`R` restricted, `V` very restricted, HL7's confidentiality codes). `U`, `L`, `M` and `N` mean no restriction; any other code of that system is treated as `R`."
+          ],
+          "examples": ["label"]
+        },
+        {
+          "id": "gate",
+          "h": "Closed until someone says why",
+          "p": [
+            "A labelled order or report answers 403 `restricted` to everyone. `POST …/override` with a reason of at least 10 characters opens it for that user and that item for one hour, and writes who, what and why to the security log (`RestrictedOverride`). The openings live in memory: a restart closes them, which is the safe way to fail. Whoever opens the order carries on with its report."
+          ],
+          "examples": ["gate", "carry"]
+        },
+        {
+          "id": "lists",
+          "h": "Listed, but not who it is for",
+          "p": [
+            "The worklists still show a closed item, so it is not lost, with the patient as “Restricted” and no MRN or indication. On the report routes the check is a filter on the whole `/{id}` group."
+          ],
+          "examples": ["hide", "filter"]
+        },
+        {
+          "id": "ui",
+          "h": "Asking on the page",
+          "p": [
+            "The editor and the worklist catch the 403 and show a box asking why, instead of a browser prompt; the button stays disabled until the reason is 10 characters long."
+          ],
+          "examples": ["ui"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "label",
+          "h": "برچسب با درخواست می‌آید",
+          "p": [
+            "وقتی بیمار در کلینیک consent directive دارد، ClinicHub به درخواست برچسب می‌زند (`R` محدود، `V` خیلی محدود، کدهای محرمانگی HL7). `U`، `L`، `M` و `N` یعنی محدودیتی نیست؛ هر کد دیگر از آن سیستم `R` حساب می‌شود."
+          ],
+          "examples": ["label"]
+        },
+        {
+          "id": "gate",
+          "h": "بسته، تا کسی بگوید چرا",
+          "p": [
+            "درخواست یا گزارش برچسب‌دار به همه 403 `restricted` می‌دهد. `POST …/override` با دلیلی دست‌کم ۱۰ کاراکتری آن را برای همان کاربر و همان مورد یک ساعت باز می‌کند، و چه کسی، چه چیزی و چرا را در security log می‌نویسد (`RestrictedOverride`). باز شدن‌ها در حافظه‌اند: restart آن‌ها را می‌بندد، که شکست امن همین است. کسی که درخواست را باز کرده با گزارشش ادامه می‌دهد."
+          ],
+          "examples": ["gate", "carry"]
+        },
+        {
+          "id": "lists",
+          "h": "در فهرست هست، ولی نه این‌که مال کیست",
+          "p": [
+            "worklistها مورد بسته را باز هم نشان می‌دهند، تا گم نشود، با بیمار به‌صورت «Restricted» و بدون MRN یا indication. در routeهای گزارش، این چک filterی روی کل گروه `/{id}` است."
+          ],
+          "examples": ["hide", "filter"]
+        },
+        {
+          "id": "ui",
+          "h": "پرسیدن در خود صفحه",
+          "p": [
+            "ویرایشگر و worklist آن 403 را می‌گیرند و به‌جای prompt مرورگر کادری نشان می‌دهند که می‌پرسد چرا؛ دکمه تا وقتی دلیل ۱۰ کاراکتر نشده غیرفعال می‌ماند."
+          ],
+          "examples": ["ui"]
+        }
+      ],
+      "examples": {
+        "label": {
+          "title": { "en": "Reading the label", "fa": "خواندن برچسب" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "public static string? Confidentiality(JsonNode? resource)",
+          "lines": 8
+        },
+        "gate": {
+          "title": { "en": "One user, one item, one hour", "fa": "یک کاربر، یک مورد، یک ساعت" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Auth/ConfidentialityGate.cs",
+          "from": "public class ConfidentialityGate(IMemoryCache cache, TimeProvider clock)",
+          "to": "public static bool ReasonOk"
+        },
+        "carry": {
+          "title": { "en": "From the order to its report", "fa": "از درخواست به گزارشش" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "if (order.Confidentiality is not null)",
+          "lines": 2
+        },
+        "hide": {
+          "title": { "en": "Listed as Restricted", "fa": "در فهرست به‌صورت Restricted" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "// A restricted order is listed, so it is not lost",
+          "lines": 2
+        },
+        "filter": {
+          "title": { "en": "The filter on the report routes", "fa": "filter روی routeهای گزارش" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+          "from": "private static async ValueTask<object?> ConfidentialityFilter(",
+          "lines": 10
+        },
+        "ui": {
+          "title": { "en": "The reason box", "fa": "کادر دلیل" },
+          "lang": "typescript",
+          "file": "web/src/components/RestrictedGate.tsx",
+          "from": "export function RestrictedGate(",
+          "to": "</section>"
+        }
+      }
+    },
+    {
+      "id": "results-out",
+      "group": "clinichub",
+      "title": { "en": "Results back, and the accounting", "fa": "جواب‌ها برمی‌گردند، و حسابداری" },
+      "files": ["src/ClinicReport.Api/Reports/ResultSender.cs", "src/ClinicReport.Api/Reports/FinanceSender.cs", "src/ClinicReport.Api/Reports/ReportService.cs"],
+      "en": [
+        {
+          "id": "queued",
+          "h": "Queued with the signature",
+          "p": [
+            "Signing a report from an order adds a result message to the clinic database's outbox, saved in the same `SaveChanges` as the signature: either both happen or neither. An addendum queues the result again as `amended`, with every addendum appended to the conclusion."
+          ],
+          "examples": ["enqueue"]
+        },
+        {
+          "id": "shape",
+          "h": "A DiagnosticReport that names the order",
+          "p": [
+            "The result is a FHIR DiagnosticReport whose `basedOn` names ClinicHub's order, which is how ClinicHub finds the clinic and the exam. It carries the conclusion, who signed, the order's confidentiality label back, and a link to the full printable report here."
+          ],
+          "examples": ["basedon", "link"]
+        },
+        {
+          "id": "send",
+          "h": "Delivery and retries",
+          "p": [
+            "A background worker goes through every clinic database it finds on disk, sends what is due with a client-credentials token (scope `results`, cached until a minute before it expires) and, after a failure, waits 10 s, 20 s, 40 s… up to 30 minutes, 12 attempts at most. A `401` drops the cached token. `ClinicHub:ResultsUrl` can send them through IntegrationHub instead of straight to ClinicHub."
+          ],
+          "examples": ["clinics", "retry"]
+        },
+        {
+          "id": "money",
+          "h": "To the accounting, without health information",
+          "p": [
+            "With `ClinicHub:FinanceUrl` set, each signed report of an ordered exam becomes an invoice to OHIP for FinancePowerApp: the template's technical fee and professional fee, by department (Echo or ECG). No patient and no findings leave. Each document has an id that never changes (`report:{id}:signed`) and is recorded in `FinanceExports` once accepted, so it is sent once."
+          ],
+          "examples": ["finance"]
+        },
+        {
+          "id": "tables",
+          "h": "Tables",
+          "data": { "kind": "tables", "only": ["ResultMessages", "FinanceExports"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "queued",
+          "h": "همراه امضا، در صف",
+          "p": [
+            "امضای گزارشی که از یک درخواست آمده یک پیام جواب به outbox دیتابیس کلینیک اضافه می‌کند، ذخیره‌شده در همان `SaveChanges` امضا: یا هر دو اتفاق می‌افتند یا هیچ‌کدام. addendum جواب را دوباره به‌صورت `amended` در صف می‌گذارد، با همه‌ی addendumها چسبیده به نتیجه‌گیری."
+          ],
+          "examples": ["enqueue"]
+        },
+        {
+          "id": "shape",
+          "h": "DiagnosticReportی که درخواست را نام می‌برد",
+          "p": [
+            "جواب یک DiagnosticReport از FHIR است که `basedOn`اش درخواست ClinicHub را نام می‌برد، و ClinicHub با همین کلینیک و معاینه را پیدا می‌کند. نتیجه‌گیری، امضاکننده، برچسب محرمانگی درخواست (برگشتی) و لینکی به گزارش کامل قابل چاپ در این‌جا را همراه دارد."
+          ],
+          "examples": ["basedon", "link"]
+        },
+        {
+          "id": "send",
+          "h": "رساندن و تلاش دوباره",
+          "p": [
+            "یک worker پس‌زمینه همه‌ی دیتابیس‌های کلینیک را که روی دیسک پیدا می‌کند می‌گردد، چیزی را که وقتش رسیده با یک token از نوع client credentials می‌فرستد (scope `results`، cache‌شده تا یک دقیقه قبل از انقضا) و بعد از هر شکست ۱۰ ثانیه، ۲۰ ثانیه، ۴۰ ثانیه… تا ۳۰ دقیقه صبر می‌کند، حداکثر ۱۲ بار. `401` token cache‌شده را دور می‌اندازد. `ClinicHub:ResultsUrl` می‌تواند آن‌ها را به‌جای مستقیم به ClinicHub، از IntegrationHub بفرستد."
+          ],
+          "examples": ["clinics", "retry"]
+        },
+        {
+          "id": "money",
+          "h": "به حسابداری، بدون اطلاعات سلامت",
+          "p": [
+            "با تنظیم `ClinicHub:FinanceUrl`، هر گزارش امضاشده‌ی یک معاینه‌ی درخواستی یک فاکتور به OHIP برای FinancePowerApp می‌شود: دستمزد فنی و حرفه‌ای قالب، به تفکیک بخش (Echo یا ECG). هیچ بیمار و هیچ یافته‌ای بیرون نمی‌رود. هر سند شناسه‌ای دارد که هیچ‌وقت عوض نمی‌شود (`report:{id}:signed`) و بعد از قبول شدن در `FinanceExports` ثبت می‌شود، پس یک بار فرستاده می‌شود."
+          ],
+          "examples": ["finance"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["ResultMessages", "FinanceExports"] }
+        }
+      ],
+      "examples": {
+        "enqueue": {
+          "title": { "en": "In the signature's save", "fa": "در ذخیره‌ی امضا" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+          "from": "if (order is not null)",
+          "lines": 5
+        },
+        "basedon": {
+          "title": { "en": "Naming ClinicHub's order", "fa": "نام بردن درخواست ClinicHub" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+          "from": "[\"basedOn\"] = new JsonArray(new JsonObject",
+          "lines": 4
+        },
+        "link": {
+          "title": { "en": "A link to the full report", "fa": "لینکی به گزارش کامل" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+          "from": "[\"presentedForm\"] = publicUrl",
+          "lines": 3
+        },
+        "clinics": {
+          "title": { "en": "The clinics: the files the pattern matches", "fa": "کلینیک‌ها: فایل‌هایی که الگو با آن‌ها جور است" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+          "from": "public IEnumerable<string> Clinics()",
+          "lines": 13
+        },
+        "retry": {
+          "title": { "en": "Doubling pauses", "fa": "مکث‌های دوبرابرشونده" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+          "from": "m.NextAttemptAt = now.AddSeconds(Math.Min(10 * Math.Pow(2",
+          "lines": 3
+        },
+        "finance": {
+          "title": { "en": "A signed report as an invoice", "fa": "گزارش امضاشده به‌صورت فاکتور" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Reports/FinanceSender.cs",
+          "from": "foreach (var r in signed)",
+          "lines": 16
+        }
+      }
+    },
+    {
+      "id": "fe-app",
+      "group": "frontend",
+      "title": { "en": "The pages and the API client", "fa": "صفحه‌ها و API client" },
+      "files": ["web/src/App.tsx", "web/src/api.ts", "web/src/main.tsx"],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Routes",
+          "p": [
+            "React 19 with React Router. The designer, users and audit pages are behind the permission they need; without it the route sends the user back. The print view drops the top bar, so the browser's Print gives the A4 report alone."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "gate",
+          "h": "Before any page",
+          "p": [
+            "The app first asks for the settings and who is signed in. Nobody: the sign-in page, or the *Sign in with ClinicHub* button when connected. Someone with a password to change or two-factor to set up: only that page. Signing out when connected goes to `/api/auth/sso/signout`, which signs out of ClinicHub too."
+          ],
+          "examples": ["gate", "signout"]
+        },
+        {
+          "id": "client",
+          "h": "One typed client",
+          "p": [
+            "`api.ts` mirrors the C# records as TypeScript types and sends every call through `request`, which adds the CSRF and client-id headers, turns any error into an `ApiError` with the field errors of a 400, and on a 401 tells the app the session has ended."
+          ],
+          "examples": ["request"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "routeها",
+          "p": [
+            "React 19 با React Router. صفحه‌های designer، کاربران و audit پشت مجوزی هستند که لازم دارند؛ بدون آن route کاربر را برمی‌گرداند. نمای چاپ نوار بالا را ندارد، پس Print مرورگر فقط گزارش A4 را می‌دهد."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "gate",
+          "h": "قبل از هر صفحه",
+          "p": [
+            "اپ اول تنظیمات و این‌که چه کسی وارد شده را می‌پرسد. هیچ‌کس: صفحه‌ی ورود، یا در حالت متصل دکمه‌ی *Sign in with ClinicHub*. کسی که رمزی برای عوض کردن یا دومرحله‌ای برای راه انداختن دارد: فقط همان صفحه. خروج در حالت متصل به `/api/auth/sso/signout` می‌رود، که از ClinicHub هم خارج می‌کند."
+          ],
+          "examples": ["gate", "signout"]
+        },
+        {
+          "id": "client",
+          "h": "یک client با type",
+          "p": [
+            "`api.ts` recordهای C# را به‌صورت typeهای TypeScript تکرار می‌کند و هر درخواست را از `request` رد می‌کند، که هدرهای CSRF و client-id را اضافه می‌کند، هر خطا را به یک `ApiError` با خطاهای فیلدِ یک 400 تبدیل می‌کند، و با 401 به اپ می‌گوید session تمام شده."
+          ],
+          "examples": ["request"]
+        }
+      ],
+      "examples": {
+        "gate": {
+          "title": { "en": "Signed in, and nothing pending", "fa": "وارد شده، و هیچ کار مانده‌ای نیست" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "if (!settings || me === undefined)",
+          "lines": 3
+        },
+        "signout": {
+          "title": { "en": "One sign-out, here and at ClinicHub", "fa": "یک خروج، این‌جا و در ClinicHub" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "const signOut = useCallback(async () => {",
+          "lines": 9
+        },
+        "request": {
+          "title": { "en": "Every call goes through here", "fa": "هر درخواست از این‌جا می‌گذرد" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {",
+          "lines": 21
+        }
+      }
+    },
+    {
+      "id": "data-sqlite",
+      "group": "data",
+      "title": { "en": "SQLite, migrations and the demo", "fa": "SQLite، migrationها و دمو" },
+      "files": ["src/ClinicReport.Api/Data/ClinicReportDbContext.cs", "src/ClinicReport.Api/Data/DatabaseInitializer.cs", "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs", "src/ClinicReport.Api/Program.cs"],
+      "en": [
+        {
+          "id": "why",
+          "h": "Why SQLite",
+          "p": [
+            "A clinic's reporting fits in one file: no database server to run, back up or secure, and the backup is a copy of `/data`. The price is one writer at a time, which a clinic's typing never comes near, and few types: dates, booleans and money are stored as TEXT and INTEGER, which is why the tables here note the C# type each column holds."
+          ],
+          "examples": ["sqlite"]
+        },
+        {
+          "id": "migrations",
+          "h": "EF Core migrations, applied at start",
+          "p": [
+            "The schema is EF Core's, eight migrations from `Initial` to `OrderConfidentiality`, applied by `MigrateAsync` when a database is opened (at start standalone, at a clinic's first sign-in connected). The tables on these pages are read from the model snapshot the migrations build."
+          ],
+          "examples": ["migration", "migrate"]
+        },
+        {
+          "id": "nocase",
+          "h": "User names in any case",
+          "p": [
+            "User names, role names and last names use SQLite's NOCASE collation, so `Admin` and `admin` are one user and a search by last name ignores case, in the database itself rather than in each query."
+          ],
+          "examples": ["nocase"]
+        },
+        {
+          "id": "demo",
+          "h": "The demo starts over every day",
+          "p": [
+            "With `Demo:Enabled`, five synthetic patients (every MRN starts with `DEMO-`), three reports in progress and four one-click users are seeded; accounts and passwords are locked. With `Demo:ResetHourUtc`, the database is deleted and seeded again every day at that hour, so whatever visitors typed does not stay."
+          ],
+          "examples": ["reset"]
+        },
+        {
+          "id": "secrets",
+          "h": "Secrets and keys in the container",
+          "p": [
+            "Settings can come from files in `/run/secrets`, one file per setting, the way Docker mounts secrets. The keys that encrypt the cookie and the two-factor secrets are kept in the data volume, so a redeploy does not sign everyone out."
+          ],
+          "examples": ["secrets"]
+        },
+        {
+          "id": "tables",
+          "h": "The template tables",
+          "data": { "kind": "tables", "only": ["Templates", "TemplateVersions"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "چرا SQLite",
+          "p": [
+            "گزارش‌نویسی یک کلینیک در یک فایل جا می‌شود: سرور دیتابیسی نیست که اجرا، backup یا امن شود، و backup یعنی یک کپی از `/data`. بهایش یک نویسنده در هر لحظه است، که تایپ یک کلینیک هیچ‌وقت به آن نزدیک نمی‌شود، و typeهای کم: تاریخ، boolean و پول به‌صورت TEXT و INTEGER ذخیره می‌شوند، و به همین دلیل جدول‌های این‌جا type C# هر ستون را هم می‌نویسند."
+          ],
+          "examples": ["sqlite"]
+        },
+        {
+          "id": "migrations",
+          "h": "migrationهای EF Core، موقع بالا آمدن",
+          "p": [
+            "schema مال EF Core است، هشت migration از `Initial` تا `OrderConfidentiality`، که `MigrateAsync` هر وقت دیتابیسی باز شود اعمال می‌کند (در حالت مستقل موقع بالا آمدن، در حالت متصل در اولین ورود کلینیک). جدول‌های این صفحه‌ها از model snapshotی خوانده می‌شوند که migrationها می‌سازند."
+          ],
+          "examples": ["migration", "migrate"]
+        },
+        {
+          "id": "nocase",
+          "h": "نام کاربری با هر حروفی",
+          "p": [
+            "نام‌های کاربری، اسم نقش‌ها و نام‌های خانوادگی collation NOCASE در SQLite را دارند، پس `Admin` و `admin` یک کاربرند و جست‌وجو با نام خانوادگی به بزرگی و کوچکی حروف کاری ندارد، در خود دیتابیس نه در هر query."
+          ],
+          "examples": ["nocase"]
+        },
+        {
+          "id": "demo",
+          "h": "دمو هر روز از نو شروع می‌شود",
+          "p": [
+            "با `Demo:Enabled`، پنج بیمار ساختگی (همه‌ی MRNها با `DEMO-` شروع می‌شوند)، سه گزارش در جریان و چهار کاربر یک‌کلیکی seed می‌شوند؛ حساب‌ها و رمزها قفل‌اند. با `Demo:ResetHourUtc`، دیتابیس هر روز در آن ساعت پاک و دوباره seed می‌شود، پس هر چه بازدیدکننده‌ها تایپ کرده‌اند نمی‌ماند."
+          ],
+          "examples": ["reset"]
+        },
+        {
+          "id": "secrets",
+          "h": "secretها و کلیدها در container",
+          "p": [
+            "تنظیمات می‌توانند از فایل‌هایی در `/run/secrets` بیایند، هر تنظیم یک فایل، همان‌طور که Docker secretها را mount می‌کند. کلیدهایی که کوکی و secretهای دومرحله‌ای را رمز می‌کنند در volume داده نگه داشته می‌شوند، پس یک redeploy همه را بیرون نمی‌اندازد."
+          ],
+          "examples": ["secrets"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌های قالب",
+          "data": { "kind": "tables", "only": ["Templates", "TemplateVersions"] }
+        }
+      ],
+      "examples": {
+        "sqlite": {
+          "title": { "en": "One connection string", "fa": "یک connection string" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Program.cs",
+          "from": "var connectionString = builder.Configuration.GetConnectionString(\"ClinicReport\")",
+          "lines": 2
+        },
+        "migration": {
+          "title": { "en": "The latest migration", "fa": "آخرین migration" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs",
+          "from": "protected override void Up(MigrationBuilder migrationBuilder)",
+          "lines": 8
+        },
+        "migrate": {
+          "title": { "en": "Migrate, then seed", "fa": "migrate، بعد seed" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/DatabaseInitializer.cs",
+          "from": "if (wipe)",
+          "lines": 11
+        },
+        "nocase": {
+          "title": { "en": "The users' columns", "fa": "ستون‌های کاربران" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/ClinicReportDbContext.cs",
+          "from": "b.Entity<AppUser>(e =>",
+          "lines": 12
+        },
+        "reset": {
+          "title": { "en": "The next reset", "fa": "ریست بعدی" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Data/DatabaseInitializer.cs",
+          "from": "var next = new DateTimeOffset(now.Year",
+          "lines": 4
+        },
+        "secrets": {
+          "title": { "en": "Secrets as files, keys in the volume", "fa": "secretها به‌صورت فایل، کلیدها در volume" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Program.cs",
+          "from": "// Secrets as files",
+          "to": "SetApplicationName(\"ClinicReport\");"
+        }
+      }
+    }
+  ]
+}

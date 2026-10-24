@@ -1,0 +1,2144 @@
+{
+  "project": "clinicreport",
+  "repo": "ClinicReport",
+  "files": {
+    "README.md": 223,
+    "Dockerfile": 30,
+    "docker-compose.yml": 26,
+    "src/ClinicReport.Api/Properties/launchSettings.json": 45,
+    "src/ClinicReport.Api/Program.cs": 115,
+    "tests/ClinicReport.Tests/ApiTests.cs": 237,
+    "tests/ClinicReport.Tests/ConnectedTests.cs": 280,
+    ".github/workflows/ci.yml": 49,
+    "src/ClinicReport.Api/Domain/TemplateDefinition.cs": 164,
+    "templates/echo-tte.json": 643,
+    "docs/templates.md": 141,
+    "src/ClinicReport.Api/Domain/Formula.cs": 260,
+    "src/ClinicReport.Api/Domain/ReportRenderer.cs": 274,
+    "src/ClinicReport.Api/Domain/ReportValues.cs": 71,
+    "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs": 207,
+    "src/ClinicReport.Api/Domain/TemplateValidator.cs": 247,
+    "src/ClinicReport.Api/Data/Seeding.cs": 220,
+    "web/src/pages/TemplateDesigner.tsx": 619,
+    "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs": 170,
+    "src/ClinicReport.Api/Reports/ReportService.cs": 304,
+    "src/ClinicReport.Api/Reports/ReportHub.cs": 93,
+    "web/src/live.ts": 57,
+    "web/src/pages/ReportEditor.tsx": 379,
+    "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs": 91,
+    "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs": 279,
+    "src/ClinicReport.Api/Auth/AuthSetup.cs": 188,
+    "src/ClinicReport.Api/Auth/Totp.cs": 92,
+    "web/src/components/TwoFactorSetup.tsx": 51,
+    "src/ClinicReport.Api/Auth/Permissions.cs": 56,
+    "src/ClinicReport.Api/Endpoints/UserEndpoints.cs": 361,
+    "src/ClinicReport.Api/Auth/SecurityLog.cs": 42,
+    "web/src/pages/Audit.tsx": 82,
+    "src/ClinicReport.Api/Auth/ClinicHubConnection.cs": 349,
+    "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs": 271,
+    "web/src/pages/Worklist.tsx": 145,
+    "src/ClinicReport.Api/Auth/ConfidentialityGate.cs": 35,
+    "web/src/components/RestrictedGate.tsx": 28,
+    "src/ClinicReport.Api/Reports/ResultSender.cs": 173,
+    "src/ClinicReport.Api/Reports/FinanceSender.cs": 135,
+    "web/src/App.tsx": 122,
+    "web/src/api.ts": 221,
+    "web/src/main.tsx": 21,
+    "src/ClinicReport.Api/Data/ClinicReportDbContext.cs": 142,
+    "src/ClinicReport.Api/Data/DatabaseInitializer.cs": 67,
+    "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs": 28
+  },
+  "examples": {
+    "run/image": {
+      "file": "Dockerfile",
+      "start": 18,
+      "end": 30,
+      "code": "FROM mcr.microsoft.com/dotnet/aspnet:10.0\nWORKDIR /app\nCOPY --from=build /app ./\nCOPY --from=web /web/dist ./wwwroot\nRUN mkdir /data && chown app:app /data\nENV ASPNETCORE_URLS=http://+:8080 \\\n    ConnectionStrings__ClinicReport=\"Data Source=/data/clinicreport.db\" \\\n    ClinicHub__DatabasePattern=\"Data Source=/data/clinicreport-{clinic}.db\" \\\n    DataProtection__KeysDirectory=/data/keys\nVOLUME /data\nUSER app\nEXPOSE 8080\nENTRYPOINT [\"dotnet\", \"ClinicReport.Api.dll\"]"
+    },
+    "run/profile": {
+      "file": "src/ClinicReport.Api/Properties/launchSettings.json",
+      "start": 13,
+      "end": 27,
+      "code": "\"connected\": {\n  \"commandName\": \"Project\",\n  \"dotnetRunMessages\": true,\n  \"launchBrowser\": false,\n  \"applicationUrl\": \"http://localhost:5290\",\n  \"environmentVariables\": {\n    \"ASPNETCORE_ENVIRONMENT\": \"Development\",\n    \"ClinicHub__Authority\": \"http://localhost:5301/\",\n    \"ClinicHub__ClientSecret\": \"dev-only-clinicreport-secret\",\n    \"ClinicHub__RequireHttpsMetadata\": \"false\",\n    \"ClinicHub__DatabasePattern\": \"Data Source=clinicreport-{clinic}.db\",\n    \"ClinicHub__PublicUrl\": \"http://localhost:5291/\",\n    \"ClinicHub__FinanceUrl\": \"http://localhost:5400\"\n  }\n},"
+    },
+    "run/init": {
+      "file": "src/ClinicReport.Api/Program.cs",
+      "start": 53,
+      "end": 57,
+      "code": "// Standalone: one database, prepared now. Connected to ClinicHub: one database per clinic, prepared at its first sign-in.\nvar connected = app.Services.IsConnected();\nif (!connected)\n    using (var scope = app.Services.CreateScope())\n        await DatabaseInitializer.RunAsync(scope.ServiceProvider, wipe: false);"
+    },
+    "tests/factory": {
+      "file": "tests/ClinicReport.Tests/ApiTests.cs",
+      "start": 18,
+      "end": 25,
+      "code": "protected override void ConfigureWebHost(IWebHostBuilder builder)\n{\n    builder.UseEnvironment(\"Testing\");\n    builder.UseSetting(\"ConnectionStrings:ClinicReport\", $\"Data Source={_dbPath}\");\n    builder.UseSetting(\"Demo:Enabled\", \"true\");\n    builder.UseSetting(\"RateLimits:LoginsPerMinute\", \"1000\");\n    builder.UseSetting(\"Demo:LockAccounts\", LockAccounts ? \"true\" : \"false\");\n}"
+    },
+    "tests/parallel": {
+      "file": "tests/ClinicReport.Tests/ApiTests.cs",
+      "start": 114,
+      "end": 128,
+      "code": "public async Task Parallel_edits_to_different_fields_are_all_kept()\n{\n    var typist = await factory.SignInAsync(\"demo.typist\");\n    var physician = await factory.SignInAsync(\"demo.physician\");\n    var id = await NewEchoReportAsync(typist);\n\n    var fields = new[] { \"ivsd\", \"lvidd\", \"lvpwd\", \"lvids\", \"la_volume\", \"ao_root\", \"rv_basal\", \"tapse\", \"e_wave\", \"a_wave\" };\n    await Task.WhenAll(fields.Select((f, i) =>\n        Patch(i % 2 == 0 ? typist : physician, id, new Dictionary<string, object> { [f] = 10 + i })));\n\n    var report = await Json(await typist.GetAsync($\"/api/reports/{id}\"));\n    foreach (var (f, i) in fields.Select((f, i) => (f, i)))\n        Assert.Equal(10 + i, report[\"values\"]![f]!.GetValue<double>());\n    Assert.Equal(1 + fields.Length, report[\"revision\"]!.GetValue<int>());\n}"
+    },
+    "tests/fakehub": {
+      "file": "tests/ClinicReport.Tests/ConnectedTests.cs",
+      "start": 24,
+      "end": 27,
+      "code": "/// ClinicReport connected to ClinicHub. ClinicHub itself is a separate project, so its discovery document and\n/// token endpoint are stand-ins here, and /test/hub-signin plays the part of the sign-in callback: it hands\n/// ClinicReport what ClinicHub's id token would carry. (ClinicHub's side is tested in ClinicHub.)\n/// </summary>"
+    },
+    "tests/smoke": {
+      "file": ".github/workflows/ci.yml",
+      "start": 43,
+      "end": 49,
+      "code": "- name: Smoke test\n  run: |\n    docker run -d --name cr -p 8080:8080 clinicreport:ci\n    for i in $(seq 1 30); do curl -fs http://localhost:8080/healthz && break; sleep 1; done\n    curl -fs http://localhost:8080/healthz\n    curl -fs http://localhost:8080/ | grep -q '<div id=\"root\">'\n    docker logs cr 2>&1 | grep -q 'Imported template echo-tte'"
+    },
+    "template-model/echo": {
+      "file": "templates/echo-tte.json",
+      "start": 282,
+      "end": 301,
+      "code": "  \"id\": \"ms\", \"label\": \"Stenosis\", \"type\": \"choice\",\n  \"options\": [\n    { \"value\": \"none\", \"label\": \"None\", \"phrase\": \"\" },\n    { \"value\": \"mild\", \"label\": \"Mild\", \"phrase\": \"There is mild mitral stenosis.\", \"abnormal\": true },\n    { \"value\": \"moderate\", \"label\": \"Moderate\", \"phrase\": \"There is moderate mitral stenosis.\", \"abnormal\": true },\n    { \"value\": \"severe\", \"label\": \"Severe\", \"phrase\": \"There is severe mitral stenosis.\", \"abnormal\": true }\n  ],\n  \"children\": [\n    {\n      \"id\": \"mv_mean_grad\", \"label\": \"Mean gradient\", \"type\": \"number\", \"unit\": \"mmHg\", \"decimals\": 0,\n      \"showIf\": { \"field\": \"ms\", \"noneOf\": [\"none\"] },\n      \"phrase\": \"The mean transmitral gradient is {value} mmHg\"\n    },\n    {\n      \"id\": \"mva\", \"label\": \"MVA (planimetry / PHT)\", \"type\": \"number\", \"unit\": \"cm²\", \"decimals\": 1,\n      \"showIf\": { \"field\": \"ms\", \"noneOf\": [\"none\"] },\n      \"phrase\": \"Mitral valve area is {value} cm².\"\n    }\n  ]\n},"
+    },
+    "template-model/types": {
+      "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+      "start": 63,
+      "end": 75,
+      "code": "public static class FieldTypes\n{\n    public const string Choice = \"choice\";       // one option\n    public const string Multi = \"multi\";         // any number of options\n    public const string Number = \"number\";       // typed measurement\n    public const string Computed = \"computed\";   // formula over other numbers\n    public const string Text = \"text\";           // one line\n    public const string TextArea = \"textarea\";   // paragraph\n\n    public static readonly string[] All = [Choice, Multi, Number, Computed, Text, TextArea];\n    public static bool IsNumeric(string type) => type is Number or Computed;\n    public static bool HasOptions(string type) => type is Choice or Multi;\n}"
+    },
+    "template-model/range": {
+      "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+      "start": 151,
+      "end": 157,
+      "code": "public Bounds? For(string? sex) => sex switch\n{\n    \"M\" when Male is not null => Male,\n    \"F\" when Female is not null => Female,\n    _ when Min is not null || Max is not null => new Bounds { Min = Min, Max = Max },\n    _ => null,\n};"
+    },
+    "template-model/strict": {
+      "file": "src/ClinicReport.Api/Domain/TemplateDefinition.cs",
+      "start": 25,
+      "end": 26,
+      "code": "// A misspelt property (\"phrse\") should fail loudly rather than vanish from the template.\nUnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,"
+    },
+    "formula/power": {
+      "file": "src/ClinicReport.Api/Domain/Formula.cs",
+      "start": 137,
+      "end": 147,
+      "code": "// power := unary ('^' power)?   (right associative)\nprivate Node ParsePower()\n{\n    var node = ParseUnary();\n    if (Peek() == '^')\n    {\n        Next();\n        return new Binary('^', node, ParsePower());\n    }\n    return node;\n}"
+    },
+    "formula/arity": {
+      "file": "src/ClinicReport.Api/Domain/Formula.cs",
+      "start": 210,
+      "end": 217,
+      "code": "var (min, max) = name switch\n{\n    \"sqrt\" or \"abs\" => (1, 1),\n    \"round\" => (1, 2),\n    _ => (1, int.MaxValue),\n};\nif (args.Count < min || args.Count > max)\n    throw Error($\"{name}() takes {(min == max ? min.ToString() : $\"{min}+\")} argument(s)\");"
+    },
+    "formula/binary": {
+      "file": "src/ClinicReport.Api/Domain/Formula.cs",
+      "start": 60,
+      "end": 76,
+      "code": "private sealed record Binary(char Op, Node Left, Node Right) : Node\n{\n    public override double? Eval(Func<string, double?> resolve)\n    {\n        if (Left.Eval(resolve) is not { } a || Right.Eval(resolve) is not { } b)\n            return null;\n        return Op switch\n        {\n            '+' => a + b,\n            '-' => a - b,\n            '*' => a * b,\n            '/' => b == 0 ? null : a / b,\n            '^' => Math.Pow(a, b),\n            _ => throw new InvalidOperationException($\"Unknown operator {Op}\"),\n        };\n    }\n}"
+    },
+    "formula/avg": {
+      "file": "src/ClinicReport.Api/Domain/Formula.cs",
+      "start": 85,
+      "end": 93,
+      "code": "    case \"avg\":\n        // Averages ignore blanks: e' septal alone still gives an E/e' when lateral was not measured.\n        var present = values.Where(v => v is not null).Select(v => v!.Value).ToArray();\n        return present.Length == 0 ? null : present.Average();\n    case \"round\":\n        if (values[0] is not { } x) return null;\n        var digits = values.Length > 1 && values[1] is { } d ? (int)d : 0;\n        return Math.Round(x, Math.Clamp(digits, 0, 10), MidpointRounding.AwayFromZero);\n}"
+    },
+    "renderer/choice": {
+      "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+      "start": 104,
+      "end": 111,
+      "code": "case FieldTypes.Choice:\n{\n    var opt = f.Options.FirstOrDefault(o => o.Value == _values.GetString(f.Id));\n    if (opt is null)\n        return (null, false);\n    var phrase = opt.Phrase ?? f.Phrase ?? \"{label}: {value}.\";\n    return (Fill(phrase, f, opt.Label, opt.Label), opt.Abnormal);\n}"
+    },
+    "renderer/fill": {
+      "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+      "start": 143,
+      "end": 157,
+      "code": "private static string? Fill(string phrase, FieldDef f, string value, string values)\n{\n    if (string.IsNullOrWhiteSpace(phrase))\n        return null;\n    var s = phrase\n        .Replace(\"{label}\", f.Label)\n        .Replace(\"{value}\", value)\n        .Replace(\"{values}\", values)\n        .Replace(\"{unit}\", f.Unit ?? \"\");\n    s = Spaces().Replace(s, \" \").Replace(\" .\", \".\").Replace(\" ,\", \",\").Trim();\n    if (s.Length == 0)\n        return null;\n    s = char.ToUpper(s[0], CultureInfo.InvariantCulture) + s[1..];\n    return s[^1] is '.' or '!' or '?' or ':' ? s : s + \".\";\n}"
+    },
+    "renderer/visible": {
+      "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+      "start": 180,
+      "end": 181,
+      "code": "var visible = (_parents.GetValueOrDefault(fieldId) is not { } parent || IsVisible(parent.Id))\n    && (f.ShowIf is null || Satisfies(f.ShowIf));"
+    },
+    "renderer/number": {
+      "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+      "start": 214,
+      "end": 220,
+      "code": "/// <summary>A typed or computed number, but only if its field is showing.</summary>\nprivate double? NumberOf(string fieldId)\n{\n    if (!_fields.TryGetValue(fieldId, out var f) || !FieldTypes.IsNumeric(f.Type))\n        return null;\n    if (f.Type == FieldTypes.Number)\n        return IsVisible(fieldId) ? _values.GetNumber(fieldId) : null;"
+    },
+    "renderer/flag": {
+      "file": "src/ClinicReport.Api/Domain/ReportRenderer.cs",
+      "start": 259,
+      "end": 263,
+      "code": "private static string? Flag(Bounds? b, double value) =>\n    b is null ? null\n    : b.Min is { } min && value < min ? \"L\"\n    : b.Max is { } max && value > max ? \"H\"\n    : null;"
+    },
+    "designer/publish": {
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "start": 113,
+      "end": 131,
+      "code": "admin.MapPost(\"/{id:int}/publish\", async (int id, ClaimsPrincipal user, ClinicReportDbContext db, TimeProvider clock) =>\n{\n    var t = await db.Templates.Include(t => t.Versions).SingleOrDefaultAsync(t => t.Id == id);\n    var draft = t?.Versions.FirstOrDefault(v => v.Status == TemplateStatus.Draft);\n    if (t is null || draft is null)\n        return Results.NotFound();\n    var errors = TemplateValidator.Validate(draft.DefinitionJson);\n    if (errors.Count > 0)\n        return Results.Problem(string.Join(\"\\n\", errors), title: \"Fix the template before publishing.\", statusCode: StatusCodes.Status422UnprocessableEntity);\n\n    var def = TemplateDefinition.Parse(draft.DefinitionJson);\n    draft.Status = TemplateStatus.Published;\n    draft.PublishedAt = clock.GetUtcNow().UtcDateTime;\n    draft.PublishedByUserId = user.RequiredUserId();\n    t.Name = def.Name;\n    t.Service = def.Service;\n    await db.SaveChangesAsync();\n    return Results.Ok(await LoadDetail(db, id));\n});"
+    },
+    "designer/key": {
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "start": 83,
+      "end": 84,
+      "code": "if (def!.Key != t.Key)\n    return Results.Problem($\"The key must stay \\\"{t.Key}\\\"; reports and exports refer to it.\", statusCode: StatusCodes.Status400BadRequest);"
+    },
+    "designer/placeholders": {
+      "file": "src/ClinicReport.Api/Domain/TemplateValidator.cs",
+      "start": 189,
+      "end": 196,
+      "code": "private static void CheckPlaceholders(string? phrase, string where, List<string> errors)\n{\n    if (phrase is null)\n        return;\n    foreach (Match m in PlaceholderPattern().Matches(phrase))\n        if (!Placeholders.Contains(m.Groups[1].Value))\n            errors.Add($\"{where}: unknown placeholder {{{m.Groups[1].Value}}} in phrase; use {string.Join(\", \", Placeholders.Select(p => \"{\" + p + \"}\"))}.\");\n}"
+    },
+    "designer/cycles": {
+      "file": "src/ClinicReport.Api/Domain/TemplateValidator.cs",
+      "start": 207,
+      "end": 222,
+      "code": "var state = new Dictionary<string, int>(); // 1 = visiting, 2 = done\nbool Visit(string id)\n{\n    if (state.TryGetValue(id, out var s))\n        return s == 1;\n    state[id] = 1;\n    if (deps.TryGetValue(id, out var next) && next.Any(n => deps.ContainsKey(n) && Visit(n)))\n        return true;\n    state[id] = 2;\n    return false;\n}\n\nforeach (var id in deps.Keys)\n    if (Visit(id))\n    {\n        errors.Add($\"Field \\\"{id}\\\": computed formulas refer to each other in a loop.\");"
+    },
+    "designer/seed": {
+      "file": "src/ClinicReport.Api/Data/Seeding.cs",
+      "start": 37,
+      "end": 58,
+      "code": "foreach (var path in Directory.GetFiles(directory, \"*.json\").Order())\n{\n    var json = await File.ReadAllTextAsync(path);\n    var errors = TemplateValidator.Validate(json);\n    if (errors.Count > 0)\n    {\n        logger.LogError(\"Skipping template {File}: {Errors}\", Path.GetFileName(path), string.Join(\" | \", errors));\n        continue;\n    }\n    var def = TemplateDefinition.Parse(json);\n    if (await db.Templates.AnyAsync(t => t.Key == def.Key))\n        continue;\n\n    db.Templates.Add(new ReportTemplate\n    {\n        Key = def.Key, Name = def.Name, Service = def.Service,\n        Versions = [new TemplateVersion\n        {\n            Version = 1, Status = TemplateStatus.Published, DefinitionJson = def.ToJson(), CreatedAt = now, PublishedAt = now,\n        }],\n    });\n    logger.LogInformation(\"Imported template {Key} from {File}\", def.Key, Path.GetFileName(path));"
+    },
+    "designer/fees": {
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "start": 149,
+      "end": 151,
+      "code": "static bool Bad(decimal? v) => v is < 0 or > 10000 || (v is { } x && decimal.Round(x, 2) != x);\nif (Bad(body.OhipTechnicalFee) || Bad(body.OhipProfessionalFee))\n    return Results.ValidationProblem(new Dictionary<string, string[]> { [\"fees\"] = [\"Dollars and cents, from 0 to 10,000; empty for none.\"] });"
+    },
+    "report-service/filter": {
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "start": 28,
+      "end": 30,
+      "code": "// Every /{id} route: the report must exist and belong to a service the user may work on;\n// otherwise it answers 404, as if the report were not there.\nvar one = api.MapGroup(\"/{id:int}\").AddEndpointFilter(ServiceAccessFilter).AddEndpointFilter(ConfidentialityFilter);"
+    },
+    "report-service/mutate": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 206,
+      "end": 232,
+      "code": "for (var attempt = 1; ; attempt++)\n{\n    var report = await LoadAsync(id, ct)\n        ?? throw new ReportRuleException(\"Report not found.\", StatusCodes.Status404NotFound);\n    if (report.Status != ReportStatus.Draft)\n        throw new ReportRuleException(\"This report is signed. Add an addendum instead of editing it.\");\n\n    var now = clock.GetUtcNow().UtcDateTime;\n    var log = new List<ReportChange>();\n    change(report, (field, value) => log.Add(new ReportChange\n    {\n        ReportId = id, Field = field, UserId = userId, At = now,\n        NewValueJson = value is { } v ? v.GetRawText() : null,\n    }));\n    report.Revision++;\n    report.UpdatedAt = now;\n    db.Changes.AddRange(log);\n\n    try\n    {\n        await db.SaveChangesAsync(ct);\n    }\n    catch (DbUpdateConcurrencyException) when (attempt < MaxSaveAttempts)\n    {\n        // Someone else saved between our read and write: start over from their version.\n        db.ChangeTracker.Clear();\n        continue;"
+    },
+    "report-service/token": {
+      "file": "src/ClinicReport.Api/Data/ClinicReportDbContext.cs",
+      "start": 119,
+      "end": 119,
+      "code": "e.Property(r => r.Revision).IsConcurrencyToken();"
+    },
+    "report-service/multi": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 259,
+      "end": 267,
+      "code": "case FieldTypes.Multi:\n    if (v.ValueKind != JsonValueKind.Array)\n        throw Bad(field, \"must be a list\");\n    var picked = v.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : null).ToList();\n    if (picked.Any(p => p is null || field.Options.All(o => o.Value != p)))\n        throw Bad(field, \"contains a value that is not one of its options\");\n    // Keep template order and drop duplicates so the narrative reads the same however it was clicked.\n    var ordered = field.Options.Select(o => o.Value).Where(picked.Contains).ToArray();\n    return JsonSerializer.SerializeToElement(ordered);"
+    },
+    "report-service/handler": {
+      "file": "src/ClinicReport.Api/Program.cs",
+      "start": 99,
+      "end": 113,
+      "code": "internal sealed class ReportRuleHandler(IProblemDetailsService problems) : IExceptionHandler\n{\n    public async ValueTask<bool> TryHandleAsync(HttpContext http, Exception exception, CancellationToken ct)\n    {\n        if (exception is not ReportRuleException rule)\n            return false;\n        http.Response.StatusCode = rule.Status;\n        return await problems.TryWriteAsync(new ProblemDetailsContext\n        {\n            HttpContext = http,\n            ProblemDetails = { Status = rule.Status, Title = rule.Message },\n            Exception = exception,\n        });\n    }\n}"
+    },
+    "report-service/sign": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 148,
+      "end": 155,
+      "code": "if (rendered.MissingRequired.Count > 0)\n    throw new ReportRuleException(\"Answer the required fields first: \" + string.Join(\"; \", rendered.MissingRequired) + \".\", StatusCodes.Status422UnprocessableEntity);\nif (string.IsNullOrWhiteSpace(r.Conclusion))\n    throw new ReportRuleException(\"Write a conclusion before signing.\", StatusCodes.Status422UnprocessableEntity);\n\nr.Status = ReportStatus.Final;\nr.SignedByUserId = userId;\nr.SignedAt = clock.GetUtcNow().UtcDateTime;"
+    },
+    "report-service/addendum": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 178,
+      "end": 179,
+      "code": "if (report.Status != ReportStatus.Final)\n    throw new ReportRuleException(\"Addenda are for signed reports; edit the draft instead.\");"
+    },
+    "live/hub": {
+      "file": "src/ClinicReport.Api/Reports/ReportHub.cs",
+      "start": 39,
+      "end": 43,
+      "code": "/// Live channel for an open report. Changes themselves go through the REST API (so they are validated\n/// and audited in one place); the hub only carries presence and the \"reportChanged\" broadcasts.\n/// </summary>\n[Authorize(Policy = Permissions.ReportsView)]\npublic class ReportHub(PresenceTracker presence, ClinicReportDbContext db) : Hub"
+    },
+    "live/broadcast": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 243,
+      "end": 244,
+      "code": "private Task BroadcastAsync(ReportDto dto, string? clientId, CancellationToken ct) =>\n    hub.Clients.Group(ReportHub.GroupName(dto.Id)).SendAsync(\"reportChanged\", new { clientId, report = dto }, ct);"
+    },
+    "live/join": {
+      "file": "src/ClinicReport.Api/Reports/ReportHub.cs",
+      "start": 47,
+      "end": 61,
+      "code": "public async Task JoinReport(int reportId)\n{\n    var service = await db.Reports.Where(r => r.Id == reportId).Select(r => r.TemplateVersion.Template.Service).SingleOrDefaultAsync();\n    if (service is null || !Context.User!.CanAccessService(service))\n        throw new HubException(\"Report not found.\");\n\n    if (presence.ReportOf(Context.ConnectionId) is { } previous && previous != reportId)\n        await LeaveCurrent();\n\n    var user = Context.User!;\n    presence.Join(reportId, new Viewer(Context.ConnectionId, user.RequiredUserId(), user.Identity!.Name ?? \"?\",\n        string.Join(\", \", user.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value)), null));\n    await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(reportId));\n    await BroadcastPresence(reportId);\n}"
+    },
+    "live/receive": {
+      "file": "web/src/live.ts",
+      "start": 26,
+      "end": 29,
+      "code": "conn.on('reportChanged', (msg: { clientId: string | null; report: Report }) => {\n  if (msg.clientId !== clientId) handlers.current.onRemoteChange(msg.report)\n})\nconn.on('presence', (v: Viewer[]) => setViewers(v))"
+    },
+    "live/reconnect": {
+      "file": "web/src/live.ts",
+      "start": 32,
+      "end": 36,
+      "code": "conn.onreconnected(async () => {\n  await conn.invoke('JoinReport', reportId)\n  setConnected(true)\n  handlers.current.onReconnected() // we may have missed changes while offline\n})"
+    },
+    "live/accept": {
+      "file": "web/src/pages/ReportEditor.tsx",
+      "start": 32,
+      "end": 45,
+      "code": "/** Takes a report from the server (our save, someone else's, or a reload) without losing local typing. */\nconst accept = useCallback((r: Report) => {\n  if (r.revision < revision.current) return // an older response overtaken by a newer one\n  revision.current = r.revision\n  setReport(r)\n  setValues(() => {\n    const v: Values = { ...r.values }\n    for (const [k, val] of pending.current) {\n      if (val == null) delete v[k]\n      else v[k] = val\n    }\n    return v\n  })\n  if (conclusionEdits.current === 0) setConclusion(r.conclusion ?? '')"
+    },
+    "live/debounce": {
+      "file": "web/src/pages/ReportEditor.tsx",
+      "start": 121,
+      "end": 122,
+      "code": "// Clicks save at once; typing waits for a pause.\nflushTimer.current = window.setTimeout(flush, field.type === 'choice' || field.type === 'multi' ? 0 : 500)"
+    },
+    "patients/read": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 78,
+      "end": 79,
+      "code": "auth.AddPolicy(PatientsRead, policy => policy.RequireClaim(AppClaims.Permission,\n    Permissions.ReportsView, Permissions.ReportsCreate, Permissions.PatientsManage));"
+    },
+    "patients/plausible": {
+      "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+      "start": 84,
+      "end": 87,
+      "code": "var today = DateOnly.FromDateTime(clock.GetLocalNow().DateTime);\nif (req.DateOfBirth > today || req.DateOfBirth < today.AddYears(-125))\n    errors[\"dateOfBirth\"] = [\"Not a plausible date of birth.\"];\nif (!Sexes.Contains(req.Sex))"
+    },
+    "patients/merge": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 211,
+      "end": 224,
+      "code": "var old = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == merged);\nif (old is not null)\n{\n    var keep = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == survivor);\n    if (keep is null)\n        old.Mrn = survivor;\n    else\n    {\n        await db.Reports.Where(r => r.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(r => r.PatientId, keep.Id));\n        await db.ReportOrders.Where(o => o.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(o => o.PatientId, keep.Id));\n        await db.SecurityEvents.Where(e => e.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(e => e.PatientId, keep.Id));\n        db.Patients.Remove(old);\n    }\n    await db.SaveChangesAsync();"
+    },
+    "accounts/lockout": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 55,
+      "end": 60,
+      "code": "if (user?.LockoutEndUtc is { } until && until > now.UtcDateTime)\n{\n    await log.WriteAsync(SecurityEventTypes.LoginFailed, null, user.Id, \"Account locked\");\n    return Results.Problem($\"Too many failed attempts. Try again after {Math.Ceiling((until - now.UtcDateTime).TotalMinutes)} minutes, or ask an administrator to unlock the account.\",\n        statusCode: StatusCodes.Status423Locked);\n}"
+    },
+    "accounts/timing": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 62,
+      "end": 65,
+      "code": "// Hash even when the user does not exist so timing does not reveal valid user names.\nvar result = hasher.VerifyHashedPassword(user ?? new AppUser(), user?.PasswordHash ?? DummyHash, req.Password ?? \"\");\nif (user is null || result == PasswordVerificationResult.Failed)\n    return await Failed(user, \"Wrong password\", \"Wrong user name or password.\");"
+    },
+    "accounts/rate": {
+      "file": "src/ClinicReport.Api/Program.cs",
+      "start": 42,
+      "end": 49,
+      "code": "var loginsPerMinute = builder.Configuration.GetValue(\"RateLimits:LoginsPerMinute\", 10);\nbuilder.Services.AddRateLimiter(o =>\n{\n    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;\n    o.AddPolicy(AuthEndpoints.LoginRateLimit, ctx => RateLimitPartition.GetFixedWindowLimiter(\n        ctx.Connection.RemoteIpAddress?.ToString() ?? \"unknown\",\n        _ => new FixedWindowRateLimiterOptions { PermitLimit = loginsPerMinute, Window = TimeSpan.FromMinutes(1) }));\n});"
+    },
+    "accounts/bootstrap": {
+      "file": "src/ClinicReport.Api/Data/Seeding.cs",
+      "start": 103,
+      "end": 106,
+      "code": "var password = config[\"Bootstrap:AdminPassword\"];\nvar generated = string.IsNullOrEmpty(password);\nif (generated)\n    password = RandomNumberGenerator.GetString(\"abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789\", 16);"
+    },
+    "accounts/pending": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 174,
+      "end": 186,
+      "code": "public static IApplicationBuilder UsePendingActionGate(this IApplicationBuilder app) => app.Use(async (ctx, next) =>\n{\n    var pending = ctx.User.FindFirstValue(AppClaims.Pending);\n    var path = ctx.Request.Path;\n    if (pending is not null && (path.StartsWithSegments(\"/hubs\")\n        || (path.StartsWithSegments(\"/api\") && !path.StartsWithSegments(\"/api/auth\") && !path.StartsWithSegments(\"/api/settings\"))))\n    {\n        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;\n        await ctx.Response.WriteAsJsonAsync(new { title = pending == PendingActions.ChangePassword\n            ? \"Choose a new password first.\" : \"Set up two-factor sign-in first.\", pending });\n        return;\n    }\n    await next();"
+    },
+    "accounts/password": {
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "start": 31,
+      "end": 36,
+      "code": "public static string? PasswordProblem(string? password, string? userName = null) =>\n    password is null || password.Length < MinPasswordLength ? $\"Use at least {MinPasswordLength} characters.\"\n    : password.Length > 128 ? \"Use at most 128 characters.\"\n    : password.Distinct().Count() < 4 ? \"Use more different characters.\"\n    : userName is { Length: >= 3 } && password.Contains(userName, StringComparison.OrdinalIgnoreCase) ? \"Don't include your user name.\"\n    : null;"
+    },
+    "totp/code": {
+      "file": "src/ClinicReport.Api/Auth/Totp.cs",
+      "start": 23,
+      "end": 32,
+      "code": "public static string Code(string secret, long step)\n{\n    var counter = BitConverter.GetBytes(step);\n    if (BitConverter.IsLittleEndian)\n        Array.Reverse(counter);\n    var hash = HMACSHA1.HashData(Base32Decode(secret), counter);\n    var offset = hash[^1] & 0x0F;\n    var binary = ((hash[offset] & 0x7F) << 24) | (hash[offset + 1] << 16) | (hash[offset + 2] << 8) | hash[offset + 3];\n    return (binary % 1_000_000).ToString(\"D6\");\n}"
+    },
+    "totp/uri": {
+      "file": "src/ClinicReport.Api/Auth/Totp.cs",
+      "start": 17,
+      "end": 19,
+      "code": "public static string OtpAuthUri(string issuer, string account, string secret) =>\n    $\"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(account)}\" +\n    $\"?secret={secret}&issuer={Uri.EscapeDataString(issuer)}&algorithm=SHA1&digits=6&period={StepSeconds}\";"
+    },
+    "totp/verify": {
+      "file": "src/ClinicReport.Api/Auth/Totp.cs",
+      "start": 38,
+      "end": 52,
+      "code": "public static long? Verify(string secret, string? code, DateTimeOffset now, long lastUsedStep)\n{\n    code = new string((code ?? \"\").Where(char.IsDigit).ToArray());\n    if (code.Length != 6)\n        return null;\n    var current = StepAt(now);\n    for (var step = current - 1; step <= current + 1; step++)\n    {\n        if (step <= lastUsedStep)\n            continue;\n        if (CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(Code(secret, step)), Encoding.ASCII.GetBytes(code)))\n            return step;\n    }\n    return null;\n}"
+    },
+    "totp/protect": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 75,
+      "end": 78,
+      "code": "var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret!);\nif (Totp.Verify(secret, req.Code, now, user.TwoFactorLastStep) is not { } step)\n    return await Failed(user, \"Wrong two-factor code\", \"That code is wrong or already used.\", twoFactor: true);\nuser.TwoFactorLastStep = step;"
+    },
+    "permissions/catalog": {
+      "file": "src/ClinicReport.Api/Auth/Permissions.cs",
+      "start": 9,
+      "end": 16,
+      "code": "public const string ReportsView = \"reports.view\";\npublic const string ReportsCreate = \"reports.create\";\npublic const string ReportsEdit = \"reports.edit\";\npublic const string ReportsSign = \"reports.sign\";\npublic const string PatientsManage = \"patients.manage\";\npublic const string TemplatesDesign = \"templates.design\";\npublic const string UsersManage = \"users.manage\";\npublic const string AuditView = \"audit.view\";"
+    },
+    "permissions/access": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 30,
+      "end": 43,
+      "code": "public static Access For(AppUser user)\n{\n    var roles = user.Roles.Select(ur => ur.Role).ToList();\n    var permissions = roles.Any(r => r.IsSystem && r.Name == SystemRoles.Administrator)\n        ? Auth.Permissions.All\n        : Auth.Permissions.All.Where(p => roles.Any(r => Auth.Permissions.Parse(r.Permissions).Contains(p))).ToArray();\n    var services = user.ServiceList();\n    var twoFactorRequired = roles.Any(r => r.RequireTwoFactor);\n    var pending = user.MustChangePassword ? PendingActions.ChangePassword\n        : twoFactorRequired && !user.TwoFactorEnabled ? PendingActions.SetupTwoFactor\n        : null;\n    return new Access(roles.Select(r => r.Name).OrderBy(n => n).ToArray(), permissions,\n        services.Count == 0 ? null : services.ToArray(), twoFactorRequired, pending);\n}"
+    },
+    "permissions/policies": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 73,
+      "end": 77,
+      "code": "var auth = services.AddAuthorizationBuilder()\n    .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());\n// One policy per permission, named after it: .RequireAuthorization(Permissions.ReportsSign)\nforeach (var p in Permissions.All)\n    auth.AddPolicy(p, policy => policy.RequireClaim(AppClaims.Permission, p));"
+    },
+    "permissions/service": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 148,
+      "end": 155,
+      "code": "public static string[]? ServiceScope(this ClaimsPrincipal user)\n{\n    var services = user.FindAll(AppClaims.Service).Select(c => c.Value).ToArray();\n    return services.Contains(AppClaims.AllServices) ? null : services;\n}\n\npublic static bool CanAccessService(this ClaimsPrincipal user, string service) =>\n    user.ServiceScope() is not { } scope || scope.Contains(service, StringComparer.OrdinalIgnoreCase);"
+    },
+    "permissions/last": {
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "start": 335,
+      "end": 346,
+      "code": "private static async Task<string?> LastAdminProblem(ClinicReportDbContext db, AppUser? changedUser, Role? changedRole = null)\n{\n    var others = await db.Users.AsNoTracking().Include(u => u.Roles).ThenInclude(ur => ur.Role)\n        .Where(u => u.IsActive && (changedUser == null || u.Id != changedUser.Id)).ToListAsync();\n    if (changedRole is not null)\n        foreach (var ur in others.SelectMany(u => u.Roles).Where(ur => ur.RoleId == changedRole.Id))\n            ur.Role = changedRole;\n    var candidates = changedUser is { IsActive: true } ? others.Append(changedUser) : others;\n    return candidates.Any(u => Access.For(u).Permissions.Contains(Permissions.UsersManage))\n        ? null\n        : \"At least one active user must keep the \\\"Manage users and roles\\\" permission.\";\n}"
+    },
+    "audit/add": {
+      "file": "src/ClinicReport.Api/Auth/SecurityLog.cs",
+      "start": 13,
+      "end": 24,
+      "code": "public void Add(string type, int? actor, int? target = null, string? detail = null, int? reportId = null, int? patientId = null) =>\n    db.SecurityEvents.Add(new SecurityEvent\n    {\n        At = clock.GetUtcNow().UtcDateTime,\n        Type = type,\n        ActorUserId = actor,\n        TargetUserId = target,\n        ReportId = reportId,\n        PatientId = patientId,\n        Detail = detail is { Length: > 500 } ? detail[..500] : detail,\n        IpAddress = http.HttpContext?.Connection.RemoteIpAddress?.ToString(),\n    });"
+    },
+    "audit/viewed": {
+      "file": "src/ClinicReport.Api/Auth/SecurityLog.cs",
+      "start": 33,
+      "end": 41,
+      "code": "public async Task ReportViewedAsync(int userId, int reportId, int patientId, CancellationToken ct)\n{\n    var since = clock.GetUtcNow().UtcDateTime - ViewDedupWindow;\n    if (await db.SecurityEvents.AnyAsync(e => e.Type == SecurityEventTypes.ReportViewed\n            && e.ActorUserId == userId && e.ReportId == reportId && e.At >= since, ct))\n        return;\n    Add(SecurityEventTypes.ReportViewed, userId, reportId: reportId, patientId: patientId);\n    await db.SaveChangesAsync(ct);\n}"
+    },
+    "audit/csrf": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 158,
+      "end": 168,
+      "code": "public static IApplicationBuilder UseCsrfHeaderCheck(this IApplicationBuilder app) => app.Use(async (ctx, next) =>\n{\n    var unsafeMethod = !(HttpMethods.IsGet(ctx.Request.Method) || HttpMethods.IsHead(ctx.Request.Method) || HttpMethods.IsOptions(ctx.Request.Method));\n    if (unsafeMethod && ctx.Request.Path.StartsWithSegments(\"/api\") && !ctx.Request.Headers.ContainsKey(CsrfHeader))\n    {\n        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;\n        await ctx.Response.WriteAsJsonAsync(new { title = $\"Missing {CsrfHeader} header.\" });\n        return;\n    }\n    await next();\n});"
+    },
+    "audit/header": {
+      "file": "web/src/api.ts",
+      "start": 110,
+      "end": 114,
+      "code": "headers: {\n  'X-ClinicReport': '1',\n  'X-Client-Id': clientId,\n  ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),\n},"
+    },
+    "clinichub-signin/managed": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 38,
+      "end": 42,
+      "code": "// Connected to ClinicHub: these exist only to say so (their handlers would need a clinic's database to bind).\nvar managed = () => Results.Problem(\"Sign-in, passwords, two-factor and roles are managed in ClinicHub for this installation.\",\n    statusCode: StatusCodes.Status409Conflict);\nforeach (var path in new[] { \"/login\", \"/demo-login\", \"/password\", \"/two-factor/setup\", \"/two-factor/enable\", \"/two-factor/disable\" })\n    api.MapPost(path, managed).AllowAnonymous();"
+    },
+    "clinichub-signin/oidc": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 153,
+      "end": 168,
+      "code": "auth.AddOpenIdConnect(Scheme, \"ClinicHub\", o =>\n{\n    o.Authority = hub.Authority;\n    o.ClientId = hub.ClientId;\n    o.ClientSecret = hub.ClientSecret;\n    o.RequireHttpsMetadata = hub.RequireHttpsMetadata;\n    o.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;\n    o.ResponseType = OpenIdConnectResponseType.Code;\n    // A redirect, not a cross-site form post, so the correlation cookies can stay SameSite=Lax over plain HTTP in development.\n    o.ResponseMode = OpenIdConnectResponseMode.Query;\n    o.UsePkce = true;\n    o.Scope.Clear();\n    foreach (var s in new[] { \"openid\", \"profile\", \"clinic\", \"offline_access\" })\n        o.Scope.Add(s);\n    o.SaveTokens = true;\n    o.MapInboundClaims = false;"
+    },
+    "clinichub-signin/lax": {
+      "file": "src/ClinicReport.Api/Auth/AuthSetup.cs",
+      "start": 59,
+      "end": 60,
+      "code": "// Connected: the browser arrives from ClinicHub's sign-in, a navigation a Strict cookie would not survive.\no.Cookie.SameSite = connected ? SameSiteMode.Lax : SameSiteMode.Strict;"
+    },
+    "clinichub-signin/user": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 212,
+      "end": 226,
+      "code": "var externalId = $\"clinichub:{hub.FindFirstValue(\"sub\")}\";\nvar now = DateTime.UtcNow;\nvar user = await db.Users.SingleOrDefaultAsync(u => u.ExternalId == externalId);\nif (user is null)\n{\n    var userName = hub.FindFirstValue(\"preferred_username\") ?? externalId;\n    // A local account with the same user name (from before the clinic connected) is taken over, keeping its history.\n    user = await db.Users.SingleOrDefaultAsync(u => u.UserName == userName && u.ExternalId == null)\n        ?? db.Users.Add(new AppUser { UserName = userName, CreatedAt = now }).Entity;\n    user.ExternalId = externalId;\n    user.PasswordHash = \"\";\n    user.TwoFactorEnabled = false;\n    user.TwoFactorSecret = null;\n    user.MustChangePassword = false;\n}"
+    },
+    "clinichub-signin/permissions": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 251,
+      "end": 252,
+      "code": "// Only keys ClinicReport knows: ClinicHub already sends this application's permissions, without its prefix.\nclaims.AddRange(permissions.Where(Permissions.All.Contains).Distinct().Select(p => new Claim(AppClaims.Permission, p)));"
+    },
+    "clinichub-signin/recheck": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 281,
+      "end": 300,
+      "code": "if (DateTime.UtcNow - checkedAt >= TimeSpan.FromMinutes(options.RecheckMinutes))\n{\n    switch (await Refresh(ctx, options))\n    {\n        case RefreshResult.Refused:\n            await Reject(ctx);\n            return;\n        case RefreshResult.Unreachable when DateTime.UtcNow - checkedAt > TimeSpan.FromMinutes(options.OfflineGraceMinutes):\n            await Reject(ctx);\n            return;\n        case RefreshResult.Unreachable:\n            break;\n        case RefreshResult.Ok(var idToken):\n            permissions = idToken.Claims.Where(c => c.Type == \"permission\").Select(c => c.Value).ToList();\n            roles = idToken.Claims.Where(c => c.Type == \"role\").Select(c => c.Value).ToList();\n            checkedAt = DateTime.UtcNow;\n            ctx.ShouldRenew = true;\n            break;\n    }\n}"
+    },
+    "clinichub-signin/create": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 77,
+      "end": 83,
+      "code": "public ClinicReportDbContext Create(string slug)\n{\n    if (!IsValidSlug(slug))\n        throw new InvalidOperationException(\"Invalid clinic name.\");\n    var cs = options.Value.DatabasePattern.Replace(\"{clinic}\", slug);\n    return new ClinicReportDbContext(new DbContextOptionsBuilder<ClinicReportDbContext>().UseSqlite(cs).Options);\n}"
+    },
+    "clinichub-signin/scoped": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 132,
+      "end": 139,
+      "code": "// The database of the request is the signed-in person's clinic.\nservices.AddScoped(sp =>\n{\n    var user = sp.GetRequiredService<IHttpContextAccessor>().HttpContext?.User;\n    // A person's session says \"clinic\"; ClinicHub's own service token says \"clinic_slug\".\n    var slug = user?.FindFirstValue(ClinicHubClaims.Clinic) ?? user?.FindFirstValue(\"clinic_slug\")\n        ?? throw new InvalidOperationException(\"Not signed in to a clinic.\");\n    return sp.GetRequiredService<ClinicReportDatabases>().Open(slug);"
+    },
+    "orders/policy": {
+      "file": "src/ClinicReport.Api/Auth/ClinicHubConnection.cs",
+      "start": 149,
+      "end": 151,
+      "code": "services.AddAuthorizationBuilder().AddPolicy(OrdersPolicy, p => p\n    .AddAuthenticationSchemes(ServiceScheme).RequireAuthenticatedUser()\n    .RequireClaim(\"scope\", \"orders\").RequireAssertion(ctx => ClinicReportDatabases.IsValidSlug(ctx.User.FindFirstValue(\"clinic_slug\"))));"
+    },
+    "orders/dispatch": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 46,
+      "end": 53,
+      "code": "var entries = bundle[\"entry\"]?.AsArray().Select(e => e?[\"resource\"]).ToList() ?? [];\nif (entries is [{ } only] && (string?)only[\"resourceType\"] == \"Patient\" && only[\"link\"] is not null)\n    return await MergeAsync(db, hub.FindFirstValue(\"clinic_slug\")!, only);\nvar revoked = entries.Where(r => (string?)r?[\"resourceType\"] == \"ServiceRequest\" && (string?)r?[\"status\"] == \"revoked\").ToList();\nif (revoked.Count > 0)\n    return revoked.Count == entries.Count\n        ? await CancelAsync(db, hub.FindFirstValue(\"clinic_slug\")!, revoked!, clock.GetUtcNow().UtcDateTime)\n        : Outcome(\"A Bundle that withdraws orders carries only the revoked ServiceRequests.\");"
+    },
+    "orders/codes": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 66,
+      "end": 70,
+      "code": "var keys = orders.Select(o => o?[\"code\"]?[\"coding\"]?.AsArray().FirstOrDefault(c => (string?)c?[\"system\"] == TemplateSystem)?[\"code\"]?.ToString()).ToList();\nvar templates = await db.Templates.Where(t => t.IsActive).ToDictionaryAsync(t => t.Key);\nvar unknown = keys.Where(k => k is null || !templates.ContainsKey(k)).ToList();\nif (unknown.Count > 0)\n    return Outcome($\"ClinicReport has no active template '{unknown[0] ?? \"(no code)\"}'. Codes use {TemplateSystem}.\");"
+    },
+    "orders/existing": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 93,
+      "end": 98,
+      "code": "var existing = await db.ReportOrders.SingleOrDefaultAsync(x => x.ExternalId == externalId);\nif (existing is not null)\n{\n    saved.Add(existing);   // the same order sent again (a retry): accepted once\n    continue;\n}"
+    },
+    "orders/cancel": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 243,
+      "end": 245,
+      "code": "if (order.Status == ReportOrderStatus.Started)\n    return Outcome($\"The {order.Template.Name} has been started (report {order.ReportId}); speak to the reading physician.\",\n        StatusCodes.Status409Conflict, \"business-rule\");"
+    },
+    "restricted/label": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 22,
+      "end": 29,
+      "code": "public static string? Confidentiality(JsonNode? resource)\n{\n    var codes = resource?[\"meta\"]?[\"security\"]?.AsArray().Where(c => (string?)c?[\"system\"] == ConfidentialitySystem)\n        .Select(c => (string?)c![\"code\"]).Where(c => !string.IsNullOrEmpty(c)).ToList() ?? [];\n    if (codes.Count == 0 || codes.All(c => c is \"U\" or \"L\" or \"M\" or \"N\"))\n        return null;\n    return codes.Contains(\"V\") ? \"V\" : \"R\";\n}"
+    },
+    "restricted/gate": {
+      "file": "src/ClinicReport.Api/Auth/ConfidentialityGate.cs",
+      "start": 13,
+      "end": 34,
+      "code": "public class ConfidentialityGate(IMemoryCache cache, TimeProvider clock)\n{\n    public static readonly TimeSpan Lasts = TimeSpan.FromHours(1);\n    public const int MinReason = 10;\n\n    private static string Key(ClaimsPrincipal user, string item) =>\n        $\"restricted|{user.FindFirst(ClinicHubClaims.Clinic)?.Value}|{user.FindFirst(ClaimTypes.NameIdentifier)?.Value}|{item}\";\n\n    public bool IsOpen(ClaimsPrincipal user, string item) => cache.TryGetValue(Key(user, item), out _);\n\n    public DateTime Open(ClaimsPrincipal user, string item)\n    {\n        var until = clock.GetUtcNow().UtcDateTime + Lasts;\n        cache.Set(Key(user, item), true, new DateTimeOffset(until, TimeSpan.Zero));\n        return until;\n    }\n\n    public static IResult Closed(string label) => Results.Json(\n        new { code = \"restricted\", label, title = \"The patient has a consent directive at the clinic: this item is restricted.\", reasonNeeded = true },\n        statusCode: StatusCodes.Status403Forbidden);\n\n    public static bool ReasonOk(string? reason) => reason is not null && reason.Trim().Length >= MinReason;"
+    },
+    "restricted/carry": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 189,
+      "end": 190,
+      "code": "if (order.Confidentiality is not null)\n    gate.Open(user, $\"report:{report.Id}\");   // the person who opened the order carries on with its report"
+    },
+    "restricted/hide": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 143,
+      "end": 144,
+      "code": "// A restricted order is listed, so it is not lost, but who it is for and why stay hidden until the glass is broken.\nreturn rows.Select(o => o.Confidentiality is null || gate.IsOpen(user, $\"order:{o.Id}\") ? o : o with { Patient = \"Restricted\", Mrn = \"\", Indication = null, ReferringPhysician = null }).ToList();"
+    },
+    "restricted/filter": {
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "start": 145,
+      "end": 154,
+      "code": "private static async ValueTask<object?> ConfidentialityFilter(EndpointFilterInvocationContext ctx, EndpointFilterDelegate next)\n{\n    var http = ctx.HttpContext;\n    var id = int.Parse(http.Request.RouteValues[\"id\"]!.ToString()!);\n    var db = http.RequestServices.GetRequiredService<ClinicReportDbContext>();\n    var label = await db.ReportOrders.Where(o => o.ReportId == id).Select(o => o.Confidentiality).FirstOrDefaultAsync();\n    if (label is not null && !http.RequestServices.GetRequiredService<ConfidentialityGate>().IsOpen(http.User, $\"report:{id}\"))\n        return ConfidentialityGate.Closed(label);\n    return await next(ctx);\n}"
+    },
+    "restricted/ui": {
+      "file": "web/src/components/RestrictedGate.tsx",
+      "start": 7,
+      "end": 26,
+      "code": "export function RestrictedGate({ label, onOpen, action = 'Open this report' }: { label: string; onOpen: (reason: string) => Promise<void>; action?: string }) {\n  const [reason, setReason] = useState('')\n  const [error, setError] = useState<string | null>(null)\n  const [busy, setBusy] = useState(false)\n  const submit = async () => {\n    setBusy(true)\n    setError(null)\n    try { await onOpen(reason.trim()) } catch (e) { setError(e instanceof Error ? e.message : 'Not opened.') } finally { setBusy(false) }\n  }\n  return (\n    <section className=\"card\" role=\"region\" aria-label=\"Restricted report\">\n      <h2>{label === 'V' ? 'Very restricted' : 'Restricted'}</h2>\n      <p>The patient has a consent directive at the clinic. Open this only if you are caring for them or have another lawful reason. Your name and your reason are logged.</p>\n      <label>Why do you need to open it?\n        <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} maxLength={300} />\n      </label>\n      {error && <p className=\"error\" role=\"alert\">{error}</p>}\n      <button className=\"primary\" disabled={busy || reason.trim().length < 10} onClick={submit}>{action}</button>\n      <p className=\"muted small\">At least 10 characters. The access lasts one hour.</p>\n    </section>"
+    },
+    "results-out/enqueue": {
+      "file": "src/ClinicReport.Api/Reports/ReportService.cs",
+      "start": 162,
+      "end": 166,
+      "code": "if (order is not null)\n{\n    r.SignedBy ??= signer;\n    ResultMessages.Enqueue(db, order, r, \"final\", [], clinicHub.Value.PublicUrl, r.SignedAt.Value);\n}"
+    },
+    "results-out/basedon": {
+      "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+      "start": 36,
+      "end": 39,
+      "code": "[\"basedOn\"] = new JsonArray(new JsonObject\n{\n    [\"identifier\"] = new JsonObject { [\"system\"] = $\"urn:clinichub:{slug}:service-request\", [\"value\"] = orderId },\n}),"
+    },
+    "results-out/link": {
+      "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+      "start": 55,
+      "end": 57,
+      "code": "[\"presentedForm\"] = publicUrl is { Length: > 0 }\n    ? new JsonArray(new JsonObject { [\"contentType\"] = \"text/html\", [\"url\"] = $\"{publicUrl.TrimEnd('/')}/reports/{report.Id}/print\", [\"title\"] = report.TemplateVersion.Template.Name })\n    : null,"
+    },
+    "results-out/clinics": {
+      "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+      "start": 88,
+      "end": 100,
+      "code": "public IEnumerable<string> Clinics()\n{\n    var path = new SqliteConnectionStringBuilder(options.Value.DatabasePattern).DataSource;\n    var full = Path.GetFullPath(path);\n    var dir = Path.GetDirectoryName(full)!;\n    var file = Path.GetFileName(full);\n    var at = file.IndexOf(\"{clinic}\", StringComparison.Ordinal);\n    if (at < 0 || !Directory.Exists(dir))\n        return [];\n    var (prefix, suffix) = (file[..at], file[(at + \"{clinic}\".Length)..]);\n    return Directory.GetFiles(dir, prefix + \"*\" + suffix).Select(Path.GetFileName)\n        .Select(f => f![prefix.Length..^suffix.Length]).Where(ClinicReportDatabases.IsValidSlug);\n}"
+    },
+    "results-out/retry": {
+      "file": "src/ClinicReport.Api/Reports/ResultSender.cs",
+      "start": 131,
+      "end": 133,
+      "code": "m.NextAttemptAt = now.AddSeconds(Math.Min(10 * Math.Pow(2, m.Attempts - 1), 1800));\nif (ex.Message.StartsWith(\"401\"))\n    _token = null;"
+    },
+    "results-out/finance": {
+      "file": "src/ClinicReport.Api/Reports/FinanceSender.cs",
+      "start": 80,
+      "end": 95,
+      "code": "foreach (var r in signed)\n{\n    var lines = new JsonArray();\n    var department = r.Service.Contains(\"Electrocardio\", StringComparison.OrdinalIgnoreCase) || r.Service.Contains(\"ECG\", StringComparison.OrdinalIgnoreCase) ? \"ECG\" : \"Echo\";\n    if (r.OhipTechnicalFee is > 0 and var tech)\n        lines.Add(Line(\"OHIP.Technical\", tech, department));\n    if (r.OhipProfessionalFee is > 0 and var prof)\n        lines.Add(Line($\"Diagnostics.{department}\", prof, department));\n    if (lines.Count == 0)\n        continue;\n    docs.Add(new JsonObject\n    {\n        [\"sourceKey\"] = sourceKey, [\"externalId\"] = $\"report:{r.Id}:signed\", [\"kind\"] = \"Invoice\", [\"date\"] = r.ExamDate.ToString(\"yyyy-MM-dd\"),\n        [\"reference\"] = $\"CR-{r.Id:D6}\", [\"party\"] = new JsonObject { [\"type\"] = \"OHIP\", [\"code\"] = \"OHIP\" }, [\"lines\"] = lines,\n        [\"memo\"] = $\"{r.Service} report CR-{r.Id:D6}\",\n    });"
+    },
+    "fe-app/gate": {
+      "file": "web/src/App.tsx",
+      "start": 57,
+      "end": 59,
+      "code": "if (!settings || me === undefined) return <div className=\"center muted\">Loading…</div>\nif (!me) return settings.signIn === 'clinichub' ? <ClinicHubSignIn settings={settings} /> : <Login settings={settings} onSignedIn={setMe} />\nif (me.pendingAction) return <PendingActionPage me={me} settings={settings} onDone={setMe} onSignOut={signOut} />"
+    },
+    "fe-app/signout": {
+      "file": "web/src/App.tsx",
+      "start": 47,
+      "end": 55,
+      "code": "const signOut = useCallback(async () => {\n  // Connected: one sign-out, here and at ClinicHub.\n  if (settings?.signIn === 'clinichub') {\n    window.location.assign('/api/auth/sso/signout')\n    return\n  }\n  await api.logout()\n  setMe(null)\n}, [settings])"
+    },
+    "fe-app/request": {
+      "file": "web/src/api.ts",
+      "start": 106,
+      "end": 126,
+      "code": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {\n  const res = await fetch(url, {\n    method,\n    credentials: 'same-origin',\n    headers: {\n      'X-ClinicReport': '1',\n      'X-Client-Id': clientId,\n      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),\n    },\n    body: body !== undefined ? JSON.stringify(body) : undefined,\n  })\n  if (res.status === 204) return undefined as T\n  const text = await res.text()\n  const data = text ? JSON.parse(text) : undefined\n  if (!res.ok) {\n    if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('clinicreport:signed-out'))\n    const message = data?.title && data?.detail ? `${data.title} ${data.detail}` : data?.title ?? data?.detail ?? `Request failed (${res.status})`\n    throw new ApiError(res.status, message, data?.errors ?? {}, data ?? {})\n  }\n  return data as T\n}"
+    },
+    "data-sqlite/sqlite": {
+      "file": "src/ClinicReport.Api/Program.cs",
+      "start": 16,
+      "end": 17,
+      "code": "var connectionString = builder.Configuration.GetConnectionString(\"ClinicReport\") ?? \"Data Source=clinicreport.db\";\nbuilder.Services.AddDbContext<ClinicReportDbContext>(o => o.UseSqlite(connectionString));"
+    },
+    "data-sqlite/migration": {
+      "file": "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs",
+      "start": 11,
+      "end": 18,
+      "code": "protected override void Up(MigrationBuilder migrationBuilder)\n{\n    migrationBuilder.AddColumn<string>(\n        name: \"Confidentiality\",\n        table: \"ReportOrders\",\n        type: \"TEXT\",\n        nullable: true);\n}"
+    },
+    "data-sqlite/migrate": {
+      "file": "src/ClinicReport.Api/Data/DatabaseInitializer.cs",
+      "start": 20,
+      "end": 30,
+      "code": "if (wipe)\n{\n    await db.Database.EnsureDeletedAsync(ct);\n    SqliteConnection.ClearAllPools();\n}\nawait db.Database.MigrateAsync(ct);\nawait RoleSeeder.SeedAsync(db);\nawait TemplateSeeder.SeedAsync(db, Path.Combine(AppContext.BaseDirectory, \"templates\"), logger, now);\nif (services.GetRequiredService<IOptions<DemoOptions>>().Value.Enabled)\n    await DemoSeeder.SeedAsync(db, hasher, now);\nawait UserBootstrap.SeedAsync(db, config, hasher, logger, now);"
+    },
+    "data-sqlite/nocase": {
+      "file": "src/ClinicReport.Api/Data/ClinicReportDbContext.cs",
+      "start": 46,
+      "end": 57,
+      "code": "b.Entity<AppUser>(e =>\n{\n    e.Property(u => u.UserName).HasMaxLength(64).UseCollation(\"NOCASE\");\n    e.HasIndex(u => u.UserName).IsUnique();\n    e.Property(u => u.DisplayName).HasMaxLength(128);\n    e.Property(u => u.Credentials).HasMaxLength(64);\n    e.Property(u => u.Services).HasMaxLength(2000);\n    e.Property(u => u.SecurityStamp).HasMaxLength(64);\n    e.Property(u => u.TwoFactorSecret).HasMaxLength(1000);\n    e.Property(u => u.ExternalId).HasMaxLength(64);\n    e.HasIndex(u => u.ExternalId).IsUnique().HasFilter(\"ExternalId IS NOT NULL\");\n});"
+    },
+    "data-sqlite/reset": {
+      "file": "src/ClinicReport.Api/Data/DatabaseInitializer.cs",
+      "start": 50,
+      "end": 53,
+      "code": "var next = new DateTimeOffset(now.Year, now.Month, now.Day, hour, 0, 0, TimeSpan.Zero);\nif (next <= now)\n    next = next.AddDays(1);\nawait Task.Delay(next - now, clock, stoppingToken);"
+    },
+    "data-sqlite/secrets": {
+      "file": "src/ClinicReport.Api/Program.cs",
+      "start": 13,
+      "end": 22,
+      "code": "// Secrets as files, one per setting (e.g. ConnectionStrings__Finance), the way Docker mounts them; none outside a container.\nbuilder.Configuration.AddKeyPerFile(\"/run/secrets\", optional: true);\n\nvar connectionString = builder.Configuration.GetConnectionString(\"ClinicReport\") ?? \"Data Source=clinicreport.db\";\nbuilder.Services.AddDbContext<ClinicReportDbContext>(o => o.UseSqlite(connectionString));\n\n// Keys that encrypt the sign-in cookie. In the container they live in the data volume, so a redeploy\n// doesn't sign everyone out.\nif (builder.Configuration[\"DataProtection:KeysDirectory\"] is { Length: > 0 } keysDirectory)\n    builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keysDirectory)).SetApplicationName(\"ClinicReport\");"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 47
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/demo-login",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 109
+    },
+    {
+      "area": "Auth",
+      "method": "GET",
+      "path": "/api/auth/sso/start",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 127
+    },
+    {
+      "area": "Auth",
+      "method": "GET",
+      "path": "/api/auth/sso/signout",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 133
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 143
+    },
+    {
+      "area": "Auth",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 151
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/password",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 173
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/setup",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 194
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/enable",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 206
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/disable",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 222
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/sessions/revoke",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "line": 238
+    },
+    {
+      "area": "Order",
+      "method": "POST",
+      "path": "/fhir",
+      "access": "clinichub.orders",
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "line": 39
+    },
+    {
+      "area": "Orders",
+      "method": "GET",
+      "path": "/api/orders",
+      "access": "reports.view",
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "line": 132
+    },
+    {
+      "area": "Orders",
+      "method": "POST",
+      "path": "/api/orders/{id:int}/override",
+      "access": "reports.create",
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "line": 148
+    },
+    {
+      "area": "Orders",
+      "method": "POST",
+      "path": "/api/orders/{id:int}/start",
+      "access": "reports.create",
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "line": 162
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients",
+      "access": "patients.read",
+      "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+      "line": 21
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients/{id:int}",
+      "access": "patients.read",
+      "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+      "line": 34
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients",
+      "access": "patients.manage",
+      "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+      "line": 39
+    },
+    {
+      "area": "Patients",
+      "method": "PUT",
+      "path": "/api/patients/{id:int}",
+      "access": "patients.manage",
+      "file": "src/ClinicReport.Api/Endpoints/PatientEndpoints.cs",
+      "line": 50
+    },
+    {
+      "area": "Reports",
+      "method": "POST",
+      "path": "/api/reports/{id:int}/override",
+      "access": "reports.view",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 33
+    },
+    {
+      "area": "Reports",
+      "method": "GET",
+      "path": "/api/reports",
+      "access": "reports.view",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 48
+    },
+    {
+      "area": "Reports",
+      "method": "POST",
+      "path": "/api/reports",
+      "access": "reports.create",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 77
+    },
+    {
+      "area": "Reports",
+      "method": "GET",
+      "path": "/api/reports/{id:int}",
+      "access": "reports.view",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 105
+    },
+    {
+      "area": "Reports",
+      "method": "PATCH",
+      "path": "/api/reports/{id:int}/values",
+      "access": "reports.edit",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 115
+    },
+    {
+      "area": "Reports",
+      "method": "POST",
+      "path": "/api/reports/{id:int}/presets/{sectionId}",
+      "access": "reports.edit",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 118
+    },
+    {
+      "area": "Reports",
+      "method": "PUT",
+      "path": "/api/reports/{id:int}/header",
+      "access": "reports.edit",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 121
+    },
+    {
+      "area": "Reports",
+      "method": "PUT",
+      "path": "/api/reports/{id:int}/conclusion",
+      "access": "reports.edit",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 124
+    },
+    {
+      "area": "Reports",
+      "method": "POST",
+      "path": "/api/reports/{id:int}/sign",
+      "access": "reports.sign",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 127
+    },
+    {
+      "area": "Reports",
+      "method": "POST",
+      "path": "/api/reports/{id:int}/addenda",
+      "access": "reports.sign",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 131
+    },
+    {
+      "area": "Reports",
+      "method": "GET",
+      "path": "/api/reports/{id:int}/history",
+      "access": "reports.view",
+      "file": "src/ClinicReport.Api/Endpoints/ReportEndpoints.cs",
+      "line": 135
+    },
+    {
+      "area": "Templates",
+      "method": "GET",
+      "path": "/api/templates",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 39
+    },
+    {
+      "area": "Templates",
+      "method": "GET",
+      "path": "/api/templates/{id:int}",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 48
+    },
+    {
+      "area": "Templates",
+      "method": "GET",
+      "path": "/api/templates/{id:int}/export",
+      "access": "signed-in",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 51
+    },
+    {
+      "area": "Templates",
+      "method": "POST",
+      "path": "/api/templates",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 61
+    },
+    {
+      "area": "Templates",
+      "method": "PUT",
+      "path": "/api/templates/{id:int}/draft",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 76
+    },
+    {
+      "area": "Templates",
+      "method": "DELETE",
+      "path": "/api/templates/{id:int}/draft",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 101
+    },
+    {
+      "area": "Templates",
+      "method": "POST",
+      "path": "/api/templates/{id:int}/publish",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 113
+    },
+    {
+      "area": "Templates",
+      "method": "PUT",
+      "path": "/api/templates/{id:int}/active",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 133
+    },
+    {
+      "area": "Templates",
+      "method": "PUT",
+      "path": "/api/templates/{id:int}/fees",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 144
+    },
+    {
+      "area": "Templates",
+      "method": "POST",
+      "path": "/api/templates/preview",
+      "access": "templates.design",
+      "file": "src/ClinicReport.Api/Endpoints/TemplateEndpoints.cs",
+      "line": 158
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/permissions",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 42
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/services",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 45
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/users",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 48
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 55
+    },
+    {
+      "area": "Users",
+      "method": "PUT",
+      "path": "/api/users/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 87
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/password",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 132
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/unlock",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 150
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/two-factor/reset",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 163
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/sessions/revoke",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 176
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/roles",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 189
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/roles",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 193
+    },
+    {
+      "area": "Users",
+      "method": "PUT",
+      "path": "/api/roles/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 204
+    },
+    {
+      "area": "Users",
+      "method": "DELETE",
+      "path": "/api/roles/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 226
+    },
+    {
+      "area": "Audit",
+      "method": "GET",
+      "path": "/api/audit",
+      "access": "audit.view",
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "line": 243
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/settings",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Program.cs",
+      "line": 72
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/healthz",
+      "access": "public",
+      "file": "src/ClinicReport.Api/Program.cs",
+      "line": 83
+    }
+  ],
+  "tables": [
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Users",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 95,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "Credentials",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 64"
+          ]
+        },
+        {
+          "name": "DisplayName",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 128"
+          ]
+        },
+        {
+          "name": "ExternalId",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 64",
+            "unique where ExternalId IS NOT NULL"
+          ]
+        },
+        {
+          "name": "FailedLoginCount",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        },
+        {
+          "name": "LastLoginAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "LockoutEndUtc",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "MustChangePassword",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        },
+        {
+          "name": "PasswordHash",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SecurityStamp",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64"
+          ]
+        },
+        {
+          "name": "Services",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 2000"
+          ]
+        },
+        {
+          "name": "TwoFactorEnabled",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        },
+        {
+          "name": "TwoFactorLastStep",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TwoFactorSecret",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 1000"
+          ]
+        },
+        {
+          "name": "UserName",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64",
+            "collate NOCASE",
+            "unique"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "FinanceExports",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 109,
+      "columns": [
+        {
+          "name": "ExternalId",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "max 200"
+          ]
+        },
+        {
+          "name": "SentAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Patients",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 152,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "DateOfBirth",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateOnly"
+          ]
+        },
+        {
+          "name": "FirstName",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64"
+          ]
+        },
+        {
+          "name": "LastName",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64",
+            "collate NOCASE"
+          ]
+        },
+        {
+          "name": "Mrn",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 32",
+            "unique"
+          ]
+        },
+        {
+          "name": "Sex",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 1"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Reports",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 230,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "Conclusion",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "CreatedByUserId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Users"
+          ]
+        },
+        {
+          "name": "ExamDate",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateOnly"
+          ]
+        },
+        {
+          "name": "HeightCm",
+          "type": "REAL",
+          "nullable": true,
+          "notes": [
+            "double"
+          ]
+        },
+        {
+          "name": "Indication",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 500"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Patients"
+          ]
+        },
+        {
+          "name": "ReferringPhysician",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 128"
+          ]
+        },
+        {
+          "name": "Revision",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "SignedAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "SignedByUserId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": [
+            "→ Users"
+          ]
+        },
+        {
+          "name": "SignedSnapshotJson",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 16"
+          ]
+        },
+        {
+          "name": "TemplateVersionId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ TemplateVersions"
+          ]
+        },
+        {
+          "name": "UpdatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "ValuesJson",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "WeightKg",
+          "type": "REAL",
+          "nullable": true,
+          "notes": [
+            "double"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Addenda",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 259,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "ReportId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Reports"
+          ]
+        },
+        {
+          "name": "Text",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 4000"
+          ]
+        },
+        {
+          "name": "UserId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Users"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Changes",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 291,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "At",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "Field",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64"
+          ]
+        },
+        {
+          "name": "NewValueJson",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReportId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Reports"
+          ]
+        },
+        {
+          "name": "UserId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Users"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "ReportOrders",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 364,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "CancelReason",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CancelledAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "Confidentiality",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ExternalId",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 80",
+            "unique"
+          ]
+        },
+        {
+          "name": "Indication",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 500"
+          ]
+        },
+        {
+          "name": "OrderedAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Patients"
+          ]
+        },
+        {
+          "name": "Priority",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 10"
+          ]
+        },
+        {
+          "name": "ReceivedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "ReferringPhysician",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 200"
+          ]
+        },
+        {
+          "name": "ReportId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": [
+            "→ Reports"
+          ]
+        },
+        {
+          "name": "Requisition",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 80"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 20"
+          ]
+        },
+        {
+          "name": "TemplateId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Templates"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Templates",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 402,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        },
+        {
+          "name": "Key",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64",
+            "unique"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 128"
+          ]
+        },
+        {
+          "name": "OhipProfessionalFee",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "decimal"
+          ]
+        },
+        {
+          "name": "OhipTechnicalFee",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "decimal"
+          ]
+        },
+        {
+          "name": "Service",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "ResultMessages",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 445,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "Attempts",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "LastError",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 1000"
+          ]
+        },
+        {
+          "name": "NextAttemptAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "PayloadJson",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReportOrderId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ ReportOrders"
+          ]
+        },
+        {
+          "name": "SentAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 20"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "Roles",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 480,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 300"
+          ]
+        },
+        {
+          "name": "IsSystem",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 64",
+            "collate NOCASE",
+            "unique"
+          ]
+        },
+        {
+          "name": "Permissions",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 1000"
+          ]
+        },
+        {
+          "name": "RequireTwoFactor",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "bool"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "SecurityEvents",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 525,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "ActorUserId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "At",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "Detail",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 500"
+          ]
+        },
+        {
+          "name": "IpAddress",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "max 64"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReportId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TargetUserId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Type",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 32"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "TemplateVersions",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 563,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "autoincrement"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "DefinitionJson",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PublishedAt",
+          "type": "TEXT",
+          "nullable": true,
+          "notes": [
+            "DateTime"
+          ]
+        },
+        {
+          "name": "PublishedByUserId",
+          "type": "INTEGER",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "TEXT",
+          "nullable": false,
+          "notes": [
+            "max 16"
+          ]
+        },
+        {
+          "name": "TemplateId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "→ Templates"
+          ]
+        },
+        {
+          "name": "Version",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "clinicreport-{clinic}.db",
+      "provider": "sqlite",
+      "table": "UserRoles",
+      "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs",
+      "line": 578,
+      "columns": [
+        {
+          "name": "UserId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "→ Users"
+          ]
+        },
+        {
+          "name": "RoleId",
+          "type": "INTEGER",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "→ Roles"
+          ]
+        }
+      ],
+      "denies": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "Worklist",
+      "guards": []
+    },
+    {
+      "path": "/reports/new",
+      "component": "NewReport",
+      "guards": []
+    },
+    {
+      "path": "/reports/:id",
+      "component": "ReportEditor",
+      "guards": []
+    },
+    {
+      "path": "/reports/:id/print",
+      "component": "PrintReport",
+      "guards": []
+    },
+    {
+      "path": "/templates",
+      "component": "Templates",
+      "guards": []
+    },
+    {
+      "path": "/templates/:id",
+      "component": "TemplateDesigner",
+      "guards": [
+        "templates.design"
+      ]
+    },
+    {
+      "path": "/users",
+      "component": "Users",
+      "guards": [
+        "users.manage"
+      ]
+    },
+    {
+      "path": "/audit",
+      "component": "Audit",
+      "guards": [
+        "audit.view"
+      ]
+    },
+    {
+      "path": "/account",
+      "component": "Account",
+      "guards": []
+    },
+    {
+      "path": "*",
+      "redirect": "/",
+      "guards": []
+    }
+  ]
+}

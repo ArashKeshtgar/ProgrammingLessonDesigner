@@ -38,7 +38,8 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
 
     <template v-else-if="data.kind === 'tables'">
       <div v-for="x in tables" :key="x.table" class="sql-table">
-        <h3 dir="ltr">{{ x.database }}.{{ x.schema ?? 'dbo' }}.{{ x.table }}</h3>
+        <h3 v-if="x.provider === 'sqlite'" dir="ltr">{{ x.database }} · {{ x.table }}</h3>
+        <h3 v-else dir="ltr">{{ x.database }}.{{ x.schema ?? 'dbo' }}.{{ x.table }}</h3>
         <div class="doc-table-wrap">
           <table class="doc-table">
             <thead>
