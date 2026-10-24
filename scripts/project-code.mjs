@@ -91,37 +91,64 @@ function expressEndpoints(repo, dir) {
   })
 }
 
-// SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks) and DENY grants.
-function sqlTables(repo, dir) {
+// SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks, references), unique indexes
+// and DENY grants. Tables in a schema other than dbo carry it; the database is the script's USE,
+// or the scan entry's own ({ dir, database }) for scripts run against a database they don't name.
+function sqlTables(repo, entry) {
+  const { dir, database } = typeof entry === 'string' ? { dir: entry } : entry
   const out = []
+  const find = (schema, table) => out.find((t) => t.table === table && (t.schema ?? 'dbo') === schema)
   for (const file of walk(path.join(repo, dir), (n) => n.endsWith('.sql')).sort()) {
     const rel = path.relative(repo, file).replace(/\\/g, '/')
     const src = lines(readFileSync(file, 'utf-8'))
-    let db = null
+    let db = database ?? null
     src.forEach((l, i) => {
       const use = /^USE (\w+);/.exec(l)
       if (use) db = use[1]
-      const create = /CREATE TABLE dbo\.(\w+) \(/.exec(l)
+      const create = /CREATE TABLE (\w+)\.(\w+) \(/.exec(l)
       if (create) {
         const columns = []
-        for (let j = i + 1; j < src.length && !/^\s*\);/.test(src[j]); j++) {
-          const c = /^\s*\[?(\w+)\]?\s+([A-Z0-9]+(?:\(\d+(?:,\s*\d+)?\))?)(.*?),?\s*$/.exec(src[j])
-          if (!c) continue
-          const rest = c[3]
+        const checks = []
+        // Parentheses opened on a line and closed on a later one (a CHECK's list): one logical line.
+        const depth = (s) => [...s.replace(/'[^']*'|--.*$/g, '')].reduce((d, ch) => d + (ch === '(') - (ch === ')'), 0)
+        for (let j = i + 1; j < src.length && !/^\s*\)/.test(src[j]); j++) {
+          let line = src[j]
+          while (depth(line) > 0 && j + 1 < src.length) line = line.replace(/\s*--.*$/, '') + ' ' + src[++j].trim()
+          // A table-level constraint: only CHECKs are kept (keys show on their columns).
+          const tc = /^\s*CONSTRAINT \w+ CHECK \((.+)\),?\s*$/.exec(line)
+          if (tc) checks.push(tc[1])
+          const c = /^\s*\[?(\w+)\]?\s+([A-Za-z0-9]+(?:\(\s*(?:\d+|max)(?:,\s*\d+)?\))?)(?=[\s,]|$)(.*?),?\s*$/.exec(line)
+          if (!c || /^(CONSTRAINT|PERIOD|PRIMARY|UNIQUE|CHECK|FOREIGN|INDEX)$/i.test(c[1])) continue
+          const rest = c[3].replace(/\s*--.*$/, '')
           const notes = []
           if (/PRIMARY KEY/.test(rest)) notes.push('PK')
           if (/IDENTITY/.test(c[2] + rest)) notes.push('identity')
           if (/UNIQUE/.test(rest)) notes.push('unique')
-          const def = /DEFAULT \((.+?)\)\s*$/.exec(rest)?.[1]
+          const def = /DEFAULT \((.+?)\)\s*$/.exec(rest)?.[1] ?? /DEFAULT ('[^']*'|[\w.]+(?:\(\))?)/.exec(rest)?.[1]
           if (def) notes.push(`default ${def}`)
+          const ref = /REFERENCES (\w+)\.(\w+)/.exec(rest)
+          if (ref) notes.push(`→ ${ref[1] === 'dbo' ? '' : ref[1] + '.'}${ref[2]}`)
           const ck = /CHECK \((.+)\)/.exec(rest)?.[1]
           if (ck) notes.push(`check ${ck}`)
-          columns.push({ name: c[1], type: c[2], nullable: !/NOT NULL/.test(rest), notes })
+          // A key column is never null, whether or not it says NOT NULL.
+          columns.push({ name: c[1], type: c[2].toUpperCase(), nullable: !/NOT NULL|PRIMARY KEY/.test(rest), notes })
         }
-        out.push({ database: db, table: create[1], file: rel, line: i + 1, columns, denies: [] })
+        out.push({
+          database: db,
+          ...(create[1] === 'dbo' ? {} : { schema: create[1] }),
+          table: create[2],
+          file: rel,
+          line: i + 1,
+          columns,
+          denies: [],
+          ...(checks.length ? { checks } : {}),
+        })
       }
-      const deny = /DENY (.+) ON dbo\.(\w+) TO (\w+)/.exec(l)
-      if (deny) out.find((t) => t.table === deny[2])?.denies.push(`${deny[1]} to ${deny[3]}`)
+      // A unique index on one column, filtered or not, is a note on that column.
+      const ux = /CREATE UNIQUE (?:NONCLUSTERED )?INDEX \w+ ON (\w+)\.(\w+) \((\w+)\)(?: WHERE (.+?))?;?\s*$/.exec(l)
+      if (ux) find(ux[1], ux[2])?.columns.find((c) => c.name === ux[3])?.notes.push(ux[4] ? `unique where ${ux[4]}` : 'unique')
+      const deny = /DENY (.+) ON (\w+)\.(\w+) TO (\w+)/.exec(l)
+      if (deny) find(deny[2], deny[3])?.denies.push(`${deny[1]} to ${deny[4]}`)
     })
   }
   return out
@@ -138,15 +165,28 @@ function angularRoutes(repo, file) {
 
 // ASP.NET Core Minimal APIs: `var api = app.MapGroup("/prefix")`, then `api.MapGet("/sub", ...)`
 // (or MapMethods with a list of verbs), each ending with .RequireAuthorization(policy) or
-// .AllowAnonymous(). With neither, the group's policy, else the fallback policy: signed in.
-// Policies are the C# constants they name (Permissions.BillingView → "billing.view"). The area is
-// the OpenAPI tag (.WithTags) of the endpoint or its group, else the file name.
+// .AllowAnonymous(). With neither, the group's policy, else the fallback policy: signed in when the
+// project sets one (SetFallbackPolicy), public when it doesn't. Policies are the C# constants they
+// name (Permissions.BillingView → "billing.view", nameof(FrontDesk) → "FrontDesk"), found by class
+// and name first, since two classes may both have a FrontDesk. The area is the OpenAPI tag
+// (.WithTags) of the endpoint or its group, else the file name.
 function aspnetEndpoints(repo, dir) {
   const files = walk(path.join(repo, dir), (n) => n.endsWith('.cs'))
   const constants = {}
-  for (const file of files)
-    for (const m of readFileSync(file, 'utf-8').matchAll(/const string (\w+) = "([^"]*)"/g)) constants[m[1]] = m[2]
-  const policy = (expr) => constants[expr.trim().split('.').at(-1)] ?? expr.trim()
+  let fallback = 'public'
+  for (const file of files) {
+    let cls = null
+    for (const l of lines(readFileSync(file, 'utf-8'))) {
+      cls = /\bclass (\w+)/.exec(l)?.[1] ?? cls
+      const m = /const string (\w+) = (?:"([^"]*)"|nameof\((\w+)\))/.exec(l)
+      if (m) constants[`${cls}.${m[1]}`] = constants[m[1]] = m[2] ?? m[3]
+      if (/SetFallbackPolicy\(/.test(l)) fallback = 'signed-in'
+    }
+  }
+  const policy = (expr) => {
+    const parts = expr.trim().split('.')
+    return constants[parts.slice(-2).join('.')] ?? constants[parts.at(-1)] ?? expr.trim()
+  }
   const AUTH = /\.(?:RequireAuthorization\(([^)]*)\)|AllowAnonymous\(\))/
   const TAG = /\.WithTags\("([^"]+)"\)/
 
@@ -181,7 +221,7 @@ function aspnetEndpoints(repo, dir) {
       const auth = src.slice(e.line, until).map((l) => AUTH.exec(l)).find(Boolean)
       const tag = src.slice(e.line, until).map((l) => TAG.exec(l)?.[1]).find(Boolean)
       const group = groups[e.on]
-      const access = auth ? (auth[1] ? policy(auth[1]) : 'public') : group?.access ?? 'signed-in'
+      const access = auth ? (auth[1] ? policy(auth[1]) : 'public') : group?.access ?? fallback
       const full = ((group?.prefix ?? '') + e.sub).replace(/(.)\/$/, '$1') || '/'
       for (const method of e.methods)
         out.push({

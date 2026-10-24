@@ -1,0 +1,4188 @@
+{
+  "project": "labflow",
+  "repo": "LabFlow",
+  "files": {
+    "README.md": 126,
+    "database/deploy.ps1": 51,
+    "src/LabFlow.Api/Properties/launchSettings.json": 55,
+    "tests/LabFlow.Api.Tests/ConnectedTests.cs": 337,
+    "tests/LabFlow.Api.Tests/SlotCalculatorTests.cs": 81,
+    "src/LabFlow.Api/Program.cs": 120,
+    "src/LabFlow.Api/Auth/DemoAuthHandler.cs": 94,
+    "src/LabFlow.Api/Auth/ClinicHubConnection.cs": 431,
+    "src/LabFlow.Api/Auth/ConfidentialityGate.cs": 37,
+    "src/LabFlow.Api/Endpoints/ResultEndpoints.cs": 324,
+    "web/src/components/RestrictedGate.tsx": 33,
+    "src/LabFlow.Api/Auth/AuditLogger.cs": 30,
+    "database/010_schema.sql": 641,
+    "src/LabFlow.Api/Domain/SlotCalculator.cs": 57,
+    "src/LabFlow.Api/Endpoints/BookingEndpoints.cs": 220,
+    "src/LabFlow.Api/Endpoints/Validation.cs": 62,
+    "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs": 318,
+    "src/LabFlow.Api/Endpoints/OrderEndpoints.cs": 348,
+    "database/050_electronic_orders.sql": 36,
+    "database/052_order_cancellation.sql": 10,
+    "src/LabFlow.Api/Auth/ResultSender.cs": 127,
+    "database/051_outbound_messages.sql": 22,
+    "web/src/App.tsx": 84,
+    "web/src/api.ts": 177,
+    "database/054_analytics_dw_view.sql": 22,
+    "docs/data-model.md": 89,
+    "database/020_seed_reference.sql": 114,
+    "database/053_finance.sql": 16,
+    "etl/README.md": 115,
+    "etl/builder/BuildPackage.cs": 333,
+    "database/040_etl_dw.sql": 544,
+    "database/tools/analytics_dw_reader.sql": 22,
+    "bi/README.md": 40
+  },
+  "examples": {
+    "run/deploy": {
+      "file": "database/deploy.ps1",
+      "start": 41,
+      "end": 51,
+      "code": "$scripts = Get-ChildItem $here -Filter '*.sql' |\n    Where-Object { $_.Name -match '^\\d{3}_' -and $_.Name -ne '001_database.sql' } |\n    Sort-Object Name\nif (-not $scripts) { throw \"No numbered scripts found in $here\" }\nif ($NoDemo) { $scripts = $scripts | Where-Object Name -notlike '*_seed_demo.sql' }\n\nforeach ($s in $scripts) {\n    Write-Host \"Running $($s.Name)...\"\n    Invoke-Sql $Database $s.FullName $null\n}\nWrite-Host \"$Database is ready.\" -ForegroundColor Green"
+    },
+    "run/profile": {
+      "file": "src/LabFlow.Api/Properties/launchSettings.json",
+      "start": 26,
+      "end": 39,
+      "code": "\"connected-per-clinic\": {\n  \"commandName\": \"Project\",\n  \"dotnetRunMessages\": true,\n  \"launchBrowser\": false,\n  \"applicationUrl\": \"http://localhost:5180\",\n  \"environmentVariables\": {\n    \"ASPNETCORE_ENVIRONMENT\": \"Development\",\n    \"ClinicHub__Authority\": \"http://localhost:5301/\",\n    \"ClinicHub__ClientSecret\": \"dev-only-labflow-secret\",\n    \"ClinicHub__RequireHttpsMetadata\": \"false\",\n    \"ClinicHub__FinanceUrl\": \"http://localhost:5400\",\n    \"ClinicHub__DatabasePattern\": \"Server=.;Database=LabFlow_{clinic};Trusted_Connection=True;TrustServerCertificate=True\"\n  }\n},"
+    },
+    "tests/sqlfact": {
+      "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+      "start": 26,
+      "end": 45,
+      "code": "public sealed class SqlFactAttribute : FactAttribute\n{\n    public static readonly string Server = Environment.GetEnvironmentVariable(\"LABFLOW_TEST_SQL\")\n        ?? \"Server=.;Trusted_Connection=True;TrustServerCertificate=True\";\n\n    private static readonly Lazy<bool> Available = new(() =>\n    {\n        try\n        {\n            using var c = new SqlConnection(new SqlConnectionStringBuilder(Server) { ConnectTimeout = 3, InitialCatalog = \"master\" }.ConnectionString);\n            c.Open();\n            return true;\n        }\n        catch (SqlException) { return false; }\n    });\n\n    public SqlFactAttribute()\n    {\n        if (!Available.Value)\n            Skip = \"No SQL Server available for LabFlow's database tests.\";"
+    },
+    "tests/settings": {
+      "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+      "start": 70,
+      "end": 73,
+      "code": "builder.UseSetting(\"ClinicHub:Authority\", \"https://hub.test/\");\nbuilder.UseSetting(\"ClinicHub:ClientSecret\", \"test-secret\");\nbuilder.UseSetting(\"ClinicHub:RecheckMinutes\", \"0\");\nbuilder.UseSetting(\"ClinicHub:SendSeconds\", \"0\");"
+    },
+    "sign-in/register": {
+      "file": "src/LabFlow.Api/Program.cs",
+      "start": 30,
+      "end": 36,
+      "code": "// Not connected, the demo sign-in exists only in Development; elsewhere every protected endpoint returns 401.\nif (!connected)\n{\n    var auth = builder.Services.AddAuthentication(DemoAuthHandler.SchemeName);\n    if (builder.Environment.IsDevelopment())\n        auth.AddScheme<AuthenticationSchemeOptions, DemoAuthHandler>(DemoAuthHandler.SchemeName, null);\n}"
+    },
+    "sign-in/demo": {
+      "file": "src/LabFlow.Api/Auth/DemoAuthHandler.cs",
+      "start": 27,
+      "end": 33,
+      "code": "var externalId = Request.Headers[Header].ToString();\nif (string.IsNullOrEmpty(externalId))\n    return AuthenticateResult.NoResult();\n\nvar user = await db.AppUsers.AsNoTracking()\n    .SingleOrDefaultAsync(u => u.ExternalId == externalId && u.IsActive, Context.RequestAborted);\nif (user is null)"
+    },
+    "sign-in/policies": {
+      "file": "src/LabFlow.Api/Program.cs",
+      "start": 38,
+      "end": 40,
+      "code": "builder.Services.AddAuthorizationBuilder()\n    .AddPolicy(Policies.FrontDesk, p => p.RequireClaim(LabPermissions.ClaimType, LabPermissions.FrontDesk, LabPermissions.Admin))\n    .AddPolicy(Policies.ResultsEntry, p => p.RequireClaim(LabPermissions.ClaimType, LabPermissions.ResultsEnter, LabPermissions.Admin));"
+    },
+    "sign-in/roles": {
+      "file": "src/LabFlow.Api/Auth/DemoAuthHandler.cs",
+      "start": 82,
+      "end": 89,
+      "code": "public static string[] ForRole(string role) => role switch\n{\n    \"Admin\" => All,\n    \"Reception\" or \"Collector\" => [FrontDesk],\n    \"Technologist\" or \"Pathologist\" => [ResultsView, ResultsEnter],\n    \"Practitioner\" => [ResultsView],\n    _ => [],\n};"
+    },
+    "clinichub/oidc": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 242,
+      "end": 254,
+      "code": ".AddOpenIdConnect(Scheme, \"ClinicHub\", o =>\n{\n    o.Authority = hub.Authority;\n    o.ClientId = hub.ClientId;\n    o.ClientSecret = hub.ClientSecret;\n    o.RequireHttpsMetadata = hub.RequireHttpsMetadata;\n    o.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;\n    o.ResponseType = OpenIdConnectResponseType.Code;\n    o.ResponseMode = OpenIdConnectResponseMode.Query;\n    o.UsePkce = true;\n    o.Scope.Clear();\n    foreach (var s in new[] { \"openid\", \"profile\", \"clinic\", \"offline_access\" })\n        o.Scope.Add(s);"
+    },
+    "clinichub/recheck": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 353,
+      "end": 370,
+      "code": "var checkedAt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(principal.FindFirstValue(ClinicHubClaims.CheckedAt) ?? \"0\")).UtcDateTime;\nvar permissions = principal.FindAll(LabPermissions.ClaimType).Select(c => c.Value).ToList();\nif (DateTime.UtcNow - checkedAt >= TimeSpan.FromMinutes(options.RecheckMinutes))\n{\n    switch (await Refresh(ctx, options))\n    {\n        case RefreshResult.Refused:\n        case RefreshResult.Unreachable when DateTime.UtcNow - checkedAt > TimeSpan.FromMinutes(options.OfflineGraceMinutes):\n            await Reject(ctx);\n            return;\n        case RefreshResult.Ok(var granted):\n            permissions = granted;\n            checkedAt = DateTime.UtcNow;\n            ctx.ShouldRenew = true;\n            break;\n    }\n}\nctx.ReplacePrincipal(Principal(user, slug!, principal.FindFirstValue(ClinicHubClaims.ClinicName) ?? slug!, permissions, checkedAt));"
+    },
+    "clinichub/cookie": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 224,
+      "end": 232,
+      "code": "o.Cookie.Name = \"labflow.auth\";\no.Cookie.HttpOnly = true;\n// Lax: the browser arrives from ClinicHub's sign-in. Unsafe API calls must also carry X-LabFlow.\no.Cookie.SameSite = SameSiteMode.Lax;\no.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;\no.ExpireTimeSpan = TimeSpan.FromHours(12);\no.SlidingExpiration = true;\no.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = 401; return Task.CompletedTask; };\no.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = 403; return Task.CompletedTask; };"
+    },
+    "clinichub/csrf": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 420,
+      "end": 429,
+      "code": "public static IApplicationBuilder UseCsrfHeaderCheck(this IApplicationBuilder app) => app.Use(async (ctx, next) =>\n{\n    var unsafeMethod = !(HttpMethods.IsGet(ctx.Request.Method) || HttpMethods.IsHead(ctx.Request.Method) || HttpMethods.IsOptions(ctx.Request.Method));\n    if (unsafeMethod && ctx.Request.Path.StartsWithSegments(\"/api\") && !ctx.Request.Headers.ContainsKey(CsrfHeader))\n    {\n        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;\n        await ctx.Response.WriteAsJsonAsync(new { title = $\"Missing {CsrfHeader} header.\" });\n        return;\n    }\n    await next();"
+    },
+    "databases/connection": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 80,
+      "end": 86,
+      "code": "public string ConnectionString(string? slug)\n{\n    if (!PerClinic)\n        return config.GetConnectionString(\"LabFlow\") ?? throw new InvalidOperationException(\"ConnectionStrings:LabFlow is not configured.\");\n    if (!IsValidSlug(slug))\n        throw new NoClinicException();\n    return options.Value.DatabasePattern!.Replace(\"{clinic}\", slug);"
+    },
+    "databases/scoped": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 205,
+      "end": 218,
+      "code": "// The request's database: the signed-in person's clinic, or for anonymous booking the clinic it names.\nservices.AddScoped(sp =>\n{\n    var databases = sp.GetRequiredService<LabDatabases>();\n    var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;\n    // A person's session says \"clinic\"; ClinicHub's own service token says \"clinic_slug\"; public booking may name one.\n    var slug = http?.User.FindFirstValue(ClinicHubClaims.Clinic) ?? http?.User.FindFirstValue(\"clinic_slug\")\n        ?? http?.Request.Headers[ClinicHubClaims.ClinicHeader].FirstOrDefault();\n    if (databases.PerClinic && http?.User.Identity?.IsAuthenticated != true)\n    {\n        if (!LabDatabases.IsValidSlug(slug) || !databases.ExistsAsync(slug!).GetAwaiter().GetResult())\n            throw new NoClinicException();\n    }\n    return LabDatabases.Create(databases.ConnectionString(slug));"
+    },
+    "databases/exists": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 96,
+      "end": 97,
+      "code": "/// <summary>Anonymous booking may only reach a clinic database that has been built (no database is made for a stranger).</summary>\npublic async Task<bool> ExistsAsync(string slug)"
+    },
+    "databases/prepare": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 93,
+      "end": 94,
+      "code": "public Task PrepareAsync(string slug) =>\n    PerClinic ? _prepared.GetOrAdd(slug, s => new Lazy<Task>(() => BuildAsync(s))).Value : Task.CompletedTask;"
+    },
+    "databases/buildscripts": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 122,
+      "end": 131,
+      "code": "await using (var check = new SqlCommand(\"SELECT COUNT(*) FROM sys.schemas WHERE name = 'lab'\", db))\n    if ((int)(await check.ExecuteScalarAsync())! == 1)\n    {\n        // Built before: only the upgrade scripts, which are safe to run again.\n        await RunScriptsAsync(db, name, UpgradeScripts());\n        return;\n    }\n// Schema, sequences and reference data. Not the database itself (made above), the synthetic patients, or the\n// warehouse and legacy-test mapping, which belong to migrating the original lab's data, not to a new clinic.\nawait RunScriptsAsync(db, name, Scripts(f => !f.StartsWith(\"001_\") && !f.Contains(\"_seed_demo\") && !f.Contains(\"_etl_\") && !f.Contains(\"_legacy_\")));"
+    },
+    "restricted/filter": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 46,
+      "end": 54,
+      "code": "api.AddEndpointFilter(async (ctx, next) =>\n{\n    var http = ctx.HttpContext;\n    if (!int.TryParse(http.Request.RouteValues[\"id\"]?.ToString(), out var id))\n        return await next(ctx);\n    var label = await RestrictedLabelAsync(http.RequestServices.GetRequiredService<LabFlowDbContext>(), id, http.RequestAborted);\n    return label is not null && !http.RequestServices.GetRequiredService<ConfidentialityGate>().IsOpen(http.User, $\"requisition:{id}\")\n        ? ConfidentialityGate.Closed(label)\n        : await next(ctx);"
+    },
+    "restricted/override": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 32,
+      "end": 41,
+      "code": "var label = await RestrictedLabelAsync(db, id, ct);\nif (label is null)\n    return Results.Ok(new { open = true });\nif (!ConfidentialityGate.ReasonOk(body.Reason))\n    return Results.BadRequest(new { title = $\"Say why, in at least {ConfidentialityGate.MinReason} characters.\" });\nvar until = gate.Open(user, $\"requisition:{id}\");\naudit.Log(\"RestrictedOverride\", \"Results\", id, await db.Requisitions.Where(r => r.RequisitionId == id).Select(r => r.PatientId).SingleAsync(ct),\n    new { label, reason = body.Reason!.Trim() });\nawait db.SaveChangesAsync(ct);\nreturn Results.Ok(new { open = true, until });"
+    },
+    "restricted/gate": {
+      "file": "src/LabFlow.Api/Auth/ConfidentialityGate.cs",
+      "start": 18,
+      "end": 27,
+      "code": "private static string Key(ClaimsPrincipal user, string item) =>\n    $\"restricted|{user.FindFirstValue(ClinicHubClaims.Clinic)}|{user.FindFirstValue(ClaimTypes.NameIdentifier)}|{item}\";\n\npublic bool IsOpen(ClaimsPrincipal user, string item) => cache.TryGetValue(Key(user, item), out _);\n\npublic DateTime Open(ClaimsPrincipal user, string item)\n{\n    var until = clock.GetUtcNow().UtcDateTime + Lasts;\n    cache.Set(Key(user, item), true, new DateTimeOffset(until, TimeSpan.Zero));\n    return until;"
+    },
+    "restricted/ui": {
+      "file": "web/src/components/RestrictedGate.tsx",
+      "start": 22,
+      "end": 30,
+      "code": "<label>Why do you need to open it?\n  <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} maxLength={300} />\n</label>\n{error && <div className=\"alert\" role=\"alert\">{error}</div>}\n<div className=\"actions\">\n  <button type=\"button\" className=\"btn ghost\" onClick={onCancel}>Not now</button>\n  <button type=\"button\" className=\"btn primary\" disabled={busy || reason.trim().length < 10} onClick={submit}>{action}</button>\n</div>\n<p className=\"muted\">At least 10 characters. The access lasts one hour.</p>"
+    },
+    "audit/log": {
+      "file": "src/LabFlow.Api/Auth/AuditLogger.cs",
+      "start": 13,
+      "end": 28,
+      "code": "public void Log(string action, string entityType, object? entityId, int? patientId, object? details = null)\n{\n    var ctx = http.HttpContext;\n    db.AccessLogs.Add(new AccessLog\n    {\n        OccurredAt = DateTime.UtcNow,\n        UserId = ctx?.User.UserId(),\n        Action = action,\n        EntityType = entityType,\n        EntityId = entityId?.ToString(),\n        PatientId = patientId,\n        Details = details is null ? null : JsonSerializer.Serialize(details),\n        IpAddress = ctx?.Connection.RemoteIpAddress?.ToString(),\n        // W3C trace id is 32 hex chars, the same shape as a Guid in \"N\" format\n        CorrelationId = Activity.Current is { } a ? Guid.ParseExact(a.TraceId.ToHexString(), \"N\") : null,\n    });"
+    },
+    "audit/use": {
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "start": 154,
+      "end": 156,
+      "code": "audit.Log(\"Create\", \"Appointment\", appointment.AppointmentId, patient.PatientId, new { channel = \"Web\" });\nawait db.SaveChangesAsync(ct);\nawait tx.CommitAsync(ct);"
+    },
+    "audit/trigger": {
+      "file": "database/010_schema.sql",
+      "start": 520,
+      "end": 523,
+      "code": "CREATE TRIGGER audit.TR_AccessLog_AppendOnly ON audit.AccessLog\nINSTEAD OF UPDATE, DELETE\nAS\n    THROW 50001, 'audit.AccessLog is append-only.', 1;"
+    },
+    "slots/slots": {
+      "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
+      "start": 27,
+      "end": 44,
+      "code": "foreach (var h in hours.Where(h => h.DayOfWeek == (byte)date.DayOfWeek).OrderBy(h => h.OpenTime))\n{\n    var step = TimeSpan.FromMinutes(h.SlotMinutes);\n    for (var t = h.OpenTime; t.Add(step) <= h.CloseTime && t >= h.OpenTime; t = t.Add(step))\n    {\n        var local = date.ToDateTime(t, DateTimeKind.Unspecified);\n        if (zone.IsInvalidTime(local)) continue;   // skipped hour when clocks go forward\n\n        var startUtc = TimeZoneInfo.ConvertTimeToUtc(local, zone);\n        if (startUtc <= nowUtc) continue;\n\n        var booked = bookedByStartUtc.GetValueOrDefault(startUtc);\n        var remaining = h.CapacityPerSlot - booked;\n        if (remaining > 0)\n            slots.Add(new Slot(startUtc, startUtc.Add(step), t, remaining));\n    }\n}\nreturn slots;"
+    },
+    "slots/day": {
+      "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
+      "start": 53,
+      "end": 56,
+      "code": "/// <summary>UTC range covering one local calendar day.</summary>\npublic static (DateTime FromUtc, DateTime ToUtc) DayRangeUtc(DateOnly date) =>\n    (TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), Toronto),\n     TimeZoneInfo.ConvertTimeToUtc(date.AddDays(1).ToDateTime(TimeOnly.MinValue), Toronto));"
+    },
+    "booking/lock": {
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "start": 97,
+      "end": 103,
+      "code": "// Serialize bookings for this slot so two people can't take the last place.\nvar lockName = $\"slot:{req.LocationId}:{startUtc:O}\";\nawait db.Database.ExecuteSqlAsync($\"\"\"\n    DECLARE @r int;\n    EXEC @r = sp_getapplock @Resource = {lockName}, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 5000;\n    IF @r < 0 THROW 50002, 'Could not lock the booking slot.', 1;\n    \"\"\", ct);"
+    },
+    "booking/rate": {
+      "file": "src/LabFlow.Api/Program.cs",
+      "start": 45,
+      "end": 47,
+      "code": "o.AddPolicy(BookingEndpoints.BookingRateLimit, ctx => RateLimitPartition.GetFixedWindowLimiter(\n    ctx.Connection.RemoteIpAddress?.ToString() ?? \"unknown\",\n    _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));"
+    },
+    "booking/match": {
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "start": 174,
+      "end": 183,
+      "code": "if (d.NormalizedHealthCard is { } hcn)\n{\n    var existing = await db.Patients.SingleOrDefaultAsync(p => p.HealthCardNumber == hcn, ct);\n    if (existing is not null)\n    {\n        var matches = existing.DateOfBirth == d.DateOfBirth\n                      && string.Equals(existing.LastName.Trim(), d.LastName.Trim(), StringComparison.OrdinalIgnoreCase);\n        return matches\n            ? (existing, null)\n            : (existing, Results.UnprocessableEntity(new { error = \"The health card details don't match our records. Please call the location to book.\" }));"
+    },
+    "booking/email": {
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "start": 134,
+      "end": 138,
+      "code": "// Confirmation goes to the address on file, never to one typed by an anonymous caller\n// for an existing patient - otherwise anyone with a health card number could redirect\n// someone else's notifications.\nstring? sentTo = null;\nif (patient.ConsentEmailNotification && !string.IsNullOrEmpty(patient.Email))"
+    },
+    "reception/duplicate": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 225,
+      "end": 229,
+      "code": "// Ordering a panel and one of its members is a duplicate order.\nvar orderedIds = tests.Select(t => t.TestId).ToHashSet();\nforeach (var panel in tests.Where(t => t.Members.Count > 0))\n    foreach (var dup in panel.Members.Where(m => orderedIds.Contains(m.MemberTestId)))\n        v.Add(\"testIds\", $\"{dup.Member.NameEn} is already part of {panel.NameEn}.\");"
+    },
+    "reception/sex": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 222,
+      "end": 223,
+      "code": "foreach (var t in tests.Where(t => t.ApplicableSex is not null && patient.Sex != t.ApplicableSex))\n    v.Add(\"testIds\", $\"{t.NameEn} only applies to sex {t.ApplicableSex}.\");"
+    },
+    "reception/selfpay": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 231,
+      "end": 234,
+      "code": "// Without an Ontario health card everything is self-pay, so every test needs a price.\nvar hasOhip = patient?.HealthCardNumber is not null && patient.HealthCardProvince == \"ON\";\nif (!hasOhip)\n    foreach (var t in tests.Where(t => t.UninsuredPrice is null))"
+    },
+    "reception/invoice": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 271,
+      "end": 280,
+      "code": "var patientPays = requisition.Items.Sum(i => i.Price ?? 0);\nif (patientPays > 0)\n    db.Invoices.Add(new Invoice\n    {\n        RequisitionId = requisition.RequisitionId,\n        PatientId = requisition.PatientId,\n        Subtotal = patientPays,\n        Tax = 0,   // HST treatment of uninsured lab services still to be confirmed\n        Status = \"Open\",\n        CreatedAt = now,"
+    },
+    "reception/tubes": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 304,
+      "end": 306,
+      "code": "// Tubes to draw: specimen types of the ordered tests and of panel members.\nvar tubes = r.Items\n    .SelectMany(i => i.Test.Members.Select(m => m.Member.SpecimenTypeCode).Append(i.Test.SpecimenTypeCode))"
+    },
+    "results/range": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 131,
+      "end": 133,
+      "code": "// The most specific range for the patient's sex and age.\nvar range = ranges.Where(r => r.TestId == test.TestId && (r.Sex == requisition.Patient.Sex || r.Sex == \"U\") && ageDays >= r.AgeFromDays && ageDays <= r.AgeToDays)\n    .OrderBy(r => r.Sex == \"U\").FirstOrDefault();"
+    },
+    "results/copy": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 141,
+      "end": 144,
+      "code": "result.RefLow = range?.Low;\nresult.RefHigh = range?.High;\nresult.RefText = range?.DisplayText ?? (range is { Low: { } lo, High: { } hi } ? $\"{lo:0.###} - {hi:0.###}\" : null);\nresult.AbnormalFlag = number is { } v && range is not null ? Flag(v, range) : null;"
+    },
+    "results/flag": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 207,
+      "end": 213,
+      "code": "/// <summary>HL7 table 0078 flag from the copied range.</summary>\npublic static string Flag(decimal value, ReferenceRange range) =>\n    range.CriticalLow is { } cl && value < cl ? \"LL\"\n    : range.CriticalHigh is { } ch && value > ch ? \"HH\"\n    : range.Low is { } lo && value < lo ? \"L\"\n    : range.High is { } hi && value > hi ? \"H\"\n    : \"N\";"
+    },
+    "results/correction": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 136,
+      "end": 137,
+      "code": "else if (result.Status is \"Final\" or \"Corrected\")\n    result.VerifiedAt = null;   // a correction after release: verified again when re-released"
+    },
+    "results/version": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 176,
+      "end": 187,
+      "code": "var version = (short)((await db.Reports.Where(r => r.RequisitionId == id).MaxAsync(r => (short?)r.Version, ct) ?? 0) + 1);\nforeach (var r in pending)\n{\n    r.Status = version == 1 ? \"Final\" : \"Corrected\";\n    r.VerifiedAt = now;\n    r.VerifiedByUserId = user.UserId();\n}\nforeach (var item in requisition.Items.Where(i => i.Status != \"Cancelled\"))\n    item.Status = \"Verified\";\nrequisition.Status = \"Final\";\nrequisition.UpdatedAt = now;\ndb.Reports.Add(new LabReport { RequisitionId = id, Version = version, Status = version == 1 ? \"Final\" : \"Amended\", IssuedAt = now, IssuedByUserId = user.UserId() });"
+    },
+    "orders-in/dispatch": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 44,
+      "end": 53,
+      "code": "if ((string?)bundle?[\"resourceType\"] != \"Bundle\" || (string?)bundle[\"type\"] != \"transaction\")\n    return Outcome(\"Expected a FHIR transaction Bundle.\");\nvar entries = bundle[\"entry\"]?.AsArray().Select(e => e?[\"resource\"]).ToList() ?? [];\nif (entries is [{ } only] && (string?)only[\"resourceType\"] == \"Patient\" && only[\"link\"] is not null)\n    return await MergeAsync(db, audit, slug, only, ct);\nvar revoked = entries.Where(r => (string?)r?[\"resourceType\"] == \"ServiceRequest\" && (string?)r?[\"status\"] == \"revoked\").ToList();\nif (revoked.Count > 0)\n    return revoked.Count == entries.Count\n        ? await CancelAsync(db, audit, slug, revoked!, ct)\n        : Outcome(\"A Bundle that withdraws orders carries only the revoked ServiceRequests.\");"
+    },
+    "orders-in/codes": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 61,
+      "end": 75,
+      "code": "// Tests: LOINC where the catalog has it, LabFlow's own code for panels.\nvar tests = await db.Tests.AsNoTracking().Where(t => t.IsActive && t.IsOrderable).ToListAsync(ct);\nvar wanted = new List<(Test Test, string ExternalId)>();\nforeach (var sr in requests)\n{\n    var coding = sr![\"code\"]?[\"coding\"]?.AsArray().Select(c => c!).ToList() ?? [];\n    var test = coding.Select(c => (string?)c[\"system\"] switch\n    {\n        Loinc => tests.FirstOrDefault(t => t.LoincCode == (string?)c[\"code\"]),\n        LabFlowTestCode => tests.FirstOrDefault(t => t.Code == (string?)c[\"code\"]),\n        _ => null,\n    }).FirstOrDefault(t => t is not null);\n    if (test is null)\n        return Outcome($\"LabFlow can't perform '{(string?)coding.FirstOrDefault()?[\"display\"] ?? (string?)coding.FirstOrDefault()?[\"code\"] ?? \"?\"}'. Codes use {Loinc} or {LabFlowTestCode}.\");\n    wanted.Add((test, (string?)sr[\"identifier\"]?[0]?[\"value\"] ?? \"\"));"
+    },
+    "orders-in/prepare": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 38,
+      "end": 39,
+      "code": "// The first order for a clinic can come before any of its staff has signed in here.\nawait databases.PrepareAsync(slug);"
+    },
+    "orders-in/existing": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 78,
+      "end": 82,
+      "code": "var existing = await db.ElectronicOrders.AsNoTracking().SingleOrDefaultAsync(o => o.SourceClinic == slug && o.ExternalId == requisition, ct);\nint patientId, practitionerId, orderId;\nif (existing is not null)\n    // Sent again (ClinicHub retried after a lost answer): accepted once.\n    (patientId, practitionerId, orderId) = (existing.PatientId, existing.PractitionerId, existing.ElectronicOrderId);"
+    },
+    "cancel/again": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 254,
+      "end": 255,
+      "code": "if (item.CancelledAt is not null)\n    continue;   // sent again: already withdrawn"
+    },
+    "cancel/rule": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 258,
+      "end": 262,
+      "code": "var line = await db.RequisitionItems.SingleOrDefaultAsync(i => i.RequisitionId == requisitionId && i.TestId == item.TestId, ct);\nif (line is not null && line.Status != \"Cancelled\"\n    && (line.Status is not (\"Ordered\" or \"Collected\") || await db.Results.AnyAsync(r => r.RequisitionItemId == line.RequisitionItemId, ct)))\n    return Outcome($\"Results have been entered for {(await db.Tests.SingleAsync(t => t.TestId == item.TestId, ct)).NameEn}; call the lab to cancel.\",\n        StatusCodes.Status409Conflict, \"business-rule\");"
+    },
+    "results-out/queue": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 189,
+      "end": 196,
+      "code": "// Ordered from ClinicHub: the results go back to it, one DiagnosticReport per ordered test.\nvar order = await db.ElectronicOrders.Include(o => o.Items).SingleOrDefaultAsync(o => o.RequisitionId == id, ct);\nif (order is not null)\n    db.OutboundMessages.Add(new OutboundMessage\n    {\n        Destination = \"ClinicHub\", Kind = \"DiagnosticReport\", RequisitionId = id, CreatedAt = now,\n        PayloadJson = ResultBundle(requisition, order, results, version == 1 ? \"final\" : \"amended\", now).ToJsonString(),\n    });"
+    },
+    "results-out/basedon": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 310,
+      "end": 312,
+      "code": "[\"basedOn\"] = new JsonArray(new JsonObject\n{\n    [\"identifier\"] = new JsonObject { [\"system\"] = $\"urn:clinichub:{order.SourceClinic}:service-request\", [\"value\"] = ordered.ExternalId },"
+    },
+    "results-out/label": {
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "start": 304,
+      "end": 307,
+      "code": "// The order's confidentiality label comes back on its results (IntegrationHub's flow 7).\n[\"meta\"] = order.Confidentiality is { } label ? new JsonObject\n{\n    [\"security\"] = new JsonArray(new JsonObject { [\"system\"] = OrderEndpoints.ConfidentialitySystem, [\"code\"] = label }),"
+    },
+    "results-out/due": {
+      "file": "src/LabFlow.Api/Auth/ResultSender.cs",
+      "start": 58,
+      "end": 59,
+      "code": "due = await db.OutboundMessages.Where(m => m.SentAt == null && m.Attempts < MaxAttempts && (m.NextAttemptAt == null || m.NextAttemptAt <= now))\n    .OrderBy(m => m.OutboundMessageId).Take(20).ToListAsync(ct);"
+    },
+    "results-out/retry": {
+      "file": "src/LabFlow.Api/Auth/ResultSender.cs",
+      "start": 85,
+      "end": 87,
+      "code": "m.NextAttemptAt = now.AddSeconds(Math.Min(10 * Math.Pow(2, m.Attempts - 1), 1800));\nif (ex.Message.StartsWith(\"401\"))\n    _token = null;"
+    },
+    "results-out/finance": {
+      "file": "src/LabFlow.Api/Auth/FinanceSender.cs",
+      "start": 12,
+      "end": 20,
+      "code": "/// The lab's money to FinancePowerApp, the group's accounting, as financial documents built from the billing tables\n/// (each with an id that never changes, marked in billing.FinanceExport once accepted). No health information leaves:\n/// no patient, no test names; patients are one party and invoices go by number.\n///\n/// <list type=\"bullet\">\n/// <item>A patient invoice for uninsured tests: owed by \"Patients\", Lab.Uninsured (exempt: a health care service). Paid\n/// online: a receipt by card. Voided or refunded: reversed.</item>\n/// <item>A finished requisition's insured tests, where ref.Test has its OHIP fee: owed by OHIP, Lab.OHIP.</item>\n/// </list>"
+    },
+    "fe-app/who": {
+      "file": "web/src/App.tsx",
+      "start": 26,
+      "end": 33,
+      "code": "// Connected, ClinicHub's permissions decide; with the demo menu, the seeded user's role.\nconst isStaff = connected\n  ? !!me?.permissions.some(p => p === 'frontdesk' || p === 'admin')\n  : !!role && FRONT_DESK.includes(role)\nconst signInError = new URLSearchParams(window.location.search).get('signInError')\nconst canResult = connected\n  ? !!me?.permissions.some(p => p === 'results.enter' || p === 'admin')\n  : !!role && ['Technologist', 'Pathologist', 'Admin'].includes(role)"
+    },
+    "fe-app/topbar": {
+      "file": "web/src/App.tsx",
+      "start": 53,
+      "end": 60,
+      "code": "{connected && (me?.userId\n  ? (\n    <div className=\"user-switch\">\n      <span>{me.name} · {me.clinic}</span>\n      <a href=\"/api/auth/sso/signout\">Sign out</a>\n    </div>\n  )\n  : <a className=\"user-switch\" href={`/api/auth/sso/start?returnUrl=${encodeURIComponent('/reception')}`}>Staff sign-in with ClinicHub</a>)}"
+    },
+    "fe-app/headers": {
+      "file": "web/src/api.ts",
+      "start": 112,
+      "end": 118,
+      "code": "// X-LabFlow: required on changes when signed in with a cookie (connected to ClinicHub); harmless otherwise.\nconst headers: Record<string, string> = { 'X-LabFlow': '1' }\nconst user = getDemoUser()\nif (user) headers['X-Demo-User'] = user\nconst clinic = bookingClinic()\nif (clinic) headers['X-LabFlow-Clinic'] = clinic\nif (body !== undefined) headers['Content-Type'] = 'application/json'"
+    },
+    "scripts/conventions": {
+      "file": "database/010_schema.sql",
+      "start": 3,
+      "end": 9,
+      "code": "-- Conventions\n--   * All timestamps are UTC (datetime2). The app converts to America/Toronto for display.\n--   * Text is nvarchar (English + French).\n--   * Money is decimal, never float.\n--   * No passwords are stored: authentication is external (ASP.NET Core Identity / Entra ID),\n--     sec.AppUser only maps the external subject to a role.\n--   * FHIR resource each table corresponds to is noted in its header comment."
+    },
+    "scripts/upgrades": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 135,
+      "end": 138,
+      "code": "/// Scripts from 050 on change existing databases and are written to be run again safely (IF OBJECT_ID … IS NULL).\n/// deploy.ps1 runs them on a new database like any other; LabFlow runs them on start-up for a database built before.\n/// </summary>\npublic static IEnumerable<string> UpgradeScripts() => Scripts(f => string.CompareOrdinal(f, \"050\") >= 0);"
+    },
+    "scripts/guard": {
+      "file": "database/054_analytics_dw_view.sql",
+      "start": 6,
+      "end": 7,
+      "code": "IF OBJECT_ID(N'dw.FactLabResult', N'U') IS NOT NULL\nEXEC (N'CREATE OR ALTER VIEW dw.vw_AnalyticsMonthly AS"
+    },
+    "scripts/temporal": {
+      "file": "database/010_schema.sql",
+      "start": 176,
+      "end": 179,
+      "code": "ValidFrom                 datetime2(0)  GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,\nValidTo                   datetime2(0)  GENERATED ALWAYS AS ROW END   HIDDEN NOT NULL,\nPERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),\nCONSTRAINT CK_Patient_HealthCard CHECK (HealthCardNumber IS NULL OR HealthCardNumber NOT LIKE '%[^0-9]%'),"
+    },
+    "etl/package": {
+      "file": "etl/builder/BuildPackage.cs",
+      "start": 1,
+      "end": 11,
+      "code": "// Builds etl/LabFlowETL/LabFlowETL.dtsx with the SSIS object model (SQL Server\n// 2019 / v15), so the package is reproducible from source and reviewable as\n// code. The generated .dtsx opens in Visual Studio's SSIS designer like any\n// hand-drawn package.\n//\n//   Settings: User::LegacyServer/LegacyDatabase/LabFlowServer/LabFlowDatabase/LookbackVisits\n//   Control flow:  SQL Start run -> DFT Extract legacy -> SQL Transform and load\n//                  (OnError: SQL Fail run)\n//   Data flow:     four independent paths, legacy -> etl.stg_*\n//                    Tests / Payers:  OLE DB Source -> Data Conversion (code page 1256 -> Unicode) -> OLE DB Destination\n//                    Visits / Results: OLE DB Source (de-identifying query from a variable) -> Row Count -> OLE DB Destination"
+    },
+    "etl/load": {
+      "file": "database/040_etl_dw.sql",
+      "start": 320,
+      "end": 323,
+      "code": "DECLARE @shift int = (SELECT CAST(Value AS int) FROM etl.Secret WHERE Name = 'DateShiftDays');\nIF @shift IS NULL THROW 50101, 'etl.Secret has no DateShiftDays; run etl.usp_StartRun first.', 1;\n\nBEGIN TRAN;"
+    },
+    "etl/secret": {
+      "file": "database/040_etl_dw.sql",
+      "start": 241,
+      "end": 247,
+      "code": "IF NOT EXISTS (SELECT 1 FROM etl.Secret WHERE Name = 'PatientHashSalt')\n    INSERT etl.Secret (Name, Value) VALUES ('PatientHashSalt', CONVERT(varchar(64), CRYPT_GEN_RANDOM(32), 2));\nIF NOT EXISTS (SELECT 1 FROM etl.Secret WHERE Name = 'DateShiftDays')\n    -- a nonzero shift between -180 and +180 days\n    INSERT etl.Secret (Name, Value)\n    VALUES ('DateShiftDays', CAST((ABS(CHECKSUM(CRYPT_GEN_RANDOM(4))) % 180 + 1)\n                                  * CASE WHEN ABS(CHECKSUM(NEWID())) % 2 = 0 THEN 1 ELSE -1 END AS varchar(10)));"
+    },
+    "etl/jalali": {
+      "file": "database/040_etl_dw.sql",
+      "start": 195,
+      "end": 200,
+      "code": "CREATE FUNCTION etl.fn_JalaliToGregorian (@j varchar(10))\nRETURNS date\nWITH SCHEMABINDING\nAS\nBEGIN\n    IF @j IS NULL OR @j NOT LIKE '[0-9][0-9][0-9][0-9]/[0-1][0-9]/[0-3][0-9]' RETURN NULL;"
+    },
+    "dw/view": {
+      "file": "database/054_analytics_dw_view.sql",
+      "start": 7,
+      "end": 21,
+      "code": "EXEC (N'CREATE OR ALTER VIEW dw.vw_AnalyticsMonthly AS\nSELECT\n    d.[Year] AS [Year], d.[Month] AS [Month],                -- the visit''s month, after the warehouse''s date shift\n    f.TestKey, p.PayerType,\n    COUNT(*)                                       AS Results,\n    COUNT(DISTINCT f.LegacyVisitNo)                AS Visits,\n    SUM(CAST(f.HasAnswer AS int))                  AS Answered,\n    SUM(CAST(f.IsAbnormal AS int))                 AS Abnormal,\n    SUM(CAST(f.IsCritical AS int))                 AS Critical,\n    SUM(CAST(f.TurnaroundDays AS int))             AS TurnaroundDaysSum,\n    COUNT(f.TurnaroundDays)                        AS TurnaroundCount\nFROM dw.FactLabResult f\nJOIN dw.DimDate d ON d.DateKey = f.VisitDateKey\nJOIN dw.DimPayer p ON p.PayerKey = f.PayerKey\nGROUP BY d.[Year], d.[Month], f.TestKey, p.PayerType');"
+    },
+    "dw/grant": {
+      "file": "database/tools/analytics_dw_reader.sql",
+      "start": 20,
+      "end": 21,
+      "code": "GRANT SELECT ON dw.vw_AnalyticsMonthly TO analytics_dw_reader;\nGRANT SELECT ON dw.DimTest (TestKey, LoincCode, LabFlowCode, TestName, Section, IsPanel) TO analytics_dw_reader;"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "Booking",
+      "method": "GET",
+      "path": "/api/locations",
+      "access": "public",
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "line": 31
+    },
+    {
+      "area": "Booking",
+      "method": "GET",
+      "path": "/api/tests",
+      "access": "public",
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "line": 38
+    },
+    {
+      "area": "Booking",
+      "method": "GET",
+      "path": "/api/locations/{locationId}/slots",
+      "access": "public",
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "line": 52
+    },
+    {
+      "area": "Booking",
+      "method": "POST",
+      "path": "/api/appointments",
+      "access": "public",
+      "handler": "BookAsync",
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "line": 60
+    },
+    {
+      "area": "Order",
+      "method": "POST",
+      "path": "/fhir",
+      "access": "clinichub.orders",
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "line": 35
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/electronic-orders",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "line": 126
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/electronic-orders/{id:int}/override",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "line": 144
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/electronic-orders/{id:int}/requisition",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "line": 159
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/appointments",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 41
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/appointments/{id:int}/check-in",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 66
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/appointments/{id:int}/no-show",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 69
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/appointments/{id:int}/cancel",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 72
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/patients",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 77
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/patients/{id:int}",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 98
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/patients",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 107
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/practitioners",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 124
+    },
+    {
+      "area": "Reception",
+      "method": "POST",
+      "path": "/api/reception/requisitions",
+      "access": "FrontDesk",
+      "handler": "CreateRequisitionAsync",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 137
+    },
+    {
+      "area": "Reception",
+      "method": "GET",
+      "path": "/api/reception/requisitions/{id:int}",
+      "access": "FrontDesk",
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "line": 139
+    },
+    {
+      "area": "Result",
+      "method": "POST",
+      "path": "/api/lab/requisitions/{id:int}/override",
+      "access": "ResultsEntry",
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "line": 30
+    },
+    {
+      "area": "Results",
+      "method": "GET",
+      "path": "/api/lab/worklist",
+      "access": "ResultsEntry",
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "line": 58
+    },
+    {
+      "area": "Results",
+      "method": "GET",
+      "path": "/api/lab/requisitions/{id:int}",
+      "access": "ResultsEntry",
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "line": 79
+    },
+    {
+      "area": "Results",
+      "method": "PUT",
+      "path": "/api/lab/requisitions/{id:int}/results",
+      "access": "ResultsEntry",
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "line": 89
+    },
+    {
+      "area": "Results",
+      "method": "POST",
+      "path": "/api/lab/requisitions/{id:int}/release",
+      "access": "ResultsEntry",
+      "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+      "line": 160
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/me",
+      "access": "public",
+      "file": "src/LabFlow.Api/Program.cs",
+      "line": 79
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/auth/settings",
+      "access": "public",
+      "file": "src/LabFlow.Api/Program.cs",
+      "line": 89
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/auth/sso/start",
+      "access": "public",
+      "file": "src/LabFlow.Api/Program.cs",
+      "line": 97
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/auth/sso/signout",
+      "access": "public",
+      "file": "src/LabFlow.Api/Program.cs",
+      "line": 101
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/dev/users",
+      "access": "public",
+      "file": "src/LabFlow.Api/Program.cs",
+      "line": 108
+    }
+  ],
+  "tables": [
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "Department",
+      "file": "database/010_schema.sql",
+      "line": 39,
+      "columns": [
+        {
+          "name": "DepartmentId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Code",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "NameEn",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NameFr",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SortOrder",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "Unit",
+      "file": "database/010_schema.sql",
+      "line": 49,
+      "columns": [
+        {
+          "name": "UnitCode",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Display",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "SpecimenType",
+      "file": "database/010_schema.sql",
+      "line": 55,
+      "columns": [
+        {
+          "name": "SpecimenTypeCode",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "NameEn",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NameFr",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Container",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "Test",
+      "file": "database/010_schema.sql",
+      "line": 63,
+      "columns": [
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Code",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "LoincCode",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "NameEn",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NameFr",
+          "type": "NVARCHAR(150)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ShortName",
+          "type": "NVARCHAR(30)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DepartmentId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Department"
+          ]
+        },
+        {
+          "name": "SpecimenTypeCode",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "notes": [
+            "→ ref.SpecimenType"
+          ]
+        },
+        {
+          "name": "ResultType",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "check ResultType IN ('Numeric','Text','Coded','Panel')"
+          ]
+        },
+        {
+          "name": "UnitCode",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": [
+            "→ ref.Unit"
+          ]
+        },
+        {
+          "name": "DecimalPlaces",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ApplicableSex",
+          "type": "CHAR(1)",
+          "nullable": true,
+          "notes": [
+            "check ApplicableSex IN ('M','F')"
+          ]
+        },
+        {
+          "name": "IsOrderable",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "OhipFeeCode",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsOhipInsured",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "UninsuredPrice",
+          "type": "DECIMAL(10,2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FastingRequired",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "PreparationEn",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PreparationFr",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TurnaroundHours",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "UpdatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "RowVer",
+          "type": "ROWVERSION",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "LoincCode IS NULL OR (LoincCode LIKE '%[0-9]-[0-9]' AND LoincCode NOT LIKE '%[^0-9-]%')",
+        "ResultType <> 'Numeric' OR UnitCode IS NOT NULL",
+        "IsOhipInsured = 1 OR UninsuredPrice IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "PanelMember",
+      "file": "database/010_schema.sql",
+      "line": 94,
+      "columns": [
+        {
+          "name": "PanelTestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "MemberTestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "SortOrder",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "PanelTestId <> MemberTestId"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "ref",
+      "table": "ReferenceRange",
+      "file": "database/010_schema.sql",
+      "line": 103,
+      "columns": [
+        {
+          "name": "ReferenceRangeId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "Sex",
+          "type": "CHAR(1)",
+          "nullable": false,
+          "notes": [
+            "default 'U'",
+            "check Sex IN ('M','F','U')"
+          ]
+        },
+        {
+          "name": "AgeFromDays",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "AgeToDays",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "default 54750"
+          ]
+        },
+        {
+          "name": "PregnancyWeekFrom",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PregnancyWeekTo",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Low",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "High",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CriticalLow",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CriticalHigh",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayText",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Comment",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DATE",
+          "nullable": false,
+          "notes": [
+            "default CAST"
+          ]
+        },
+        {
+          "name": "EffectiveTo",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "AgeFromDays <= AgeToDays",
+        "Low IS NULL OR High IS NULL OR Low <= High",
+        "(PregnancyWeekFrom IS NULL AND PregnancyWeekTo IS NULL) OR PregnancyWeekFrom <= PregnancyWeekTo"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "core",
+      "table": "Location",
+      "file": "database/010_schema.sql",
+      "line": 132,
+      "columns": [
+        {
+          "name": "LocationId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AddressLine1",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AddressLine2",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "City",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Province",
+          "type": "CHAR(2)",
+          "nullable": false,
+          "notes": [
+            "default 'ON'"
+          ]
+        },
+        {
+          "name": "PostalCode",
+          "type": "CHAR(7)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(254)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsCollectionCentre",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "IsLab",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "PostalCode LIKE '[A-Z][0-9][A-Z] [0-9][A-Z][0-9]'"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "core",
+      "table": "Patient",
+      "file": "database/010_schema.sql",
+      "line": 149,
+      "columns": [
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Mrn",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "HealthCardNumber",
+          "type": "CHAR(10)",
+          "nullable": true,
+          "notes": [
+            "unique where HealthCardNumber IS NOT NULL"
+          ]
+        },
+        {
+          "name": "HealthCardVersion",
+          "type": "VARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "HealthCardExpiry",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "HealthCardProvince",
+          "type": "CHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FirstName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "MiddleName",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LastName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DateOfBirth",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Sex",
+          "type": "CHAR(1)",
+          "nullable": false,
+          "notes": [
+            "check Sex IN ('M','F','X','U')"
+          ]
+        },
+        {
+          "name": "GenderIdentity",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(254)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "MobilePhone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PreferredLanguage",
+          "type": "CHAR(2)",
+          "nullable": false,
+          "notes": [
+            "default 'en'",
+            "check PreferredLanguage IN ('en','fr')"
+          ]
+        },
+        {
+          "name": "AddressLine1",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AddressLine2",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "City",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Province",
+          "type": "CHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PostalCode",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ConsentEmailNotification",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "ConsentAiSummary",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "ConsentRecordedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "RowVer",
+          "type": "ROWVERSION",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ValidFrom",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ValidTo",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "HealthCardNumber IS NULL OR HealthCardNumber NOT LIKE '%[^0-9]%'",
+        "PostalCode IS NULL OR PostalCode LIKE '[A-Z][0-9][A-Z] [0-9][A-Z][0-9]'",
+        "DateOfBirth >= '1900-01-01'"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "core",
+      "table": "Practitioner",
+      "file": "database/010_schema.sql",
+      "line": 188,
+      "columns": [
+        {
+          "name": "PractitionerId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "LicenceNumber",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LicenceBody",
+          "type": "VARCHAR(6)",
+          "nullable": false,
+          "notes": [
+            "default 'CPSO'",
+            "check LicenceBody IN ('CPSO','CNO')"
+          ]
+        },
+        {
+          "name": "OhipBillingNumber",
+          "type": "CHAR(6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FirstName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LastName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Specialty",
+          "type": "NVARCHAR(80)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ClinicName",
+          "type": "NVARCHAR(150)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AddressLine1",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "City",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Province",
+          "type": "CHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PostalCode",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Fax",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(254)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "sec",
+      "table": "AppUser",
+      "file": "database/010_schema.sql",
+      "line": 214,
+      "columns": [
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(128)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(254)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(120)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Role",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "check Role IN ('Admin','Reception','Collector','Technologist','Pathologist','Practitioner','Patient')"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "PractitionerId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ core.Practitioner"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "LastLoginAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Role <> 'Practitioner' OR PractitionerId IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "sched",
+      "table": "LocationHours",
+      "file": "database/010_schema.sql",
+      "line": 235,
+      "columns": [
+        {
+          "name": "LocationId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ core.Location"
+          ]
+        },
+        {
+          "name": "DayOfWeek",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": [
+            "check DayOfWeek BETWEEN 0 AND 6"
+          ]
+        },
+        {
+          "name": "OpenTime",
+          "type": "TIME(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CloseTime",
+          "type": "TIME(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SlotMinutes",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": [
+            "default 10"
+          ]
+        },
+        {
+          "name": "CapacityPerSlot",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": [
+            "default 2"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "OpenTime < CloseTime"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "sched",
+      "table": "LocationClosure",
+      "file": "database/010_schema.sql",
+      "line": 247,
+      "columns": [
+        {
+          "name": "LocationId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ core.Location"
+          ]
+        },
+        {
+          "name": "ClosedOn",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Reason",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "sched",
+      "table": "Appointment",
+      "file": "database/010_schema.sql",
+      "line": 255,
+      "columns": [
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "LocationId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ core.Location"
+          ]
+        },
+        {
+          "name": "StartUtc",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EndUtc",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "default 'Booked'",
+            "check Status IN ('Booked','CheckedIn','Completed','Cancelled','NoShow')"
+          ]
+        },
+        {
+          "name": "Channel",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "notes": [
+            "default 'Web'",
+            "check Channel IN ('Web','Phone','WalkIn')"
+          ]
+        },
+        {
+          "name": "RequisitionImageUri",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Notes",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CancelReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "CreatedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "RowVer",
+          "type": "ROWVERSION",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "StartUtc < EndUtc"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "Requisition",
+      "file": "database/010_schema.sql",
+      "line": 281,
+      "columns": [
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AccessionNumber",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "OrderingPractitionerId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Practitioner"
+          ]
+        },
+        {
+          "name": "LocationId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ core.Location"
+          ]
+        },
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sched.Appointment",
+            "unique where AppointmentId IS NOT NULL"
+          ]
+        },
+        {
+          "name": "Priority",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "notes": [
+            "default 'Routine'",
+            "check Priority IN ('Routine','Stat')"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "default 'Received'",
+            "check Status IN ('Received','InProgress','PartiallyResulted','Final','Cancelled')"
+          ]
+        },
+        {
+          "name": "PayerType",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'OHIP'",
+            "check PayerType IN ('OHIP','Patient','ThirdParty')"
+          ]
+        },
+        {
+          "name": "RequisitionDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ClinicalNotes",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsPregnant",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "PregnancyWeek",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FastingHours",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReceivedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "ReceivedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "UpdatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "RowVer",
+          "type": "ROWVERSION",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "IsPregnant = 1 OR PregnancyWeek IS NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "RequisitionCopyTo",
+      "file": "database/010_schema.sql",
+      "line": 308,
+      "columns": [
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "PractitionerId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Practitioner"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "RequisitionItem",
+      "file": "database/010_schema.sql",
+      "line": 315,
+      "columns": [
+        {
+          "name": "RequisitionItemId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "default 'Ordered'",
+            "check Status IN ('Ordered','Collected','InProgress','Resulted','Verified','Cancelled')"
+          ]
+        },
+        {
+          "name": "IsInsured",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Price",
+          "type": "DECIMAL(10,2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CancelReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "IsInsured = 1 OR Price IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "Specimen",
+      "file": "database/010_schema.sql",
+      "line": 329,
+      "columns": [
+        {
+          "name": "SpecimenId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "Barcode",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "SpecimenTypeCode",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "→ ref.SpecimenType"
+          ]
+        },
+        {
+          "name": "CollectedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CollectedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "ReceivedInLabAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'Collected'",
+            "check Status IN ('Collected','Received','Rejected','Disposed')"
+          ]
+        },
+        {
+          "name": "RejectionReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Status <> 'Rejected' OR RejectionReason IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "Result",
+      "file": "database/010_schema.sql",
+      "line": 347,
+      "columns": [
+        {
+          "name": "ResultId",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionItemId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.RequisitionItem"
+          ]
+        },
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "SpecimenId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ lab.Specimen"
+          ]
+        },
+        {
+          "name": "ValueNumeric",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ValueText",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "UnitCode",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": [
+            "→ ref.Unit"
+          ]
+        },
+        {
+          "name": "RefLow",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RefHigh",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RefText",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AbnormalFlag",
+          "type": "VARCHAR(2)",
+          "nullable": true,
+          "notes": [
+            "check AbnormalFlag IN ('N','L','H','LL','HH','A')"
+          ]
+        },
+        {
+          "name": "IsCritical",
+          "type": "AS",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CriticalCalledAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CriticalCalledTo",
+          "type": "NVARCHAR(150)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "default 'Preliminary'",
+            "check Status IN ('Preliminary','Final','Corrected','Cancelled')"
+          ]
+        },
+        {
+          "name": "Comment",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "ResultedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "VerifiedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "VerifiedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "LegacyAnswer",
+          "type": "VARCHAR(250)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RowVer",
+          "type": "ROWVERSION",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ValidFrom",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ValidTo",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Status = 'Cancelled' OR ValueNumeric IS NOT NULL OR ValueText IS NOT NULL",
+        "Status NOT IN ('Final','Corrected') OR VerifiedAt IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "Report",
+      "file": "database/010_schema.sql",
+      "line": 381,
+      "columns": [
+        {
+          "name": "ReportId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "Version",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "check Status IN ('Preliminary','Final','Amended')"
+          ]
+        },
+        {
+          "name": "IssuedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "IssuedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "PdfBlobUri",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Hl7MessageId",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsPatientVisible",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "ResultInterpretation",
+      "file": "database/010_schema.sql",
+      "line": 396,
+      "columns": [
+        {
+          "name": "InterpretationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "ReportId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ lab.Report"
+          ]
+        },
+        {
+          "name": "Audience",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "check Audience IN ('Patient','Clinician')"
+          ]
+        },
+        {
+          "name": "Language",
+          "type": "CHAR(2)",
+          "nullable": false,
+          "notes": [
+            "default 'en'",
+            "check Language IN ('en','fr')"
+          ]
+        },
+        {
+          "name": "ContentMarkdown",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FindingsJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": [
+            "check FindingsJson IS NULL OR ISJSON(FindingsJson) = 1"
+          ]
+        },
+        {
+          "name": "Model",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PromptVersion",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "InputTokens",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "OutputTokens",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "default 'Draft'",
+            "check Status IN ('Draft','Approved','Rejected','Superseded')"
+          ]
+        },
+        {
+          "name": "ReviewedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.AppUser"
+          ]
+        },
+        {
+          "name": "ReviewedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReviewComment",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Status NOT IN ('Approved','Rejected') OR (ReviewedByUserId IS NOT NULL AND ReviewedAt IS NOT NULL)"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "notify",
+      "table": "Notification",
+      "file": "database/010_schema.sql",
+      "line": 427,
+      "columns": [
+        {
+          "name": "NotificationId",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "PractitionerId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ core.Practitioner"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sched.Appointment"
+          ]
+        },
+        {
+          "name": "Channel",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "notes": [
+            "check Channel IN ('Email','Sms')"
+          ]
+        },
+        {
+          "name": "TemplateCode",
+          "type": "VARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Language",
+          "type": "CHAR(2)",
+          "nullable": false,
+          "notes": [
+            "default 'en'"
+          ]
+        },
+        {
+          "name": "Recipient",
+          "type": "NVARCHAR(254)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'Queued'",
+            "check Status IN ('Queued','Sending','Sent','Failed','Cancelled')"
+          ]
+        },
+        {
+          "name": "AttemptCount",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "NextAttemptAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "QueuedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "SentAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LastError",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ProviderMessageId",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "PatientId IS NOT NULL OR PractitionerId IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "billing",
+      "table": "OhipClaim",
+      "file": "database/010_schema.sql",
+      "line": 454,
+      "columns": [
+        {
+          "name": "ClaimId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "HealthCardNumber",
+          "type": "CHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "HealthCardVersion",
+          "type": "VARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReferringOhipBillingNumber",
+          "type": "CHAR(6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ServiceDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'Draft'",
+            "check Status IN ('Draft','Submitted','Accepted','Rejected','Paid')"
+          ]
+        },
+        {
+          "name": "BatchNumber",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SubmittedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TotalAmount",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "ErrorCodes",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "billing",
+      "table": "OhipClaimItem",
+      "file": "database/010_schema.sql",
+      "line": 472,
+      "columns": [
+        {
+          "name": "ClaimItemId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ClaimId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ billing.OhipClaim"
+          ]
+        },
+        {
+          "name": "RequisitionItemId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.RequisitionItem"
+          ]
+        },
+        {
+          "name": "FeeCode",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Units",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "Amount",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ExplanatoryCode",
+          "type": "VARCHAR(5)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "billing",
+      "table": "Invoice",
+      "file": "database/010_schema.sql",
+      "line": 483,
+      "columns": [
+        {
+          "name": "InvoiceId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "Subtotal",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Tax",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "Total",
+          "type": "AS",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'Open'",
+            "check Status IN ('Open','Paid','Void','Refunded')"
+          ]
+        },
+        {
+          "name": "PaymentProvider",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PaymentReference",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PaidAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "audit",
+      "table": "AccessLog",
+      "file": "database/010_schema.sql",
+      "line": 503,
+      "columns": [
+        {
+          "name": "AuditId",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "OccurredAt",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Action",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "check Action IN ('View','Create','Update','Delete','Print','Export','Email','Login','LoginFailed','AiGenerate')"
+          ]
+        },
+        {
+          "name": "EntityType",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EntityId",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Details",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": [
+            "check Details IS NULL OR ISJSON(Details) = 1"
+          ]
+        },
+        {
+          "name": "IpAddress",
+          "type": "VARCHAR(45)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CorrelationId",
+          "type": "UNIQUEIDENTIFIER",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "LegacyTestMap",
+      "file": "database/010_schema.sql",
+      "line": 530,
+      "columns": [
+        {
+          "name": "LegacyAzId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "LegacyCode",
+          "type": "VARCHAR(12)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyName",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyUnit",
+          "type": "VARCHAR(15)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "Factor",
+          "type": "DECIMAL(18,8)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "MapStatus",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "default 'Unmapped'",
+            "check MapStatus IN ('Unmapped','Suggested','Reviewed','Excluded')"
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReviewedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "MapStatus <> 'Reviewed' OR TestId IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "Secret",
+      "file": "database/040_etl_dw.sql",
+      "line": 25,
+      "columns": [
+        {
+          "name": "Name",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Value",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "LoadRun",
+      "file": "database/040_etl_dw.sql",
+      "line": 31,
+      "columns": [
+        {
+          "name": "RunId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Package",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "StartedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "EndedAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "default 'Running'",
+            "check Status IN ('Running','Succeeded','Failed')"
+          ]
+        },
+        {
+          "name": "FromVisitNo",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "VisitsExtracted",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultsExtracted",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultsInserted",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultsUpdated",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultsSkipped",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ResultsRejected",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Warnings",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Message",
+          "type": "NVARCHAR(2000)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "RejectRow",
+      "file": "database/040_etl_dw.sql",
+      "line": 49,
+      "columns": [
+        {
+          "name": "RejectRowId",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "RunId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ etl.LoadRun"
+          ]
+        },
+        {
+          "name": "Severity",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "notes": [
+            "check Severity IN ('Rejected','Warning')"
+          ]
+        },
+        {
+          "name": "SourceTable",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SourceKey",
+          "type": "VARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Rule_",
+          "type": "VARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RawValue",
+          "type": "NVARCHAR(250)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "Watermark",
+      "file": "database/040_etl_dw.sql",
+      "line": 60,
+      "columns": [
+        {
+          "name": "Name",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Value",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UpdatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "stg_Test",
+      "file": "database/040_etl_dw.sql",
+      "line": 69,
+      "columns": [
+        {
+          "name": "LegacyAzId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "LegacyCode",
+          "type": "NVARCHAR(12)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyName",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyUnit",
+          "type": "NVARCHAR(15)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Section",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "stg_Payer",
+      "file": "database/040_etl_dw.sql",
+      "line": 77,
+      "columns": [
+        {
+          "name": "LegacyPayerId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "PayerName",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "stg_Visit",
+      "file": "database/040_etl_dw.sql",
+      "line": 82,
+      "columns": [
+        {
+          "name": "LegacyVisitNo",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "PatientHash",
+          "type": "NCHAR(16)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LegacySex",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Age",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AgeKind",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "VisitDateJ",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "VisitTime",
+          "type": "NVARCHAR(8)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AnswerDateJ",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AnswerTime",
+          "type": "NVARCHAR(8)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyPayerId",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Cancelled",
+          "type": "BIT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PregnancyWeek",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "etl",
+      "table": "stg_Result",
+      "file": "database/040_etl_dw.sql",
+      "line": 97,
+      "columns": [
+        {
+          "name": "LegacyVisitNo",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LegacyAzId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LegacyChildAzId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RowNo",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RowNo2",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Answer",
+          "type": "NVARCHAR(250)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Unit",
+          "type": "NVARCHAR(15)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "NormalRange",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "OutOfRange",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "OutOfCritical",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "NoAnswer",
+          "type": "NVARCHAR(1)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "dw",
+      "table": "DimDate",
+      "file": "database/040_etl_dw.sql",
+      "line": 117,
+      "columns": [
+        {
+          "name": "DateKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Date",
+          "type": "DATE",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "Year",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Quarter",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Month",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "MonthName",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "YearMonth",
+          "type": "CHAR(7)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Day",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "WeekdayNo",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "WeekdayName",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsWeekend",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "dw",
+      "table": "DimTest",
+      "file": "database/040_etl_dw.sql",
+      "line": 131,
+      "columns": [
+        {
+          "name": "TestKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "LegacyAzId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "LegacyCode",
+          "type": "VARCHAR(12)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyName",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LegacyUnit",
+          "type": "NVARCHAR(15)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LoincCode",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LabFlowCode",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TestName",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SiUnit",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Factor",
+          "type": "DECIMAL(18,8)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "MapStatus",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsPanel",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "Section",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "dw",
+      "table": "DimPayer",
+      "file": "database/040_etl_dw.sql",
+      "line": 147,
+      "columns": [
+        {
+          "name": "PayerKey",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "LegacyPayerId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "PayerName",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PayerType",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "dw",
+      "table": "DimPatient",
+      "file": "database/040_etl_dw.sql",
+      "line": 154,
+      "columns": [
+        {
+          "name": "PatientKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "PatientHash",
+          "type": "CHAR(16)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "Sex",
+          "type": "CHAR(1)",
+          "nullable": false,
+          "notes": [
+            "check Sex IN ('F','M','U')"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "dw",
+      "table": "FactLabResult",
+      "file": "database/040_etl_dw.sql",
+      "line": 160,
+      "columns": [
+        {
+          "name": "ResultKey",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "LegacyVisitNo",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LegacyAzId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LegacyChildAzId",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RowNo",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RowNo2",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TestKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ dw.DimTest"
+          ]
+        },
+        {
+          "name": "PanelTestKey",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ dw.DimTest"
+          ]
+        },
+        {
+          "name": "PatientKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ dw.DimPatient"
+          ]
+        },
+        {
+          "name": "PayerKey",
+          "type": "SMALLINT",
+          "nullable": false,
+          "notes": [
+            "→ dw.DimPayer"
+          ]
+        },
+        {
+          "name": "VisitDateKey",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ dw.DimDate"
+          ]
+        },
+        {
+          "name": "ResultDateKey",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ dw.DimDate"
+          ]
+        },
+        {
+          "name": "AgeYears",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AgeBand",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "HasAnswer",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ValueText",
+          "type": "NVARCHAR(250)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ValueNumeric",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ValueSi",
+          "type": "DECIMAL(18,6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsAbnormal",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsCritical",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TurnaroundDays",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LoadRunId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ etl.LoadRun"
+          ]
+        },
+        {
+          "name": "UpdatedRunId",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "ElectronicOrder",
+      "file": "database/050_electronic_orders.sql",
+      "line": 8,
+      "columns": [
+        {
+          "name": "ElectronicOrderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "SourceClinic",
+          "type": "VARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(80)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Patient"
+          ]
+        },
+        {
+          "name": "PractitionerId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ core.Practitioner"
+          ]
+        },
+        {
+          "name": "Priority",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "notes": [
+            "check Priority IN ('Routine','Stat')"
+          ]
+        },
+        {
+          "name": "ClinicalNotes",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "default 'Waiting'"
+          ]
+        },
+        {
+          "name": "ReceivedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Status IN ('Waiting','Requisitioned','Cancelled')",
+        "Status <> 'Requisitioned' OR RequisitionId IS NOT NULL"
+      ]
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "ElectronicOrderItem",
+      "file": "database/050_electronic_orders.sql",
+      "line": 26,
+      "columns": [
+        {
+          "name": "ElectronicOrderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ lab.ElectronicOrder"
+          ]
+        },
+        {
+          "name": "TestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.Test"
+          ]
+        },
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "lab",
+      "table": "OutboundMessage",
+      "file": "database/051_outbound_messages.sql",
+      "line": 6,
+      "columns": [
+        {
+          "name": "OutboundMessageId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Destination",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "check Destination IN ('ClinicHub')"
+          ]
+        },
+        {
+          "name": "Kind",
+          "type": "VARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RequisitionId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ lab.Requisition"
+          ]
+        },
+        {
+          "name": "PayloadJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": [
+            "check ISJSON(PayloadJson) = 1"
+          ]
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        },
+        {
+          "name": "SentAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Attempts",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "default 0"
+          ]
+        },
+        {
+          "name": "NextAttemptAt",
+          "type": "DATETIME2(0)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LastError",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "LabFlow",
+      "schema": "billing",
+      "table": "FinanceExport",
+      "file": "database/053_finance.sql",
+      "line": 12,
+      "columns": [
+        {
+          "name": "ExternalId",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "SentAt",
+          "type": "DATETIME2(0)",
+          "nullable": false,
+          "notes": [
+            "default SYSUTCDATETIME()"
+          ]
+        }
+      ],
+      "denies": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "BookingPage",
+      "guards": []
+    },
+    {
+      "path": "/results",
+      "component": "ResultsPage",
+      "guards": []
+    },
+    {
+      "path": "/reception",
+      "component": "ReceptionPage",
+      "guards": []
+    }
+  ]
+}

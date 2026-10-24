@@ -1,0 +1,1720 @@
+{
+  "project": "labflow",
+  "repo": "LabFlow",
+  "scan": {
+    "aspnetEndpoints": ["src/LabFlow.Api"],
+    "sql": [{ "dir": "database", "database": "LabFlow" }],
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "access", "title": { "en": "Sign-in and access", "fa": "ورود و دسترسی" } },
+    { "id": "booking", "title": { "en": "Online booking", "fa": "نوبت آنلاین" } },
+    { "id": "lab", "title": { "en": "Reception and results", "fa": "پذیرش و جواب‌ها" } },
+    { "id": "clinichub", "title": { "en": "With ClinicHub: orders, results, money", "fa": "با ClinicHub: درخواست‌ها، جواب‌ها، پول" } },
+    { "id": "frontend", "title": { "en": "Frontend (React)", "fa": "فرانت‌اند (React)" } },
+    { "id": "data", "title": { "en": "Data (SQL scripts)", "fa": "داده (اسکریپت‌های SQL)" } },
+    { "id": "warehouse", "title": { "en": "Warehouse and reporting", "fa": "انبار داده و گزارش" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it on the PC", "fa": "اجرا روی PC" },
+      "files": ["README.md", "database/deploy.ps1", "src/LabFlow.Api/Properties/launchSettings.json"],
+      "en": [
+        {
+          "id": "db",
+          "h": "The database first, from numbered scripts",
+          "p": [
+            "LabFlow's database is plain SQL, not EF Core migrations: `database/deploy.ps1` runs every `NNN_*.sql` script in order with `sqlcmd`. `-Recreate` drops and rebuilds; `-NoDemo` leaves out the synthetic patients. Only `001_database.sql` needs the database's name, through a sqlcmd variable."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "app",
+          "h": "API and page",
+          "p": [
+            "`dotnet run --project src/LabFlow.Api` serves the API on http://localhost:5180 and `npm run dev` in `web/` the page on http://localhost:5174. On its own, sign-in is a development-only menu of seeded users."
+          ]
+        },
+        {
+          "id": "profiles",
+          "h": "Launch profiles for the connected modes",
+          "p": [
+            "`connected` signs staff in through ClinicHub with one lab database; `connected-per-clinic` gives each clinic its own LabFlow database, from a connection string with `{clinic}` in it; `via-hub` sends results and money through IntegrationHub. Each is just a set of environment variables."
+          ],
+          "examples": ["profile"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "اول دیتابیس، از اسکریپت‌های شماره‌دار",
+          "p": [
+            "دیتابیس LabFlow با SQL خالص ساخته می‌شود، نه migrationهای EF Core: `database/deploy.ps1` همه‌ی اسکریپت‌های `NNN_*.sql` را به ترتیب با `sqlcmd` اجرا می‌کند. `-Recreate` حذف می‌کند و از نو می‌سازد؛ `-NoDemo` بیماران ساختگی را نمی‌گذارد. فقط `001_database.sql` اسم دیتابیس را لازم دارد، که با یک متغیر sqlcmd می‌رسد."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "app",
+          "h": "API و صفحه",
+          "p": [
+            "`dotnet run --project src/LabFlow.Api` API را روی http://localhost:5180 بالا می‌آورد و `npm run dev` در `web/` صفحه را روی http://localhost:5174. وقتی تنها اجرا شود، ورود یک منوی مخصوص Development از کاربران seed‌شده است."
+          ]
+        },
+        {
+          "id": "profiles",
+          "h": "launch profileها برای حالت‌های متصل",
+          "p": [
+            "`connected` کارکنان را از طریق ClinicHub وارد می‌کند و یک دیتابیس آزمایشگاه دارد؛ `connected-per-clinic` به هر کلینیک دیتابیس LabFlow خودش را می‌دهد، با connection stringی که `{clinic}` دارد؛ `via-hub` جواب‌ها و پول را از IntegrationHub رد می‌کند. هر کدام فقط مجموعه‌ای از متغیرهای محیطی است."
+          ],
+          "examples": ["profile"]
+        }
+      ],
+      "examples": {
+        "deploy": {
+          "title": { "en": "Every numbered script, in order", "fa": "همه‌ی اسکریپت‌های شماره‌دار، به ترتیب" },
+          "lang": "powershell",
+          "file": "database/deploy.ps1",
+          "from": "$scripts = Get-ChildItem $here -Filter '*.sql'",
+          "to": "Write-Host \"$Database is ready.\""
+        },
+        "profile": {
+          "title": { "en": "A database per clinic, as settings", "fa": "یک دیتابیس برای هر کلینیک، به شکل تنظیمات" },
+          "lang": "json",
+          "file": "src/LabFlow.Api/Properties/launchSettings.json",
+          "from": "\"connected-per-clinic\": {",
+          "lines": 14
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": { "en": "Tests", "fa": "تست‌ها" },
+      "files": ["tests/LabFlow.Api.Tests/ConnectedTests.cs", "tests/LabFlow.Api.Tests/SlotCalculatorTests.cs"],
+      "en": [
+        {
+          "id": "skip",
+          "h": "Database tests only where there is a database",
+          "p": [
+            "Pure logic (slots, health cards, flags) is tested without anything around it. Tests that need SQL Server use `[SqlFact]`, which tries to connect once (3 seconds) and marks them skipped when nothing answers, so CI without SQL Server stays green and says what it did not run."
+          ],
+          "examples": ["sqlfact"]
+        },
+        {
+          "id": "hub",
+          "h": "ClinicHub as a stand-in",
+          "p": [
+            "The connected tests build throw-away databases under a fresh prefix and replace ClinicHub with stand-ins: a fixed discovery document, a token endpoint that answers as the test decides, and a signing key of the test's own for ClinicHub's service tokens. Re-checks happen at once (`RecheckMinutes` 0)."
+          ],
+          "examples": ["settings"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "skip",
+          "h": "تست دیتابیس فقط جایی که دیتابیس هست",
+          "p": [
+            "منطق خالص (نوبت‌ها، کارت سلامت، flagها) بدون هیچ چیز اطرافش تست می‌شود. تست‌هایی که SQL Server لازم دارند `[SqlFact]` دارند: یک بار (۳ ثانیه) سعی می‌کند وصل شود و اگر کسی جواب ندهد آن‌ها را skip می‌کند؛ پس CI بدون SQL Server سبز می‌ماند و می‌گوید چه چیزی را اجرا نکرده."
+          ],
+          "examples": ["sqlfact"]
+        },
+        {
+          "id": "hub",
+          "h": "بدل ClinicHub",
+          "p": [
+            "تست‌های حالت متصل دیتابیس‌های یک‌بارمصرف زیر یک پیشوند تازه می‌سازند و ClinicHub را با بدل‌ها عوض می‌کنند: یک discovery document ثابت، یک token endpoint که هر طور تست بخواهد جواب می‌دهد، و یک کلید امضای مال خود تست برای tokenهای سرویس ClinicHub. چک دوباره فوراً انجام می‌شود (`RecheckMinutes` صفر)."
+          ],
+          "examples": ["settings"]
+        }
+      ],
+      "examples": {
+        "sqlfact": {
+          "title": { "en": "Skipped, not failed, without SQL Server", "fa": "بدون SQL Server، skip می‌شود نه fail" },
+          "lang": "csharp",
+          "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+          "from": "public sealed class SqlFactAttribute",
+          "to": "Skip = \"No SQL Server available"
+        },
+        "settings": {
+          "title": { "en": "The test's ClinicHub", "fa": "ClinicHub تست" },
+          "lang": "csharp",
+          "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+          "from": "builder.UseSetting(\"ClinicHub:Authority\"",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "sign-in",
+      "group": "access",
+      "title": { "en": "Two ways to sign in, two policies", "fa": "دو راه ورود، دو policy" },
+      "files": ["src/LabFlow.Api/Program.cs", "src/LabFlow.Api/Auth/DemoAuthHandler.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints of Program.cs",
+          "p": [
+            "`/api/auth/sso/*` exist only when connected to ClinicHub, `/api/dev/users` only in Development without it."
+          ],
+          "data": { "kind": "endpoints", "only": ["Program"] }
+        },
+        {
+          "id": "demo",
+          "h": "A demo sign-in that cannot reach production",
+          "p": [
+            "Not connected, the caller names a seeded `sec.AppUser` in the `X-Demo-User` header and is signed in with that user's role. The handler is registered only in Development; anywhere else the scheme has no handler and every protected endpoint answers 401."
+          ],
+          "examples": ["register", "demo"]
+        },
+        {
+          "id": "policies",
+          "h": "Permissions, the same either way",
+          "p": [
+            "Endpoints use two policies, `FrontDesk` and `ResultsEntry`, which check permissions, not roles. A demo user gets them from the role; someone from ClinicHub gets them from ClinicHub (`labflow:frontdesk` there arrives as `frontdesk` here). There is no fallback policy: an endpoint without one is public, which is what the booking pages need."
+          ],
+          "examples": ["policies", "roles"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointهای Program.cs",
+          "p": [
+            "`/api/auth/sso/*` فقط وقتی به ClinicHub وصل است وجود دارند و `/api/dev/users` فقط در Development و بدون آن."
+          ],
+          "data": { "kind": "endpoints", "only": ["Program"] }
+        },
+        {
+          "id": "demo",
+          "h": "ورود دمو که به production نمی‌رسد",
+          "p": [
+            "در حالت غیرمتصل، درخواست‌دهنده اسم یک `sec.AppUser` seed‌شده را در هدر `X-Demo-User` می‌فرستد و با نقش همان کاربر وارد می‌شود. این handler فقط در Development ثبت می‌شود؛ هر جای دیگر scheme هیچ handlerی ندارد و هر endpoint محافظت‌شده 401 می‌دهد."
+          ],
+          "examples": ["register", "demo"]
+        },
+        {
+          "id": "policies",
+          "h": "مجوزها، در هر دو حالت یکی",
+          "p": [
+            "endpointها دو policy دارند، `FrontDesk` و `ResultsEntry`، که مجوز را چک می‌کنند نه نقش را. کاربر دمو آن‌ها را از نقشش می‌گیرد؛ کسی که از ClinicHub می‌آید از ClinicHub (`labflow:frontdesk` آن‌جا این‌جا `frontdesk` می‌شود). fallback policy وجود ندارد: endpoint بدون policy عمومی است، و صفحه‌های نوبت‌گیری همین را لازم دارند."
+          ],
+          "examples": ["policies", "roles"]
+        }
+      ],
+      "examples": {
+        "register": {
+          "title": { "en": "Only in Development", "fa": "فقط در Development" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Program.cs",
+          "from": "// Not connected, the demo sign-in exists only in Development",
+          "lines": 7
+        },
+        "demo": {
+          "title": { "en": "The header names a seeded user", "fa": "هدر اسم یک کاربر seed‌شده را می‌دهد" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/DemoAuthHandler.cs",
+          "from": "var externalId = Request.Headers[Header].ToString();",
+          "lines": 7
+        },
+        "policies": {
+          "title": { "en": "Two policies over permissions", "fa": "دو policy روی مجوزها" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Program.cs",
+          "from": "builder.Services.AddAuthorizationBuilder()",
+          "lines": 3
+        },
+        "roles": {
+          "title": { "en": "A demo role's permissions", "fa": "مجوزهای یک نقش دمو" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/DemoAuthHandler.cs",
+          "from": "public static string[] ForRole(string role) => role switch",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "clinichub",
+      "group": "access",
+      "title": { "en": "Signing in through ClinicHub", "fa": "ورود از طریق ClinicHub" },
+      "files": ["src/LabFlow.Api/Auth/ClinicHubConnection.cs"],
+      "en": [
+        {
+          "id": "oidc",
+          "h": "OpenID Connect, code flow with PKCE",
+          "p": [
+            "Staff press \"Staff sign-in with ClinicHub\", sign in there, choose a clinic and come back with a code. LabFlow asks for `openid profile clinic offline_access`, keeps only the refresh and id tokens in its cookie, and makes each ClinicHub person a `sec.AppUser` (`ExternalId = clinichub:{id}`) so the access log names them."
+          ],
+          "examples": ["oidc"]
+        },
+        {
+          "id": "recheck",
+          "h": "The session re-checked every few minutes",
+          "p": [
+            "Every `RecheckMinutes` (5 by default) the cookie's refresh token goes to ClinicHub. Refused (role taken away, \"sign out everywhere\") and the session ends; ClinicHub unreachable, and the session carries on for a grace period, then ends too. The permissions in the cookie are replaced by what ClinicHub says now."
+          ],
+          "examples": ["recheck"]
+        },
+        {
+          "id": "csrf",
+          "h": "Lax cookie and a CSRF header",
+          "p": [
+            "The cookie is `SameSite=Lax` because the browser arrives from ClinicHub's sign-in, so unsafe `/api` calls must also carry `X-LabFlow`, which another site's form cannot send."
+          ],
+          "examples": ["cookie", "csrf"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "oidc",
+          "h": "OpenID Connect، code flow با PKCE",
+          "p": [
+            "کارکنان «Staff sign-in with ClinicHub» را می‌زنند، آن‌جا وارد می‌شوند، کلینیک را انتخاب می‌کنند و با یک code برمی‌گردند. LabFlow scopeهای `openid profile clinic offline_access` را می‌خواهد، فقط refresh token و id token را در کوکی‌اش نگه می‌دارد، و از هر آدم ClinicHub یک `sec.AppUser` می‌سازد (`ExternalId = clinichub:{id}`) تا لاگ دسترسی اسمش را داشته باشد."
+          ],
+          "examples": ["oidc"]
+        },
+        {
+          "id": "recheck",
+          "h": "نشست هر چند دقیقه دوباره چک می‌شود",
+          "p": [
+            "هر `RecheckMinutes` (پیش‌فرض ۵) refresh token کوکی به ClinicHub فرستاده می‌شود. اگر رد شود (نقش گرفته شده، «خروج از همه‌جا») نشست تمام می‌شود؛ اگر ClinicHub در دسترس نباشد، نشست تا یک مهلت ادامه پیدا می‌کند و بعد آن هم تمام می‌شود. مجوزهای کوکی با چیزی که ClinicHub الان می‌گوید عوض می‌شوند."
+          ],
+          "examples": ["recheck"]
+        },
+        {
+          "id": "csrf",
+          "h": "کوکی Lax و هدر CSRF",
+          "p": [
+            "کوکی `SameSite=Lax` است چون مرورگر از صفحه‌ی ورود ClinicHub می‌آید؛ برای همین درخواست‌های ناامن به `/api` باید `X-LabFlow` هم داشته باشند، که فرم یک سایت دیگر نمی‌تواند بفرستد."
+          ],
+          "examples": ["cookie", "csrf"]
+        }
+      ],
+      "examples": {
+        "oidc": {
+          "title": { "en": "The OpenID Connect client", "fa": "client در OpenID Connect" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": ".AddOpenIdConnect(Scheme, \"ClinicHub\", o =>",
+          "to": "o.Scope.Add(s);"
+        },
+        "recheck": {
+          "title": { "en": "Refused, unreachable, or fresh permissions", "fa": "رد، در دسترس نبودن، یا مجوزهای تازه" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "var checkedAt = DateTimeOffset.FromUnixTimeSeconds",
+          "to": "ctx.ReplacePrincipal(Principal(user"
+        },
+        "cookie": {
+          "title": { "en": "The cookie", "fa": "کوکی" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "o.Cookie.Name = \"labflow.auth\";",
+          "lines": 9
+        },
+        "csrf": {
+          "title": { "en": "No header, no change", "fa": "بدون هدر، بدون تغییر" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "public static IApplicationBuilder UseCsrfHeaderCheck",
+          "to": "await next();"
+        }
+      }
+    },
+    {
+      "id": "databases",
+      "group": "access",
+      "title": { "en": "One lab database, or one per clinic", "fa": "یک دیتابیس آزمایشگاه، یا یکی برای هر کلینیک" },
+      "files": ["src/LabFlow.Api/Auth/ClinicHubConnection.cs"],
+      "en": [
+        {
+          "id": "two",
+          "h": "A setting, not a fork",
+          "p": [
+            "Usually an Ontario lab is its own business receiving orders from many clinics: one database. With `ClinicHub:DatabasePattern` containing `{clinic}`, each clinic gets its own instead. The same code serves both; only the connection string differs."
+          ],
+          "examples": ["connection"]
+        },
+        {
+          "id": "request",
+          "h": "Which clinic a request is for",
+          "p": [
+            "A staff session says `clinic`, ClinicHub's own service token says `clinic_slug`, and public booking may name a clinic in `X-LabFlow-Clinic`. An anonymous request only reaches a clinic database that already exists: nothing is created for a stranger."
+          ],
+          "examples": ["scoped", "exists"]
+        },
+        {
+          "id": "build",
+          "h": "Built from the same scripts at first sign-in",
+          "p": [
+            "A clinic's database is created the first time one of its staff signs in (or its first order arrives), from `database/*.sql` without the demo patients, the warehouse or the legacy mapping. A database built before only gets the upgrade scripts, which are safe to run again."
+          ],
+          "examples": ["prepare", "buildscripts"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "two",
+          "h": "یک تنظیم، نه یک نسخه‌ی جدا",
+          "p": [
+            "معمولاً آزمایشگاه در انتاریو کسب‌وکار مستقلی است که از کلینیک‌های زیادی درخواست می‌گیرد: یک دیتابیس. اگر `ClinicHub:DatabasePattern` شامل `{clinic}` باشد، هر کلینیک دیتابیس خودش را می‌گیرد. همان کد هر دو را سرویس می‌دهد؛ فقط connection string فرق دارد."
+          ],
+          "examples": ["connection"]
+        },
+        {
+          "id": "request",
+          "h": "درخواست مال کدام کلینیک است",
+          "p": [
+            "نشست کارکنان `clinic` را دارد، token سرویس خود ClinicHub `clinic_slug` را، و نوبت‌گیری عمومی می‌تواند کلینیک را در `X-LabFlow-Clinic` بگوید. درخواست ناشناس فقط به دیتابیس کلینیکی می‌رسد که از قبل وجود دارد: برای یک غریبه چیزی ساخته نمی‌شود."
+          ],
+          "examples": ["scoped", "exists"]
+        },
+        {
+          "id": "build",
+          "h": "با همان اسکریپت‌ها در اولین ورود ساخته می‌شود",
+          "p": [
+            "دیتابیس هر کلینیک اولین باری ساخته می‌شود که یکی از کارکنانش وارد شود (یا اولین درخواستش برسد)، از `database/*.sql` بدون بیماران دمو، انبار داده و نگاشت سیستم قدیمی. دیتابیسی که قبلاً ساخته شده فقط اسکریپت‌های ارتقا را می‌گیرد، که اجرای دوباره‌شان امن است."
+          ],
+          "examples": ["prepare", "buildscripts"]
+        }
+      ],
+      "examples": {
+        "connection": {
+          "title": { "en": "The lab's database or the clinic's", "fa": "دیتابیس آزمایشگاه یا کلینیک" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "public string ConnectionString(string? slug)",
+          "to": "return options.Value.DatabasePattern!.Replace"
+        },
+        "scoped": {
+          "title": { "en": "The request's database", "fa": "دیتابیس درخواست" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "// The request's database: the signed-in person's clinic",
+          "to": "return LabDatabases.Create(databases.ConnectionString(slug));"
+        },
+        "exists": {
+          "title": { "en": "No database made for a stranger", "fa": "برای غریبه دیتابیسی ساخته نمی‌شود" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "/// <summary>Anonymous booking may only reach a clinic database that has been built",
+          "lines": 2
+        },
+        "prepare": {
+          "title": { "en": "Once per clinic", "fa": "یک بار برای هر کلینیک" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "public Task PrepareAsync(string slug) =>",
+          "lines": 2
+        },
+        "buildscripts": {
+          "title": { "en": "New: everything but demo and warehouse; existing: upgrades", "fa": "تازه: همه‌چیز به‌جز دمو و انبار؛ موجود: ارتقاها" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "await using (var check = new SqlCommand(\"SELECT COUNT(*) FROM sys.schemas WHERE name = 'lab'\", db))",
+          "to": "await RunScriptsAsync(db, name, Scripts(f => !f.StartsWith"
+        }
+      }
+    },
+    {
+      "id": "restricted",
+      "group": "access",
+      "title": { "en": "Restricted items: breaking the glass", "fa": "موارد محدود: شکستن شیشه" },
+      "files": ["src/LabFlow.Api/Auth/ConfidentialityGate.cs", "src/LabFlow.Api/Endpoints/ResultEndpoints.cs", "web/src/components/RestrictedGate.tsx"],
+      "en": [
+        {
+          "id": "label",
+          "h": "A label from ClinicHub",
+          "p": [
+            "When the patient has a consent directive at the clinic, ClinicHub labels the order `R` (restricted) or `V` (very restricted). In LabFlow that order, and the requisition made from it, is closed to everyone: it answers `403` with `code: restricted`, and the lists show it as \"Restricted\" with no tests or values, so it is not lost."
+          ],
+          "examples": ["filter"]
+        },
+        {
+          "id": "open",
+          "h": "Opened by one person, with a reason, for an hour",
+          "p": [
+            "Opening it takes a reason of at least 10 characters, written to the audit log as `RestrictedOverride` with the label and the reason. The access is for that user and that item only, and lasts one hour. It is kept in memory, so a restart closes everything again, which is the safe way to fail."
+          ],
+          "examples": ["override", "gate"]
+        },
+        {
+          "id": "ui",
+          "h": "On the page",
+          "p": [
+            "The page shows what is restricted and asks why; the button stays disabled until the reason is long enough."
+          ],
+          "examples": ["ui"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "label",
+          "h": "یک برچسب از ClinicHub",
+          "p": [
+            "وقتی بیمار در کلینیک consent directive دارد، ClinicHub درخواست را با `R` (محدود) یا `V` (خیلی محدود) برچسب می‌زند. در LabFlow آن درخواست و requisitionی که از آن ساخته شده به روی همه بسته است: `403` با `code: restricted` جواب می‌دهد و فهرست‌ها آن را با عنوان «Restricted» و بدون تست یا مقدار نشان می‌دهند، تا گم نشود."
+          ],
+          "examples": ["filter"]
+        },
+        {
+          "id": "open",
+          "h": "باز شدن برای یک نفر، با دلیل، برای یک ساعت",
+          "p": [
+            "باز کردنش دلیلی دست‌کم ۱۰ کاراکتری می‌خواهد که با برچسب و دلیل به‌عنوان `RestrictedOverride` در لاگ audit نوشته می‌شود. دسترسی فقط برای همان کاربر و همان مورد است و یک ساعت طول می‌کشد. در حافظه نگه داشته می‌شود، پس restart همه‌چیز را دوباره می‌بندد؛ شکستن از سمت امن."
+          ],
+          "examples": ["override", "gate"]
+        },
+        {
+          "id": "ui",
+          "h": "روی صفحه",
+          "p": [
+            "صفحه نشان می‌دهد چه چیزی محدود است و دلیل می‌پرسد؛ دکمه تا وقتی دلیل به اندازه‌ی کافی بلند نشده غیرفعال می‌ماند."
+          ],
+          "examples": ["ui"]
+        }
+      ],
+      "examples": {
+        "filter": {
+          "title": { "en": "Closed until opened", "fa": "بسته تا وقتی باز شود" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "api.AddEndpointFilter(async (ctx, next) =>",
+          "to": ": await next(ctx);"
+        },
+        "override": {
+          "title": { "en": "A reason, then an hour", "fa": "یک دلیل، بعد یک ساعت" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "var label = await RestrictedLabelAsync(db, id, ct);",
+          "to": "return Results.Ok(new { open = true, until });"
+        },
+        "gate": {
+          "title": { "en": "One user, one item, in memory", "fa": "یک کاربر، یک مورد، در حافظه" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ConfidentialityGate.cs",
+          "from": "private static string Key(ClaimsPrincipal user, string item)",
+          "to": "return until;"
+        },
+        "ui": {
+          "title": { "en": "Asking why", "fa": "پرسیدن دلیل" },
+          "lang": "typescript",
+          "file": "web/src/components/RestrictedGate.tsx",
+          "from": "<label>Why do you need to open it?",
+          "to": "<p className=\"muted\">At least 10 characters."
+        }
+      }
+    },
+    {
+      "id": "audit",
+      "group": "access",
+      "title": { "en": "The PHIPA access log", "fa": "لاگ دسترسی PHIPA" },
+      "files": ["src/LabFlow.Api/Auth/AuditLogger.cs", "database/010_schema.sql"],
+      "en": [
+        {
+          "id": "same",
+          "h": "Logged in the same transaction",
+          "p": [
+            "Every read or write of patient data adds a row to `audit.AccessLog` through `AuditLogger`, which only adds it to the current DbContext: the row is saved by the caller's own `SaveChanges`, so the change and its log line commit together or not at all. The row carries the trace id, so a log line leads to the request's other logs."
+          ],
+          "examples": ["log", "use"]
+        },
+        {
+          "id": "append",
+          "h": "Append-only, enforced by the database",
+          "p": [
+            "An `INSTEAD OF UPDATE, DELETE` trigger refuses every change to the log, whoever runs it. The table has no foreign keys on purpose: it must accept any entity and outlive it."
+          ],
+          "examples": ["trigger"]
+        },
+        {
+          "id": "table",
+          "h": "The table",
+          "data": { "kind": "tables", "only": ["AccessLog"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "same",
+          "h": "در همان تراکنش ثبت می‌شود",
+          "p": [
+            "هر خواندن یا نوشتن داده‌ی بیمار با `AuditLogger` یک ردیف به `audit.AccessLog` اضافه می‌کند، که فقط آن را به DbContext فعلی اضافه می‌کند: ردیف با همان `SaveChanges` خود کد ذخیره می‌شود، پس تغییر و خط لاگش با هم commit می‌شوند یا هیچ‌کدام. ردیف trace id را هم دارد، پس از یک خط لاگ می‌شود به بقیه‌ی لاگ‌های همان درخواست رسید."
+          ],
+          "examples": ["log", "use"]
+        },
+        {
+          "id": "append",
+          "h": "فقط اضافه کردن، که دیتابیس اجبارش می‌کند",
+          "p": [
+            "یک trigger از نوع `INSTEAD OF UPDATE, DELETE` هر تغییری در لاگ را رد می‌کند، هر کسی اجرایش کند. جدول عمداً foreign key ندارد: باید هر موجودیتی را قبول کند و بعد از آن هم بماند."
+          ],
+          "examples": ["trigger"]
+        },
+        {
+          "id": "table",
+          "h": "جدول",
+          "data": { "kind": "tables", "only": ["AccessLog"] }
+        }
+      ],
+      "examples": {
+        "log": {
+          "title": { "en": "Added, saved by the caller", "fa": "اضافه می‌شود، کد صدازننده ذخیره‌اش می‌کند" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/AuditLogger.cs",
+          "from": "public void Log(string action",
+          "to": "});"
+        },
+        "use": {
+          "title": { "en": "A booking logs itself", "fa": "نوبت خودش را ثبت می‌کند" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+          "from": "audit.Log(\"Create\", \"Appointment\"",
+          "lines": 3
+        },
+        "trigger": {
+          "title": { "en": "No update, no delete", "fa": "نه ویرایش، نه حذف" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE TRIGGER audit.TR_AccessLog_AppendOnly",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "slots",
+      "group": "booking",
+      "title": { "en": "Slots from opening hours", "fa": "نوبت‌ها از ساعت کاری" },
+      "files": ["src/LabFlow.Api/Domain/SlotCalculator.cs", "tests/LabFlow.Api.Tests/SlotCalculatorTests.cs"],
+      "en": [
+        {
+          "id": "toronto",
+          "h": "Hours in Toronto time, appointments in UTC",
+          "p": [
+            "A collection centre's hours are stored as local times per weekday, with a slot length and a capacity per slot. The calculator walks each day's hours, turns every local start into UTC, drops the past and full slots, and leaves out a closure day entirely. It takes \"now\" and the bookings as arguments, so tests need no clock or database."
+          ],
+          "examples": ["slots"]
+        },
+        {
+          "id": "dst",
+          "h": "Daylight saving time",
+          "p": [
+            "On the night clocks go forward, 2:00 to 2:59 does not exist; `IsInvalidTime` skips it rather than inventing a slot. A local day's range is converted at both ends, so a day of 23 or 25 hours is still one day."
+          ],
+          "examples": ["day"]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "data": { "kind": "tables", "only": ["LocationHours", "LocationClosure", "Appointment"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "toronto",
+          "h": "ساعت کاری به وقت تورنتو، نوبت‌ها به UTC",
+          "p": [
+            "ساعت کاری هر مرکز نمونه‌گیری به وقت محلی و برای هر روز هفته ذخیره می‌شود، با طول هر نوبت و ظرفیت هر نوبت. محاسبه‌گر ساعت‌های هر روز را می‌پیماید، شروع محلی هر نوبت را به UTC تبدیل می‌کند، نوبت‌های گذشته و پر را کنار می‌گذارد و روز تعطیل را کلاً حذف می‌کند. «الان» و نوبت‌های گرفته‌شده را به‌عنوان ورودی می‌گیرد، پس تست‌ها ساعت و دیتابیس لازم ندارند."
+          ],
+          "examples": ["slots"]
+        },
+        {
+          "id": "dst",
+          "h": "ساعت تابستانی",
+          "p": [
+            "شبی که ساعت‌ها جلو کشیده می‌شوند، ۲:۰۰ تا ۲:۵۹ وجود ندارد؛ `IsInvalidTime` آن را رد می‌کند به‌جای این‌که نوبتی از خودش بسازد. بازه‌ی یک روز محلی در هر دو سرش تبدیل می‌شود، پس روز ۲۳ یا ۲۵ ساعته هم یک روز است."
+          ],
+          "examples": ["day"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["LocationHours", "LocationClosure", "Appointment"] }
+        }
+      ],
+      "examples": {
+        "slots": {
+          "title": { "en": "Every slot, in UTC, with what is left", "fa": "هر نوبت، به UTC، با ظرفیت باقی‌مانده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
+          "from": "foreach (var h in hours.Where(h => h.DayOfWeek",
+          "to": "return slots;"
+        },
+        "day": {
+          "title": { "en": "One local day in UTC", "fa": "یک روز محلی به UTC" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
+          "from": "/// <summary>UTC range covering one local calendar day.</summary>",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "booking",
+      "group": "booking",
+      "title": { "en": "Booking without an account", "fa": "نوبت‌گیری بدون حساب کاربری" },
+      "files": ["src/LabFlow.Api/Endpoints/BookingEndpoints.cs", "src/LabFlow.Api/Endpoints/Validation.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints (public)",
+          "data": { "kind": "endpoints", "only": ["Booking"] }
+        },
+        {
+          "id": "lock",
+          "h": "Two people, one last place",
+          "p": [
+            "Booking takes a SQL Server application lock named after the location and the slot, inside the transaction, then reads the slots again. Of two people pressing at the same moment, the second waits, finds the slot full and is told to pick another. Bookings are also limited to 10 a minute per IP address."
+          ],
+          "examples": ["lock", "rate"]
+        },
+        {
+          "id": "match",
+          "h": "A health card must match the patient on file",
+          "p": [
+            "An anonymous caller with an existing health card must also give that patient's date of birth and last name; otherwise the answer is \"call the location\". An existing patient's contact details are never changed from this endpoint."
+          ],
+          "examples": ["match"]
+        },
+        {
+          "id": "email",
+          "h": "Confirmation to the address on file only",
+          "p": [
+            "The confirmation goes to the email already on file, and the reply shows it masked. Sending it to an address the caller typed would let anyone with someone's health card number redirect their notifications."
+          ],
+          "examples": ["email"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها (عمومی)",
+          "data": { "kind": "endpoints", "only": ["Booking"] }
+        },
+        {
+          "id": "lock",
+          "h": "دو نفر، یک جای آخر",
+          "p": [
+            "نوبت‌گیری داخل تراکنش یک application lock در SQL Server با اسم مکان و نوبت می‌گیرد و بعد نوبت‌ها را دوباره می‌خواند. از دو نفری که هم‌زمان دکمه را می‌زنند، دومی صبر می‌کند، می‌بیند نوبت پر شده و به او گفته می‌شود نوبت دیگری انتخاب کند. نوبت‌گیری برای هر IP هم دقیقه‌ای ۱۰ بار محدود است."
+          ],
+          "examples": ["lock", "rate"]
+        },
+        {
+          "id": "match",
+          "h": "کارت سلامت باید با بیمار ثبت‌شده جور باشد",
+          "p": [
+            "درخواست‌دهنده‌ی ناشناس با کارت سلامتی که از قبل ثبت شده، باید تاریخ تولد و نام خانوادگی همان بیمار را هم بدهد؛ وگرنه جواب «با مرکز تماس بگیرید» است. اطلاعات تماس بیمار موجود هیچ‌وقت از این endpoint عوض نمی‌شود."
+          ],
+          "examples": ["match"]
+        },
+        {
+          "id": "email",
+          "h": "تأیید فقط به آدرس ثبت‌شده",
+          "p": [
+            "تأییدیه به ایمیلی می‌رود که از قبل ثبت شده و جواب آن را نیمه‌پنهان نشان می‌دهد. اگر به آدرسی فرستاده شود که درخواست‌دهنده تایپ کرده، هر کسی با شماره‌ی کارت سلامت دیگری می‌تواند اعلان‌های او را به جای دیگری بفرستد."
+          ],
+          "examples": ["email"]
+        }
+      ],
+      "examples": {
+        "lock": {
+          "title": { "en": "An application lock per slot", "fa": "یک application lock برای هر نوبت" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+          "from": "// Serialize bookings for this slot",
+          "to": "\"\"\", ct);"
+        },
+        "rate": {
+          "title": { "en": "10 bookings a minute per address", "fa": "۱۰ نوبت در دقیقه برای هر آدرس" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Program.cs",
+          "from": "o.AddPolicy(BookingEndpoints.BookingRateLimit",
+          "lines": 3
+        },
+        "match": {
+          "title": { "en": "Birth date and last name must match", "fa": "تاریخ تولد و نام خانوادگی باید جور باشند" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+          "from": "if (d.NormalizedHealthCard is { } hcn)",
+          "to": ": (existing, Results.UnprocessableEntity"
+        },
+        "email": {
+          "title": { "en": "Why the address on file", "fa": "چرا آدرس ثبت‌شده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+          "from": "// Confirmation goes to the address on file",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "reception",
+      "group": "lab",
+      "title": { "en": "Reception: the requisition", "fa": "پذیرش: requisition" },
+      "files": ["src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": { "kind": "endpoints", "only": ["Reception"] }
+        },
+        {
+          "id": "rules",
+          "h": "What a requisition may not contain",
+          "p": [
+            "Reception types in the doctor's paper requisition. The API refuses a panel together with one of its own members (a duplicate order), a sex-specific test for a patient of the other sex, and, for a patient without an Ontario health card, any test with no self-pay price: everything is self-pay for them."
+          ],
+          "examples": ["duplicate", "sex", "selfpay"]
+        },
+        {
+          "id": "invoice",
+          "h": "Uninsured tests make an invoice",
+          "p": [
+            "In the same transaction as the requisition, the tests the patient pays for become an open invoice. Each item remembers whether it was insured and at what price, so a later change to the catalog does not rewrite an old requisition."
+          ],
+          "examples": ["invoice"]
+        },
+        {
+          "id": "tubes",
+          "h": "Which tubes to draw",
+          "p": [
+            "The requisition shows the specimen types of the ordered tests and of the members of ordered panels, each once, so the collector knows which tubes to label."
+          ],
+          "examples": ["tubes"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": { "kind": "endpoints", "only": ["Reception"] }
+        },
+        {
+          "id": "rules",
+          "h": "چیزهایی که requisition نمی‌تواند داشته باشد",
+          "p": [
+            "پذیرش requisition کاغذی پزشک را وارد می‌کند. API این‌ها را رد می‌کند: یک پنل همراه یکی از اعضای خودش (درخواست تکراری)، تست مخصوص یک جنس برای بیمارِ جنس دیگر، و برای بیمار بدون کارت سلامت انتاریو هر تستی که قیمت پرداخت شخصی ندارد، چون برای او همه‌چیز پرداخت شخصی است."
+          ],
+          "examples": ["duplicate", "sex", "selfpay"]
+        },
+        {
+          "id": "invoice",
+          "h": "تست‌های بدون بیمه فاکتور می‌سازند",
+          "p": [
+            "در همان تراکنش requisition، تست‌هایی که بیمار پولشان را می‌دهد یک فاکتور باز می‌شوند. هر آیتم یادش می‌ماند بیمه‌شده بوده یا نه و با چه قیمتی، پس تغییر بعدی در کاتالوگ requisition قدیمی را بازنویسی نمی‌کند."
+          ],
+          "examples": ["invoice"]
+        },
+        {
+          "id": "tubes",
+          "h": "کدام لوله‌ها گرفته شوند",
+          "p": [
+            "requisition نوع نمونه‌ی تست‌های درخواست‌شده و اعضای پنل‌های درخواست‌شده را، هر کدام یک بار، نشان می‌دهد تا نمونه‌گیر بداند کدام لوله‌ها را برچسب بزند."
+          ],
+          "examples": ["tubes"]
+        }
+      ],
+      "examples": {
+        "duplicate": {
+          "title": { "en": "A panel and its own member", "fa": "یک پنل و عضو خودش" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "// Ordering a panel and one of its members is a duplicate order.",
+          "lines": 5
+        },
+        "sex": {
+          "title": { "en": "Sex-specific tests", "fa": "تست‌های مخصوص یک جنس" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "foreach (var t in tests.Where(t => t.ApplicableSex is not null",
+          "lines": 2
+        },
+        "selfpay": {
+          "title": { "en": "No Ontario card: every test needs a price", "fa": "بدون کارت انتاریو: هر تست قیمت لازم دارد" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "// Without an Ontario health card everything is self-pay",
+          "lines": 4
+        },
+        "invoice": {
+          "title": { "en": "The invoice, in the same transaction", "fa": "فاکتور، در همان تراکنش" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "var patientPays = requisition.Items.Sum(i => i.Price ?? 0);",
+          "lines": 10
+        },
+        "tubes": {
+          "title": { "en": "Tubes to draw", "fa": "لوله‌هایی که باید گرفته شوند" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "// Tubes to draw:",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "results",
+      "group": "lab",
+      "title": { "en": "Results: flags, release, corrections", "fa": "جواب‌ها: flag، انتشار، اصلاح" },
+      "files": ["src/LabFlow.Api/Endpoints/ResultEndpoints.cs"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": { "kind": "endpoints", "only": ["Results", "Result"] }
+        },
+        {
+          "id": "range",
+          "h": "The reference range, copied onto the result",
+          "p": [
+            "For each value the most specific range is chosen: the patient's own sex before \"either\", within their age in days. Its low, high and text are copied onto the result, so a report printed next year shows the range that applied when the test was done, not today's."
+          ],
+          "examples": ["range", "copy"]
+        },
+        {
+          "id": "flag",
+          "h": "Flags as in HL7 table 0078",
+          "p": [
+            "Critical limits are checked first (`LL`, `HH`), then the normal ones (`L`, `H`), else `N`. The same codes go back to ClinicHub as the Observation's interpretation."
+          ],
+          "examples": ["flag"]
+        },
+        {
+          "id": "release",
+          "h": "Release issues a report version",
+          "p": [
+            "Release needs every ordered analyte to have a value and something new to release. The first release is version 1, `Final`; a correction made afterwards resets the result's verification, and the next release is version 2, `Amended`, with the corrected results marked `Corrected`."
+          ],
+          "examples": ["correction", "version"]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "p": [
+            "`lab.Result` is a system-versioned (temporal) table: SQL Server keeps every earlier version of a row in `history.Result`, so a corrected value never disappears."
+          ],
+          "data": { "kind": "tables", "only": ["Result", "Report"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": { "kind": "endpoints", "only": ["Results", "Result"] }
+        },
+        {
+          "id": "range",
+          "h": "محدوده‌ی مرجع، کپی‌شده روی جواب",
+          "p": [
+            "برای هر مقدار، دقیق‌ترین محدوده انتخاب می‌شود: جنس خود بیمار قبل از «هر دو»، در بازه‌ی سنش به روز. حد پایین، حد بالا و متن آن روی جواب کپی می‌شود، پس گزارشی که سال بعد چاپ شود محدوده‌ای را نشان می‌دهد که موقع انجام تست معتبر بوده، نه محدوده‌ی امروز را."
+          ],
+          "examples": ["range", "copy"]
+        },
+        {
+          "id": "flag",
+          "h": "flagها مطابق جدول 0078 در HL7",
+          "p": [
+            "اول حدهای بحرانی چک می‌شوند (`LL` و `HH`)، بعد حدهای معمولی (`L` و `H`)، وگرنه `N`. همین کدها به‌عنوان interpretation در Observation به ClinicHub برمی‌گردند."
+          ],
+          "examples": ["flag"]
+        },
+        {
+          "id": "release",
+          "h": "انتشار یک نسخه‌ی گزارش می‌سازد",
+          "p": [
+            "انتشار لازم دارد که هر آنالیت درخواست‌شده مقدار داشته باشد و چیز تازه‌ای برای انتشار باشد. اولین انتشار نسخه‌ی ۱ و `Final` است؛ اصلاحی که بعد از آن انجام شود تأیید جواب را از نو می‌کند و انتشار بعدی نسخه‌ی ۲ و `Amended` است، با جواب‌های اصلاح‌شده که `Corrected` علامت خورده‌اند."
+          ],
+          "examples": ["correction", "version"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "p": [
+            "`lab.Result` یک جدول system-versioned (temporal) است: SQL Server هر نسخه‌ی قبلی هر ردیف را در `history.Result` نگه می‌دارد، پس مقدار اصلاح‌شده هیچ‌وقت ناپدید نمی‌شود."
+          ],
+          "data": { "kind": "tables", "only": ["Result", "Report"] }
+        }
+      ],
+      "examples": {
+        "range": {
+          "title": { "en": "The most specific range", "fa": "دقیق‌ترین محدوده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "// The most specific range for the patient's sex and age.",
+          "lines": 3
+        },
+        "copy": {
+          "title": { "en": "Copied onto the result", "fa": "کپی روی جواب" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "result.RefLow = range?.Low;",
+          "lines": 4
+        },
+        "flag": {
+          "title": { "en": "Critical first, then normal", "fa": "اول بحرانی، بعد معمولی" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "/// <summary>HL7 table 0078 flag from the copied range.</summary>",
+          "lines": 7
+        },
+        "correction": {
+          "title": { "en": "A correction after release", "fa": "اصلاح بعد از انتشار" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "else if (result.Status is \"Final\" or \"Corrected\")",
+          "lines": 2
+        },
+        "version": {
+          "title": { "en": "Version 1 Final, then Amended", "fa": "نسخه‌ی ۱ Final، بعد Amended" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "var version = (short)((await db.Reports",
+          "to": "db.Reports.Add(new LabReport"
+        }
+      }
+    },
+    {
+      "id": "orders-in",
+      "group": "clinichub",
+      "title": { "en": "Electronic orders arriving over FHIR", "fa": "درخواست‌های الکترونیکی که با FHIR می‌رسند" },
+      "files": ["src/LabFlow.Api/Endpoints/OrderEndpoints.cs", "database/050_electronic_orders.sql"],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "p": [
+            "`/fhir` and the electronic-order endpoints exist only when connected to ClinicHub."
+          ],
+          "data": { "kind": "endpoints", "only": ["Order"] }
+        },
+        {
+          "id": "bundle",
+          "h": "One endpoint, three kinds of Bundle",
+          "p": [
+            "ClinicHub posts a FHIR transaction Bundle with a token it signs for LabFlow. A Patient with links is a merge; revoked ServiceRequests withdraw tests; otherwise it is a new order: a Patient, a Practitioner and one ServiceRequest per test. A Bundle mixing withdrawals with anything else is refused."
+          ],
+          "examples": ["dispatch"]
+        },
+        {
+          "id": "codes",
+          "h": "LOINC, or LabFlow's own code for panels",
+          "p": [
+            "Each test is found by its LOINC code, or by LabFlow's own code for panels that LOINC does not name the same way. A test LabFlow cannot do refuses the whole order, with the codes it understands in the message."
+          ],
+          "examples": ["codes"]
+        },
+        {
+          "id": "once",
+          "h": "Accepted once, even when sent twice",
+          "p": [
+            "ClinicHub retries after a lost answer, so the same requisition number from the same clinic is recognised and answered with the order already made. A clinic's first order may arrive before any of its staff has signed in, so its database is prepared first."
+          ],
+          "examples": ["prepare", "existing"]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "p": [
+            "An order waits here until the patient comes to collection; reception's \"Patient is here: make requisition\" turns it into a requisition with the usual checks."
+          ],
+          "data": { "kind": "tables", "only": ["ElectronicOrder", "ElectronicOrderItem"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "p": [
+            "`/fhir` و endpointهای درخواست الکترونیکی فقط وقتی به ClinicHub وصل است وجود دارند."
+          ],
+          "data": { "kind": "endpoints", "only": ["Order"] }
+        },
+        {
+          "id": "bundle",
+          "h": "یک endpoint، سه نوع Bundle",
+          "p": [
+            "ClinicHub یک transaction Bundle در FHIR با tokenی که برای LabFlow امضا کرده می‌فرستد. Patient با link یعنی ادغام؛ ServiceRequestهای revoked یعنی پس گرفتن تست‌ها؛ وگرنه درخواست تازه است: یک Patient، یک Practitioner و یک ServiceRequest برای هر تست. Bundleی که پس گرفتن را با چیز دیگری قاطی کند رد می‌شود."
+          ],
+          "examples": ["dispatch"]
+        },
+        {
+          "id": "codes",
+          "h": "LOINC، یا کد خود LabFlow برای پنل‌ها",
+          "p": [
+            "هر تست با کد LOINC پیدا می‌شود، یا با کد خود LabFlow برای پنل‌هایی که LOINC همان‌طور نام‌گذاری‌شان نکرده. تستی که LabFlow نمی‌تواند انجام دهد کل درخواست را رد می‌کند، و پیام می‌گوید کدام کدها را می‌فهمد."
+          ],
+          "examples": ["codes"]
+        },
+        {
+          "id": "once",
+          "h": "یک بار قبول می‌شود، حتی اگر دو بار فرستاده شود",
+          "p": [
+            "ClinicHub بعد از گم شدن جواب دوباره تلاش می‌کند، پس همان شماره‌ی requisition از همان کلینیک شناخته می‌شود و با درخواستی که قبلاً ساخته شده جواب داده می‌شود. اولین درخواست یک کلینیک ممکن است قبل از ورود هر کدام از کارکنانش برسد، پس اول دیتابیسش آماده می‌شود."
+          ],
+          "examples": ["prepare", "existing"]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "p": [
+            "درخواست این‌جا منتظر می‌ماند تا بیمار برای نمونه‌گیری بیاید؛ دکمه‌ی «Patient is here: make requisition» در پذیرش آن را با همان چک‌های همیشگی به یک requisition تبدیل می‌کند."
+          ],
+          "data": { "kind": "tables", "only": ["ElectronicOrder", "ElectronicOrderItem"] }
+        }
+      ],
+      "examples": {
+        "dispatch": {
+          "title": { "en": "Merge, withdrawal or a new order", "fa": "ادغام، پس گرفتن یا درخواست تازه" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "if ((string?)bundle?[\"resourceType\"] != \"Bundle\"",
+          "to": "A Bundle that withdraws orders carries only"
+        },
+        "codes": {
+          "title": { "en": "Finding each test", "fa": "پیدا کردن هر تست" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "// Tests: LOINC where the catalog has it",
+          "to": "wanted.Add((test,"
+        },
+        "prepare": {
+          "title": { "en": "Before any staff has signed in", "fa": "قبل از ورود هر کدام از کارکنان" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "// The first order for a clinic can come before",
+          "lines": 2
+        },
+        "existing": {
+          "title": { "en": "Sent again: the same order", "fa": "دوباره فرستاده شده: همان درخواست" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var existing = await db.ElectronicOrders.AsNoTracking().SingleOrDefaultAsync(o => o.SourceClinic == slug && o.ExternalId == requisition",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "cancel",
+      "group": "clinichub",
+      "title": { "en": "Withdrawing a test", "fa": "پس گرفتن یک تست" },
+      "files": ["src/LabFlow.Api/Endpoints/OrderEndpoints.cs", "database/052_order_cancellation.sql"],
+      "en": [
+        {
+          "id": "revoked",
+          "h": "The ServiceRequest again, as revoked",
+          "p": [
+            "ClinicHub withdraws a test by sending its ServiceRequest again with status `revoked`. A test already withdrawn is skipped, so a repeat changes nothing."
+          ],
+          "examples": ["again"]
+        },
+        {
+          "id": "rule",
+          "h": "Not once results are entered",
+          "p": [
+            "A waiting order just loses the test, which stays marked cancelled with its reason. On a requisition the line is cancelled only while nothing has been resulted; otherwise the answer is `409` and the clinic is told to call the lab. ClinicHub treats that as the lab's answer, not as an error to retry."
+          ],
+          "examples": ["rule"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "revoked",
+          "h": "همان ServiceRequest، این بار revoked",
+          "p": [
+            "ClinicHub یک تست را با فرستادن دوباره‌ی ServiceRequest آن با وضعیت `revoked` پس می‌گیرد. تستی که قبلاً پس گرفته شده نادیده گرفته می‌شود، پس تکرار چیزی را عوض نمی‌کند."
+          ],
+          "examples": ["again"]
+        },
+        {
+          "id": "rule",
+          "h": "نه بعد از ثبت جواب",
+          "p": [
+            "درخواستی که هنوز منتظر است فقط تست را از دست می‌دهد، که با دلیلش لغوشده علامت می‌خورد و می‌ماند. روی requisition، خط فقط تا وقتی لغو می‌شود که هیچ جوابی ثبت نشده؛ وگرنه جواب `409` است و به کلینیک گفته می‌شود با آزمایشگاه تماس بگیرد. ClinicHub این را جواب آزمایشگاه حساب می‌کند، نه خطایی که باید دوباره امتحان شود."
+          ],
+          "examples": ["rule"]
+        }
+      ],
+      "examples": {
+        "again": {
+          "title": { "en": "Already withdrawn", "fa": "قبلاً پس گرفته شده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "if (item.CancelledAt is not null)",
+          "lines": 2
+        },
+        "rule": {
+          "title": { "en": "Results entered: call the lab", "fa": "جواب ثبت شده: با آزمایشگاه تماس بگیرید" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var line = await db.RequisitionItems.SingleOrDefaultAsync(i => i.RequisitionId == requisitionId && i.TestId == item.TestId",
+          "to": "\"business-rule\");"
+        }
+      }
+    },
+    {
+      "id": "results-out",
+      "group": "clinichub",
+      "title": { "en": "Results back to ClinicHub", "fa": "جواب‌ها به ClinicHub برمی‌گردند" },
+      "files": ["src/LabFlow.Api/Endpoints/ResultEndpoints.cs", "src/LabFlow.Api/Auth/ResultSender.cs", "database/051_outbound_messages.sql"],
+      "en": [
+        {
+          "id": "queued",
+          "h": "Queued at release, in the same save",
+          "p": [
+            "Releasing a requisition that came from an electronic order adds an outbound message with the results, in the same `SaveChanges` as the release. A background sender delivers it later, so releasing never waits on ClinicHub."
+          ],
+          "examples": ["queue"]
+        },
+        {
+          "id": "shape",
+          "h": "One DiagnosticReport per ordered test",
+          "p": [
+            "Each report names ClinicHub's order in `basedOn`, which is how ClinicHub finds the clinic and the order, and carries the order's confidentiality label back. Under it, one Observation per analyte with LOINC where known, the value, unit, flag and range; `final` the first time, `amended` after a correction."
+          ],
+          "examples": ["basedon", "label"]
+        },
+        {
+          "id": "send",
+          "h": "Delivery and retries",
+          "p": [
+            "The sender goes through every LabFlow database (the lab's, or every clinic's on the server), sends what is due with a client-credentials token (scope `results`) it caches until shortly before it expires, and waits 10 s, 20 s, 40 s… up to 30 minutes after a failure. A `401` drops the cached token."
+          ],
+          "examples": ["due", "retry"]
+        },
+        {
+          "id": "money",
+          "h": "The lab's money, the same way",
+          "p": [
+            "`FinanceSender` sends invoices, online payments, voids and refunds to FinancePowerApp as financial documents, each with an id that never changes, recorded in `billing.FinanceExport` once accepted. No patient or test names leave."
+          ],
+          "examples": ["finance"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "queued",
+          "h": "در لحظه‌ی انتشار، در همان save، در صف",
+          "p": [
+            "انتشار requisitionی که از یک درخواست الکترونیکی آمده، یک پیام خروجی با جواب‌ها اضافه می‌کند، در همان `SaveChanges` انتشار. فرستنده‌ی پس‌زمینه بعداً آن را می‌رساند، پس انتشار هیچ‌وقت منتظر ClinicHub نمی‌ماند."
+          ],
+          "examples": ["queue"]
+        },
+        {
+          "id": "shape",
+          "h": "یک DiagnosticReport برای هر تست درخواست‌شده",
+          "p": [
+            "هر گزارش درخواست ClinicHub را در `basedOn` نام می‌برد، که ClinicHub با آن کلینیک و درخواست را پیدا می‌کند، و برچسب محرمانگی درخواست را برمی‌گرداند. زیر آن، یک Observation برای هر آنالیت با LOINC اگر معلوم باشد، مقدار، واحد، flag و محدوده؛ بار اول `final`، بعد از اصلاح `amended`."
+          ],
+          "examples": ["basedon", "label"]
+        },
+        {
+          "id": "send",
+          "h": "رساندن و تلاش دوباره",
+          "p": [
+            "فرستنده همه‌ی دیتابیس‌های LabFlow را می‌گردد (مال آزمایشگاه، یا مال هر کلینیک روی سرور)، چیزی را که وقتش رسیده با یک token از نوع client credentials (scope `results`) می‌فرستد که تا کمی قبل از انقضا cache می‌شود، و بعد از هر شکست ۱۰ ثانیه، ۲۰ ثانیه، ۴۰ ثانیه… تا ۳۰ دقیقه صبر می‌کند. `401` token cache‌شده را دور می‌اندازد."
+          ],
+          "examples": ["due", "retry"]
+        },
+        {
+          "id": "money",
+          "h": "پول آزمایشگاه هم همین‌طور",
+          "p": [
+            "`FinanceSender` فاکتورها، پرداخت‌های آنلاین، ابطال‌ها و بازپرداخت‌ها را به‌عنوان سند مالی به FinancePowerApp می‌فرستد، هر کدام با شناسه‌ای که هیچ‌وقت عوض نمی‌شود و بعد از قبول شدن در `billing.FinanceExport` ثبت می‌شود. هیچ اسم بیمار یا تستی بیرون نمی‌رود."
+          ],
+          "examples": ["finance"]
+        }
+      ],
+      "examples": {
+        "queue": {
+          "title": { "en": "The message, with the release", "fa": "پیام، همراه انتشار" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "// Ordered from ClinicHub: the results go back to it",
+          "lines": 8
+        },
+        "basedon": {
+          "title": { "en": "Naming ClinicHub's order", "fa": "نام بردن درخواست ClinicHub" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "[\"basedOn\"] = new JsonArray(new JsonObject",
+          "lines": 3
+        },
+        "label": {
+          "title": { "en": "The label comes back", "fa": "برچسب برمی‌گردد" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
+          "from": "// The order's confidentiality label comes back on its results",
+          "lines": 4
+        },
+        "due": {
+          "title": { "en": "What is due", "fa": "چیزی که وقتش رسیده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ResultSender.cs",
+          "from": "due = await db.OutboundMessages.Where(m => m.SentAt == null",
+          "lines": 2
+        },
+        "retry": {
+          "title": { "en": "Doubling pauses", "fa": "مکث‌های دوبرابرشونده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ResultSender.cs",
+          "from": "m.NextAttemptAt = now.AddSeconds(Math.Min(10 * Math.Pow(2",
+          "lines": 3
+        },
+        "finance": {
+          "title": { "en": "What goes to the accounting", "fa": "چه چیزی به حسابداری می‌رود" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/FinanceSender.cs",
+          "from": "/// The lab's money to FinancePowerApp",
+          "to": "/// </list>"
+        }
+      }
+    },
+    {
+      "id": "fe-app",
+      "group": "frontend",
+      "title": { "en": "The pages and the API client", "fa": "صفحه‌ها و API client" },
+      "files": ["web/src/App.tsx", "web/src/api.ts"],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Routes",
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "who",
+          "h": "Who may use a page, in either mode",
+          "p": [
+            "Connected, ClinicHub's permissions decide; with the demo menu, the seeded user's role. Each staff page is keyed by the user, so switching user starts it fresh instead of showing the last person's patient."
+          ],
+          "examples": ["who"]
+        },
+        {
+          "id": "signin",
+          "h": "The sign-in in the top bar",
+          "p": [
+            "Connected, the top bar shows the person and the clinic with a sign-out link, or a link to sign in with ClinicHub. Otherwise, in Development, a select of the seeded users."
+          ],
+          "examples": ["topbar"]
+        },
+        {
+          "id": "headers",
+          "h": "Headers on every call",
+          "p": [
+            "`request` always sends `X-LabFlow` (needed on changes once signed in with a cookie, harmless otherwise), the demo user if one is chosen, and the clinic for public booking with a database per clinic."
+          ],
+          "examples": ["headers"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "routeها",
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "who",
+          "h": "چه کسی می‌تواند از صفحه استفاده کند، در هر دو حالت",
+          "p": [
+            "در حالت متصل مجوزهای ClinicHub تصمیم می‌گیرند؛ با منوی دمو، نقش کاربر seed‌شده. هر صفحه‌ی کارکنان با کاربر key خورده، پس عوض کردن کاربر صفحه را از نو شروع می‌کند به‌جای این‌که بیمار آدم قبلی را نشان دهد."
+          ],
+          "examples": ["who"]
+        },
+        {
+          "id": "signin",
+          "h": "ورود در نوار بالا",
+          "p": [
+            "در حالت متصل، نوار بالا آدم و کلینیک را با لینک خروج نشان می‌دهد، یا لینک ورود با ClinicHub را. وگرنه، در Development، یک select از کاربران seed‌شده."
+          ],
+          "examples": ["topbar"]
+        },
+        {
+          "id": "headers",
+          "h": "هدرها در هر درخواست",
+          "p": [
+            "`request` همیشه `X-LabFlow` را می‌فرستد (بعد از ورود با کوکی برای تغییرها لازم است، وگرنه بی‌ضرر)، کاربر دمو را اگر انتخاب شده باشد، و کلینیک را برای نوبت‌گیری عمومی وقتی هر کلینیک دیتابیس خودش را دارد."
+          ],
+          "examples": ["headers"]
+        }
+      ],
+      "examples": {
+        "who": {
+          "title": { "en": "Permissions or the demo role", "fa": "مجوزها یا نقش دمو" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "// Connected, ClinicHub's permissions decide",
+          "to": ": !!role && ['Technologist'"
+        },
+        "topbar": {
+          "title": { "en": "ClinicHub or the demo menu", "fa": "ClinicHub یا منوی دمو" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "{connected && (me?.userId",
+          "to": "Staff sign-in with ClinicHub</a>)}"
+        },
+        "headers": {
+          "title": { "en": "The request helper", "fa": "تابع request" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "// X-LabFlow: required on changes",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "scripts",
+      "group": "data",
+      "title": { "en": "Numbered scripts and their conventions", "fa": "اسکریپت‌های شماره‌دار و قراردادهایشان" },
+      "files": ["database/010_schema.sql", "database/054_analytics_dw_view.sql", "src/LabFlow.Api/Auth/ClinicHubConnection.cs", "docs/data-model.md"],
+      "en": [
+        {
+          "id": "conventions",
+          "h": "Written down at the top",
+          "p": [
+            "Timestamps are UTC, text is nvarchar for English and French, money is decimal, and no passwords are stored. Each table's header comment names the FHIR resource it corresponds to."
+          ],
+          "examples": ["conventions"]
+        },
+        {
+          "id": "schemas",
+          "h": "A schema per concern",
+          "p": [
+            "`ref` (the test catalog), `core` (patients, practitioners, locations), `sec`, `sched`, `lab` (requisition → specimen → result → report), `notify` (the email outbox), `billing`, `audit`, `etl`, `dw` and `history` for the temporal tables."
+          ]
+        },
+        {
+          "id": "upgrade",
+          "h": "From 050 on: safe to run again",
+          "p": [
+            "Scripts before 050 build a new database. Scripts from 050 on change existing ones and check before they act (`IF OBJECT_ID … IS NULL`), so LabFlow can run them at every start-up on a database built earlier."
+          ],
+          "examples": ["upgrades", "guard"]
+        },
+        {
+          "id": "temporal",
+          "h": "History kept by SQL Server",
+          "p": [
+            "`core.Patient` and `lab.Result` are system-versioned: every update keeps the earlier row in `history.*`, with the period it was valid. Nothing in the application has to remember to copy it."
+          ],
+          "examples": ["temporal"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "conventions",
+          "h": "بالای فایل نوشته شده",
+          "p": [
+            "زمان‌ها UTC هستند، متن برای انگلیسی و فرانسه nvarchar است، پول decimal است و هیچ رمزی ذخیره نمی‌شود. کامنت بالای هر جدول می‌گوید معادل کدام resource در FHIR است."
+          ],
+          "examples": ["conventions"]
+        },
+        {
+          "id": "schemas",
+          "h": "یک schema برای هر موضوع",
+          "p": [
+            "`ref` (کاتالوگ تست‌ها)، `core` (بیماران، پزشکان، مکان‌ها)، `sec`، `sched`، `lab` (requisition → نمونه → جواب → گزارش)، `notify` (صف ایمیل)، `billing`، `audit`، `etl`، `dw` و `history` برای جدول‌های temporal."
+          ]
+        },
+        {
+          "id": "upgrade",
+          "h": "از 050 به بعد: اجرای دوباره امن است",
+          "p": [
+            "اسکریپت‌های قبل از 050 دیتابیس تازه می‌سازند. اسکریپت‌های 050 به بعد دیتابیس موجود را عوض می‌کنند و قبل از هر کاری چک می‌کنند (`IF OBJECT_ID … IS NULL`)، پس LabFlow می‌تواند در هر بار شروع آن‌ها را روی دیتابیسی که قبلاً ساخته شده اجرا کند."
+          ],
+          "examples": ["upgrades", "guard"]
+        },
+        {
+          "id": "temporal",
+          "h": "تاریخچه‌ای که SQL Server نگه می‌دارد",
+          "p": [
+            "`core.Patient` و `lab.Result` جدول‌های system-versioned هستند: هر به‌روزرسانی ردیف قبلی را با بازه‌ای که معتبر بوده در `history.*` نگه می‌دارد. لازم نیست هیچ‌جای برنامه یادش بماند کپی کند."
+          ],
+          "examples": ["temporal"]
+        }
+      ],
+      "examples": {
+        "conventions": {
+          "title": { "en": "The conventions", "fa": "قراردادها" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "-- Conventions",
+          "lines": 7
+        },
+        "upgrades": {
+          "title": { "en": "Which scripts are upgrades", "fa": "کدام اسکریپت‌ها ارتقا هستند" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "/// Scripts from 050 on change existing databases",
+          "lines": 4
+        },
+        "guard": {
+          "title": { "en": "Check, then act", "fa": "چک کن، بعد عمل کن" },
+          "lang": "sql",
+          "file": "database/054_analytics_dw_view.sql",
+          "from": "IF OBJECT_ID(N'dw.FactLabResult', N'U') IS NOT NULL",
+          "lines": 2
+        },
+        "temporal": {
+          "title": { "en": "System versioning", "fa": "system versioning" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "ValidFrom                 datetime2(0)",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "data-catalog",
+      "group": "data",
+      "title": { "en": "The test catalog", "fa": "کاتالوگ تست‌ها" },
+      "files": ["database/010_schema.sql", "database/020_seed_reference.sql"],
+      "en": [
+        {
+          "id": "about",
+          "h": "Tests, panels and reference ranges",
+          "p": [
+            "A test has a LabFlow code and, where it exists, a LOINC code (checked for its shape by a CHECK constraint); a numeric test must have a unit; an uninsured one must have a price. A panel is a test whose members are other tests, never itself. Reference ranges depend on sex, age in days and pregnancy week, with optional critical limits."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "data": { "kind": "tables", "only": ["Department", "Unit", "SpecimenType", "Test", "PanelMember", "ReferenceRange"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "about",
+          "h": "تست‌ها، پنل‌ها و محدوده‌های مرجع",
+          "p": [
+            "هر تست یک کد LabFlow دارد و اگر وجود داشته باشد یک کد LOINC (که یک قید CHECK شکلش را چک می‌کند)؛ تست عددی باید واحد داشته باشد و تست بدون بیمه باید قیمت داشته باشد. پنل تستی است که اعضایش تست‌های دیگرند، هیچ‌وقت خودش. محدوده‌های مرجع به جنس، سن به روز و هفته‌ی بارداری بستگی دارند، با حدهای بحرانی اختیاری."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["Department", "Unit", "SpecimenType", "Test", "PanelMember", "ReferenceRange"] }
+        }
+      ]
+    },
+    {
+      "id": "data-people",
+      "group": "data",
+      "title": { "en": "Patients, practitioners, users", "fa": "بیماران، پزشکان، کاربران" },
+      "files": ["database/010_schema.sql"],
+      "en": [
+        {
+          "id": "about",
+          "h": "One live record per health card",
+          "p": [
+            "A filtered unique index allows one patient per health card while leaving patients without a card free. Postal codes and the language are checked by the database. A practitioner is known by licence body and number (CPSO or CNO)."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "data": { "kind": "tables", "only": ["Location", "Patient", "Practitioner", "AppUser"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "about",
+          "h": "یک پرونده‌ی زنده برای هر کارت سلامت",
+          "p": [
+            "یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک بیمار اجازه می‌دهد و بیماران بدون کارت را آزاد می‌گذارد. کد پستی و زبان را دیتابیس چک می‌کند. هر پزشک با نهاد صادرکننده و شماره‌ی مجوز شناخته می‌شود (CPSO یا CNO)."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": { "kind": "tables", "only": ["Location", "Patient", "Practitioner", "AppUser"] }
+        }
+      ]
+    },
+    {
+      "id": "data-lab",
+      "group": "data",
+      "title": { "en": "Requisitions, specimens, billing", "fa": "requisitionها، نمونه‌ها، صورت‌حساب" },
+      "files": ["database/010_schema.sql", "database/051_outbound_messages.sql", "database/053_finance.sql"],
+      "en": [
+        {
+          "id": "lab",
+          "h": "The lab's work",
+          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] }
+        },
+        {
+          "id": "money",
+          "h": "Money and notifications",
+          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "lab",
+          "h": "کار آزمایشگاه",
+          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] }
+        },
+        {
+          "id": "money",
+          "h": "پول و اعلان‌ها",
+          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] }
+        }
+      ]
+    },
+    {
+      "id": "etl",
+      "group": "warehouse",
+      "title": { "en": "ETL from the legacy lab system (SSIS)", "fa": "ETL از سیستم آزمایشگاه قدیمی (SSIS)" },
+      "files": ["etl/README.md", "etl/builder/BuildPackage.cs", "database/040_etl_dw.sql"],
+      "en": [
+        {
+          "id": "what",
+          "h": "Legacy results into a star schema",
+          "p": [
+            "An SSIS package moves results from a legacy Iranian lab system (code page 1256, Jalali dates) into the `dw` star schema: extract to `etl.stg_*`, then one stored procedure transforms and loads everything in one transaction, mapping tests to LOINC and SI units on the way. The `.dtsx` is generated from C# with the SSIS object model, so it is reviewable and reproducible."
+          ],
+          "examples": ["package", "load"]
+        },
+        {
+          "id": "deid",
+          "h": "De-identified before it leaves",
+          "p": [
+            "The extract never reads names, phone numbers, addresses, national codes or birth dates. The patient code leaves as a salted SHA-256, and every date is shifted by one secret offset of 1 to 180 days, so turnaround times and weekly patterns stay true while real dates do not. Salt and offset are made on the first run and live only in `etl.Secret`."
+          ],
+          "examples": ["secret"]
+        },
+        {
+          "id": "jalali",
+          "h": "Jalali dates",
+          "p": [
+            "Legacy dates are Jalali `yyyy/mm/dd` text. A schema-bound function converts them to Gregorian and returns NULL for anything that is not a valid date; such rows go to `etl.RejectRow` with a reason."
+          ],
+          "examples": ["jalali"]
+        },
+        {
+          "id": "tables",
+          "h": "Runs and rejects",
+          "data": { "kind": "tables", "only": ["LoadRun", "RejectRow", "LegacyTestMap"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "جواب‌های قدیمی به یک star schema",
+          "p": [
+            "یک پکیج SSIS جواب‌ها را از یک سیستم آزمایشگاه قدیمی ایرانی (code page 1256، تاریخ شمسی) به star schema در `dw` منتقل می‌کند: استخراج به `etl.stg_*`، بعد یک stored procedure همه‌چیز را در یک تراکنش تبدیل و بارگذاری می‌کند و در همین مسیر تست‌ها را به LOINC و واحدهای SI نگاشت می‌کند. فایل `.dtsx` با object model خود SSIS از کد C# ساخته می‌شود، پس قابل بازبینی و تکرارپذیر است."
+          ],
+          "examples": ["package", "load"]
+        },
+        {
+          "id": "deid",
+          "h": "بی‌نام‌سازی قبل از بیرون رفتن",
+          "p": [
+            "استخراج هیچ‌وقت اسم، شماره‌ی تلفن، آدرس، کد ملی یا تاریخ تولد را نمی‌خواند. کد بیمار به شکل SHA-256 با salt بیرون می‌رود، و همه‌ی تاریخ‌ها با یک جابه‌جایی مخفی بین ۱ تا ۱۸۰ روز جابه‌جا می‌شوند؛ پس زمان پاسخ‌دهی و الگوهای هفتگی درست می‌مانند ولی تاریخ‌های واقعی نه. salt و جابه‌جایی در اولین اجرا ساخته می‌شوند و فقط در `etl.Secret` هستند."
+          ],
+          "examples": ["secret"]
+        },
+        {
+          "id": "jalali",
+          "h": "تاریخ‌های شمسی",
+          "p": [
+            "تاریخ‌های سیستم قدیمی متن شمسی `yyyy/mm/dd` هستند. یک تابع schema-bound آن‌ها را به میلادی تبدیل می‌کند و برای هر چیزی که تاریخ معتبر نباشد NULL برمی‌گرداند؛ آن ردیف‌ها با دلیل به `etl.RejectRow` می‌روند."
+          ],
+          "examples": ["jalali"]
+        },
+        {
+          "id": "tables",
+          "h": "اجراها و ردشده‌ها",
+          "data": { "kind": "tables", "only": ["LoadRun", "RejectRow", "LegacyTestMap"] }
+        }
+      ],
+      "examples": {
+        "package": {
+          "title": { "en": "The package, as code", "fa": "پکیج، به شکل کد" },
+          "lang": "csharp",
+          "file": "etl/builder/BuildPackage.cs",
+          "from": "// Builds etl/LabFlowETL/LabFlowETL.dtsx",
+          "lines": 11
+        },
+        "load": {
+          "title": { "en": "One transaction for the whole load", "fa": "یک تراکنش برای کل بارگذاری" },
+          "lang": "sql",
+          "file": "database/040_etl_dw.sql",
+          "from": "DECLARE @shift int = (SELECT CAST(Value AS int) FROM etl.Secret WHERE Name = 'DateShiftDays');",
+          "lines": 4
+        },
+        "secret": {
+          "title": { "en": "Salt and date shift, made once", "fa": "salt و جابه‌جایی تاریخ، یک بار ساخته می‌شوند" },
+          "lang": "sql",
+          "file": "database/040_etl_dw.sql",
+          "from": "IF NOT EXISTS (SELECT 1 FROM etl.Secret WHERE Name = 'PatientHashSalt')",
+          "lines": 7
+        },
+        "jalali": {
+          "title": { "en": "Not a valid date: NULL", "fa": "تاریخ نامعتبر: NULL" },
+          "lang": "sql",
+          "file": "database/040_etl_dw.sql",
+          "from": "CREATE FUNCTION etl.fn_JalaliToGregorian",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "dw",
+      "group": "warehouse",
+      "title": { "en": "The warehouse, Analytics and Power BI", "fa": "انبار داده، Analytics و Power BI" },
+      "files": ["database/040_etl_dw.sql", "database/054_analytics_dw_view.sql", "database/tools/analytics_dw_reader.sql", "bi/README.md"],
+      "en": [
+        {
+          "id": "star",
+          "h": "The star schema",
+          "p": [
+            "One fact row per legacy result, with dimensions for date, test, payer and the hashed patient. The Power BI report in `bi/` (overview, turnaround, abnormal results, data quality) reads these tables."
+          ],
+          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] }
+        },
+        {
+          "id": "analytics",
+          "h": "Only totals leave, for Analytics",
+          "p": [
+            "The group's Analytics reads one view: monthly totals per test and kind of payer. No row, value, patient key or legacy visit number leaves. Its login may read that view and the test catalogue's names and codes, nothing else; the view reaches the tables through ownership chaining."
+          ],
+          "examples": ["view", "grant"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "star",
+          "h": "star schema",
+          "p": [
+            "برای هر جواب قدیمی یک ردیف fact، با dimensionهای تاریخ، تست، پرداخت‌کننده و بیمارِ hash‌شده. گزارش Power BI در `bi/` (نمای کلی، زمان پاسخ‌دهی، جواب‌های غیرطبیعی، کیفیت داده) همین جدول‌ها را می‌خواند."
+          ],
+          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] }
+        },
+        {
+          "id": "analytics",
+          "h": "فقط جمع‌ها بیرون می‌روند، برای Analytics",
+          "p": [
+            "Analytics گروه فقط یک view را می‌خواند: جمع ماهانه برای هر تست و نوع پرداخت‌کننده. هیچ ردیف، مقدار، کلید بیمار یا شماره‌ی ویزیت قدیمی بیرون نمی‌رود. login آن فقط می‌تواند همان view و اسم و کد تست‌های کاتالوگ را بخواند؛ view از طریق ownership chaining به جدول‌ها می‌رسد."
+          ],
+          "examples": ["view", "grant"]
+        }
+      ],
+      "examples": {
+        "view": {
+          "title": { "en": "Monthly totals", "fa": "جمع‌های ماهانه" },
+          "lang": "sql",
+          "file": "database/054_analytics_dw_view.sql",
+          "from": "EXEC (N'CREATE OR ALTER VIEW dw.vw_AnalyticsMonthly AS",
+          "to": "GROUP BY"
+        },
+        "grant": {
+          "title": { "en": "The view and a few columns, nothing else", "fa": "view و چند ستون، نه چیز دیگر" },
+          "lang": "sql",
+          "file": "database/tools/analytics_dw_reader.sql",
+          "from": "GRANT SELECT ON dw.vw_AnalyticsMonthly",
+          "lines": 2
+        }
+      }
+    }
+  ]
+}
