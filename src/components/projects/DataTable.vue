@@ -38,13 +38,13 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
 
     <template v-else-if="data.kind === 'tables'">
       <div v-for="x in tables" :key="x.table" class="sql-table">
-        <h3 v-if="x.provider === 'sqlite'" dir="ltr">{{ x.database }} · {{ x.table }}</h3>
+        <h3 v-if="x.provider" dir="ltr">{{ x.database }} · {{ x.table }}</h3>
         <h3 v-else dir="ltr">{{ x.database }}.{{ x.schema ?? 'dbo' }}.{{ x.table }}</h3>
         <div class="doc-table-wrap">
           <table class="doc-table">
             <thead>
               <tr>
-                <th>{{ t.column }}</th>
+                <th>{{ x.provider === 'mongodb' ? t.field : t.column }}</th>
                 <th>{{ t.type }}</th>
                 <th>{{ t.nullable }}</th>
                 <th>{{ t.notes }}</th>
@@ -62,6 +62,9 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
         </div>
         <p v-if="x.checks?.length" class="muted">
           {{ t.checks }}: <code v-for="c in x.checks" :key="c" dir="ltr" class="note">{{ c }}</code>
+        </p>
+        <p v-if="x.indexes?.length" class="muted">
+          {{ t.indexes }}: <code v-for="i in x.indexes" :key="i" dir="ltr" class="note">{{ i }}</code>
         </p>
         <p v-if="x.denies.length" class="muted">
           {{ t.denied }}: <code v-for="d in x.denies" :key="d" dir="ltr">{{ d }}</code>

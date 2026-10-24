@@ -1,0 +1,1685 @@
+{
+  "project": "rebiomed",
+  "repo": "Rebiomed",
+  "path": "mern-animation-project",
+  "scan": {
+    "expressRouters": [{ "app": "app.ts", "access": { "auth": "signed-in", "admin": "Admin" } }],
+    "mongoose": [{ "dir": "models", "database": "rebiomed" }],
+    "reactRoutes": "client/src/App.js"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "security", "title": { "en": "Accounts, admins and files", "fa": "حساب‌ها، adminها و فایل‌ها" } },
+    { "id": "sellers", "title": { "en": "Sellers and verification", "fa": "فروشنده‌ها و احراز" } },
+    { "id": "listings", "title": { "en": "Medical listings", "fa": "آگهی‌های تجهیزات پزشکی" } },
+    { "id": "money", "title": { "en": "Checkout, escrow and payouts", "fa": "پرداخت، امانت و تسویه" } },
+    { "id": "trust", "title": { "en": "Offers and inspections", "fa": "پیشنهاد قیمت و بازرسی" } },
+    { "id": "frontend", "title": { "en": "Frontend (React)", "fa": "فرانت‌اند (React)" } },
+    { "id": "data", "title": { "en": "Data (MongoDB)", "fa": "داده (MongoDB)" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it: locally, in Docker, on the server", "fa": "اجرا: محلی، در Docker، روی سرور" },
+      "files": ["README.md", "app.ts", "server.ts", "config/keys.ts", "services/stripe.ts", "Dockerfile", "render.yaml"],
+      "en": [
+        {
+          "id": "local",
+          "h": "Two processes in development",
+          "p": [
+            "`npm run dev` runs `server.ts` directly with tsx on port 5000, and `cd client && npm start` runs the React app on port 3000. `npm run seed` loads 7 categories, 4 fictional organizations (the biomedical service provider already verified), 12 listings and 2 inspection reports.",
+            "`app.ts` builds the Express app without calling `listen()`; `server.ts` only starts it. That split is what lets the tests run the real app in-process."
+          ]
+        },
+        {
+          "id": "safe",
+          "h": "Safe defaults, and a demo before Stripe",
+          "p": [
+            "In development every setting has a local default. In production, `MONGO_URI` and `JWT_SECRET` have none: the server throws at start rather than sign tokens with a guessable secret.",
+            "Stripe is the opposite: optional. The Stripe SDK throws when built without a key, which would take the whole server down, so it gets a placeholder, and the payment endpoints answer 503 \"not configured yet\". Browsing, offers and inspections work before Stripe is set up."
+          ],
+          "examples": ["required", "placeholder"]
+        },
+        {
+          "id": "prod",
+          "h": "One service in production",
+          "p": [
+            "With `NODE_ENV=production` Express also serves the React build, so the browser calls `/api` on the same origin and no CORS is needed. Unknown `/api` paths get a JSON 404, and every other path gets `index.html` for the client router. `GET /api/health` answers 503 until MongoDB is connected, for the platform's health checks.",
+            "The image is built in three stages (API, React, runtime), runs as the unprivileged `node` user, and has a health check. `render.yaml` describes the same service for Render with MongoDB Atlas."
+          ],
+          "examples": ["serve", "image"],
+          "data": { "kind": "endpoints", "only": ["health"] }
+        },
+        {
+          "id": "server",
+          "h": "On the server",
+          "p": [
+            "Control Panel runs it at rebiomed.arashkeshtgar.ca as three containers: `rebiomed-web` (nginx with the React build, passing `/api/` and `/uploads/` on), `rebiomed-api`, and its own `rebiomed-mongo` on a network only the API reaches. Demo data is a one-shot `rebiomed-seed` job. How the server is set up is in Control Panel's topics (deploy-vps)."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "local",
+          "h": "دو process در حالت توسعه",
+          "p": [
+            "`npm run dev` فایل `server.ts` را مستقیم با tsx روی پورت 5000 اجرا می‌کند، و `cd client && npm start` اپ React را روی پورت 3000. `npm run seed` هفت دسته، چهار سازمان خیالی (ارائه‌دهنده‌ی خدمات biomedical از قبل احرازشده)، دوازده آگهی و دو گزارش بازرسی می‌ریزد.",
+            "`app.ts` اپ Express را بدون صدا زدن `listen()` می‌سازد؛ `server.ts` فقط آن را بالا می‌آورد. همین جدایی است که تست‌ها را قادر می‌کند اپ واقعی را داخل همان process اجرا کنند."
+          ]
+        },
+        {
+          "id": "safe",
+          "h": "پیش‌فرض‌های امن، و دمو قبل از Stripe",
+          "p": [
+            "در حالت توسعه هر تنظیم یک پیش‌فرض محلی دارد. در production، `MONGO_URI` و `JWT_SECRET` پیش‌فرض ندارند: سرور موقع بالا آمدن خطا می‌اندازد تا این‌که token را با یک secret قابل حدس امضا کند.",
+            "Stripe برعکس است: اختیاری. SDK استرایپ بدون کلید موقع ساخته شدن خطا می‌اندازد، که کل سرور را می‌خواباند، پس یک کلید جانشین می‌گیرد و endpointهای پرداخت با 503 «هنوز تنظیم نشده» جواب می‌دهند. مرور آگهی، پیشنهاد قیمت و بازرسی قبل از راه افتادن Stripe کار می‌کنند."
+          ],
+          "examples": ["required", "placeholder"]
+        },
+        {
+          "id": "prod",
+          "h": "یک سرویس در production",
+          "p": [
+            "با `NODE_ENV=production`، خود Express build اپ React را هم سرو می‌کند، پس مرورگر `/api` را روی همان origin صدا می‌زند و CORS لازم نیست. مسیرهای ناشناخته‌ی `/api` یک 404 به‌صورت JSON می‌گیرند، و هر مسیر دیگری `index.html` را برای router سمت client. `GET /api/health` تا وقتی MongoDB وصل نشده 503 می‌دهد، برای health check پلتفرم.",
+            "image در سه مرحله ساخته می‌شود (API، React، runtime)، با کاربر بی‌امتیاز `node` اجرا می‌شود و health check دارد. `render.yaml` همین سرویس را برای Render با MongoDB Atlas توصیف می‌کند."
+          ],
+          "examples": ["serve", "image"],
+          "data": { "kind": "endpoints", "only": ["health"] }
+        },
+        {
+          "id": "server",
+          "h": "روی سرور",
+          "p": [
+            "Control Panel آن را روی rebiomed.arashkeshtgar.ca با سه container اجرا می‌کند: `rebiomed-web` (nginx با build اپ React، که `/api/` و `/uploads/` را جلو می‌فرستد)، `rebiomed-api`، و `rebiomed-mongo` مخصوص خودش روی شبکه‌ای که فقط API به آن می‌رسد. داده‌ی دمو یک job یک‌باره به اسم `rebiomed-seed` است. این‌که سرور چطور راه افتاده در topicهای Control Panel آمده (deploy-vps)."
+          ]
+        }
+      ],
+      "examples": {
+        "required": {
+          "title": { "en": "No default in production", "fa": "در production پیش‌فرض ندارد" },
+          "lang": "typescript",
+          "file": "config/keys.ts",
+          "from": "const required = (name: string, devDefault: string): string => {",
+          "to": "export const jwtSecret"
+        },
+        "placeholder": {
+          "title": { "en": "Payments off instead of a crash", "fa": "پرداخت خاموش به‌جای از کار افتادن" },
+          "lang": "typescript",
+          "file": "services/stripe.ts",
+          "from": "export const paymentsConfigured",
+          "lines": 11
+        },
+        "serve": {
+          "title": { "en": "The API and the React build on one origin", "fa": "API و build اپ React روی یک origin" },
+          "lang": "typescript",
+          "file": "app.ts",
+          "from": "app.use('/api', (_req, res) => {",
+          "lines": 12
+        },
+        "image": {
+          "title": { "en": "The runtime stage", "fa": "مرحله‌ی runtime" },
+          "lang": "dockerfile",
+          "file": "Dockerfile",
+          "from": "ENV NODE_ENV=production PORT=5000",
+          "to": "CMD [\"node\", \"dist/server.js\"]"
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": { "en": "Tests and CI", "fa": "تست‌ها و CI" },
+      "files": ["test/setup.ts", "test/checkout.test.ts", "test/fulfillment.test.ts", ".github/workflows/ci.yml"],
+      "en": [
+        {
+          "id": "real",
+          "h": "A real MongoDB, a fake Stripe",
+          "p": [
+            "`npm test` (Mocha, Chai, chai-http) runs the real Express app against a real MongoDB. Stripe is never called: every money-moving call goes through one `stripeOps` object that the tests replace method by method, so they can count transfers and make a refund fail on purpose.",
+            "The races are tested as races: two requests sent at once with `Promise.all`. Those tests depend on unique indexes, which Mongoose builds in the background on a fresh database, so a root hook waits for every model's indexes first."
+          ],
+          "examples": ["hooks", "race"]
+        },
+        {
+          "id": "ci",
+          "h": "CI",
+          "p": [
+            "GitHub Actions runs the TypeScript build and the tests against a MongoDB service container, builds the React app with `CI=true` (a lint warning fails the build), and then builds the Docker image."
+          ],
+          "examples": ["ci"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "real",
+          "h": "MongoDB واقعی، Stripe جعلی",
+          "p": [
+            "`npm test` (Mocha، Chai، chai-http) اپ واقعی Express را روی یک MongoDB واقعی اجرا می‌کند. Stripe هیچ‌وقت صدا زده نمی‌شود: هر call که پول جابه‌جا می‌کند از یک شیء `stripeOps` می‌گذرد که تست‌ها متد به متد عوضش می‌کنند، پس می‌توانند transferها را بشمارند و یک refund را عمداً شکست بدهند.",
+            "race‌ها به‌صورت race تست می‌شوند: دو درخواست هم‌زمان با `Promise.all`. این تست‌ها به unique indexها تکیه دارند، که Mongoose روی دیتابیس تازه در پس‌زمینه می‌سازد، پس یک root hook اول صبر می‌کند تا indexهای همه‌ی مدل‌ها ساخته شوند."
+          ],
+          "examples": ["hooks", "race"]
+        },
+        {
+          "id": "ci",
+          "h": "CI",
+          "p": [
+            "GitHub Actions، build تایپ‌اسکریپت و تست‌ها را روی یک container سرویس MongoDB اجرا می‌کند، اپ React را با `CI=true` build می‌کند (یک هشدار lint، build را خراب می‌کند)، و بعد image داکر را می‌سازد."
+          ],
+          "examples": ["ci"]
+        }
+      ],
+      "examples": {
+        "hooks": {
+          "title": { "en": "Wait for the unique indexes", "fa": "صبر برای unique indexها" },
+          "lang": "typescript",
+          "file": "test/setup.ts",
+          "from": "export const mochaHooks",
+          "lines": 7
+        },
+        "race": {
+          "title": { "en": "Webhook and client at the same moment", "fa": "webhook و client در یک لحظه" },
+          "lang": "typescript",
+          "file": "test/checkout.test.ts",
+          "from": "it('decrements stock once when called concurrently",
+          "lines": 8
+        },
+        "ci": {
+          "title": { "en": "MongoDB as a service container", "fa": "MongoDB به‌عنوان container سرویس" },
+          "lang": "yaml",
+          "file": ".github/workflows/ci.yml",
+          "from": "    services:",
+          "to": "MONGO_URI: mongodb://localhost:27017/rebiomed-ci"
+        }
+      }
+    },
+    {
+      "id": "auth",
+      "group": "security",
+      "title": { "en": "Sign-in with JWT", "fa": "ورود با JWT" },
+      "files": ["routes/auth.ts", "middleware/auth.ts", "types/express.d.ts"],
+      "en": [
+        {
+          "id": "token",
+          "h": "A token for seven days",
+          "p": [
+            "Register and login return a JWT signed with `JWT_SECRET`, valid for 7 days, carrying the user's id, name and `isAdmin`. Passwords are stored as bcrypt hashes, and a wrong email and a wrong password get the same answer."
+          ],
+          "examples": ["sign", "hash"],
+          "data": { "kind": "endpoints", "only": ["auth"] }
+        },
+        {
+          "id": "guard",
+          "h": "The auth middleware",
+          "p": [
+            "`auth` reads the `Authorization` header (with or without `Bearer `), verifies the token and puts its user on `req.user`, a type added to Express's `Request` in `types/express.d.ts`. Routes that need a signed-in user name it, or the whole router does with `router.use(auth)`; the endpoint tables on these pages are read from exactly that."
+          ],
+          "examples": ["guard"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "token",
+          "h": "یک token برای هفت روز",
+          "p": [
+            "ثبت‌نام و ورود یک JWT برمی‌گردانند که با `JWT_SECRET` امضا شده، ۷ روز اعتبار دارد و id، اسم و `isAdmin` کاربر را حمل می‌کند. رمزها به‌صورت hash با bcrypt ذخیره می‌شوند، و ایمیل اشتباه و رمز اشتباه یک جواب می‌گیرند."
+          ],
+          "examples": ["sign", "hash"],
+          "data": { "kind": "endpoints", "only": ["auth"] }
+        },
+        {
+          "id": "guard",
+          "h": "middleware ورود",
+          "p": [
+            "`auth` هدر `Authorization` را می‌خواند (با یا بدون `Bearer `)، token را چک می‌کند و کاربرش را روی `req.user` می‌گذارد؛ نوعی که در `types/express.d.ts` به `Request` اکسپرس اضافه شده. routeهایی که کاربر واردشده لازم دارند اسمش را می‌آورند، یا کل router با `router.use(auth)`؛ جدول endpointهای این صفحه‌ها دقیقاً از همین خوانده می‌شوند."
+          ],
+          "examples": ["guard"]
+        }
+      ],
+      "examples": {
+        "sign": {
+          "title": { "en": "What the token carries", "fa": "token چه چیزی حمل می‌کند" },
+          "lang": "typescript",
+          "file": "routes/auth.ts",
+          "from": "const signToken = (user: IUser): string => {",
+          "lines": 4
+        },
+        "hash": {
+          "title": { "en": "Stored as a hash", "fa": "به‌صورت hash ذخیره می‌شود" },
+          "lang": "typescript",
+          "file": "routes/auth.ts",
+          "from": "const salt = await bcrypt.genSalt(10);",
+          "lines": 4
+        },
+        "guard": {
+          "title": { "en": "Verify, then req.user", "fa": "چک، بعد req.user" },
+          "lang": "typescript",
+          "file": "middleware/auth.ts",
+          "from": "export default function auth(",
+          "lines": 17
+        }
+      }
+    },
+    {
+      "id": "admin",
+      "group": "security",
+      "title": { "en": "Admins: checked in the database", "fa": "adminها: چک در دیتابیس" },
+      "files": ["middleware/admin.ts", "routes/admin.ts", "seed/makeAdmin.ts"],
+      "en": [
+        {
+          "id": "db",
+          "h": "Not trusting the token's claim",
+          "p": [
+            "The token says `isAdmin`, but the `admin` middleware doesn't believe it: it reads the user from the database on every admin request. Revoking admin rights therefore takes effect at once, not when the 7-day token expires. The whole admin router sits behind `router.use(auth, admin)`."
+          ],
+          "examples": ["db", "mount"],
+          "data": { "kind": "endpoints", "only": ["admin"] }
+        },
+        {
+          "id": "grant",
+          "h": "No API can make an admin",
+          "p": [
+            "Admin rights are granted from a shell on the server, `npm run make-admin -- you@example.com` (`--revoke` takes them away), never through the API. A test checks that an organization's owner can't verify their own organization."
+          ],
+          "examples": ["grant"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "اعتماد نکردن به ادعای token",
+          "p": [
+            "token می‌گوید `isAdmin`، ولی middleware‌ی `admin` باورش نمی‌کند: در هر درخواست admin، کاربر را از دیتابیس می‌خواند. پس گرفتن حق admin همان لحظه اثر می‌کند، نه وقتی token هفت‌روزه منقضی شد. کل router‌ی admin پشت `router.use(auth, admin)` است."
+          ],
+          "examples": ["db", "mount"],
+          "data": { "kind": "endpoints", "only": ["admin"] }
+        },
+        {
+          "id": "grant",
+          "h": "هیچ API نمی‌تواند admin بسازد",
+          "p": [
+            "حق admin از shell روی سرور داده می‌شود، `npm run make-admin -- you@example.com` (`--revoke` پسش می‌گیرد)، و هیچ‌وقت از راه API. یک تست چک می‌کند که صاحب یک سازمان نتواند سازمان خودش را احراز کند."
+          ],
+          "examples": ["grant"]
+        }
+      ],
+      "examples": {
+        "db": {
+          "title": { "en": "Read from the database each time", "fa": "هر بار از دیتابیس خوانده می‌شود" },
+          "lang": "typescript",
+          "file": "middleware/admin.ts",
+          "from": "// Use after `auth`.",
+          "to": "    next();"
+        },
+        "mount": {
+          "title": { "en": "The whole router", "fa": "کل router" },
+          "lang": "typescript",
+          "file": "routes/admin.ts",
+          "from": "router.use(auth, admin);",
+          "lines": 1
+        },
+        "grant": {
+          "title": { "en": "Granted from a shell", "fa": "داده‌شده از shell" },
+          "lang": "typescript",
+          "file": "seed/makeAdmin.ts",
+          "from": "const user = await User.findOneAndUpdate({ email }, { isAdmin: !revoke }, { new: true });",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "files",
+      "group": "security",
+      "title": { "en": "Private documents", "fa": "مدارک خصوصی" },
+      "files": ["config/keys.ts", "services/verification.ts", "routes/organizations.ts", "routes/inspections.ts", "models/Organization.ts", "models/Inspection.ts"],
+      "en": [
+        {
+          "id": "where",
+          "h": "Outside the public folder",
+          "p": [
+            "Listing photos go to `uploads/`, which is served as static files. Verification documents and inspection attachments go to `private-uploads/`, which is not: a file there can only be downloaded through a route that checks who is asking."
+          ],
+          "examples": ["dir"]
+        },
+        {
+          "id": "type",
+          "h": "Identified by their bytes",
+          "p": [
+            "The browser's Content-Type and the file name are not trusted. The first bytes of the file decide: `%PDF-`, the PNG signature, or JPEG's `FF D8 FF`. Anything else is deleted and refused. Downloads are sent with `X-Content-Type-Options: nosniff`, so a browser can't be talked into reading a document as a page."
+          ],
+          "examples": ["sniff"]
+        },
+        {
+          "id": "who",
+          "h": "Who may download",
+          "p": [
+            "A verification document goes only to the organization's owner or an admin. Anyone else gets 404, not 403, so an outsider can't probe which organizations exist. The name the file is stored under is a server detail: `toJSON` removes it from every answer."
+          ],
+          "examples": ["download", "hide"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "where",
+          "h": "بیرون از پوشه‌ی عمومی",
+          "p": [
+            "عکس آگهی‌ها به `uploads/` می‌روند که به‌صورت فایل static سرو می‌شود. مدارک احراز و پیوست‌های بازرسی به `private-uploads/` می‌روند که نمی‌شود: فایلی که آن‌جاست فقط از routeی دانلود می‌شود که چک می‌کند چه کسی می‌خواهد."
+          ],
+          "examples": ["dir"]
+        },
+        {
+          "id": "type",
+          "h": "شناسایی با بایت‌ها",
+          "p": [
+            "به Content-Type مرورگر و اسم فایل اعتماد نمی‌شود. بایت‌های اول فایل تصمیم می‌گیرند: `%PDF-`، امضای PNG، یا `FF D8 FF` در JPEG. هر چیز دیگری پاک و رد می‌شود. دانلودها با `X-Content-Type-Options: nosniff` فرستاده می‌شوند، پس نمی‌شود مرورگر را راضی کرد که یک مدرک را به‌عنوان صفحه بخواند."
+          ],
+          "examples": ["sniff"]
+        },
+        {
+          "id": "who",
+          "h": "چه کسی می‌تواند دانلود کند",
+          "p": [
+            "مدرک احراز فقط به صاحب سازمان یا یک admin می‌رسد. هر کس دیگری 404 می‌گیرد، نه 403، تا آدم بیرونی نتواند بفهمد کدام سازمان‌ها وجود دارند. اسمی که فایل با آن ذخیره شده جزئیات سرور است: `toJSON` آن را از همه‌ی جواب‌ها حذف می‌کند."
+          ],
+          "examples": ["download", "hide"]
+        }
+      ],
+      "examples": {
+        "dir": {
+          "title": { "en": "A folder of its own", "fa": "یک پوشه‌ی جدا" },
+          "lang": "typescript",
+          "file": "config/keys.ts",
+          "from": "// Verification documents live outside the public /uploads static folder.",
+          "lines": 2
+        },
+        "sniff": {
+          "title": { "en": "The leading bytes decide", "fa": "بایت‌های اول تصمیم می‌گیرند" },
+          "lang": "typescript",
+          "file": "services/verification.ts",
+          "from": "// Identifies an uploaded file by its leading bytes",
+          "lines": 8
+        },
+        "download": {
+          "title": { "en": "Owner or admin, else 404", "fa": "صاحب یا admin، وگرنه 404" },
+          "lang": "typescript",
+          "file": "routes/organizations.ts",
+          "from": "const allowed = org && (org.owner.toString() === req.user!.id",
+          "to": "res.download("
+        },
+        "hide": {
+          "title": { "en": "The stored name never leaves", "fa": "اسم ذخیره‌شده هیچ‌وقت بیرون نمی‌رود" },
+          "lang": "typescript",
+          "file": "models/Organization.ts",
+          "from": "// storedName is an internal path detail; never send it to clients.",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "organizations",
+      "group": "sellers",
+      "title": { "en": "Organizations", "fa": "سازمان‌ها" },
+      "files": ["routes/organizations.ts", "models/Organization.ts", "config/medical.ts"],
+      "en": [
+        {
+          "id": "who",
+          "h": "Selling on behalf of a clinic",
+          "p": [
+            "Users buy and sell on behalf of an organization: a clinic, a hospital, a dealer or a biomedical service provider, with its province, city and, for dealers, a Health Canada MDEL number. Each user has at most one. Its public profile shows only the name, type, location, website and verification status."
+          ],
+          "data": { "kind": "endpoints", "only": ["organizations"] }
+        },
+        {
+          "id": "edit",
+          "h": "What the owner may change",
+          "p": [
+            "An edit copies only the listed fields from the request. The verification fields aren't on the list, so no request body can mark an organization verified: that status only changes through the verification flow."
+          ],
+          "examples": ["editable"]
+        },
+        {
+          "id": "reset",
+          "h": "New details, new review",
+          "p": [
+            "An admin verified a name, a type, a location and an MDEL number. If the owner changes any of those afterwards, buyers would see details nobody checked, so verification drops back to unverified with a note saying why. A new phone number or website doesn't count."
+          ],
+          "examples": ["identity", "reset"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "who",
+          "h": "فروش از طرف یک کلینیک",
+          "p": [
+            "کاربرها از طرف یک سازمان می‌خرند و می‌فروشند: کلینیک، بیمارستان، فروشنده‌ی تجهیزات یا ارائه‌دهنده‌ی خدمات biomedical، با استان، شهر و برای فروشنده‌ها شماره‌ی MDEL از Health Canada. هر کاربر حداکثر یکی دارد. پروفایل عمومی‌اش فقط اسم، نوع، محل، وب‌سایت و وضعیت احراز را نشان می‌دهد."
+          ],
+          "data": { "kind": "endpoints", "only": ["organizations"] }
+        },
+        {
+          "id": "edit",
+          "h": "صاحب چه چیزی را می‌تواند عوض کند",
+          "p": [
+            "ویرایش فقط فیلدهای فهرست‌شده را از درخواست برمی‌دارد. فیلدهای احراز در فهرست نیستند، پس هیچ بدنه‌ی درخواستی نمی‌تواند سازمان را احرازشده علامت بزند: آن وضعیت فقط از مسیر احراز عوض می‌شود."
+          ],
+          "examples": ["editable"]
+        },
+        {
+          "id": "reset",
+          "h": "مشخصات تازه، بررسی تازه",
+          "p": [
+            "admin یک اسم، یک نوع، یک محل و یک شماره‌ی MDEL را احراز کرده. اگر صاحب بعداً هر کدام را عوض کند، خریدارها مشخصاتی می‌بینند که کسی چکشان نکرده، پس احراز به «احرازنشده» برمی‌گردد با یادداشتی که دلیلش را می‌گوید. تلفن یا وب‌سایت تازه حساب نمی‌شود."
+          ],
+          "examples": ["identity", "reset"]
+        }
+      ],
+      "examples": {
+        "editable": {
+          "title": { "en": "The verification fields are left out", "fa": "فیلدهای احراز بیرون مانده‌اند" },
+          "lang": "typescript",
+          "file": "routes/organizations.ts",
+          "from": "// Fields an owner may set.",
+          "lines": 3
+        },
+        "identity": {
+          "title": { "en": "The details an admin checked", "fa": "مشخصاتی که admin چک کرده" },
+          "lang": "typescript",
+          "file": "services/verification.ts",
+          "from": "// Changing any of these after verification",
+          "lines": 3
+        },
+        "reset": {
+          "title": { "en": "Compared before and after the save", "fa": "مقایسه‌ی قبل و بعد از ذخیره" },
+          "lang": "typescript",
+          "file": "routes/organizations.ts",
+          "from": "const norm = (v: unknown) => String(v ?? '').trim();",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "verification",
+      "group": "sellers",
+      "title": { "en": "Verification by an admin", "fa": "احراز توسط admin" },
+      "files": ["services/verification.ts", "routes/organizations.ts", "routes/admin.ts", "client/src/components/Admin/VerificationQueue.js"],
+      "en": [
+        {
+          "id": "request",
+          "h": "Asking for review",
+          "p": [
+            "An organization uploads its documents (an MDEL licence, a business registration...) and asks for review. It can't ask with no document, a dealer can't ask without its MDEL number, and documents can't be removed while the review is in progress."
+          ],
+          "examples": ["request"]
+        },
+        {
+          "id": "one",
+          "h": "One place where the status changes",
+          "p": [
+            "Every change goes through `changeVerificationStatus`. It records who did it and when in the organization's history, so decisions can be audited, and keeps the listings in step: Class III listings are allowed only because the seller is verified, so they are suspended when it stops being verified and come back when it is verified again.",
+            "An admin verifies a pending request, or rejects (or revokes) with a reason the seller will see. A rejection without a reason is refused."
+          ],
+          "examples": ["change", "reject"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "request",
+          "h": "درخواست بررسی",
+          "p": [
+            "سازمان مدارکش را بالا می‌گذارد (مجوز MDEL، ثبت کسب‌وکار...) و درخواست بررسی می‌دهد. بدون مدرک نمی‌تواند درخواست بدهد، فروشنده بدون شماره‌ی MDEL نمی‌تواند، و تا بررسی در جریان است مدارک را نمی‌شود پاک کرد."
+          ],
+          "examples": ["request"]
+        },
+        {
+          "id": "one",
+          "h": "یک جا که وضعیت عوض می‌شود",
+          "p": [
+            "هر تغییری از `changeVerificationStatus` می‌گذرد. این تابع ثبت می‌کند چه کسی و کی این کار را کرده، در تاریخچه‌ی سازمان، تا تصمیم‌ها قابل بازبینی باشند، و آگهی‌ها را هم‌گام نگه می‌دارد: آگهی کلاس III فقط به این دلیل مجاز است که فروشنده احراز شده، پس وقتی احرازش از دست برود معلق می‌شود و با احراز دوباره برمی‌گردد.",
+            "admin درخواست در انتظار را احراز می‌کند، یا با دلیلی که فروشنده می‌بیند رد (یا لغو) می‌کند. رد بدون دلیل پذیرفته نمی‌شود."
+          ],
+          "examples": ["change", "reject"]
+        }
+      ],
+      "examples": {
+        "request": {
+          "title": { "en": "What a request needs", "fa": "درخواست چه لازم دارد" },
+          "lang": "typescript",
+          "file": "services/verification.ts",
+          "from": "export async function requestVerification(",
+          "lines": 11
+        },
+        "change": {
+          "title": { "en": "History, then the Class III listings", "fa": "تاریخچه، بعد آگهی‌های کلاس III" },
+          "lang": "typescript",
+          "file": "services/verification.ts",
+          "from": "export async function changeVerificationStatus(",
+          "lines": 22
+        },
+        "reject": {
+          "title": { "en": "A reason the seller can act on", "fa": "دلیلی که فروشنده بتواند به آن عمل کند" },
+          "lang": "typescript",
+          "file": "services/verification.ts",
+          "from": "export async function reject(",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "listings",
+      "group": "listings",
+      "title": { "en": "Listing equipment", "fa": "ثبت آگهی تجهیزات" },
+      "files": ["routes/products.ts", "config/medical.ts", "routes/categories.ts", "routes/reviews.ts", "client/src/components/Products/SellProduct.js"],
+      "en": [
+        {
+          "id": "fields",
+          "h": "What a medical listing carries",
+          "p": [
+            "Besides a title, price and photo: manufacturer, model, year, the Health Canada device class (I to IV), the MDL number, condition, usage hours, the last service and calibration dates, and a service history. It is listed on behalf of the seller's organization and, unless given another place, located where the organization is."
+          ],
+          "data": { "kind": "endpoints", "only": ["products", "categories", "reviews"] }
+        },
+        {
+          "id": "classes",
+          "h": "Who may list which class",
+          "p": [
+            "Class I and II are open to every seller. Class III, higher risk, only to a seller an admin has verified. Class IV (implantables, life support) isn't accepted at all yet. The rule is in `config/medical.ts` and the listing route asks it before saving."
+          ],
+          "examples": ["classes", "gate"]
+        },
+        {
+          "id": "history",
+          "h": "The service history",
+          "p": [
+            "It arrives as a JSON string inside the multipart form (the photo is in the same post). Each record needs a real date not in the future, a known type (preventive maintenance, repair, calibration, inspection) and who did it, and there can be at most 50."
+          ],
+          "examples": ["history"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "fields",
+          "h": "یک آگهی پزشکی چه چیزی دارد",
+          "p": [
+            "غیر از عنوان، قیمت و عکس: سازنده، مدل، سال، کلاس دستگاه از نظر Health Canada (I تا IV)، شماره‌ی MDL، وضعیت، ساعت کارکرد، تاریخ آخرین سرویس و کالیبراسیون، و تاریخچه‌ی سرویس. از طرف سازمان فروشنده ثبت می‌شود و اگر جای دیگری داده نشود، محلش همان محل سازمان است."
+          ],
+          "data": { "kind": "endpoints", "only": ["products", "categories", "reviews"] }
+        },
+        {
+          "id": "classes",
+          "h": "چه کسی چه کلاسی را می‌تواند ثبت کند",
+          "p": [
+            "کلاس I و II برای همه‌ی فروشنده‌ها باز است. کلاس III، با ریسک بالاتر، فقط برای فروشنده‌ای که admin احرازش کرده. کلاس IV (کاشتنی‌ها، حمایت حیاتی) فعلاً اصلاً پذیرفته نمی‌شود. قانون در `config/medical.ts` است و route ثبت آگهی قبل از ذخیره از آن می‌پرسد."
+          ],
+          "examples": ["classes", "gate"]
+        },
+        {
+          "id": "history",
+          "h": "تاریخچه‌ی سرویس",
+          "p": [
+            "به‌صورت یک رشته‌ی JSON داخل فرم multipart می‌رسد (عکس هم در همان post است). هر رکورد یک تاریخ واقعی که در آینده نباشد، یک نوع شناخته‌شده (نگهداری پیشگیرانه، تعمیر، کالیبراسیون، بازرسی) و انجام‌دهنده لازم دارد، و حداکثر ۵۰ تا."
+          ],
+          "examples": ["history"]
+        }
+      ],
+      "examples": {
+        "classes": {
+          "title": { "en": "The class rule", "fa": "قانون کلاس‌ها" },
+          "lang": "typescript",
+          "file": "config/medical.ts",
+          "from": "// Which device classes an organization may list, by verification status.",
+          "to": "VERIFIED_DEVICE_CLASSES.filter("
+        },
+        "gate": {
+          "title": { "en": "Asked before the listing is saved", "fa": "قبل از ذخیره‌ی آگهی پرسیده می‌شود" },
+          "lang": "typescript",
+          "file": "routes/products.ts",
+          "from": "if (!listableDeviceClasses(org.verificationStatus).includes(req.body.deviceClass)) {",
+          "lines": 6
+        },
+        "history": {
+          "title": { "en": "Each record checked", "fa": "هر رکورد چک می‌شود" },
+          "lang": "typescript",
+          "file": "routes/products.ts",
+          "from": "const parseServiceHistory = (raw: unknown): IServiceRecord[] => {",
+          "lines": 16
+        }
+      }
+    },
+    {
+      "id": "browse",
+      "group": "listings",
+      "title": { "en": "Browsing and filters", "fa": "مرور و فیلترها" },
+      "files": ["routes/products.ts", "client/src/components/Products/ProductList.js", "client/src/components/Products/ProductDetail.js"],
+      "en": [
+        {
+          "id": "filters",
+          "h": "Filters checked against the lists",
+          "p": [
+            "Listings can be filtered by category, device class, condition, province, and \"independently inspected\" (an inspection report still current). A class, condition or province that isn't in the known lists is simply ignored rather than passed to MongoDB."
+          ],
+          "examples": ["filter"]
+        },
+        {
+          "id": "hidden",
+          "h": "Suspended listings are gone",
+          "p": [
+            "A suspended listing (a Class III whose seller lost verification) is left out of browsing, its detail page answers 404, and checkout won't price it. Next to each listing the seller organization shows with only its public fields, verification status included."
+          ],
+          "examples": ["detail"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "filters",
+          "h": "فیلترها با فهرست‌ها چک می‌شوند",
+          "p": [
+            "آگهی‌ها را می‌شود با دسته، کلاس دستگاه، وضعیت، استان و «بازرسی مستقل‌شده» (گزارش بازرسی‌ای که هنوز معتبر است) فیلتر کرد. کلاس، وضعیت یا استانی که در فهرست‌های شناخته‌شده نیست به‌سادگی نادیده گرفته می‌شود، نه این‌که به MongoDB داده شود."
+          ],
+          "examples": ["filter"]
+        },
+        {
+          "id": "hidden",
+          "h": "آگهی معلق ناپدید است",
+          "p": [
+            "آگهی معلق (کلاس IIIی که فروشنده‌اش احراز را از دست داده) از مرور بیرون می‌ماند، صفحه‌ی جزئیاتش 404 می‌دهد، و checkout قیمتش نمی‌کند. کنار هر آگهی، سازمان فروشنده فقط با فیلدهای عمومی‌اش دیده می‌شود، از جمله وضعیت احراز."
+          ],
+          "examples": ["detail"]
+        }
+      ],
+      "examples": {
+        "filter": {
+          "title": { "en": "Only known values reach the query", "fa": "فقط مقدارهای شناخته‌شده به query می‌رسند" },
+          "lang": "typescript",
+          "file": "routes/products.ts",
+          "from": "const filter: Record<string, unknown> = { suspended: { $ne: true } };",
+          "lines": 13
+        },
+        "detail": {
+          "title": { "en": "A suspended listing is a 404", "fa": "آگهی معلق یعنی 404" },
+          "lang": "typescript",
+          "file": "routes/products.ts",
+          "from": "const product = await Product.findById(req.params.id)",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "checkout",
+      "group": "money",
+      "title": { "en": "Checkout: priced on the server", "fa": "checkout: قیمت‌گذاری روی سرور" },
+      "files": ["services/checkout.ts", "routes/payment.ts", "services/stripe.ts"],
+      "en": [
+        {
+          "id": "price",
+          "h": "The client says what, never how much",
+          "p": [
+            "The cart sends product ids and quantities only. Every price comes from the database, or for a line bought through an offer, from that buyer's accepted offer. Repeated lines for the same product are merged, and a quantity above stock is refused with 409."
+          ],
+          "examples": ["server"],
+          "data": { "kind": "endpoints", "only": ["payment"] }
+        },
+        {
+          "id": "sellers",
+          "h": "One part per seller",
+          "p": [
+            "A cart can hold several sellers' equipment. The order keeps one part (a \"fulfillment\") per seller with its subtotal and the platform fee taken from it, `PLATFORM_FEE_BPS` basis points (800, or 8%, by default). Amounts are kept in cents so rounding never drifts. CAD only, and no shipping charge: freight is arranged between buyer and seller."
+          ],
+          "examples": ["split", "fee"]
+        },
+        {
+          "id": "intent",
+          "h": "A pending order and its PaymentIntent",
+          "p": [
+            "The order is created as `pending` first, then a Stripe PaymentIntent for exactly its total, carrying the order id and a transfer group for the seller payouts later. The browser gets the client secret and pays with Stripe Elements; the server never sees the card."
+          ],
+          "examples": ["intent"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "price",
+          "h": "client می‌گوید چه چیزی، نه چقدر",
+          "p": [
+            "سبد فقط id محصول و تعداد می‌فرستد. هر قیمتی از دیتابیس می‌آید، یا برای خطی که با پیشنهاد قیمت خریده می‌شود، از پیشنهاد پذیرفته‌شده‌ی همان خریدار. خط‌های تکراری یک محصول یکی می‌شوند، و تعداد بیشتر از موجودی با 409 رد می‌شود."
+          ],
+          "examples": ["server"],
+          "data": { "kind": "endpoints", "only": ["payment"] }
+        },
+        {
+          "id": "sellers",
+          "h": "یک بخش برای هر فروشنده",
+          "p": [
+            "یک سبد می‌تواند تجهیزات چند فروشنده را داشته باشد. سفارش برای هر فروشنده یک بخش («fulfillment») نگه می‌دارد با جمعش و کارمزد پلتفرم که از آن کم می‌شود، به اندازه‌ی `PLATFORM_FEE_BPS` واحد پایه (پیش‌فرض ۸۰۰، یعنی ۸٪). مبلغ‌ها به سنت نگه داشته می‌شوند تا گرد کردن هیچ‌وقت منحرف نشود. فقط دلار کانادا، و بدون هزینه‌ی ارسال: حمل بین خریدار و فروشنده هماهنگ می‌شود."
+          ],
+          "examples": ["split", "fee"]
+        },
+        {
+          "id": "intent",
+          "h": "یک سفارش pending و PaymentIntent آن",
+          "p": [
+            "اول سفارش به‌صورت `pending` ساخته می‌شود، بعد یک PaymentIntent استرایپ دقیقاً به اندازه‌ی جمعش، که id سفارش و یک transfer group برای تسویه با فروشنده‌ها در آینده را حمل می‌کند. مرورگر client secret را می‌گیرد و با Stripe Elements پرداخت می‌کند؛ سرور هیچ‌وقت کارت را نمی‌بیند."
+          ],
+          "examples": ["intent"]
+        }
+      ],
+      "examples": {
+        "server": {
+          "title": { "en": "Prices from the database", "fa": "قیمت از دیتابیس" },
+          "lang": "typescript",
+          "file": "services/checkout.ts",
+          "from": "// Prices a cart from the database.",
+          "lines": 4
+        },
+        "split": {
+          "title": { "en": "Grouped by seller", "fa": "گروه‌بندی بر اساس فروشنده" },
+          "lang": "typescript",
+          "file": "services/checkout.ts",
+          "from": "const bySeller = new Map<string, PricedFulfillment>();",
+          "to": "const fulfillments = [...bySeller.values()]"
+        },
+        "fee": {
+          "title": { "en": "The fee in basis points", "fa": "کارمزد به واحد پایه" },
+          "lang": "typescript",
+          "file": "services/checkout.ts",
+          "from": "export const platformFeeFor = (subtotalCents: number): number =>",
+          "lines": 2
+        },
+        "intent": {
+          "title": { "en": "Order first, then the PaymentIntent", "fa": "اول سفارش، بعد PaymentIntent" },
+          "lang": "typescript",
+          "file": "routes/payment.ts",
+          "from": "const cart = await priceCart(req.body.items, req.user!.id);",
+          "lines": 11
+        }
+      }
+    },
+    {
+      "id": "paid",
+      "group": "money",
+      "title": { "en": "When is an order paid?", "fa": "سفارش کی پرداخت‌شده است؟" },
+      "files": ["services/checkout.ts", "routes/orders.ts", "routes/webhook.ts", "app.ts"],
+      "en": [
+        {
+          "id": "two",
+          "h": "Two ways in, one result",
+          "p": [
+            "An order becomes `paid` only after the server itself confirms the PaymentIntent with Stripe, never on the browser's word. Two paths lead there: the browser asks `POST /api/orders/:id/confirm` after paying, and Stripe's signed webhook says `payment_intent.succeeded`. Usually both arrive, at about the same time."
+          ],
+          "data": { "kind": "endpoints", "only": ["orders"] }
+        },
+        {
+          "id": "lock",
+          "h": "Only one of them touches stock",
+          "p": [
+            "`finalizeOrder` checks that the payment belongs to this order and that its amount and currency match the total. Then it moves the order from `pending` to `processing` in one conditional update: whichever caller wins goes on, and the other simply returns the order as it is. Calling it twice changes nothing."
+          ],
+          "examples": ["lock"]
+        },
+        {
+          "id": "stock",
+          "h": "Sold out while paying",
+          "p": [
+            "Stock is decremented item by item, each only if enough is left. If one item ran out in the meantime, the items already decremented are put back, the offers released, and the payment refunded. The checkout page then says so instead of thanking the buyer."
+          ],
+          "examples": ["stock"]
+        },
+        {
+          "id": "webhook",
+          "h": "The webhook",
+          "p": [
+            "Stripe signs the raw request body, so the webhook router is mounted before `express.json()` would parse it. Payments and sellers' account events come from two endpoints with two secrets; an event is accepted if it verifies against either. The endpoint tables show it as open to anyone, and that is true: what protects it is the signature."
+          ],
+          "examples": ["mount", "verify"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "two",
+          "h": "دو راه ورود، یک نتیجه",
+          "p": [
+            "سفارش فقط وقتی `paid` می‌شود که خود سرور PaymentIntent را با Stripe تأیید کند، هیچ‌وقت به حرف مرورگر. دو راه به آن‌جا می‌رسد: مرورگر بعد از پرداخت `POST /api/orders/:id/confirm` را صدا می‌زند، و webhook امضاشده‌ی Stripe می‌گوید `payment_intent.succeeded`. معمولاً هر دو می‌رسند، تقریباً هم‌زمان."
+          ],
+          "data": { "kind": "endpoints", "only": ["orders"] }
+        },
+        {
+          "id": "lock",
+          "h": "فقط یکی‌شان به موجودی دست می‌زند",
+          "p": [
+            "`finalizeOrder` چک می‌کند که پرداخت مال همین سفارش باشد و مبلغ و ارزش با جمع سفارش بخواند. بعد سفارش را در یک update شرطی از `pending` به `processing` می‌برد: هر صدازننده‌ای که برنده شود ادامه می‌دهد، و دیگری فقط سفارش را همان‌طور که هست برمی‌گرداند. دو بار صدا زدنش چیزی را عوض نمی‌کند."
+          ],
+          "examples": ["lock"]
+        },
+        {
+          "id": "stock",
+          "h": "تمام شدن موجودی وسط پرداخت",
+          "p": [
+            "موجودی قلم به قلم کم می‌شود، هر کدام فقط اگر به اندازه‌ی کافی مانده باشد. اگر یک قلم در این فاصله تمام شده باشد، قلم‌هایی که کم شده بودند برمی‌گردند، پیشنهادها آزاد می‌شوند، و پرداخت refund می‌شود. صفحه‌ی checkout هم همین را می‌گوید، نه این‌که از خریدار تشکر کند."
+          ],
+          "examples": ["stock"]
+        },
+        {
+          "id": "webhook",
+          "h": "webhook",
+          "p": [
+            "Stripe بدنه‌ی خام درخواست را امضا می‌کند، پس router‌ی webhook قبل از این‌که `express.json()` آن را parse کند mount می‌شود. رویدادهای پرداخت و رویدادهای حساب فروشنده‌ها از دو endpoint با دو secret می‌آیند؛ رویدادی پذیرفته می‌شود که با یکی از آن دو بخواند. جدول endpointها آن را برای همه باز نشان می‌دهد، و درست است: چیزی که از آن محافظت می‌کند امضاست."
+          ],
+          "examples": ["mount", "verify"]
+        }
+      ],
+      "examples": {
+        "lock": {
+          "title": { "en": "pending → processing, once", "fa": "pending → processing، یک بار" },
+          "lang": "typescript",
+          "file": "services/checkout.ts",
+          "from": "if (order.status !== 'pending') return order;",
+          "to": "if (!locked) return (await Order.findById(orderId))!;"
+        },
+        "stock": {
+          "title": { "en": "Decrement only if enough is left", "fa": "کم کردن فقط اگر به اندازه‌ی کافی مانده" },
+          "lang": "typescript",
+          "file": "services/checkout.ts",
+          "from": "const decremented: IOrderItem[] = [];",
+          "lines": 15
+        },
+        "mount": {
+          "title": { "en": "Before the JSON parser", "fa": "قبل از parser‌ی JSON" },
+          "lang": "typescript",
+          "file": "app.ts",
+          "from": "// Stripe signs the raw request body",
+          "lines": 3
+        },
+        "verify": {
+          "title": { "en": "Either secret", "fa": "هر کدام از دو secret" },
+          "lang": "typescript",
+          "file": "routes/webhook.ts",
+          "from": "const verify = (body: Buffer, signature: string): Stripe.Event => {",
+          "lines": 12
+        }
+      }
+    },
+    {
+      "id": "escrow",
+      "group": "money",
+      "title": { "en": "Escrow: held until delivery", "fa": "امانت: نگه‌داری تا تحویل" },
+      "files": ["services/fulfillment.ts", "services/stripeOps.ts", "routes/sales.ts", "routes/orders.ts", "models/Order.ts"],
+      "en": [
+        {
+          "id": "flow",
+          "h": "Each seller's part has its own life",
+          "p": [
+            "The buyer pays the platform. Each seller's part then moves on its own: awaiting shipment → shipped (the seller enters carrier and tracking) → delivered (the buyer confirms). The seller's money stays with the platform the whole time and is transferred only when the buyer confirms delivery.",
+            "Sellers see their own part of each order with the buyer's contact, to arrange freight. Buyers see each part's shipping status, but never the seller's payout or the platform fee."
+          ],
+          "examples": ["buyer"],
+          "data": { "kind": "endpoints", "only": ["sales"] }
+        },
+        {
+          "id": "transition",
+          "h": "Every step is one conditional update",
+          "p": [
+            "A step changes one part only if the order is paid and the part is in the expected state and belongs to the caller, all in one `findOneAndUpdate`. Double clicks and webhook retries can't ship, refund or pay the same part twice. When nothing matches, a second read tells \"not yours\" (404) from \"wrong state\" (409)."
+          ],
+          "examples": ["transition", "confirm"]
+        },
+        {
+          "id": "payout",
+          "h": "The transfer",
+          "p": [
+            "The payout is locked as `processing` first, then sent to the seller's Stripe account with an idempotency key made from the part's id, so even a retried call can't pay twice. If the seller hasn't finished setting up payouts it waits as `pending`; a transfer Stripe refuses is marked `failed` and retried later."
+          ],
+          "examples": ["payout"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "flow",
+          "h": "بخش هر فروشنده زندگی خودش را دارد",
+          "p": [
+            "خریدار به پلتفرم پرداخت می‌کند. بعد بخش هر فروشنده جداگانه پیش می‌رود: در انتظار ارسال → ارسال‌شده (فروشنده شرکت حمل و شماره‌ی رهگیری را وارد می‌کند) → تحویل‌شده (خریدار تأیید می‌کند). پول فروشنده تمام این مدت پیش پلتفرم می‌ماند و فقط وقتی خریدار تحویل را تأیید کند منتقل می‌شود.",
+            "فروشنده‌ها بخش خودشان از هر سفارش را با اطلاعات تماس خریدار می‌بینند، برای هماهنگی حمل. خریدارها وضعیت ارسال هر بخش را می‌بینند، ولی هیچ‌وقت سهم فروشنده یا کارمزد پلتفرم را."
+          ],
+          "examples": ["buyer"],
+          "data": { "kind": "endpoints", "only": ["sales"] }
+        },
+        {
+          "id": "transition",
+          "h": "هر قدم یک update شرطی است",
+          "p": [
+            "یک قدم یک بخش را فقط وقتی عوض می‌کند که سفارش پرداخت‌شده باشد و بخش در وضعیت مورد انتظار و مال صدازننده باشد، همه در یک `findOneAndUpdate`. دابل‌کلیک و تکرار webhook نمی‌توانند یک بخش را دو بار ارسال، refund یا تسویه کنند. وقتی چیزی نمی‌خواند، یک خواندن دوم «مال تو نیست» (404) را از «وضعیت اشتباه» (409) جدا می‌کند."
+          ],
+          "examples": ["transition", "confirm"]
+        },
+        {
+          "id": "payout",
+          "h": "انتقال",
+          "p": [
+            "تسویه اول به‌صورت `processing` قفل می‌شود، بعد با یک idempotency key ساخته‌شده از id بخش به حساب Stripe فروشنده فرستاده می‌شود، پس حتی یک call تکراری هم نمی‌تواند دو بار پرداخت کند. اگر فروشنده هنوز تنظیم تسویه را تمام نکرده، به‌صورت `pending` منتظر می‌ماند؛ انتقالی که Stripe رد کند `failed` علامت می‌خورد و بعداً دوباره امتحان می‌شود."
+          ],
+          "examples": ["payout"]
+        }
+      ],
+      "examples": {
+        "buyer": {
+          "title": { "en": "What the buyer doesn't see", "fa": "چیزی که خریدار نمی‌بیند" },
+          "lang": "typescript",
+          "file": "routes/orders.ts",
+          "from": "// The buyer's view of an order",
+          "lines": 7
+        },
+        "transition": {
+          "title": { "en": "State and owner in one query", "fa": "وضعیت و صاحب در یک query" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "const updated = await Order.findOneAndUpdate(",
+          "lines": 10
+        },
+        "confirm": {
+          "title": { "en": "Delivery confirmed, payout due", "fa": "تحویل تأیید شد، تسویه سررسید شد" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "export async function confirmDelivery(",
+          "lines": 9
+        },
+        "payout": {
+          "title": { "en": "Wait, or transfer once", "fa": "صبر، یا یک بار انتقال" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "const org = await Organization.findById(f.organization);",
+          "lines": 17
+        }
+      }
+    },
+    {
+      "id": "disputes",
+      "group": "money",
+      "title": { "en": "Cancellations and disputes", "fa": "لغو و اختلاف" },
+      "files": ["services/fulfillment.ts", "routes/orders.ts", "routes/sales.ts", "routes/admin.ts", "client/src/components/Admin/DisputeQueue.js"],
+      "en": [
+        {
+          "id": "cancel",
+          "h": "The seller can't ship",
+          "p": [
+            "Before shipping, a seller can cancel its part with a reason: that part alone is refunded and its stock put back. If Stripe refuses the refund, the part goes back to its previous state so the action can be tried again; nothing is left half-done."
+          ],
+          "examples": ["cancel"]
+        },
+        {
+          "id": "dispute",
+          "h": "The buyer reports a problem",
+          "p": [
+            "Before or after shipping, the buyer can report a problem with a description. The part becomes `disputed`, which freezes its money: nobody can ship it or confirm it until an admin decides."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "resolve",
+          "h": "The admin decides",
+          "p": [
+            "Ruling for the buyer refunds that part (without restocking: whether the equipment came back usable is for the seller to decide by listing it again). Ruling for the seller on something already shipped pays it out. Ruling for the seller on something never shipped (\"the seller isn't answering\" turned out wrong) doesn't pay anyone: the order simply continues and the seller can ship."
+          ],
+          "examples": ["unshipped"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "cancel",
+          "h": "فروشنده نمی‌تواند ارسال کند",
+          "p": [
+            "قبل از ارسال، فروشنده می‌تواند بخش خودش را با دلیل لغو کند: فقط همان بخش refund می‌شود و موجودی‌اش برمی‌گردد. اگر Stripe refund را رد کند، بخش به وضعیت قبلی‌اش برمی‌گردد تا کار دوباره امتحان شود؛ هیچ چیز نیمه‌کاره نمی‌ماند."
+          ],
+          "examples": ["cancel"]
+        },
+        {
+          "id": "dispute",
+          "h": "خریدار مشکلی گزارش می‌کند",
+          "p": [
+            "قبل یا بعد از ارسال، خریدار می‌تواند مشکلی را با توضیح گزارش کند. بخش `disputed` می‌شود، که پولش را منجمد می‌کند: تا admin تصمیم نگرفته کسی نمی‌تواند ارسالش کند یا تأییدش کند."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "resolve",
+          "h": "admin تصمیم می‌گیرد",
+          "p": [
+            "حکم به نفع خریدار آن بخش را refund می‌کند (بدون برگرداندن موجودی: این‌که دستگاه سالم برگشته یا نه را فروشنده با آگهی دوباره تصمیم می‌گیرد). حکم به نفع فروشنده برای چیزی که ارسال شده، پولش را می‌دهد. حکم به نفع فروشنده برای چیزی که هرگز ارسال نشده («فروشنده جواب نمی‌دهد» اشتباه از آب درآمده) به کسی پول نمی‌دهد: سفارش فقط ادامه پیدا می‌کند و فروشنده می‌تواند ارسال کند."
+          ],
+          "examples": ["unshipped"]
+        }
+      ],
+      "examples": {
+        "cancel": {
+          "title": { "en": "A partial refund and restock", "fa": "refund جزئی و برگرداندن موجودی" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "// Seller can't or won't ship",
+          "lines": 11
+        },
+        "open": {
+          "title": { "en": "Before or after shipping", "fa": "قبل یا بعد از ارسال" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "export async function openDispute(",
+          "lines": 9
+        },
+        "unshipped": {
+          "title": { "en": "Never paid for equipment never shipped", "fa": "هیچ‌وقت پول برای دستگاهی که ارسال نشده" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "// Ruling for the seller on something never shipped",
+          "lines": 11
+        }
+      }
+    },
+    {
+      "id": "connect",
+      "group": "money",
+      "title": { "en": "Seller payouts with Stripe Connect", "fa": "تسویه با فروشنده‌ها با Stripe Connect" },
+      "files": ["routes/payouts.ts", "services/stripeOps.ts", "services/fulfillment.ts", "routes/webhook.ts"],
+      "en": [
+        {
+          "id": "onboard",
+          "h": "Stripe's own onboarding",
+          "p": [
+            "Each organization gets one Stripe Express account, created the first time it asks, and is sent to Stripe's hosted onboarding. ReBiomed never sees a seller's bank details; the seller reaches its payout history through a one-time link to its Stripe dashboard."
+          ],
+          "examples": ["express"],
+          "data": { "kind": "endpoints", "only": ["payouts"] }
+        },
+        {
+          "id": "ready",
+          "h": "When a seller can be paid",
+          "p": [
+            "Payouts from the account to its bank aren't enough: the platform can only transfer to it once its `transfers` capability is active. Both have to be true before `payoutsEnabled` is."
+          ],
+          "examples": ["state"]
+        },
+        {
+          "id": "release",
+          "h": "Payouts that waited",
+          "p": [
+            "A buyer may confirm delivery before the seller has finished onboarding. Its payout waits, and is released as soon as the account is ready: from the `account.updated` webhook, or when the seller comes back from Stripe and the page asks for a refresh."
+          ],
+          "examples": ["sync", "event"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "onboard",
+          "h": "onboarding خود Stripe",
+          "p": [
+            "هر سازمان یک حساب Stripe Express می‌گیرد که اولین باری که درخواست کند ساخته می‌شود، و به صفحه‌ی onboarding خود Stripe فرستاده می‌شود. ReBiomed هیچ‌وقت اطلاعات بانکی فروشنده را نمی‌بیند؛ فروشنده تاریخچه‌ی تسویه‌اش را از یک لینک یک‌بار مصرف به داشبورد Stripe خودش می‌بیند."
+          ],
+          "examples": ["express"],
+          "data": { "kind": "endpoints", "only": ["payouts"] }
+        },
+        {
+          "id": "ready",
+          "h": "کی می‌شود به فروشنده پول داد",
+          "p": [
+            "این‌که حساب بتواند به بانکش پرداخت کند کافی نیست: پلتفرم فقط وقتی می‌تواند به آن انتقال بدهد که قابلیت `transfers` آن فعال باشد. هر دو باید درست باشند تا `payoutsEnabled` درست شود."
+          ],
+          "examples": ["state"]
+        },
+        {
+          "id": "release",
+          "h": "تسویه‌هایی که منتظر ماندند",
+          "p": [
+            "ممکن است خریدار قبل از تمام شدن onboarding فروشنده تحویل را تأیید کند. تسویه‌اش منتظر می‌ماند، و به محض آماده شدن حساب آزاد می‌شود: از webhook‌ی `account.updated`، یا وقتی فروشنده از Stripe برمی‌گردد و صفحه refresh درخواست می‌کند."
+          ],
+          "examples": ["sync", "event"]
+        }
+      ],
+      "examples": {
+        "express": {
+          "title": { "en": "An Express account in Canada", "fa": "یک حساب Express در کانادا" },
+          "lang": "typescript",
+          "file": "services/stripeOps.ts",
+          "from": "async createExpressAccount(email: string, organizationId: string) {",
+          "lines": 11
+        },
+        "state": {
+          "title": { "en": "Transfers must be active too", "fa": "transfers هم باید فعال باشد" },
+          "lang": "typescript",
+          "file": "services/stripeOps.ts",
+          "from": "export const toAccountState = (a: {",
+          "lines": 12
+        },
+        "sync": {
+          "title": { "en": "Ready, so release what waited", "fa": "آماده شد، پس منتظرها آزاد شوند" },
+          "lang": "typescript",
+          "file": "services/fulfillment.ts",
+          "from": "// Stores the latest account state",
+          "lines": 8
+        },
+        "event": {
+          "title": { "en": "From Stripe's account event", "fa": "از رویداد حساب Stripe" },
+          "lang": "typescript",
+          "file": "routes/webhook.ts",
+          "from": "} else if (event.type === 'account.updated') {",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "offers",
+      "group": "trust",
+      "title": { "en": "Offers and counter-offers", "fa": "پیشنهاد و پیشنهاد متقابل" },
+      "files": ["services/offers.ts", "routes/offers.ts", "config/medical.ts", "models/Offer.ts", "client/src/components/Offers/OffersPage.js"],
+      "en": [
+        {
+          "id": "rules",
+          "h": "The rules of a negotiation",
+          "p": [
+            "A buyer offers less than the listed price (at the price, just buy it). The seller accepts, declines, or counters once, between the offer and the price, and the buyer can accept the counter. An unanswered offer lapses after 7 days; an agreed price can be checked out for 72 hours, by that buyer only, for one unit, so it can't be sat on while the equipment sells to someone else."
+          ],
+          "examples": ["deadlines"],
+          "data": { "kind": "endpoints", "only": ["offers"] }
+        },
+        {
+          "id": "one",
+          "h": "One open offer, even in a race",
+          "p": [
+            "While an offer is open it carries `openKey` = \"buyer:listing\", and a unique sparse index on that field allows only one. Two requests racing both try to insert; MongoDB lets one through, and the other's duplicate-key error becomes a 409. Closing an offer removes its key, so the buyer can offer again."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "lazy",
+          "h": "Expired without a background job",
+          "p": [
+            "Nothing runs on a timer: whenever offers are read or changed, the ones past their deadline are closed first."
+          ],
+          "examples": ["lazy"]
+        },
+        {
+          "id": "claim",
+          "h": "Used once, at payment",
+          "p": [
+            "At checkout the price comes from the offer on the server, never from the cart. When the order is paid the offer is marked used by it, in one conditional update; a second order paying with the same offer at the same moment finds it already used and is refunded. An offer valid when the order was created is honoured even if its window closed during payment."
+          ],
+          "examples": ["claim"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "rules",
+          "h": "قانون‌های یک چانه‌زنی",
+          "p": [
+            "خریدار کمتر از قیمت آگهی پیشنهاد می‌دهد (با همان قیمت، خب بخرد). فروشنده می‌پذیرد، رد می‌کند، یا یک بار پیشنهاد متقابل می‌دهد، بین پیشنهاد و قیمت، و خریدار می‌تواند آن را بپذیرد. پیشنهاد بی‌جواب بعد از ۷ روز منقضی می‌شود؛ قیمت توافق‌شده ۷۲ ساعت برای checkout می‌ماند، فقط برای همان خریدار، برای یک عدد، تا نشود رویش نشست در حالی که دستگاه به کس دیگری فروخته می‌شود."
+          ],
+          "examples": ["deadlines"],
+          "data": { "kind": "endpoints", "only": ["offers"] }
+        },
+        {
+          "id": "one",
+          "h": "یک پیشنهاد باز، حتی در race",
+          "p": [
+            "تا پیشنهاد باز است، `openKey` = «خریدار:آگهی» را دارد، و یک unique sparse index روی این فیلد فقط یکی را اجازه می‌دهد. دو درخواست هم‌زمان هر دو سعی می‌کنند insert کنند؛ MongoDB یکی را راه می‌دهد، و خطای کلید تکراری دیگری 409 می‌شود. بسته شدن پیشنهاد کلیدش را برمی‌دارد، پس خریدار دوباره می‌تواند پیشنهاد بدهد."
+          ],
+          "examples": ["open"]
+        },
+        {
+          "id": "lazy",
+          "h": "انقضا بدون job پس‌زمینه",
+          "p": [
+            "هیچ چیز با تایمر اجرا نمی‌شود: هر وقت پیشنهادها خوانده یا عوض می‌شوند، اول آن‌هایی که از مهلتشان گذشته بسته می‌شوند."
+          ],
+          "examples": ["lazy"]
+        },
+        {
+          "id": "claim",
+          "h": "یک بار مصرف، موقع پرداخت",
+          "p": [
+            "در checkout قیمت روی سرور از پیشنهاد می‌آید، هیچ‌وقت از سبد. وقتی سفارش پرداخت شد، پیشنهاد با یک update شرطی «مصرف‌شده توسط آن سفارش» علامت می‌خورد؛ سفارش دومی که هم‌زمان با همان پیشنهاد پرداخت کند آن را مصرف‌شده می‌بیند و refund می‌شود. پیشنهادی که موقع ساخت سفارش معتبر بوده پذیرفته می‌شود حتی اگر مهلتش وسط پرداخت تمام شده باشد."
+          ],
+          "examples": ["claim"]
+        }
+      ],
+      "examples": {
+        "deadlines": {
+          "title": { "en": "The two deadlines", "fa": "دو مهلت" },
+          "lang": "typescript",
+          "file": "config/medical.ts",
+          "from": "export const OFFER_RESPONSE_DAYS = 7;",
+          "lines": 2
+        },
+        "open": {
+          "title": { "en": "The duplicate key is the answer", "fa": "کلید تکراری خودش جواب است" },
+          "lang": "typescript",
+          "file": "services/offers.ts",
+          "from": "const amountCents = parseAmount(amount);",
+          "lines": 23
+        },
+        "lazy": {
+          "title": { "en": "Closed on the next read", "fa": "بسته شدن در خواندن بعدی" },
+          "lang": "typescript",
+          "file": "services/offers.ts",
+          "from": "// Offers past their deadline are closed lazily",
+          "lines": 13
+        },
+        "claim": {
+          "title": { "en": "Marked used by the paid order", "fa": "علامت مصرف توسط سفارش پرداخت‌شده" },
+          "lang": "typescript",
+          "file": "services/offers.ts",
+          "from": "export async function claimOffers(",
+          "lines": 21
+        }
+      }
+    },
+    {
+      "id": "inspections",
+      "group": "trust",
+      "title": { "en": "Independent inspections", "fa": "بازرسی مستقل" },
+      "files": ["services/inspections.ts", "routes/inspections.ts", "config/medical.ts", "models/Inspection.ts", "client/src/components/Inspections/InspectionReport.js"],
+      "en": [
+        {
+          "id": "who",
+          "h": "Who may inspect",
+          "p": [
+            "A seller asks a verified biomedical service provider to inspect a listing, and never itself. The inspector accepts, visits, and files the report. An inspector that loses its verification can no longer accept or file. One open request per listing is enforced by a unique sparse index, as with offers."
+          ],
+          "examples": ["eligible"],
+          "data": { "kind": "endpoints", "only": ["inspections"] }
+        },
+        {
+          "id": "report",
+          "h": "A structured report",
+          "p": [
+            "The technician and their credential, the serial number read off the device on site, six checks (visual and physical, electrical safety per IEC 62353 / CSA C22.2 No. 60601-1, functional performance, calibration, alarms, accessories and documentation), an overall outcome, a summary, and optionally a signed PDF. Every check must be there, and a failed one needs a note."
+          ],
+          "examples": ["checks"]
+        },
+        {
+          "id": "consistent",
+          "h": "The outcome has to match the checks",
+          "p": [
+            "A device with a failed check can't pass outright; it is \"pass with findings\" or \"fail\". A device that fails electrical safety fails, full stop."
+          ],
+          "examples": ["outcome"]
+        },
+        {
+          "id": "dates",
+          "h": "Dates in Canada",
+          "p": [
+            "An inspection date can't be in the future or before the request. But a date-only value is UTC midnight, and an evening request in Vancouver is already the next day in UTC, so calendar days are compared, with one day of slack. There is a test for exactly that evening."
+          ],
+          "examples": ["date"]
+        },
+        {
+          "id": "publish",
+          "h": "Published whatever the result",
+          "p": [
+            "The report is public on the listing as soon as it is filed, pass or fail, and the seller can neither edit nor hide it: that is what makes it worth trusting. The listing keeps a copy of the latest outcome, valid for 12 months, which powers the \"Independently inspected\" badge and filter. An older report filed late doesn't replace a newer one."
+          ],
+          "examples": ["publish"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "who",
+          "h": "چه کسی می‌تواند بازرسی کند",
+          "p": [
+            "فروشنده از یک ارائه‌دهنده‌ی خدمات biomedical احرازشده می‌خواهد آگهی‌اش را بازرسی کند، و هیچ‌وقت از خودش. بازرس می‌پذیرد، سر می‌زند، و گزارش را ثبت می‌کند. بازرسی که احرازش را از دست بدهد دیگر نمی‌تواند بپذیرد یا ثبت کند. یک درخواست باز برای هر آگهی، مثل پیشنهادها، با یک unique sparse index تضمین می‌شود."
+          ],
+          "examples": ["eligible"],
+          "data": { "kind": "endpoints", "only": ["inspections"] }
+        },
+        {
+          "id": "report",
+          "h": "یک گزارش ساختاریافته",
+          "p": [
+            "تکنسین و مدرکش، شماره‌سریالی که سر محل از روی دستگاه خوانده شده، شش بررسی (ظاهری و فیزیکی، ایمنی الکتریکی طبق IEC 62353 / CSA C22.2 No. 60601-1، عملکرد، کالیبراسیون، هشدارها، لوازم جانبی و مستندات)، یک نتیجه‌ی کلی، یک خلاصه، و در صورت تمایل یک PDF امضاشده. همه‌ی بررسی‌ها باید باشند، و بررسی رد‌شده یادداشت لازم دارد."
+          ],
+          "examples": ["checks"]
+        },
+        {
+          "id": "consistent",
+          "h": "نتیجه باید با بررسی‌ها بخواند",
+          "p": [
+            "دستگاهی که یک بررسی‌اش رد شده نمی‌تواند بی‌قیدوشرط قبول شود؛ «قبول با ملاحظات» است یا «رد». دستگاهی که در ایمنی الکتریکی رد شود، رد است، والسلام."
+          ],
+          "examples": ["outcome"]
+        },
+        {
+          "id": "dates",
+          "h": "تاریخ‌ها در کانادا",
+          "p": [
+            "تاریخ بازرسی نمی‌تواند در آینده یا قبل از درخواست باشد. ولی مقدار فقط-تاریخ نیمه‌شب UTC است، و درخواستی که عصر در ونکوور داده شود در UTC روز بعد است، پس روزهای تقویمی مقایسه می‌شوند، با یک روز حاشیه. برای دقیقاً همان عصر یک تست هست."
+          ],
+          "examples": ["date"]
+        },
+        {
+          "id": "publish",
+          "h": "منتشر می‌شود، نتیجه هر چه باشد",
+          "p": [
+            "گزارش به محض ثبت روی آگهی عمومی است، قبول یا رد، و فروشنده نه می‌تواند ویرایشش کند نه پنهانش: همین است که آن را قابل اعتماد می‌کند. آگهی یک کپی از آخرین نتیجه نگه می‌دارد، معتبر برای ۱۲ ماه، که نشان و فیلتر «بازرسی مستقل‌شده» را می‌سازد. گزارش قدیمی‌تری که دیر ثبت شود جای گزارش تازه‌تر را نمی‌گیرد."
+          ],
+          "examples": ["publish"]
+        }
+      ],
+      "examples": {
+        "eligible": {
+          "title": { "en": "Verified service providers only", "fa": "فقط ارائه‌دهنده‌ی خدمات احرازشده" },
+          "lang": "typescript",
+          "file": "services/inspections.ts",
+          "from": "// Only verified biomedical service providers may inspect.",
+          "lines": 3
+        },
+        "checks": {
+          "title": { "en": "The six checks", "fa": "شش بررسی" },
+          "lang": "typescript",
+          "file": "config/medical.ts",
+          "from": "export const INSPECTION_CHECKS = [",
+          "to": "] as const;"
+        },
+        "outcome": {
+          "title": { "en": "Outcome against the checks", "fa": "نتیجه در برابر بررسی‌ها" },
+          "lang": "typescript",
+          "file": "services/inspections.ts",
+          "from": "const failed = checks.filter(c => c.result === 'fail');",
+          "lines": 7
+        },
+        "date": {
+          "title": { "en": "Calendar days, one day of slack", "fa": "روز تقویمی، یک روز حاشیه" },
+          "lang": "typescript",
+          "file": "services/inspections.ts",
+          "from": "// A date-only value is UTC midnight",
+          "lines": 9
+        },
+        "publish": {
+          "title": { "en": "Onto the listing, unless a newer one is there", "fa": "روی آگهی، مگر تازه‌تری آن‌جا باشد" },
+          "lang": "typescript",
+          "file": "services/inspections.ts",
+          "from": "// Publish on the listing unless a more recent inspection is already shown.",
+          "lines": 19
+        }
+      }
+    },
+    {
+      "id": "pages",
+      "group": "frontend",
+      "title": { "en": "Pages, Redux and the token", "fa": "صفحه‌ها، Redux و token" },
+      "files": ["client/src/App.js", "client/src/components/Routing/PrivateRoute.js", "client/src/utils/setAuthToken.js", "client/src/store.js", "client/src/components/Layout/Navbar.js"],
+      "en": [
+        {
+          "id": "routes",
+          "h": "The pages",
+          "p": [
+            "A Create React App client with React Router, Redux (with thunk) and Bootstrap. Browsing, a listing's page and the cart are open; everything that acts for you sits behind `PrivateRoute`, which sends a visitor who isn't signed in to the login page."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "token",
+          "h": "The token after a reload",
+          "p": [
+            "The JWT is kept in localStorage. On load, an expired token logs the user out; a valid one is put on every axios request's `Authorization` header and its user into Redux."
+          ],
+          "examples": ["rehydrate", "header"]
+        },
+        {
+          "id": "admin",
+          "h": "The admin pages are only a convenience",
+          "p": [
+            "`PrivateRoute` checks only that someone is signed in, and the navbar shows Admin when the token says `isAdmin`. Neither protects anything: a non-admin who opens `/admin/verifications` gets a page whose API calls are refused with 403, because the server checks the database."
+          ],
+          "examples": ["private"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "صفحه‌ها",
+          "p": [
+            "یک client با Create React App، با React Router، Redux (همراه thunk) و Bootstrap. مرور، صفحه‌ی آگهی و سبد باز هستند؛ هر چیزی که از طرف تو کاری می‌کند پشت `PrivateRoute` است، که بازدیدکننده‌ی واردنشده را به صفحه‌ی ورود می‌فرستد."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "token",
+          "h": "token بعد از reload",
+          "p": [
+            "JWT در localStorage نگه داشته می‌شود. موقع بارگذاری، token منقضی کاربر را خارج می‌کند؛ token معتبر روی هدر `Authorization` همه‌ی درخواست‌های axios گذاشته می‌شود و کاربرش در Redux."
+          ],
+          "examples": ["rehydrate", "header"]
+        },
+        {
+          "id": "admin",
+          "h": "صفحه‌های admin فقط یک راحتی‌اند",
+          "p": [
+            "`PrivateRoute` فقط چک می‌کند که کسی وارد شده باشد، و navbar وقتی token بگوید `isAdmin` گزینه‌ی Admin را نشان می‌دهد. هیچ‌کدام از چیزی محافظت نمی‌کنند: غیر adminی که `/admin/verifications` را باز کند صفحه‌ای می‌گیرد که callهای API‌اش با 403 رد می‌شوند، چون سرور دیتابیس را چک می‌کند."
+          ],
+          "examples": ["private"]
+        }
+      ],
+      "examples": {
+        "rehydrate": {
+          "title": { "en": "Expired, or restored", "fa": "منقضی، یا بازگردانده" },
+          "lang": "javascript",
+          "file": "client/src/App.js",
+          "from": "// Rehydrate auth state from a stored JWT on page load",
+          "lines": 15
+        },
+        "header": {
+          "title": { "en": "On every request", "fa": "روی هر درخواست" },
+          "lang": "javascript",
+          "file": "client/src/utils/setAuthToken.js",
+          "from": "const setAuthToken = token => {",
+          "lines": 9
+        },
+        "private": {
+          "title": { "en": "Signed in, nothing more", "fa": "واردشده، نه بیشتر" },
+          "lang": "javascript",
+          "file": "client/src/components/Routing/PrivateRoute.js",
+          "from": "const PrivateRoute = ({ children }) => {",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "cart",
+      "group": "frontend",
+      "title": { "en": "Cart, checkout and animation", "fa": "سبد، checkout و انیمیشن" },
+      "files": ["client/src/store.js", "client/src/reducers/cartReducer.js", "client/src/actions/cartActions.js", "client/src/components/Checkout/CheckoutForm.js", "client/src/components/Layout/Navbar.js"],
+      "en": [
+        {
+          "id": "cart",
+          "h": "A cart that survives a reload",
+          "p": [
+            "The cart lives in Redux and is written to localStorage after every change. Quantities are capped at the stock the page last saw. An accepted offer goes in as a single unit at the agreed price, replacing any other line for that listing; the price shown is a hint, since the server re-checks the offer at checkout."
+          ],
+          "examples": ["persist", "offerline"]
+        },
+        {
+          "id": "pay",
+          "h": "Paying",
+          "p": [
+            "The checkout page asks the server for the totals and a client secret, shows Stripe's Payment Element, and after Stripe confirms asks the server to finalize the order. If the order comes back `refunded`, an item sold out during payment, and the page says so. A build without a publishable key shows that checkout isn't enabled yet instead of a broken form."
+          ],
+          "examples": ["confirm", "nokey"]
+        },
+        {
+          "id": "motion",
+          "h": "framer-motion",
+          "p": [
+            "Page transitions, hover effects, the success screen and the cart badge are animated with framer-motion. The badge is keyed by the count, so each change is a new element that springs in."
+          ],
+          "examples": ["badge"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "cart",
+          "h": "سبدی که از reload جان سالم به در می‌برد",
+          "p": [
+            "سبد در Redux است و بعد از هر تغییر در localStorage نوشته می‌شود. تعدادها به موجودی‌ای که صفحه آخرین بار دیده محدود می‌شوند. پیشنهاد پذیرفته‌شده به‌صورت یک عدد با قیمت توافق‌شده وارد می‌شود و جای هر خط دیگر همان آگهی را می‌گیرد؛ قیمتی که نشان داده می‌شود فقط یک اشاره است، چون سرور در checkout پیشنهاد را دوباره چک می‌کند."
+          ],
+          "examples": ["persist", "offerline"]
+        },
+        {
+          "id": "pay",
+          "h": "پرداخت",
+          "p": [
+            "صفحه‌ی checkout جمع‌ها و client secret را از سرور می‌گیرد، Payment Element استرایپ را نشان می‌دهد، و بعد از تأیید Stripe از سرور می‌خواهد سفارش را نهایی کند. اگر سفارش `refunded` برگردد، یک قلم وسط پرداخت تمام شده، و صفحه همین را می‌گوید. buildی که کلید publishable ندارد به‌جای فرم خراب نشان می‌دهد که checkout هنوز فعال نیست."
+          ],
+          "examples": ["confirm", "nokey"]
+        },
+        {
+          "id": "motion",
+          "h": "framer-motion",
+          "p": [
+            "انتقال صفحه‌ها، افکت‌های hover، صفحه‌ی موفقیت و نشان سبد با framer-motion متحرک شده‌اند. نشان با تعداد key خورده، پس هر تغییر یک element تازه است که با فنر ظاهر می‌شود."
+          ],
+          "examples": ["badge"]
+        }
+      ],
+      "examples": {
+        "persist": {
+          "title": { "en": "Written after every change", "fa": "بعد از هر تغییر نوشته می‌شود" },
+          "lang": "javascript",
+          "file": "client/src/store.js",
+          "from": "store.subscribe(() => {",
+          "lines": 7
+        },
+        "offerline": {
+          "title": { "en": "One unit at the agreed price", "fa": "یک عدد با قیمت توافق‌شده" },
+          "lang": "javascript",
+          "file": "client/src/actions/cartActions.js",
+          "from": "// Puts one unit in the cart at an accepted offer's price",
+          "lines": 6
+        },
+        "confirm": {
+          "title": { "en": "Stripe first, then the server", "fa": "اول Stripe، بعد سرور" },
+          "lang": "javascript",
+          "file": "client/src/components/Checkout/CheckoutForm.js",
+          "from": "const { error: confirmError } = await stripe.confirmPayment({",
+          "to": "onSuccess();"
+        },
+        "nokey": {
+          "title": { "en": "No key, no Stripe", "fa": "بدون کلید، بدون Stripe" },
+          "lang": "javascript",
+          "file": "client/src/components/Checkout/CheckoutForm.js",
+          "from": "const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY",
+          "lines": 3
+        },
+        "badge": {
+          "title": { "en": "A new badge for each count", "fa": "یک نشان تازه برای هر تعداد" },
+          "lang": "javascript",
+          "file": "client/src/components/Layout/Navbar.js",
+          "from": "<AnimatePresence>",
+          "lines": 14
+        }
+      }
+    },
+    {
+      "id": "sellers-data",
+      "group": "data",
+      "title": { "en": "Collections: sellers and listings", "fa": "collectionها: فروشنده‌ها و آگهی‌ها" },
+      "files": ["models/User.ts", "models/Organization.ts", "models/Product.ts", "models/Category.ts", "models/Review.ts", "db.ts"],
+      "en": [
+        {
+          "id": "shape",
+          "h": "Documents, not rows",
+          "p": [
+            "Mongoose schemas in TypeScript, each with an interface. What belongs to one thing lives inside it: an organization's documents and verification history, a listing's service history and location. The tables below are read from the schemas: `a.b` is a field of a nested object, `a[].b` a field of each item of an array."
+          ],
+          "data": { "kind": "tables", "only": ["users", "organizations", "products", "categories", "reviews"] }
+        },
+        {
+          "id": "copy",
+          "h": "A copy for browsing",
+          "p": [
+            "The full inspection report lives in `inspections`. The listing keeps a small copy of the latest one (outcome, date, valid until, inspector) so browsing can filter and badge without a join."
+          ],
+          "examples": ["copy"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "shape",
+          "h": "سند، نه ردیف",
+          "p": [
+            "schemaهای Mongoose در تایپ‌اسکریپت، هر کدام با یک interface. چیزی که مال یک چیز است داخل خودش زندگی می‌کند: مدارک و تاریخچه‌ی احراز یک سازمان، تاریخچه‌ی سرویس و محل یک آگهی. جدول‌های پایین از خود schemaها خوانده شده‌اند: `a.b` فیلدی از یک شیء تودرتو است، `a[].b` فیلدی از هر عضو یک آرایه."
+          ],
+          "data": { "kind": "tables", "only": ["users", "organizations", "products", "categories", "reviews"] }
+        },
+        {
+          "id": "copy",
+          "h": "یک کپی برای مرور",
+          "p": [
+            "گزارش کامل بازرسی در `inspections` است. آگهی یک کپی کوچک از آخرینش نگه می‌دارد (نتیجه، تاریخ، اعتبار تا، بازرس) تا مرور بدون join بتواند فیلتر کند و نشان بزند."
+          ],
+          "examples": ["copy"]
+        }
+      ],
+      "examples": {
+        "copy": {
+          "title": { "en": "The latest inspection, copied", "fa": "آخرین بازرسی، کپی‌شده" },
+          "lang": "typescript",
+          "file": "models/Product.ts",
+          "from": "// Latest completed independent inspection, copied here",
+          "lines": 9
+        }
+      }
+    },
+    {
+      "id": "orders-data",
+      "group": "data",
+      "title": { "en": "Collections: orders, offers, inspections", "fa": "collectionها: سفارش، پیشنهاد، بازرسی" },
+      "files": ["models/Order.ts", "models/Offer.ts", "models/Inspection.ts"],
+      "en": [
+        {
+          "id": "shape",
+          "h": "State machines in documents",
+          "p": [
+            "Orders, offers and inspections each move through statuses, written as comments above their schemas. An order keeps its items and one fulfillment per seller inside it, each with its own dispute and payout, so a step on one seller's part is a single update on a single document."
+          ],
+          "examples": ["lifecycle"],
+          "data": { "kind": "tables", "only": ["orders", "offers", "inspections"] }
+        },
+        {
+          "id": "openkey",
+          "h": "openKey",
+          "p": [
+            "Offers and inspections both carry an `openKey` while open and drop it when they close. A unique sparse index ignores documents without the field, so it limits only the open ones: one open offer per buyer and listing, one open inspection per listing."
+          ],
+          "examples": ["openkey"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "shape",
+          "h": "ماشین حالت داخل سند",
+          "p": [
+            "سفارش، پیشنهاد و بازرسی هر کدام از وضعیت‌هایی عبور می‌کنند که به‌صورت comment بالای schemaشان نوشته شده. سفارش قلم‌هایش و یک fulfillment برای هر فروشنده را داخل خودش نگه می‌دارد، هر کدام با اختلاف و تسویه‌ی خودش، پس قدمی روی بخش یک فروشنده یک update روی یک سند است."
+          ],
+          "examples": ["lifecycle"],
+          "data": { "kind": "tables", "only": ["orders", "offers", "inspections"] }
+        },
+        {
+          "id": "openkey",
+          "h": "openKey",
+          "p": [
+            "پیشنهاد و بازرسی هر دو تا باز هستند یک `openKey` دارند و با بسته شدن آن را می‌اندازند. unique sparse index سندهای بدون این فیلد را نادیده می‌گیرد، پس فقط بازها را محدود می‌کند: یک پیشنهاد باز برای هر خریدار و آگهی، یک بازرسی باز برای هر آگهی."
+          ],
+          "examples": ["openkey"]
+        }
+      ],
+      "examples": {
+        "lifecycle": {
+          "title": { "en": "A seller's part, step by step", "fa": "بخش یک فروشنده، قدم به قدم" },
+          "lang": "typescript",
+          "file": "models/Order.ts",
+          "from": "// Each seller's part of an order moves through its own lifecycle.",
+          "to": "//                      cancelled          disputed -> refunded | delivered"
+        },
+        "openkey": {
+          "title": { "en": "Only while open", "fa": "فقط تا وقتی باز است" },
+          "lang": "typescript",
+          "file": "models/Offer.ts",
+          "from": "// \"<buyer>:<product>\" while the offer is open",
+          "lines": 4
+        }
+      }
+    }
+  ]
+}

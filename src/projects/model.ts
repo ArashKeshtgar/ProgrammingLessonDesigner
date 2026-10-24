@@ -138,14 +138,16 @@ export interface SqlTable {
   database: string
   // EF Core tables live in named schemas; SQL scripts here use dbo
   schema?: string
-  // SQLite: no schemas, the database is a file
-  provider?: 'sqlite'
+  // SQLite: no schemas, the database is a file; MongoDB: a collection, its fields
+  provider?: 'sqlite' | 'mongodb'
   table: string
   file: string
   line: number
   columns: { name: string; type: string; nullable: boolean; notes: string[] }[]
   denies: string[]
   checks?: string[]
+  // MongoDB: Schema.index({...}) of the collection
+  indexes?: string[]
 }
 export interface CodeSnapshot {
   repo: string

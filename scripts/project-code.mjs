@@ -1,8 +1,8 @@
 // Snapshots what the topic pages of a project show from its real repo, so the site
 // builds (and CI checks) without that repo: the code excerpts the pages quote, the
 // length of every file they list, and tables read from the code itself: HTTP
-// endpoints (NestJS controllers, Express apps, ASP.NET Core Minimal APIs), SQL tables (scripts or
-// EF Core model snapshots), Angular and React routes.
+// endpoints (NestJS controllers, Express apps and routers, ASP.NET Core Minimal APIs), tables
+// (SQL scripts, EF Core model snapshots, Mongoose schemas), Angular and React routes.
 //
 //   npm run code            regenerate src/data/topics/<project>.code.json
 //   npm run code -- --check fail if a snapshot no longer matches its repo
@@ -117,6 +117,55 @@ function expressRoutes(repo, { dir, gate }) {
   return out
 }
 
+// Express routers mounted by the app: `import xRoutes from './routes/x'`, then
+// app.use('/api/x', xRoutes) in `app`; each router's router.get('/sub', auth, ...) is /api/x/sub.
+// Access comes from the middleware names in `access` ({ auth: 'signed-in', admin: 'Admin' }),
+// passed on the route or by a router.use(...) above it; a later name in the map wins. Routes
+// declared on the app itself (app.get('/api/health')) are listed too. A route whose path is on
+// the next line (router.post(\n '/login', ...) is found there.
+function expressRouters(repo, { app, access }) {
+  const names = Object.keys(access)
+  const levelOf = (text) => {
+    const hit = names.filter((n) => new RegExp(`[(,]\\s*${n}\\b(?!\\()`).test(text))
+    return hit.length ? access[hit.at(-1)] : null
+  }
+  const appSrc = lines(readFileSync(path.join(repo, app), 'utf-8'))
+  const imports = {}
+  for (const l of appSrc) {
+    const m = /^import (\w+) from '\.\/([\w/]+)'/.exec(l)
+    if (m) imports[m[1]] = m[2] + '.ts'
+  }
+  const out = []
+  const scan = (file, prefix, re) => {
+    const src = lines(readFileSync(path.join(repo, file), 'utf-8'))
+    let base = null
+    src.forEach((l, i) => {
+      if (/^router\.use\(/.test(l)) base = levelOf(l) ?? base
+      const m = re.exec(l)
+      if (!m) return
+      // The route's head: its line, and the next when the path is there.
+      const head = m[2] === undefined ? l + ' ' + (src[i + 1] ?? '') : l
+      const sub = m[2] ?? /^\s*'([^']*)'/.exec(src[i + 1] ?? '')?.[1]
+      if (sub === undefined) return
+      const full = (prefix + (sub === '/' ? '' : sub)) || '/'
+      out.push({
+        area: full.split('/')[2],
+        method: m[1].toUpperCase(),
+        path: full,
+        access: levelOf(head) ?? base ?? 'public',
+        file,
+        line: i + 1,
+      })
+    })
+  }
+  scan(app, '', /^app\.(get|post|put|patch|delete)\('(\/api\/[^']*)'/)
+  for (const l of appSrc) {
+    const m = /^app\.use\('(\/api\/[^']*)', (\w+)\)/.exec(l)
+    if (m && imports[m[2]]) scan(imports[m[2]], m[1], /^router\.(get|post|put|patch|delete)\((?:'([^']*)')?/)
+  }
+  return out
+}
+
 // SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks, references), columns and
 // CHECKs added later by ALTER TABLE … ADD, unique indexes and DENY grants. Tables in a schema
 // other than dbo carry it; the database is the script's USE, or the scan entry's own
@@ -224,6 +273,131 @@ function sqlTables(repo, entry) {
   return out
 }
 
+// Mongoose: each mongoose.model('Name', NameSchema) in `dir` is a collection (named the way
+// Mongoose names it: lower case, plural). Its fields come from the schema's object literal:
+// a nested object or a subdocument (new Schema({...}) or a schema of the same file) shows as
+// its own fields, `parent.child`, an array of subdocuments as `parent[].child`. `required` is
+// "not null"; unique, sparse, ref, enum, default, min/max and maxlength are notes, and
+// Schema.index({...}) the collection's indexes. `{ timestamps: true }` adds createdAt and
+// updatedAt.
+function mongooseCollections(repo, { dir, database }) {
+  const out = []
+  // Splits a literal's body on its top-level commas (not inside brackets or strings).
+  const split = (s) => {
+    const parts = []
+    let depth = 0
+    let quote = null
+    let cur = ''
+    for (const ch of s) {
+      if (quote) {
+        if (ch === quote) quote = null
+      } else if (ch === "'" || ch === '"' || ch === '`') quote = ch
+      else if ('([{'.includes(ch)) depth++
+      else if (')]}'.includes(ch)) depth--
+      else if (ch === ',' && depth === 0) {
+        parts.push(cur)
+        cur = ''
+        continue
+      }
+      cur += ch
+    }
+    if (cur.trim()) parts.push(cur)
+    return parts.map((p) => p.trim()).filter(Boolean)
+  }
+  // The text from an opening bracket at `at` to its match, both included.
+  const balanced = (s, at) => {
+    let depth = 0
+    for (let i = at; i < s.length; i++) {
+      if ('([{'.includes(s[i])) depth++
+      else if (')]}'.includes(s[i]) && --depth === 0) return s.slice(at, i + 1)
+    }
+    return s.slice(at)
+  }
+  const entries = (obj) =>
+    split(obj.trim().slice(1, -1)).map((e) => {
+      const m = /^['"]?([\w.$]+)['"]?\s*:\s*([\s\S]*)$/.exec(e)
+      return m ? [m[1], m[2].trim()] : [e, '']
+    })
+  const plural = (name) => {
+    const n = name.toLowerCase()
+    return /[^aeiou]y$/.test(n) ? n.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/.test(n) ? n + 'es' : n + 's'
+  }
+
+  for (const file of walk(path.join(repo, dir), (n) => n.endsWith('.ts')).sort()) {
+    const rel = path.relative(repo, file).replace(/\\/g, '/')
+    const text = readFileSync(file, 'utf-8').replace(/\r\n/g, '\n')
+    // No comments inside a literal: a comment's commas and quotes would split it wrongly.
+    const code = text.replace(/\/\/.*$/gm, '')
+    const schemas = {}
+    for (const m of code.matchAll(/const (\w+) = new Schema(?:<[^>]*>)?\(/g)) {
+      const args = split(balanced(code, m.index + m[0].length - 1).slice(1, -1))
+      schemas[m[1]] = { body: args[0], options: args[1] ?? '' }
+    }
+    const subSchema = (value) => {
+      const inline = /^new Schema(?:<[^>]*>)?\(/.exec(value)
+      if (inline) return { body: split(balanced(value, inline[0].length - 1).slice(1, -1))[0] }
+      return schemas[value]
+    }
+
+    const fields = (body, prefix, columns) => {
+      for (const [key, value] of entries(body)) {
+        const name = prefix + key
+        const props = value.startsWith('{') ? Object.fromEntries(entries(value)) : { type: value }
+        if (!('type' in props)) {
+          fields(value, name + '.', columns)
+          continue
+        }
+        const t = props.type
+        const array = /^\[(\w+)\]$/.exec(t)
+        const sub = array ? schemas[array[1]] : subSchema(t)
+        const type = array
+          ? sub
+            ? `[${array[1].replace(/Schema$/, '')}]`
+            : `[${array[1]}]`
+          : sub
+            ? 'Object'
+            : t.replace(/^Schema\.Types\./, '')
+        const notes = []
+        if (props.unique === 'true') notes.push(props.sparse === 'true' ? 'unique sparse' : 'unique')
+        const ref = /^'(\w+)'$/.exec(props.ref ?? '')?.[1]
+        if (ref) notes.push(`→ ${plural(ref)}`)
+        if (props.enum) {
+          const list = [...props.enum.matchAll(/'([^']*)'/g)].map((x) => x[1])
+          notes.push(`enum ${list.length ? list.join('|') : props.enum}`)
+        }
+        if (props.default && props.default !== 'undefined' && props.default !== '[]') notes.push(`default ${props.default.replace(/^'|'$/g, '')}`)
+        if (props.min) notes.push(`min ${props.min}`)
+        if (props.max) notes.push(`max ${props.max}`)
+        if (props.maxlength) notes.push(`maxlength ${props.maxlength}`)
+        columns.push({ name, type, nullable: props.required !== 'true', notes })
+        if (sub) fields(sub.body, name + (array ? '[].' : '.'), columns)
+      }
+    }
+
+    for (const m of code.matchAll(/mongoose\.model(?:<[^>]*>)?\('(\w+)', (\w+)\)/g)) {
+      const schema = schemas[m[2]]
+      if (!schema) continue
+      const columns = [{ name: '_id', type: 'ObjectId', nullable: false, notes: ['PK'] }]
+      fields(schema.body, '', columns)
+      if (/timestamps:\s*true/.test(schema.options))
+        for (const name of ['createdAt', 'updatedAt']) columns.push({ name, type: 'Date', nullable: false, notes: ['timestamps'] })
+      const indexes = [...code.matchAll(new RegExp(`${m[2]}\\.index\\((\\{[^)]*\\})\\)`, 'g'))].map((x) => x[1].replace(/\s+/g, ' '))
+      const at = text.split('\n').findIndex((l) => l.includes(`const ${m[2]} = new Schema`))
+      out.push({
+        database,
+        provider: 'mongodb',
+        table: plural(m[1]),
+        file: rel,
+        line: at + 1,
+        columns,
+        denies: [],
+        ...(indexes.length ? { indexes } : {}),
+      })
+    }
+  }
+  return out
+}
+
 // Angular: { path: '...', component: X, canActivate: [...] } or a redirect.
 function angularRoutes(repo, file) {
   return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {
@@ -311,9 +485,23 @@ function aspnetEndpoints(repo, dir) {
 // React Router: <Route path="..." element={<Page />} />, or a <Navigate> to a fixed path
 // (a target computed from the user's permissions shows as Navigate). A page behind a check,
 // element={can(me, 'users.manage') ? <Users /> : <Navigate to="/" />}, is that page with the
-// permission as its guard.
+// permission as its guard. A <Route written over several lines reads as one, and a page wrapped
+// in a guard component, element={<PrivateRoute><Orders /></PrivateRoute>}, has it as its guard.
 function reactRoutes(repo, file) {
-  return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {
+  const src = lines(readFileSync(path.join(repo, file), 'utf-8'))
+  const joined = []
+  for (let i = 0; i < src.length; i++) {
+    if (!/^\s*<Route\s*$/.test(src[i])) {
+      joined.push(src[i])
+      continue
+    }
+    let l = src[i].trimEnd()
+    while (i + 1 < src.length && !/^\s*\/>/.test(src[i])) l += ' ' + src[++i].trim()
+    joined.push(l.replace(/\{ </g, '{<').replace(/> </g, '><'))
+  }
+  return joined.flatMap((l) => {
+    const wrapped = /<Route path="([^"]*)" element=\{<(\w+)><(\w+)/.exec(l)
+    if (wrapped) return [{ path: wrapped[1], component: wrapped[3], guards: [wrapped[2]] }]
     const guarded = /<Route path="([^"]*)" element=\{(.+?) \? <(\w+)/.exec(l)
     if (guarded) {
       const perm = /can\(\w+, '([^']+)'\)/.exec(guarded[2])?.[1]
@@ -478,8 +666,13 @@ function snapshot(topics) {
       ...(s.expressApps ?? []).flatMap((d) => expressEndpoints(repo, d)),
       ...(s.expressRoutes ?? []).flatMap((x) => expressRoutes(repo, x)),
       ...(s.aspnetEndpoints ?? []).flatMap((d) => aspnetEndpoints(repo, d)),
+      ...(s.expressRouters ?? []).flatMap((x) => expressRouters(repo, x)),
     ],
-    tables: [...(s.sql ?? []).flatMap((d) => sqlTables(repo, d)), ...(s.efSnapshots ?? []).flatMap((x) => efTables(repo, x))],
+    tables: [
+      ...(s.sql ?? []).flatMap((d) => sqlTables(repo, d)),
+      ...(s.efSnapshots ?? []).flatMap((x) => efTables(repo, x)),
+      ...(s.mongoose ?? []).flatMap((x) => mongooseCollections(repo, x)),
+    ],
     routes: [
       ...(s.angularRoutes ? angularRoutes(repo, s.angularRoutes) : []),
       ...(s.reactRoutes ? reactRoutes(repo, s.reactRoutes) : []),

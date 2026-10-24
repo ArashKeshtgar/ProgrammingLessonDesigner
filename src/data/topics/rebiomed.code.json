@@ -1,0 +1,2278 @@
+{
+  "project": "rebiomed",
+  "repo": "Rebiomed",
+  "files": {
+    "README.md": 144,
+    "app.ts": 69,
+    "server.ts": 4,
+    "config/keys.ts": 34,
+    "services/stripe.ts": 17,
+    "Dockerfile": 46,
+    "render.yaml": 33,
+    "test/setup.ts": 23,
+    "test/checkout.test.ts": 162,
+    "test/fulfillment.test.ts": 322,
+    ".github/workflows/ci.yml": 59,
+    "routes/auth.ts": 94,
+    "middleware/auth.ts": 26,
+    "types/express.d.ts": 15,
+    "middleware/admin.ts": 21,
+    "routes/admin.ts": 100,
+    "seed/makeAdmin.ts": 33,
+    "services/verification.ts": 86,
+    "routes/organizations.ts": 266,
+    "routes/inspections.ts": 200,
+    "models/Organization.ts": 101,
+    "models/Inspection.ts": 114,
+    "config/medical.ts": 74,
+    "client/src/components/Admin/VerificationQueue.js": 176,
+    "routes/products.ts": 209,
+    "routes/categories.ts": 36,
+    "routes/reviews.ts": 40,
+    "client/src/components/Products/SellProduct.js": 250,
+    "client/src/components/Products/ProductList.js": 204,
+    "client/src/components/Products/ProductDetail.js": 289,
+    "services/checkout.ts": 221,
+    "routes/payment.ts": 45,
+    "routes/orders.ts": 93,
+    "routes/webhook.ts": 65,
+    "services/fulfillment.ts": 301,
+    "services/stripeOps.ts": 81,
+    "routes/sales.ts": 72,
+    "models/Order.ts": 150,
+    "client/src/components/Admin/DisputeQueue.js": 97,
+    "routes/payouts.ts": 85,
+    "services/offers.ts": 216,
+    "routes/offers.ts": 102,
+    "models/Offer.ts": 58,
+    "client/src/components/Offers/OffersPage.js": 179,
+    "services/inspections.ts": 260,
+    "client/src/components/Inspections/InspectionReport.js": 104,
+    "client/src/App.js": 149,
+    "client/src/components/Routing/PrivateRoute.js": 10,
+    "client/src/utils/setAuthToken.js": 13,
+    "client/src/store.js": 23,
+    "client/src/components/Layout/Navbar.js": 118,
+    "client/src/reducers/cartReducer.js": 74,
+    "client/src/actions/cartActions.js": 25,
+    "client/src/components/Checkout/CheckoutForm.js": 177,
+    "models/User.ts": 21,
+    "models/Product.ts": 107,
+    "models/Category.ts": 11,
+    "models/Review.ts": 19,
+    "db.ts": 14
+  },
+  "examples": {
+    "run/required": {
+      "file": "config/keys.ts",
+      "start": 7,
+      "end": 15,
+      "code": "const required = (name: string, devDefault: string): string => {\n  const value = process.env[name];\n  if (value) return value;\n  if (isProduction) throw new Error(`${name} must be set in production`);\n  return devDefault;\n};\n\nexport const mongoURI: string = required('MONGO_URI', 'mongodb://localhost:27017/mern-store');\nexport const jwtSecret: string = required('JWT_SECRET', 'dev-only-secret-change-me');"
+    },
+    "run/placeholder": {
+      "file": "services/stripe.ts",
+      "start": 5,
+      "end": 15,
+      "code": "export const paymentsConfigured = !!keys.stripeSecretKey;\n\n// The SDK throws on construction without a key, which would take the whole\n// server down (e.g. a demo deployment before Stripe is set up). Use a\n// placeholder instead, and let payment endpoints say payments are off.\nconst stripe = new Stripe(keys.stripeSecretKey || 'sk_test_not_configured');\n\nexport function requirePayments(_req: Request, res: Response, next: NextFunction): void {\n  if (paymentsConfigured) return next();\n  res.status(503).json({ msg: 'Payments are not configured on this server yet' });\n}"
+    },
+    "run/serve": {
+      "file": "app.ts",
+      "start": 56,
+      "end": 67,
+      "code": "app.use('/api', (_req, res) => {\n  res.status(404).json({ msg: 'Not found' });\n});\n\n// In production one service hosts both the API and the React build, so the\n// client can call /api on its own origin. Unknown paths get index.html and are\n// routed on the client.\nif (keys.serveClient) {\n  const build = path.join(process.cwd(), 'client', 'build');\n  app.use(express.static(build, { index: false, maxAge: '1h' }));\n  app.get('*', (_req, res) => res.sendFile(path.join(build, 'index.html')));\n}"
+    },
+    "run/image": {
+      "file": "Dockerfile",
+      "start": 36,
+      "end": 46,
+      "code": "ENV NODE_ENV=production PORT=5000\nCOPY package.json package-lock.json ./\nRUN npm ci --omit=dev && npm cache clean --force\nCOPY --from=server-build /app/dist ./dist\nCOPY --from=client-build /app/client/build ./client/build\nRUN mkdir -p uploads private-uploads && chown -R node:node uploads private-uploads\nUSER node\nEXPOSE 5000\nHEALTHCHECK --interval=30s --timeout=5s --start-period=20s \\\n  CMD wget -qO- http://localhost:${PORT}/api/health || exit 1\nCMD [\"node\", \"dist/server.js\"]"
+    },
+    "tests/hooks": {
+      "file": "test/setup.ts",
+      "start": 17,
+      "end": 23,
+      "code": "export const mochaHooks = {\n  async beforeAll(this: Mocha.Context) {\n    this.timeout(30000);\n    await mongoose.connection.asPromise();\n    await Promise.all(Object.values(mongoose.models).map(m => m.init()));\n  }\n};"
+    },
+    "tests/race": {
+      "file": "test/checkout.test.ts",
+      "start": 110,
+      "end": 117,
+      "code": "it('decrements stock once when called concurrently (webhook + client race)', async () => {\n  const { product, order, pi } = await setup(5, 2);\n  await Promise.all([\n    finalizeOrder(order.id, pi, noRefund),\n    finalizeOrder(order.id, pi, noRefund)\n  ]);\n  expect((await Product.findById(product.id))!.stock).to.equal(3);\n});"
+    },
+    "tests/ci": {
+      "file": ".github/workflows/ci.yml",
+      "start": 12,
+      "end": 23,
+      "code": "services:\n  mongo:\n    image: mongo:7\n    ports:\n      - 27017:27017\n    options: >-\n      --health-cmd \"mongosh --quiet --eval 'db.runCommand({ ping: 1 })'\"\n      --health-interval 5s\n      --health-timeout 5s\n      --health-retries 10\nenv:\n  MONGO_URI: mongodb://localhost:27017/rebiomed-ci"
+    },
+    "auth/sign": {
+      "file": "routes/auth.ts",
+      "start": 11,
+      "end": 14,
+      "code": "const signToken = (user: IUser): string => {\n  const payload = { user: { id: user.id, name: user.name, isAdmin: user.isAdmin } };\n  return jwt.sign(payload, keys.jwtSecret, { expiresIn: '7d' });\n};"
+    },
+    "auth/hash": {
+      "file": "routes/auth.ts",
+      "start": 39,
+      "end": 42,
+      "code": "const salt = await bcrypt.genSalt(10);\nconst hashed = await bcrypt.hash(password, salt);\n\nuser = await User.create({ name, email, password: hashed });"
+    },
+    "auth/guard": {
+      "file": "middleware/auth.ts",
+      "start": 10,
+      "end": 26,
+      "code": "export default function auth(req: Request, res: Response, next: NextFunction): void {\n  const authHeader = req.header('Authorization');\n  if (!authHeader) {\n    res.status(401).json({ msg: 'No token, authorization denied' });\n    return;\n  }\n\n  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;\n\n  try {\n    const decoded = jwt.verify(token, keys.jwtSecret) as DecodedToken;\n    req.user = decoded.user;\n    next();\n  } catch (err) {\n    res.status(401).json({ msg: 'Token is not valid' });\n  }\n}"
+    },
+    "admin/db": {
+      "file": "middleware/admin.ts",
+      "start": 4,
+      "end": 13,
+      "code": "// Use after `auth`. Checks the database rather than the isAdmin claim in the\n// JWT, so revoking admin rights takes effect before the token expires.\nexport default async function admin(req: Request, res: Response, next: NextFunction): Promise<void> {\n  try {\n    const user = await User.findById(req.user!.id).select('isAdmin');\n    if (!user?.isAdmin) {\n      res.status(403).json({ msg: 'Admin access required' });\n      return;\n    }\n    next();"
+    },
+    "admin/mount": {
+      "file": "routes/admin.ts",
+      "start": 12,
+      "end": 12,
+      "code": "router.use(auth, admin);"
+    },
+    "admin/grant": {
+      "file": "seed/makeAdmin.ts",
+      "start": 20,
+      "end": 24,
+      "code": "const user = await User.findOneAndUpdate({ email }, { isAdmin: !revoke }, { new: true });\nif (!user) {\n  console.error(`No user with email ${email}. Register the account first.`);\n  process.exit(1);\n}"
+    },
+    "files/dir": {
+      "file": "config/keys.ts",
+      "start": 25,
+      "end": 26,
+      "code": "// Verification documents live outside the public /uploads static folder.\nexport const privateUploadDir: string = process.env.PRIVATE_UPLOAD_DIR || path.join(process.cwd(), 'private-uploads');"
+    },
+    "files/sniff": {
+      "file": "services/verification.ts",
+      "start": 79,
+      "end": 86,
+      "code": "// Identifies an uploaded file by its leading bytes instead of trusting the\n// client-supplied Content-Type or file extension.\nexport function detectDocumentType(head: Buffer): string | null {\n  if (head.subarray(0, 5).toString('latin1') === '%PDF-') return 'application/pdf';\n  if (head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';\n  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'image/jpeg';\n  return null;\n}"
+    },
+    "files/download": {
+      "file": "routes/organizations.ts",
+      "start": 237,
+      "end": 244,
+      "code": "const allowed = org && (org.owner.toString() === req.user!.id || await isAdminUser(req.user!.id));\n// 404 rather than 403 so outsiders cannot probe which organizations exist.\nconst doc = allowed ? org.documents.id(req.params.docId) : null;\nif (!doc) return res.status(404).json({ msg: 'Document not found' });\n\nres.setHeader('X-Content-Type-Options', 'nosniff');\nres.type(doc.mimeType);\nres.download(path.join(keys.privateUploadDir, doc.storedName), doc.originalName, err => {"
+    },
+    "files/hide": {
+      "file": "models/Organization.ts",
+      "start": 66,
+      "end": 72,
+      "code": "// storedName is an internal path detail; never send it to clients.\nVerificationDocumentSchema.set('toJSON', {\n  transform: (_doc, ret) => {\n    const { storedName: _hidden, ...visible } = ret;\n    return visible;\n  }\n});"
+    },
+    "organizations/editable": {
+      "file": "routes/organizations.ts",
+      "start": 29,
+      "end": 31,
+      "code": "// Fields an owner may set. Verification fields are deliberately absent: they\n// only change through the verification flow.\nconst EDITABLE_FIELDS = ['name', 'type', 'province', 'city', 'phone', 'website', 'mdelNumber'] as const;"
+    },
+    "organizations/identity": {
+      "file": "services/verification.ts",
+      "start": 6,
+      "end": 8,
+      "code": "// Changing any of these after verification means an admin checked different\n// details than the ones now shown to buyers, so verification is reset.\nexport const IDENTITY_FIELDS = ['name', 'type', 'province', 'city', 'mdelNumber'] as const;"
+    },
+    "organizations/reset": {
+      "file": "routes/organizations.ts",
+      "start": 129,
+      "end": 138,
+      "code": "const norm = (v: unknown) => String(v ?? '').trim();\nconst before = Object.fromEntries(IDENTITY_FIELDS.map(f => [f, norm(org.get(f))]));\norg.set(pickEditable(req.body));\nawait org.save();\n\nconst identityChanged = IDENTITY_FIELDS.some(f => norm(org.get(f)) !== before[f]);\nif (identityChanged && (org.verificationStatus === 'verified' || org.verificationStatus === 'pending')) {\n  await changeVerificationStatus(org, 'unverified', req.user!.id,\n    'Organization details changed after review; request verification again');\n}"
+    },
+    "verification/request": {
+      "file": "services/verification.ts",
+      "start": 42,
+      "end": 52,
+      "code": "export async function requestVerification(org: IOrganization, by: string): Promise<IOrganization> {\n  if (org.verificationStatus === 'pending') throw new VerificationError('Verification is already under review', 409);\n  if (org.verificationStatus === 'verified') throw new VerificationError('Organization is already verified', 409);\n  if (!org.documents.length) {\n    throw new VerificationError('Upload at least one supporting document before requesting verification');\n  }\n  if (org.type === 'dealer' && !org.mdelNumber) {\n    throw new VerificationError('Dealers must provide their Health Canada MDEL number');\n  }\n  return changeVerificationStatus(org, 'pending', by);\n}"
+    },
+    "verification/change": {
+      "file": "services/verification.ts",
+      "start": 19,
+      "end": 40,
+      "code": "export async function changeVerificationStatus(\n  org: IOrganization,\n  status: VerificationStatus,\n  by: string | Types.ObjectId,\n  note?: string\n): Promise<IOrganization> {\n  const wasVerified = org.verificationStatus === 'verified';\n\n  org.verificationStatus = status;\n  org.verificationNote = note;\n  org.verifiedAt = status === 'verified' ? new Date() : undefined;\n  org.verificationHistory.push({ status, at: new Date(), by: new Types.ObjectId(String(by)), note });\n  await org.save();\n\n  const gated = { organization: org._id, deviceClass: { $in: VERIFICATION_GATED_CLASSES } };\n  if (wasVerified && status !== 'verified') {\n    await Product.updateMany(gated, { suspended: true });\n  } else if (!wasVerified && status === 'verified') {\n    await Product.updateMany(gated, { suspended: false });\n  }\n  return org;\n}"
+    },
+    "verification/reject": {
+      "file": "services/verification.ts",
+      "start": 63,
+      "end": 65,
+      "code": "export async function reject(orgId: string, adminId: string, note: unknown): Promise<IOrganization> {\n  const reason = typeof note === 'string' ? note.trim() : '';\n  if (!reason) throw new VerificationError('A reason is required so the seller knows what to fix');"
+    },
+    "listings/classes": {
+      "file": "config/medical.ts",
+      "start": 18,
+      "end": 30,
+      "code": "// Which device classes an organization may list, by verification status.\n// Class III needs a seller an admin has verified; Class IV (highest risk,\n// e.g. implantables and life support) is not accepted at all yet.\nexport const OPEN_DEVICE_CLASSES: readonly DeviceClass[] = ['I', 'II'];\nexport const VERIFIED_DEVICE_CLASSES: readonly DeviceClass[] = ['I', 'II', 'III'];\n\nexport const listableDeviceClasses = (status: VerificationStatus): readonly DeviceClass[] =>\n  status === 'verified' ? VERIFIED_DEVICE_CLASSES : OPEN_DEVICE_CLASSES;\n\n// Classes that are only listed because the seller is verified; these listings\n// are suspended if the organization loses its verification.\nexport const VERIFICATION_GATED_CLASSES: readonly DeviceClass[] =\n  VERIFIED_DEVICE_CLASSES.filter(c => !OPEN_DEVICE_CLASSES.includes(c));"
+    },
+    "listings/gate": {
+      "file": "routes/products.ts",
+      "start": 140,
+      "end": 145,
+      "code": "if (!listableDeviceClasses(org.verificationStatus).includes(req.body.deviceClass)) {\n  const msg = req.body.deviceClass === 'IV'\n    ? 'Class IV devices cannot be listed on the marketplace yet'\n    : 'Class III devices can only be listed by verified sellers; request verification from your organization page';\n  return res.status(403).json({ errors: [{ msg }] });\n}"
+    },
+    "listings/history": {
+      "file": "routes/products.ts",
+      "start": 26,
+      "end": 41,
+      "code": "const parseServiceHistory = (raw: unknown): IServiceRecord[] => {\n  if (raw === undefined || raw === '') return [];\n  const list = typeof raw === 'string' ? JSON.parse(raw) : raw;\n  if (!Array.isArray(list)) throw new Error('Service history must be a list');\n  if (list.length > MAX_SERVICE_RECORDS) throw new Error(`At most ${MAX_SERVICE_RECORDS} service records`);\n  return list.map((r, i) => {\n    const date = new Date(r?.date);\n    if (Number.isNaN(date.getTime())) throw new Error(`Service record ${i + 1}: invalid date`);\n    if (date.getTime() > Date.now()) throw new Error(`Service record ${i + 1}: date is in the future`);\n    if (!SERVICE_TYPES.includes(r?.type)) throw new Error(`Service record ${i + 1}: invalid type`);\n    const performedBy = String(r?.performedBy ?? '').trim();\n    if (!performedBy) throw new Error(`Service record ${i + 1}: \"performed by\" is required`);\n    const notes = r?.notes ? String(r.notes).trim() : undefined;\n    return { date, type: r.type, performedBy, notes };\n  });\n};"
+    },
+    "browse/filter": {
+      "file": "routes/products.ts",
+      "start": 69,
+      "end": 81,
+      "code": "const filter: Record<string, unknown> = { suspended: { $ne: true } };\nconst { category, deviceClass, condition, province, inspected } = req.query;\nif (inspected === '1' || inspected === 'true') filter['inspection.validUntil'] = { $gt: new Date() };\nif (typeof category === 'string' && category) filter.category = category;\nif (typeof deviceClass === 'string' && (DEVICE_CLASSES as readonly string[]).includes(deviceClass)) {\n  filter.deviceClass = deviceClass;\n}\nif (typeof condition === 'string' && (CONDITIONS as readonly string[]).includes(condition)) {\n  filter.condition = condition;\n}\nif (typeof province === 'string' && (PROVINCES as readonly string[]).includes(province)) {\n  filter['location.province'] = province;\n}"
+    },
+    "browse/detail": {
+      "file": "routes/products.ts",
+      "start": 113,
+      "end": 116,
+      "code": "const product = await Product.findById(req.params.id)\n  .populate('category', 'name')\n  .populate('organization', ORG_PUBLIC_FIELDS);\nif (!product || product.suspended) return res.status(404).json({ msg: 'Product not found' });"
+    },
+    "checkout/server": {
+      "file": "services/checkout.ts",
+      "start": 45,
+      "end": 48,
+      "code": "// Prices a cart from the database. The client only says *what* it wants and how\n// many; every price comes from the Product collection (or, for a line with an\n// offerId, from that buyer's accepted offer), never from the request.\nexport async function priceCart(lines: unknown, buyerId?: string): Promise<PricedCart> {"
+    },
+    "checkout/split": {
+      "file": "services/checkout.ts",
+      "start": 102,
+      "end": 109,
+      "code": "const bySeller = new Map<string, PricedFulfillment>();\nfor (const item of items) {\n  const key = item.organization.toString();\n  const f = bySeller.get(key) ?? { organization: item.organization, subtotalCents: 0, platformFeeCents: 0 };\n  f.subtotalCents += toCents(item.price) * item.quantity;\n  bySeller.set(key, f);\n}\nconst fulfillments = [...bySeller.values()].map(f => ({ ...f, platformFeeCents: platformFeeFor(f.subtotalCents) }));"
+    },
+    "checkout/fee": {
+      "file": "services/checkout.ts",
+      "start": 42,
+      "end": 43,
+      "code": "export const platformFeeFor = (subtotalCents: number): number =>\n  Math.round((subtotalCents * keys.platformFeeBps) / 10000);"
+    },
+    "checkout/intent": {
+      "file": "routes/payment.ts",
+      "start": 14,
+      "end": 24,
+      "code": "const cart = await priceCart(req.body.items, req.user!.id);\nconst order = await createPendingOrder(req.user!.id, cart);\n\nconst paymentIntent = await stripe.paymentIntents.create({\n  amount: cart.totalCents,\n  currency: CURRENCY,\n  automatic_payment_methods: { enabled: true },\n  metadata: { orderId: order.id },\n  // Groups the seller transfers made later for this order.\n  transfer_group: `order_${order.id}`\n});"
+    },
+    "paid/lock": {
+      "file": "services/checkout.ts",
+      "start": 163,
+      "end": 177,
+      "code": "if (order.status !== 'pending') return order;\n\nif (paymentIntent.status !== 'succeeded') {\n  throw new CheckoutError('Payment has not succeeded', 402);\n}\nif (paymentIntent.amount !== order.totalCents || paymentIntent.currency !== order.currency) {\n  throw new CheckoutError('Payment amount does not match order total');\n}\n\nconst locked = await Order.findOneAndUpdate(\n  { _id: order._id, status: 'pending' },\n  { status: 'processing' },\n  { new: true }\n);\nif (!locked) return (await Order.findById(orderId))!;"
+    },
+    "paid/stock": {
+      "file": "services/checkout.ts",
+      "start": 193,
+      "end": 207,
+      "code": "const decremented: IOrderItem[] = [];\nfor (const item of locked.items) {\n  const res = await Product.updateOne(\n    { _id: item.product, stock: { $gte: item.quantity } },\n    { $inc: { stock: -item.quantity } }\n  );\n  if (res.modifiedCount !== 1) {\n    await Promise.all(decremented.map(d =>\n      Product.updateOne({ _id: d.product }, { $inc: { stock: d.quantity } })\n    ));\n    await releaseOffers(offerIds, locked._id as Types.ObjectId);\n    return refundOrder();\n  }\n  decremented.push(item);\n}"
+    },
+    "paid/mount": {
+      "file": "app.ts",
+      "start": 30,
+      "end": 32,
+      "code": "// Stripe signs the raw request body, so the webhook must be mounted before express.json().\napp.use('/api/payment/webhook', webhookRoutes);\napp.use(express.json());"
+    },
+    "paid/verify": {
+      "file": "routes/webhook.ts",
+      "start": 18,
+      "end": 29,
+      "code": "const verify = (body: Buffer, signature: string): Stripe.Event => {\n  const secrets = [keys.stripeWebhookSecret, keys.stripeConnectWebhookSecret].filter(Boolean);\n  let lastError: unknown;\n  for (const secret of secrets) {\n    try {\n      return stripe.webhooks.constructEvent(body, signature, secret);\n    } catch (err) {\n      lastError = err;\n    }\n  }\n  throw lastError;\n};"
+    },
+    "escrow/buyer": {
+      "file": "routes/orders.ts",
+      "start": 10,
+      "end": 16,
+      "code": "// The buyer's view of an order: each seller's part with its shipping status,\n// but not the seller's payout or the platform fee.\nconst forBuyer = (order: IOrder) => {\n  const o = order.toJSON() as unknown as Record<string, unknown> & { fulfillments: Array<Record<string, unknown>> };\n  o.fulfillments = o.fulfillments.map(({ payout: _p, platformFeeCents: _f, ...visible }) => visible);\n  return o;\n};"
+    },
+    "escrow/transition": {
+      "file": "services/fulfillment.ts",
+      "start": 54,
+      "end": 63,
+      "code": "const updated = await Order.findOneAndUpdate(\n  {\n    _id: orderId,\n    status: 'paid',\n    ...conditions.order,\n    fulfillments: { $elemMatch: { _id: fulfillmentId, ...conditions.fulfillment } }\n  },\n  { $set: positional(set) },\n  { new: true }\n);"
+    },
+    "escrow/confirm": {
+      "file": "services/fulfillment.ts",
+      "start": 118,
+      "end": 126,
+      "code": "export async function confirmDelivery(\n  orderId: string, fulfillmentId: string, buyerId: string, ops: Ops = stripeOps\n): Promise<IOrder> {\n  await transition(orderId, fulfillmentId,\n    { order: { user: buyerId }, fulfillment: { status: 'shipped' } },\n    { status: 'delivered', deliveredAt: new Date(), 'payout.status': 'pending' },\n    'confirm delivery of');\n  return tryPayout(orderId, fulfillmentId, ops);\n}"
+    },
+    "escrow/payout": {
+      "file": "services/fulfillment.ts",
+      "start": 234,
+      "end": 250,
+      "code": "const org = await Organization.findById(f.organization);\nif (!org?.stripeAccountId || !org.payoutsEnabled) {\n  return setPayout({ status: 'pending', error: 'Seller has not finished setting up payouts' });\n}\n\ntry {\n  const transfer = await ops.transfer({\n    amountCents: f.payout.amountCents,\n    destination: org.stripeAccountId,\n    transferGroup: `order_${orderId}`,\n    sourceTransaction: locked.stripeChargeId,\n    metadata: { orderId: String(orderId), fulfillmentId: String(fulfillmentId) }\n  }, `payout_${fulfillmentId}`);\n  return setPayout({ status: 'paid', transferId: transfer.id, paidAt: new Date() }, ['error']);\n} catch (err) {\n  return setPayout({ status: 'failed', error: (err as Error).message });\n}"
+    },
+    "disputes/cancel": {
+      "file": "services/fulfillment.ts",
+      "start": 104,
+      "end": 114,
+      "code": "// Seller can't or won't ship: refund the buyer for this seller's part only.\nexport async function cancelBySeller(\n  orderId: string, fulfillmentId: string, organizationId: string, reason: unknown, ops: Ops = stripeOps\n): Promise<IOrder> {\n  const why = requiredText(reason, 'A cancellation reason');\n  const order = await transition(orderId, fulfillmentId,\n    { fulfillment: { organization: organizationId, status: 'awaiting_shipment' } },\n    { status: 'cancelled', cancelReason: why },\n    'cancel');\n  return refundFulfillment(order, fulfillmentId, 'awaiting_shipment', true, ops);\n}"
+    },
+    "disputes/open": {
+      "file": "services/fulfillment.ts",
+      "start": 128,
+      "end": 136,
+      "code": "export async function openDispute(\n  orderId: string, fulfillmentId: string, buyerId: string, reason: unknown\n): Promise<IOrder> {\n  const why = requiredText(reason, 'A description of the problem');\n  return transition(orderId, fulfillmentId,\n    { order: { user: buyerId }, fulfillment: { status: { $in: ['awaiting_shipment', 'shipped'] } } },\n    { status: 'disputed', dispute: { reason: why, openedAt: new Date() } },\n    'report a problem with');\n}"
+    },
+    "disputes/unshipped": {
+      "file": "services/fulfillment.ts",
+      "start": 163,
+      "end": 173,
+      "code": "// Ruling for the seller on something never shipped (e.g. \"seller isn't\n// answering\") means the order carries on, not that the seller gets paid for\n// equipment the buyer never received.\nconst order = Types.ObjectId.isValid(orderId) ? await Order.findById(orderId) : null;\nconst shipped = !!order?.fulfillments.id(fulfillmentId)?.shippedAt;\nif (!shipped) {\n  return transition(orderId, fulfillmentId,\n    { fulfillment: { status: 'disputed', shippedAt: { $exists: false } } },\n    { status: 'awaiting_shipment', ...resolved },\n    'resume');\n}"
+    },
+    "connect/express": {
+      "file": "services/stripeOps.ts",
+      "start": 52,
+      "end": 62,
+      "code": "async createExpressAccount(email: string, organizationId: string) {\n  const a = await stripe.accounts.create({\n    type: 'express',\n    country: 'CA',\n    email,\n    business_type: 'company',\n    capabilities: { transfers: { requested: true } },\n    metadata: { organizationId }\n  });\n  return toAccountState(a);\n},"
+    },
+    "connect/state": {
+      "file": "services/stripeOps.ts",
+      "start": 15,
+      "end": 26,
+      "code": "export const toAccountState = (a: {\n  id: string;\n  details_submitted?: boolean;\n  payouts_enabled?: boolean;\n  capabilities?: { transfers?: string } | null;\n}): AccountState => ({\n  id: a.id,\n  detailsSubmitted: !!a.details_submitted,\n  // Transfers to the account need the transfers capability to be active, not\n  // just payouts from the account to its bank.\n  payoutsEnabled: !!a.payouts_enabled && a.capabilities?.transfers === 'active'\n});"
+    },
+    "connect/sync": {
+      "file": "services/fulfillment.ts",
+      "start": 294,
+      "end": 301,
+      "code": "// Stores the latest account state and, once payouts are possible, sends any\n// payouts that were waiting for the seller to finish onboarding.\nexport async function syncAccount(org: IOrganization, state: AccountState, ops: Ops = stripeOps): Promise<IOrganization> {\n  applyAccountState(org, state);\n  await org.save();\n  if (org.payoutsEnabled) await releasePendingPayouts(org._id as Types.ObjectId, ops);\n  return org;\n}"
+    },
+    "connect/event": {
+      "file": "routes/webhook.ts",
+      "start": 53,
+      "end": 56,
+      "code": "} else if (event.type === 'account.updated') {\n  // A seller progressed through (or lost) Stripe onboarding.\n  const org = await Organization.findOne({ stripeAccountId: event.data.object.id });\n  if (org) await syncAccount(org, toAccountState(event.data.object));"
+    },
+    "offers/deadlines": {
+      "file": "config/medical.ts",
+      "start": 51,
+      "end": 52,
+      "code": "export const OFFER_RESPONSE_DAYS = 7;\nexport const ACCEPTED_OFFER_HOURS = 72;"
+    },
+    "offers/open": {
+      "file": "services/offers.ts",
+      "start": 69,
+      "end": 91,
+      "code": "const amountCents = parseAmount(amount);\nconst priceCents = Math.round(product.price * 100);\nif (amountCents >= priceCents) {\n  throw new OfferError(`An offer must be below the listed price of ${formatCad(priceCents)}; at that price, just buy it`);\n}\n\nawait expireStale();\ntry {\n  return await Offer.create({\n    product: product._id,\n    organization: product.organization,\n    buyer: buyerId,\n    amountCents,\n    message: note(message),\n    expiresAt: responseDeadline(),\n    openKey: `${buyerId}:${product.id}`\n  });\n} catch (err) {\n  if ((err as { code?: number }).code === 11000) {\n    throw new OfferError('You already have an open offer on this listing', 409);\n  }\n  throw err;\n}"
+    },
+    "offers/lazy": {
+      "file": "services/offers.ts",
+      "start": 41,
+      "end": 53,
+      "code": "// Offers past their deadline are closed lazily, whenever offers are read or\n// changed, rather than by a background job.\nexport async function expireStale(): Promise<void> {\n  const now = new Date();\n  await Offer.updateMany(\n    { status: { $in: ['pending', 'countered'] }, expiresAt: { $lte: now } },\n    { $set: { status: 'expired' }, $unset: { openKey: '' } }\n  );\n  await Offer.updateMany(\n    { status: 'accepted', acceptedUntil: { $lte: now } },\n    { $set: { status: 'expired' }, $unset: { openKey: '' } }\n  );\n}"
+    },
+    "offers/claim": {
+      "file": "services/offers.ts",
+      "start": 180,
+      "end": 200,
+      "code": "export async function claimOffers(offerIds: Types.ObjectId[], orderId: Types.ObjectId, orderCreatedAt: Date): Promise<boolean> {\n  const claimed: Types.ObjectId[] = [];\n  for (const id of offerIds) {\n    const res = await Offer.updateOne(\n      {\n        _id: id,\n        status: { $in: ['accepted', 'expired'] },\n        agreedAmountCents: { $exists: true },\n        acceptedUntil: { $gte: orderCreatedAt },\n        usedByOrder: { $exists: false }\n      },\n      { $set: { status: 'used', usedByOrder: orderId }, $unset: { openKey: '' } }\n    );\n    if (res.modifiedCount !== 1) {\n      await releaseOffers(claimed, orderId);\n      return false;\n    }\n    claimed.push(id);\n  }\n  return true;\n}"
+    },
+    "inspections/eligible": {
+      "file": "services/inspections.ts",
+      "start": 28,
+      "end": 30,
+      "code": "// Only verified biomedical service providers may inspect.\nexport const isEligibleInspector = (org: Pick<IOrganization, 'type' | 'verificationStatus'>): boolean =>\n  org.type === 'service_provider' && org.verificationStatus === 'verified';"
+    },
+    "inspections/checks": {
+      "file": "config/medical.ts",
+      "start": 57,
+      "end": 64,
+      "code": "export const INSPECTION_CHECKS = [\n  'visual_physical',          // housing, cables, connectors, labels, cleanliness\n  'electrical_safety',        // leakage current / earth resistance (IEC 62353, CSA C22.2 No. 60601-1)\n  'functional_performance',   // operates to the manufacturer's specifications\n  'calibration_accuracy',     // readings against a reference\n  'alarms',                   // audible/visual alarms and self-tests\n  'accessories_documentation' // probes, cuffs, manuals, service records present\n] as const;"
+    },
+    "inspections/outcome": {
+      "file": "services/inspections.ts",
+      "start": 190,
+      "end": 196,
+      "code": "const failed = checks.filter(c => c.result === 'fail');\nif (outcome === 'pass' && failed.length) {\n  throw new InspectionError('A device with failed checks cannot pass outright; use \"pass with findings\" or \"fail\"');\n}\nif (failed.some(c => c.item === 'electrical_safety') && outcome !== 'fail') {\n  throw new InspectionError('A device that fails electrical safety testing must fail the inspection');\n}"
+    },
+    "inspections/date": {
+      "file": "services/inspections.ts",
+      "start": 152,
+      "end": 160,
+      "code": "// A date-only value is UTC midnight of the inspector's local date, and in\n// Canada the local date can be a calendar day behind UTC (an evening request\n// in Vancouver is stamped the next day in UTC). So compare calendar days, with\n// one day of slack, rather than instants.\nif (inspectedAt.getTime() > Date.now() + DAY) throw new InspectionError('Inspection date is in the future');\nconst requestedDay = Date.UTC(requestedAt.getUTCFullYear(), requestedAt.getUTCMonth(), requestedAt.getUTCDate());\nif (inspectedAt.getTime() < requestedDay - DAY) {\n  throw new InspectionError('Inspection date is before the inspection was requested');\n}"
+    },
+    "inspections/publish": {
+      "file": "services/inspections.ts",
+      "start": 229,
+      "end": 247,
+      "code": "// Publish on the listing unless a more recent inspection is already shown.\nconst inspector = await Organization.findById(inspectorOrgId).select('name');\nawait Product.updateOne(\n  {\n    _id: done.product,\n    $or: [{ inspection: { $exists: false } }, { 'inspection.inspectedAt': { $lte: report.inspectedAt } }]\n  },\n  {\n    $set: {\n      inspection: {\n        report: done._id,\n        outcome: report.outcome,\n        inspectedAt: report.inspectedAt,\n        validUntil: new Date(report.inspectedAt.getTime() + INSPECTION_VALID_DAYS * DAY),\n        inspectorName: inspector?.name ?? 'Inspector'\n      }\n    }\n  }\n);"
+    },
+    "pages/rehydrate": {
+      "file": "client/src/App.js",
+      "start": 30,
+      "end": 44,
+      "code": "// Rehydrate auth state from a stored JWT on page load\nconst token = localStorage.getItem('jwtToken');\nif (token) {\n  try {\n    const decoded = jwtDecode(token);\n    if (decoded.exp * 1000 < Date.now()) {\n      store.dispatch(logoutUser());\n    } else {\n      setAuthToken(token);\n      store.dispatch(setCurrentUser(decoded.user));\n    }\n  } catch {\n    store.dispatch(logoutUser());\n  }\n}"
+    },
+    "pages/header": {
+      "file": "client/src/utils/setAuthToken.js",
+      "start": 3,
+      "end": 11,
+      "code": "const setAuthToken = token => {\n  if (token) {\n    // Apply authorization token to every request if logged in\n    axios.defaults.headers.common['Authorization'] = token;\n  } else {\n    // Delete auth header\n    delete axios.defaults.headers.common['Authorization'];\n  }\n};"
+    },
+    "pages/private": {
+      "file": "client/src/components/Routing/PrivateRoute.js",
+      "start": 5,
+      "end": 8,
+      "code": "const PrivateRoute = ({ children }) => {\n  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);\n  return isAuthenticated ? children : <Navigate to=\"/login\" replace />;\n};"
+    },
+    "cart/persist": {
+      "file": "client/src/store.js",
+      "start": 15,
+      "end": 21,
+      "code": "store.subscribe(() => {\n  try {\n    localStorage.setItem('cartItems', JSON.stringify(store.getState().cart.items));\n  } catch {\n    // ignore storage failures (e.g. private browsing)\n  }\n});"
+    },
+    "cart/offerline": {
+      "file": "client/src/actions/cartActions.js",
+      "start": 8,
+      "end": 13,
+      "code": "// Puts one unit in the cart at an accepted offer's price (replacing any other\n// line for the same listing). The server re-checks the offer at checkout.\nexport const addOfferToCart = (offer) => ({\n  type: ADD_OFFER_TO_CART,\n  payload: offer\n});"
+    },
+    "cart/confirm": {
+      "file": "client/src/components/Checkout/CheckoutForm.js",
+      "start": 52,
+      "end": 70,
+      "code": "const { error: confirmError } = await stripe.confirmPayment({\n  elements,\n  redirect: 'if_required'\n});\n\nif (confirmError) {\n  setError(confirmError.message);\n  setProcessing(false);\n  return;\n}\n\ntry {\n  const order = await dispatch(confirmOrder(orderId));\n  if (order.status === 'refunded') {\n    setError('Sorry, an item sold out while you were paying. Your payment has been refunded.');\n    return;\n  }\n  dispatch(clearCart());\n  onSuccess();"
+    },
+    "cart/nokey": {
+      "file": "client/src/components/Checkout/CheckoutForm.js",
+      "start": 16,
+      "end": 18,
+      "code": "const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY\n  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)\n  : null;"
+    },
+    "cart/badge": {
+      "file": "client/src/components/Layout/Navbar.js",
+      "start": 78,
+      "end": 91,
+      "code": "<AnimatePresence>\n  {cartCount > 0 && (\n    <motion.span\n      key={cartCount}\n      className=\"badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle\"\n      initial={{ scale: 0 }}\n      animate={{ scale: 1 }}\n      exit={{ scale: 0 }}\n      transition={{ type: 'spring', stiffness: 300, damping: 15 }}\n    >\n      {cartCount}\n    </motion.span>\n  )}\n</AnimatePresence>"
+    },
+    "sellers-data/copy": {
+      "file": "models/Product.ts",
+      "start": 48,
+      "end": 56,
+      "code": "// Latest completed independent inspection, copied here so browsing can\n// filter and badge on it. The full report lives in the Inspection.\ninspection?: {\n  report: Types.ObjectId;\n  outcome: InspectionOutcome;\n  inspectedAt: Date;\n  validUntil: Date;\n  inspectorName: string;\n};"
+    },
+    "orders-data/lifecycle": {
+      "file": "models/Order.ts",
+      "start": 20,
+      "end": 27,
+      "code": "// Each seller's part of an order moves through its own lifecycle. The buyer's\n// money stays with the platform until the buyer confirms delivery (or an admin\n// resolves a dispute in the seller's favour); only then is it paid out.\n//\n// awaiting_payment -> awaiting_shipment -> shipped -> delivered\n//                          |                  |\n//                          v                  v\n//                      cancelled          disputed -> refunded | delivered"
+    },
+    "orders-data/openkey": {
+      "file": "models/Offer.ts",
+      "start": 27,
+      "end": 30,
+      "code": "// \"<buyer>:<product>\" while the offer is open, removed when it closes. A\n// unique sparse index on it means a buyer can have only one open offer per\n// listing, even if two requests race.\nopenKey?: string;"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "health",
+      "method": "GET",
+      "path": "/api/health",
+      "access": "public",
+      "file": "app.ts",
+      "line": 51
+    },
+    {
+      "area": "payment",
+      "method": "POST",
+      "path": "/api/payment/webhook",
+      "access": "public",
+      "file": "routes/webhook.ts",
+      "line": 35
+    },
+    {
+      "area": "auth",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "access": "public",
+      "file": "routes/auth.ts",
+      "line": 18
+    },
+    {
+      "area": "auth",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "access": "public",
+      "file": "routes/auth.ts",
+      "line": 54
+    },
+    {
+      "area": "auth",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "access": "signed-in",
+      "file": "routes/auth.ts",
+      "line": 84
+    },
+    {
+      "area": "products",
+      "method": "GET",
+      "path": "/api/products",
+      "access": "public",
+      "file": "routes/products.ts",
+      "line": 67
+    },
+    {
+      "area": "products",
+      "method": "GET",
+      "path": "/api/products/mine",
+      "access": "signed-in",
+      "file": "routes/products.ts",
+      "line": 97
+    },
+    {
+      "area": "products",
+      "method": "GET",
+      "path": "/api/products/:id",
+      "access": "public",
+      "file": "routes/products.ts",
+      "line": 111
+    },
+    {
+      "area": "products",
+      "method": "POST",
+      "path": "/api/products",
+      "access": "signed-in",
+      "file": "routes/products.ts",
+      "line": 127
+    },
+    {
+      "area": "products",
+      "method": "DELETE",
+      "path": "/api/products/:id",
+      "access": "signed-in",
+      "file": "routes/products.ts",
+      "line": 193
+    },
+    {
+      "area": "categories",
+      "method": "GET",
+      "path": "/api/categories",
+      "access": "public",
+      "file": "routes/categories.ts",
+      "line": 9
+    },
+    {
+      "area": "categories",
+      "method": "POST",
+      "path": "/api/categories",
+      "access": "signed-in",
+      "file": "routes/categories.ts",
+      "line": 21
+    },
+    {
+      "area": "reviews",
+      "method": "GET",
+      "path": "/api/reviews/:productId",
+      "access": "public",
+      "file": "routes/reviews.ts",
+      "line": 9
+    },
+    {
+      "area": "reviews",
+      "method": "POST",
+      "path": "/api/reviews",
+      "access": "signed-in",
+      "file": "routes/reviews.ts",
+      "line": 23
+    },
+    {
+      "area": "payment",
+      "method": "POST",
+      "path": "/api/payment/create-payment-intent",
+      "access": "signed-in",
+      "file": "routes/payment.ts",
+      "line": 12
+    },
+    {
+      "area": "orders",
+      "method": "POST",
+      "path": "/api/orders/:id/confirm",
+      "access": "signed-in",
+      "file": "routes/orders.ts",
+      "line": 33
+    },
+    {
+      "area": "orders",
+      "method": "POST",
+      "path": "/api/orders/:id/fulfillments/:fid/confirm-delivery",
+      "access": "signed-in",
+      "file": "routes/orders.ts",
+      "line": 56
+    },
+    {
+      "area": "orders",
+      "method": "POST",
+      "path": "/api/orders/:id/fulfillments/:fid/dispute",
+      "access": "signed-in",
+      "file": "routes/orders.ts",
+      "line": 69
+    },
+    {
+      "area": "orders",
+      "method": "GET",
+      "path": "/api/orders",
+      "access": "signed-in",
+      "file": "routes/orders.ts",
+      "line": 82
+    },
+    {
+      "area": "organizations",
+      "method": "POST",
+      "path": "/api/organizations",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 85
+    },
+    {
+      "area": "organizations",
+      "method": "GET",
+      "path": "/api/organizations/mine",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 108
+    },
+    {
+      "area": "organizations",
+      "method": "PUT",
+      "path": "/api/organizations/mine",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 121
+    },
+    {
+      "area": "organizations",
+      "method": "POST",
+      "path": "/api/organizations/mine/documents",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 148
+    },
+    {
+      "area": "organizations",
+      "method": "DELETE",
+      "path": "/api/organizations/mine/documents/:docId",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 198
+    },
+    {
+      "area": "organizations",
+      "method": "POST",
+      "path": "/api/organizations/mine/verification-request",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 221
+    },
+    {
+      "area": "organizations",
+      "method": "GET",
+      "path": "/api/organizations/:id/documents/:docId",
+      "access": "signed-in",
+      "file": "routes/organizations.ts",
+      "line": 234
+    },
+    {
+      "area": "organizations",
+      "method": "GET",
+      "path": "/api/organizations/:id",
+      "access": "public",
+      "file": "routes/organizations.ts",
+      "line": 255
+    },
+    {
+      "area": "admin",
+      "method": "GET",
+      "path": "/api/admin/organizations",
+      "access": "Admin",
+      "file": "routes/admin.ts",
+      "line": 25
+    },
+    {
+      "area": "admin",
+      "method": "POST",
+      "path": "/api/admin/organizations/:id/verify",
+      "access": "Admin",
+      "file": "routes/admin.ts",
+      "line": 43
+    },
+    {
+      "area": "admin",
+      "method": "POST",
+      "path": "/api/admin/organizations/:id/reject",
+      "access": "Admin",
+      "file": "routes/admin.ts",
+      "line": 54
+    },
+    {
+      "area": "admin",
+      "method": "GET",
+      "path": "/api/admin/disputes",
+      "access": "Admin",
+      "file": "routes/admin.ts",
+      "line": 65
+    },
+    {
+      "area": "admin",
+      "method": "POST",
+      "path": "/api/admin/orders/:id/fulfillments/:fid/resolve",
+      "access": "Admin",
+      "file": "routes/admin.ts",
+      "line": 87
+    },
+    {
+      "area": "payouts",
+      "method": "GET",
+      "path": "/api/payouts/status",
+      "access": "signed-in",
+      "file": "routes/payouts.ts",
+      "line": 33
+    },
+    {
+      "area": "payouts",
+      "method": "POST",
+      "path": "/api/payouts/onboarding",
+      "access": "signed-in",
+      "file": "routes/payouts.ts",
+      "line": 46
+    },
+    {
+      "area": "payouts",
+      "method": "POST",
+      "path": "/api/payouts/refresh",
+      "access": "signed-in",
+      "file": "routes/payouts.ts",
+      "line": 59
+    },
+    {
+      "area": "payouts",
+      "method": "POST",
+      "path": "/api/payouts/dashboard-link",
+      "access": "signed-in",
+      "file": "routes/payouts.ts",
+      "line": 73
+    },
+    {
+      "area": "sales",
+      "method": "GET",
+      "path": "/api/sales",
+      "access": "signed-in",
+      "file": "routes/sales.ts",
+      "line": 26
+    },
+    {
+      "area": "sales",
+      "method": "POST",
+      "path": "/api/sales/:orderId/fulfillments/:fid/ship",
+      "access": "signed-in",
+      "file": "routes/sales.ts",
+      "line": 48
+    },
+    {
+      "area": "sales",
+      "method": "POST",
+      "path": "/api/sales/:orderId/fulfillments/:fid/cancel",
+      "access": "signed-in",
+      "file": "routes/sales.ts",
+      "line": 61
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 51
+    },
+    {
+      "area": "offers",
+      "method": "GET",
+      "path": "/api/offers/mine",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 61
+    },
+    {
+      "area": "offers",
+      "method": "GET",
+      "path": "/api/offers/received",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 78
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers/:id/accept",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 94
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers/:id/decline",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 95
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers/:id/counter",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 96
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers/:id/accept-counter",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 99
+    },
+    {
+      "area": "offers",
+      "method": "POST",
+      "path": "/api/offers/:id/withdraw",
+      "access": "signed-in",
+      "file": "routes/offers.ts",
+      "line": 100
+    },
+    {
+      "area": "inspections",
+      "method": "GET",
+      "path": "/api/inspections/inspectors",
+      "access": "public",
+      "file": "routes/inspections.ts",
+      "line": 68
+    },
+    {
+      "area": "inspections",
+      "method": "GET",
+      "path": "/api/inspections/product/:productId",
+      "access": "public",
+      "file": "routes/inspections.ts",
+      "line": 79
+    },
+    {
+      "area": "inspections",
+      "method": "GET",
+      "path": "/api/inspections/:id/attachment",
+      "access": "public",
+      "file": "routes/inspections.ts",
+      "line": 90
+    },
+    {
+      "area": "inspections",
+      "method": "POST",
+      "path": "/api/inspections",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 111
+    },
+    {
+      "area": "inspections",
+      "method": "GET",
+      "path": "/api/inspections/requested",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 123
+    },
+    {
+      "area": "inspections",
+      "method": "GET",
+      "path": "/api/inspections/assigned",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 139
+    },
+    {
+      "area": "inspections",
+      "method": "POST",
+      "path": "/api/inspections/:id/cancel",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 154
+    },
+    {
+      "area": "inspections",
+      "method": "POST",
+      "path": "/api/inspections/:id/accept",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 157
+    },
+    {
+      "area": "inspections",
+      "method": "POST",
+      "path": "/api/inspections/:id/decline",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 158
+    },
+    {
+      "area": "inspections",
+      "method": "POST",
+      "path": "/api/inspections/:id/report",
+      "access": "signed-in",
+      "file": "routes/inspections.ts",
+      "line": 164
+    }
+  ],
+  "tables": [
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "categories",
+      "file": "models/Category.ts",
+      "line": 7,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "inspections",
+      "file": "models/Inspection.ts",
+      "line": 82,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "product",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ products"
+          ]
+        },
+        {
+          "name": "sellerOrganization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "inspectorOrganization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "requestedBy",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "requestNote",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "maxlength 1000"
+          ]
+        },
+        {
+          "name": "declineNote",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "maxlength 1000"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum requested|accepted|completed|declined|cancelled",
+            "default requested"
+          ]
+        },
+        {
+          "name": "report",
+          "type": "Object",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "report.inspectedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.technicianName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.credential",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.serialNumber",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.checks",
+          "type": "[CheckResult]",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.checks[].item",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum INSPECTION_CHECKS"
+          ]
+        },
+        {
+          "name": "report.checks[].result",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum CHECK_RESULTS"
+          ]
+        },
+        {
+          "name": "report.checks[].notes",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "maxlength 1000"
+          ]
+        },
+        {
+          "name": "report.outcome",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum INSPECTION_OUTCOMES"
+          ]
+        },
+        {
+          "name": "report.summary",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "maxlength 4000"
+          ]
+        },
+        {
+          "name": "report.attachment",
+          "type": "Object",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "report.attachment.originalName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.attachment.storedName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.attachment.mimeType",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.attachment.size",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "report.submittedBy",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "report.submittedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "openKey",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "unique sparse"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": [
+            "timestamps"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": [
+            "timestamps"
+          ]
+        }
+      ],
+      "denies": [],
+      "indexes": [
+        "{ product: 1, status: 1, 'report.inspectedAt': -1 }",
+        "{ inspectorOrganization: 1, status: 1, createdAt: -1 }",
+        "{ sellerOrganization: 1, createdAt: -1 }"
+      ]
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "offers",
+      "file": "models/Offer.ts",
+      "line": 35,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "product",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ products"
+          ]
+        },
+        {
+          "name": "organization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "buyer",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "amountCents",
+          "type": "Number",
+          "nullable": false,
+          "notes": [
+            "min 1"
+          ]
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "maxlength 1000"
+          ]
+        },
+        {
+          "name": "counterAmountCents",
+          "type": "Number",
+          "nullable": true,
+          "notes": [
+            "min 1"
+          ]
+        },
+        {
+          "name": "agreedAmountCents",
+          "type": "Number",
+          "nullable": true,
+          "notes": [
+            "min 1"
+          ]
+        },
+        {
+          "name": "sellerNote",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "maxlength 1000"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum pending|countered|accepted|used|declined|withdrawn|expired",
+            "default pending"
+          ]
+        },
+        {
+          "name": "expiresAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "acceptedUntil",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "usedByOrder",
+          "type": "ObjectId",
+          "nullable": true,
+          "notes": [
+            "→ orders"
+          ]
+        },
+        {
+          "name": "openKey",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "unique sparse"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": [
+            "timestamps"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": [
+            "timestamps"
+          ]
+        }
+      ],
+      "denies": [],
+      "indexes": [
+        "{ buyer: 1, product: 1, status: 1 }",
+        "{ organization: 1, status: 1, createdAt: -1 }"
+      ]
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "orders",
+      "file": "models/Order.ts",
+      "line": 129,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "user",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "items",
+          "type": "[OrderItem]",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "items[].product",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ products"
+          ]
+        },
+        {
+          "name": "items[].organization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "items[].title",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "items[].price",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "items[].quantity",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "items[].offer",
+          "type": "ObjectId",
+          "nullable": true,
+          "notes": [
+            "→ offers"
+          ]
+        },
+        {
+          "name": "fulfillments",
+          "type": "[Fulfillment]",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].organization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "fulfillments[].subtotalCents",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].platformFeeCents",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].status",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum awaiting_payment|awaiting_shipment|shipped|delivered|disputed|cancelled|refunded",
+            "default awaiting_payment"
+          ]
+        },
+        {
+          "name": "fulfillments[].carrier",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].trackingNumber",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].shippedAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].deliveredAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].cancelReason",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].refundId",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute",
+          "type": "Object",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute.reason",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute.openedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute.resolution",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum refund|release"
+          ]
+        },
+        {
+          "name": "fulfillments[].dispute.note",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute.resolvedAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].dispute.resolvedBy",
+          "type": "ObjectId",
+          "nullable": true,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "fulfillments[].payout.status",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum not_due|pending|processing|paid|failed",
+            "default not_due"
+          ]
+        },
+        {
+          "name": "fulfillments[].payout.amountCents",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].payout.transferId",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].payout.paidAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fulfillments[].payout.error",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "subtotal",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "shipping",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "total",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "totalCents",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "stripePaymentIntentId",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "unique sparse"
+          ]
+        },
+        {
+          "name": "stripeChargeId",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum pending|processing|paid|failed|refunded",
+            "default pending"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        }
+      ],
+      "denies": [],
+      "indexes": [
+        "{ 'fulfillments.organization': 1, createdAt: -1 }"
+      ]
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "organizations",
+      "file": "models/Organization.ts",
+      "line": 81,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum ORGANIZATION_TYPES"
+          ]
+        },
+        {
+          "name": "province",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum PROVINCES"
+          ]
+        },
+        {
+          "name": "city",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "website",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "mdelNumber",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "verificationStatus",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "enum VERIFICATION_STATUSES",
+            "default unverified"
+          ]
+        },
+        {
+          "name": "verificationNote",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "verifiedAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "documents",
+          "type": "[VerificationDocument]",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "documents[].kind",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum DOCUMENT_KINDS"
+          ]
+        },
+        {
+          "name": "documents[].originalName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "documents[].storedName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "documents[].mimeType",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "documents[].size",
+          "type": "Number",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "documents[].uploadedAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        },
+        {
+          "name": "stripeAccountId",
+          "type": "String",
+          "nullable": true,
+          "notes": [
+            "unique sparse"
+          ]
+        },
+        {
+          "name": "stripeDetailsSubmitted",
+          "type": "Boolean",
+          "nullable": true,
+          "notes": [
+            "default false"
+          ]
+        },
+        {
+          "name": "payoutsEnabled",
+          "type": "Boolean",
+          "nullable": true,
+          "notes": [
+            "default false"
+          ]
+        },
+        {
+          "name": "verificationHistory",
+          "type": "[VerificationEvent]",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "verificationHistory[].status",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum VERIFICATION_STATUSES"
+          ]
+        },
+        {
+          "name": "verificationHistory[].at",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        },
+        {
+          "name": "verificationHistory[].by",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "verificationHistory[].note",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "owner",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "products",
+      "file": "models/Product.ts",
+      "line": 68,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "price",
+          "type": "Number",
+          "nullable": false,
+          "notes": [
+            "min 0.01"
+          ]
+        },
+        {
+          "name": "category",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ categories"
+          ]
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "stock",
+          "type": "Number",
+          "nullable": true,
+          "notes": [
+            "default 1",
+            "min 0"
+          ]
+        },
+        {
+          "name": "seller",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "organization",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "manufacturer",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "deviceModel",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "yearOfManufacture",
+          "type": "Number",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "deviceClass",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum DEVICE_CLASSES"
+          ]
+        },
+        {
+          "name": "mdlNumber",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "condition",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum CONDITIONS"
+          ]
+        },
+        {
+          "name": "usageHours",
+          "type": "Number",
+          "nullable": true,
+          "notes": [
+            "min 0"
+          ]
+        },
+        {
+          "name": "lastServiceDate",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "lastCalibrationDate",
+          "type": "Date",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "serviceHistory",
+          "type": "[ServiceRecord]",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "serviceHistory[].date",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "serviceHistory[].type",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum SERVICE_TYPES"
+          ]
+        },
+        {
+          "name": "serviceHistory[].performedBy",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "serviceHistory[].notes",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "location.province",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum PROVINCES"
+          ]
+        },
+        {
+          "name": "location.city",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "suspended",
+          "type": "Boolean",
+          "nullable": true,
+          "notes": [
+            "default false"
+          ]
+        },
+        {
+          "name": "inspection",
+          "type": "Object",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "inspection.report",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ inspections"
+          ]
+        },
+        {
+          "name": "inspection.outcome",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "enum INSPECTION_OUTCOMES"
+          ]
+        },
+        {
+          "name": "inspection.inspectedAt",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "inspection.validUntil",
+          "type": "Date",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "inspection.inspectorName",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "reviews",
+      "file": "models/Review.ts",
+      "line": 11,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "product",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ products"
+          ]
+        },
+        {
+          "name": "user",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "→ users"
+          ]
+        },
+        {
+          "name": "score",
+          "type": "Number",
+          "nullable": false,
+          "notes": [
+            "min 1",
+            "max 5"
+          ]
+        },
+        {
+          "name": "comment",
+          "type": "String",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "rebiomed",
+      "provider": "mongodb",
+      "table": "users",
+      "file": "models/User.ts",
+      "line": 12,
+      "columns": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "isAdmin",
+          "type": "Boolean",
+          "nullable": true,
+          "notes": [
+            "default false"
+          ]
+        },
+        {
+          "name": "organization",
+          "type": "ObjectId",
+          "nullable": true,
+          "notes": [
+            "→ organizations"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "nullable": true,
+          "notes": [
+            "default Date.now"
+          ]
+        }
+      ],
+      "denies": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "Home",
+      "guards": []
+    },
+    {
+      "path": "/register",
+      "component": "Register",
+      "guards": []
+    },
+    {
+      "path": "/login",
+      "component": "Login",
+      "guards": []
+    },
+    {
+      "path": "/products",
+      "component": "ProductList",
+      "guards": []
+    },
+    {
+      "path": "/products/:id",
+      "component": "ProductDetail",
+      "guards": []
+    },
+    {
+      "path": "/cart",
+      "component": "CartPage",
+      "guards": []
+    },
+    {
+      "path": "/checkout",
+      "component": "CheckoutForm",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/orders",
+      "component": "OrderHistory",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/sell",
+      "component": "SellProduct",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/my-listings",
+      "component": "MyListings",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/organization",
+      "component": "OrganizationProfile",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/admin/verifications",
+      "component": "VerificationQueue",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/admin/disputes",
+      "component": "DisputeQueue",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/offers",
+      "component": "OffersPage",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/inspections",
+      "component": "InspectionsPage",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "/sales",
+      "component": "SalesPage",
+      "guards": [
+        "PrivateRoute"
+      ]
+    },
+    {
+      "path": "*",
+      "component": "NotFound",
+      "guards": []
+    }
+  ]
+}
