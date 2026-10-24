@@ -1535,7 +1535,10 @@
           ]
         }
       ],
-      "denies": []
+      "denies": [],
+      "uniques": [
+        "(LicenceBody, LicenceNumber)"
+      ]
     },
     {
       "database": "LabFlow",
@@ -2072,6 +2075,9 @@
       "denies": [],
       "checks": [
         "IsInsured = 1 OR Price IS NOT NULL"
+      ],
+      "uniques": [
+        "(RequisitionId, TestId)"
       ]
     },
     {
@@ -2333,6 +2339,9 @@
       "checks": [
         "Status = 'Cancelled' OR ValueNumeric IS NOT NULL OR ValueText IS NOT NULL",
         "Status NOT IN ('Final','Corrected') OR VerifiedAt IS NOT NULL"
+      ],
+      "uniques": [
+        "(RequisitionItemId, TestId)"
       ]
     },
     {
@@ -2412,7 +2421,10 @@
           ]
         }
       ],
-      "denies": []
+      "denies": [],
+      "uniques": [
+        "(RequisitionId, Version)"
+      ]
     },
     {
       "database": "LabFlow",
@@ -2889,9 +2901,12 @@
         },
         {
           "name": "Total",
-          "type": "AS",
-          "nullable": true,
-          "notes": []
+          "type": "COMPUTED",
+          "nullable": null,
+          "notes": [
+            "= Subtotal + Tax",
+            "persisted"
+          ]
         },
         {
           "name": "Status",
@@ -3960,7 +3975,10 @@
           "notes": []
         }
       ],
-      "denies": []
+      "denies": [],
+      "uniques": [
+        "(LegacyVisitNo, LegacyAzId, LegacyChildAzId, RowNo, RowNo2)"
+      ]
     },
     {
       "database": "LabFlow",
@@ -4049,6 +4067,9 @@
       "denies": [],
       "checks": [
         "Status <> 'Requisitioned' OR RequisitionId IS NOT NULL"
+      ],
+      "uniques": [
+        "(SourceClinic, ExternalId)"
       ]
     },
     {

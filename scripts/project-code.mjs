@@ -167,7 +167,8 @@ function expressRouters(repo, { app, access }) {
 }
 
 // SQL Server: CREATE TABLE blocks (columns, keys, defaults, checks, references), columns and
-// CHECKs added later by ALTER TABLE … ADD, unique indexes and DENY grants. Tables in a schema
+// CHECKs added later by ALTER TABLE … ADD, computed columns, unique keys and indexes, and DENY
+// grants (on a table or some of its columns). Tables in a schema
 // other than dbo carry it; the database is the script's USE, or the scan entry's own
 // ({ dir, database }) for scripts run against a database they don't name.
 function sqlTables(repo, entry) {
@@ -191,6 +192,10 @@ function sqlTables(repo, entry) {
     }
   }
   const column = (line) => {
+    // A computed column, Balance AS (Amount - Paid) PERSISTED: its expression is its note. Whether it can be null
+    // follows from that expression, so it isn't said.
+    const comp = /^\s*\[?(\w+)\]?\s+AS\s+\((.+)\)(\s+PERSISTED)?\s*,?\s*$/.exec(line)
+    if (comp) return { name: comp[1], type: 'COMPUTED', nullable: null, notes: [`= ${squash(comp[2])}`, ...(comp[3] ? ['persisted'] : [])] }
     const c = /^\s*\[?(\w+)\]?\s+([A-Za-z0-9]+(?:\(\s*(?:\d+|max|MAX)(?:,\s*\d+)?\))?)(?=[\s,;]|$)(.*?)[,;]?\s*$/.exec(line)
     if (!c || /^(CONSTRAINT|PERIOD|PRIMARY|UNIQUE|CHECK|FOREIGN|INDEX|ALTER|IF|GO)$/i.test(c[1])) return null
     const rest = c[3].replace(/\s*--.*$/, '')
@@ -206,6 +211,13 @@ function sqlTables(repo, entry) {
     if (ck) notes.push(`check ${squash(ck)}`)
     // A key column is never null, whether or not it says NOT NULL.
     return { name: c[1], type: c[2].toUpperCase(), nullable: !/NOT NULL|PRIMARY KEY/.test(rest), notes }
+  }
+  // UNIQUE over a list of columns: on one column a note on it, on several a key of the table.
+  const unique = (columns, uniques, list, where) => {
+    const names = list.split(',').map((x) => x.trim().replace(/^\[|\]$/g, ''))
+    const col = names.length === 1 && columns.find((c) => c.name === names[0])
+    if (col) col.notes.push(where ? `unique where ${where}` : 'unique')
+    else if (names.length > 1) uniques.push(`(${names.join(', ')})${where ? ` where ${where}` : ''}`)
   }
   for (const file of walk(path.join(repo, dir), (n) => n.endsWith('.sql')).sort()) {
     const rel = path.relative(repo, file).replace(/\\/g, '/')
@@ -232,10 +244,14 @@ function sqlTables(repo, entry) {
         const body = /CHECK \((.+)\)\s*;?\s*$/.exec(line)?.[1]
         if (t && body) t.checks = [...(t.checks ?? []), squash(body)]
       }
+      // A foreign key added afterwards (the tables reference each other): a note on its column.
+      const addFk = /ALTER TABLE (\w+)\.(\w+) ADD CONSTRAINT \w+ FOREIGN KEY \((\w+)\) REFERENCES (\w+)\.(\w+)/.exec(l)
+      if (addFk) find(addFk[1], addFk[2])?.columns.find((c) => c.name === addFk[3])?.notes.push(`→ ${addFk[4] === 'dbo' ? '' : addFk[4] + '.'}${addFk[5]}`)
       const create = /CREATE TABLE (\w+)\.(\w+) \(/.exec(l)
       if (create) {
         const columns = []
         const checks = []
+        const uniques = []
         for (let j = i + 1; j < src.length && !/^\s*\)/.test(src[j]); j++) {
           const { line, end } = logical(src, j)
           j = end
@@ -243,6 +259,8 @@ function sqlTables(repo, entry) {
           // shows as PK on each of them.
           const tc = /^\s*CONSTRAINT \w+ CHECK \((.+)\),?\s*$/.exec(line)
           if (tc) checks.push(squash(tc[1]))
+          const uq = /^\s*CONSTRAINT \w+ UNIQUE (?:CLUSTERED |NONCLUSTERED )?\(([^)]+)\)/.exec(line)
+          if (uq) unique(columns, uniques, uq[1])
           const pk = /^\s*CONSTRAINT \w+ PRIMARY KEY (?:CLUSTERED |NONCLUSTERED )?\(([^)]+)\)/.exec(line)
           if (pk) for (const name of pk[1].split(',').map((s) => s.trim().replace(/\s+(ASC|DESC)$/i, ''))) {
             const col = columns.find((x) => x.name === name)
@@ -261,13 +279,20 @@ function sqlTables(repo, entry) {
           columns,
           denies: [],
           ...(checks.length ? { checks } : {}),
+          ...(uniques.length ? { uniques } : {}),
         })
       }
-      // A unique index on one column, filtered or not, is a note on that column.
-      const ux = /CREATE UNIQUE (?:NONCLUSTERED )?INDEX \w+ ON (\w+)\.(\w+) \((\w+)\)(?: WHERE (.+?))?;?\s*$/.exec(l)
-      if (ux) find(ux[1], ux[2])?.columns.find((c) => c.name === ux[3])?.notes.push(ux[4] ? `unique where ${ux[4]}` : 'unique')
-      const deny = /DENY (.+) ON (\w+)\.(\w+) TO (\w+)/.exec(l)
-      if (deny) find(deny[2], deny[3])?.denies.push(`${deny[1]} to ${deny[4]}`)
+      // A unique index, filtered or not, the same way.
+      const ux = /CREATE UNIQUE (?:NONCLUSTERED )?INDEX \w+ ON (\w+)\.(\w+) \(([^)]+)\)(?: WHERE (.+?))?;?\s*$/.exec(l)
+      const ut = ux && find(ux[1], ux[2])
+      if (ut) {
+        const uniques = ut.uniques ?? []
+        unique(ut.columns, uniques, ux[3], ux[4])
+        if (uniques.length) ut.uniques = uniques
+      }
+      // DENY on a table, or on some of its columns: DENY SELECT ON org.Party (Email, Phone) TO reader.
+      const deny = /DENY (.+?) ON (\w+)\.(\w+)(?: \(([^)]+)\))?\s+TO (\w+)/.exec(l)
+      if (deny) find(deny[2], deny[3])?.denies.push(`${deny[1]}${deny[4] ? ` (${deny[4]})` : ''} to ${deny[5]}`)
     })
   }
   return out

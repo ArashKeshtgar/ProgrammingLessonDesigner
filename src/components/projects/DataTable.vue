@@ -54,7 +54,7 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
               <tr v-for="c in x.columns" :key="c.name">
                 <td dir="ltr"><code>{{ c.name }}</code></td>
                 <td dir="ltr"><code>{{ c.type }}</code></td>
-                <td>{{ c.nullable ? t.yes : t.no }}</td>
+                <td>{{ c.nullable === null ? '—' : c.nullable ? t.yes : t.no }}</td>
                 <td dir="ltr"><code v-for="n in c.notes" :key="n" class="note">{{ n }}</code></td>
               </tr>
             </tbody>
@@ -62,6 +62,9 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
         </div>
         <p v-if="x.checks?.length" class="muted">
           {{ t.checks }}: <code v-for="c in x.checks" :key="c" dir="ltr" class="note">{{ c }}</code>
+        </p>
+        <p v-if="x.uniques?.length" class="muted">
+          {{ t.uniques }}: <code v-for="u in x.uniques" :key="u" dir="ltr" class="note">{{ u }}</code>
         </p>
         <p v-if="x.indexes?.length" class="muted">
           {{ t.indexes }}: <code v-for="i in x.indexes" :key="i" dir="ltr" class="note">{{ i }}</code>

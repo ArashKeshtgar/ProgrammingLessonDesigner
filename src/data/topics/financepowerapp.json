@@ -1,0 +1,1408 @@
+{
+  "project": "financepowerapp",
+  "repo": "FinancePowerApp",
+  "scan": {
+    "aspnetEndpoints": ["src/FinancePowerApp.Api"],
+    "sql": [{ "dir": "database", "database": "FinancePowerApp" }],
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "origin", "title": { "en": "From a Power App to an ERP", "fa": "از یک Power App تا یک ERP" } },
+    { "id": "access", "title": { "en": "Sign-in and who may send", "fa": "ورود و این‌که چه کسی می‌تواند بفرستد" } },
+    { "id": "books", "title": { "en": "The books", "fa": "دفاتر" } },
+    { "id": "inbox", "title": { "en": "Documents from the applications", "fa": "سندهای اپ‌ها" } },
+    { "id": "items", "title": { "en": "Receivables, payables and HST", "fa": "مطالبات، بدهی‌ها و HST" } },
+    { "id": "reports", "title": { "en": "Reports and the web app", "fa": "گزارش‌ها و اپ وب" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it: the database, the API, the web app", "fa": "اجرا: دیتابیس، API، اپ وب" },
+      "files": ["README.md", "database/deploy.ps1", "src/FinancePowerApp.Api/Program.cs", "src/FinancePowerApp.Api/Properties/launchSettings.json", "web/vite.config.ts"],
+      "en": [
+        {
+          "id": "db",
+          "h": "The scripts own the schema",
+          "p": [
+            "There are no EF migrations: `database/*.sql` builds everything and Entity Framework only reads and writes. `deploy.ps1` runs each numbered script once, in order, and records it in `dbo.ErpMigration`, so the same command upgrades the existing Power Apps database and builds a new one (`-Recreate`). `-NoDemo` leaves out the opening balances."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "api",
+          "h": "The API and the web app",
+          "p": [
+            "`dotnet run` starts the ASP.NET Core Minimal API on port 5400, and `npm run dev` in `web/` the React app on 5401. Vite passes `/api` and the sign-in callbacks on to the API, so the browser stays on one origin and the API needs no CORS policy.",
+            "Secrets can come as files, one per setting, the way Docker mounts them in `/run/secrets`. The `connected` launch profile turns on sign-in through a local ClinicHub; the plain one runs with the development user."
+          ],
+          "examples": ["secrets", "proxy"],
+          "data": { "kind": "endpoints", "only": ["Program"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "اسکریپت‌ها صاحب schema هستند",
+          "p": [
+            "migration‌ی EF وجود ندارد: `database/*.sql` همه چیز را می‌سازد و Entity Framework فقط می‌خواند و می‌نویسد. `deploy.ps1` هر اسکریپت شماره‌دار را یک بار، به ترتیب، اجرا می‌کند و در `dbo.ErpMigration` ثبتش می‌کند، پس همان دستور هم دیتابیس فعلی Power Apps را ارتقا می‌دهد و هم یک دیتابیس تازه می‌سازد (`-Recreate`). `-NoDemo` مانده‌های افتتاحیه را کنار می‌گذارد."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "api",
+          "h": "API و اپ وب",
+          "p": [
+            "`dotnet run`، Minimal API با ASP.NET Core را روی پورت 5400 بالا می‌آورد، و `npm run dev` در `web/` اپ React را روی 5401. Vite مسیر `/api` و callbackهای ورود را به API می‌دهد، پس مرورگر روی یک origin می‌ماند و API به سیاست CORS نیاز ندارد.",
+            "secretها می‌توانند به‌صورت فایل بیایند، یکی برای هر تنظیم، همان‌طور که Docker آن‌ها را در `/run/secrets` mount می‌کند. پروفایل اجرای `connected` ورود از طریق یک ClinicHub محلی را روشن می‌کند؛ پروفایل ساده با کاربر توسعه اجرا می‌شود."
+          ],
+          "examples": ["secrets", "proxy"],
+          "data": { "kind": "endpoints", "only": ["Program"] }
+        }
+      ],
+      "examples": {
+        "deploy": {
+          "title": { "en": "Each script once", "fa": "هر اسکریپت یک بار" },
+          "lang": "powershell",
+          "file": "database/deploy.ps1",
+          "from": "foreach ($s in $scripts) {",
+          "lines": 6
+        },
+        "secrets": {
+          "title": { "en": "Secrets as files", "fa": "secret به‌صورت فایل" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Program.cs",
+          "from": "// Secrets as files, one per setting",
+          "lines": 2
+        },
+        "proxy": {
+          "title": { "en": "One origin through Vite", "fa": "یک origin از طریق Vite" },
+          "lang": "typescript",
+          "file": "web/vite.config.ts",
+          "from": "// The API runs on :5400",
+          "lines": 14
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": { "en": "Tests on a real SQL Server", "fa": "تست روی یک SQL Server واقعی" },
+      "files": ["tests/FinancePowerApp.Tests/ApiFactory.cs", "tests/FinancePowerApp.Tests/LedgerApiTests.cs", "tests/FinancePowerApp.Tests/PostingEngineTests.cs", "tests/FinancePowerApp.Tests/SignInTests.cs"],
+      "en": [
+        {
+          "id": "db",
+          "h": "A database built from the same scripts",
+          "p": [
+            "`dotnet test` creates a database with a fresh name, runs the numbered scripts into it, batch by batch at each `GO` (the way `sqlcmd` does), and drops it afterwards. The tests therefore run against the schema that production has, CHECK constraints and unique keys included."
+          ],
+          "examples": ["build"]
+        },
+        {
+          "id": "stories",
+          "h": "Tests that read like the books",
+          "p": [
+            "The API tests send documents as the applications would and check the books: a claim and its remittance settle the receivable, and sending the claim twice changes nothing; an unmapped category waits, then posts once mapped; a document for a closed month lands in the next open one. The posting engine has its own tests with no database at all, since it is a pure function."
+          ],
+          "examples": ["claim"]
+        },
+        {
+          "id": "prod",
+          "h": "Production without ClinicHub",
+          "p": [
+            "One test starts the API as Production with no ClinicHub settings and expects it to refuse to start."
+          ],
+          "examples": ["nostart"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "دیتابیسی ساخته‌شده از همان اسکریپت‌ها",
+          "p": [
+            "`dotnet test` یک دیتابیس با اسم تازه می‌سازد، اسکریپت‌های شماره‌دار را دسته به دسته در هر `GO` (همان‌طور که `sqlcmd` می‌کند) در آن اجرا می‌کند، و بعد پاکش می‌کند. پس تست‌ها روی همان schemaی اجرا می‌شوند که production دارد، از جمله قیدهای CHECK و کلیدهای یکتا."
+          ],
+          "examples": ["build"]
+        },
+        {
+          "id": "stories",
+          "h": "تست‌هایی که مثل دفاتر خوانده می‌شوند",
+          "p": [
+            "تست‌های API مثل خود اپ‌ها سند می‌فرستند و دفاتر را چک می‌کنند: یک claim و remittanceاش مطالبه را تسویه می‌کنند، و دو بار فرستادن claim چیزی را عوض نمی‌کند؛ دسته‌ی map‌نشده منتظر می‌ماند و بعد از map شدن ثبت می‌شود؛ سندی برای یک ماه بسته در اولین ماه باز بعدی می‌نشیند. موتور ثبت تست‌های خودش را بدون هیچ دیتابیسی دارد، چون یک تابع خالص است."
+          ],
+          "examples": ["claim"]
+        },
+        {
+          "id": "prod",
+          "h": "production بدون ClinicHub",
+          "p": [
+            "یک تست API را به‌صورت Production و بدون تنظیمات ClinicHub بالا می‌آورد و انتظار دارد اصلاً بالا نیاید."
+          ],
+          "examples": ["nostart"]
+        }
+      ],
+      "examples": {
+        "build": {
+          "title": { "en": "The scripts, batch by batch", "fa": "اسکریپت‌ها، دسته به دسته" },
+          "lang": "csharp",
+          "file": "tests/FinancePowerApp.Tests/ApiFactory.cs",
+          "from": "var dir = Path.Combine(AppContext.BaseDirectory, \"database\");",
+          "lines": 5
+        },
+        "claim": {
+          "title": { "en": "A claim, sent twice, then paid short", "fa": "یک claim، دو بار فرستاده، بعد کم پرداخت‌شده" },
+          "lang": "csharp",
+          "file": "tests/FinancePowerApp.Tests/LedgerApiTests.cs",
+          "from": "public async Task A_claim_and_its_remittance_settle_the_receivable",
+          "lines": 24
+        },
+        "nostart": {
+          "title": { "en": "Refuses to start", "fa": "بالا نمی‌آید" },
+          "lang": "csharp",
+          "file": "tests/FinancePowerApp.Tests/SignInTests.cs",
+          "from": "public void Outside_development_it_refuses_to_start_without_ClinicHub()",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "powerapp",
+      "group": "origin",
+      "title": { "en": "The Power App keeps working", "fa": "Power App کار می‌کند" },
+      "files": ["database/005_powerapp_baseline.sql", "database/011_expense_posting.sql", "src/FinancePowerApp.Api/Domain/Ledger.cs", "src/FinancePowerApp.Api/Data/FinanceDbContext.cs"],
+      "en": [
+        {
+          "id": "baseline",
+          "h": "Its schema, untouched",
+          "p": [
+            "It began as a Power Apps canvas app over Azure SQL that recorded expenses by month. Its tables, views, procedures and trigger stay exactly as they were. `005` creates each object only if it is missing: on the existing database nothing happens, on a new one it is rebuilt the same, so the ERP scripts always start from the same place."
+          ],
+          "data": { "kind": "tables", "only": ["AccountingPeriods", "ExpenseCategories", "Expenses"] }
+        },
+        {
+          "id": "trigger",
+          "h": "Its trigger decides how dbo.Expenses is written",
+          "p": [
+            "The Power App's `INSTEAD OF` trigger refuses expenses in a closed month and rewrites every insert and update with its own column list. A first version of the ERP added two columns to `dbo.Expenses`; the trigger would never have written them. So the ledger never writes there: which journal entry an approved expense became is kept in its own table, and `011` took the two columns back."
+          ],
+          "examples": ["trigger", "never"]
+        },
+        {
+          "id": "expenses",
+          "h": "Approved expenses into the ledger",
+          "p": [
+            "Approved expenses become bills of the head office, the full amount on the category's expense account. The Power App's tax column is the part deductible for income tax, not HST, so no input tax credit is taken from it. The months are the Power App's own `AccountingPeriods`, now unique per year and month."
+          ],
+          "examples": ["expenses"],
+          "data": { "kind": "endpoints", "only": ["Expenses"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "baseline",
+          "h": "schema‌ی آن، دست‌نخورده",
+          "p": [
+            "کارش را به‌صورت یک canvas app در Power Apps روی Azure SQL شروع کرد که هزینه‌ها را ماه به ماه ثبت می‌کرد. جدول‌ها، viewها، procedureها و trigger آن دقیقاً همان‌طور که بودند می‌مانند. `005` هر شیء را فقط اگر نباشد می‌سازد: روی دیتابیس فعلی هیچ اتفاقی نمی‌افتد، روی دیتابیس تازه همان‌طور ساخته می‌شود، پس اسکریپت‌های ERP همیشه از یک نقطه شروع می‌کنند."
+          ],
+          "data": { "kind": "tables", "only": ["AccountingPeriods", "ExpenseCategories", "Expenses"] }
+        },
+        {
+          "id": "trigger",
+          "h": "trigger آن تصمیم می‌گیرد dbo.Expenses چطور نوشته شود",
+          "p": [
+            "trigger‌ی `INSTEAD OF` در Power App هزینه در ماه بسته را رد می‌کند و هر insert و update را با فهرست ستون‌های خودش بازنویسی می‌کند. نسخه‌ی اول ERP دو ستون به `dbo.Expenses` اضافه کرد؛ trigger هیچ‌وقت آن‌ها را نمی‌نوشت. پس دفتر هیچ‌وقت آن‌جا نمی‌نویسد: این‌که یک هزینه‌ی تأییدشده کدام سند روزنامه شد در جدول خودش نگه داشته می‌شود، و `011` آن دو ستون را پس گرفت."
+          ],
+          "examples": ["trigger", "never"]
+        },
+        {
+          "id": "expenses",
+          "h": "هزینه‌های تأییدشده به دفتر",
+          "p": [
+            "هزینه‌های تأییدشده bill‌های دفتر مرکزی می‌شوند، کل مبلغ روی حساب هزینه‌ی همان دسته. ستون مالیات Power App بخش قابل کسر برای مالیات بر درآمد است، نه HST، پس هیچ input tax creditی از آن گرفته نمی‌شود. ماه‌ها همان `AccountingPeriods` خود Power App هستند، که حالا برای هر سال و ماه یکتاست."
+          ],
+          "examples": ["expenses"],
+          "data": { "kind": "endpoints", "only": ["Expenses"] }
+        }
+      ],
+      "examples": {
+        "trigger": {
+          "title": { "en": "The Power App's guard", "fa": "نگهبان Power App" },
+          "lang": "sql",
+          "file": "database/005_powerapp_baseline.sql",
+          "from": "-- The Power App's guard",
+          "lines": 26
+        },
+        "never": {
+          "title": { "en": "The two columns taken back", "fa": "دو ستونی که پس گرفته شد" },
+          "lang": "sql",
+          "file": "database/011_expense_posting.sql",
+          "from": "-- The Power App's dbo.Expenses has an INSTEAD OF trigger",
+          "lines": 7
+        },
+        "expenses": {
+          "title": { "en": "Bills of the head office, no ITC", "fa": "bill دفتر مرکزی، بدون ITC" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "/// Approved expenses not yet in the ledger become bills",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "signin",
+      "group": "access",
+      "title": { "en": "People sign in through ClinicHub", "fa": "افراد از طریق ClinicHub وارد می‌شوند" },
+      "files": ["src/FinancePowerApp.Api/Auth/AuthSetup.cs", "src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs", "tests/FinancePowerApp.Tests/SignInTests.cs"],
+      "en": [
+        {
+          "id": "oidc",
+          "h": "No users of its own",
+          "p": [
+            "FinancePowerApp keeps no user table. People sign in through ClinicHub with OpenID Connect (code flow with PKCE), and ClinicHub decides who may use the books, at which clinic, with which of three permissions: `ledger.view`, `ledger.post` and `admin` (its `finance:*` keys). `admin` implies the other two. Journal entries just carry the person's name.",
+            "Outside development there is no other way in: without ClinicHub's address and the client secret the API refuses to start. In development, and only there, a single developer user has every permission."
+          ],
+          "examples": ["start", "policies"]
+        },
+        {
+          "id": "recheck",
+          "h": "Re-checked every five minutes",
+          "p": [
+            "The session is a cookie, but every five minutes ClinicHub is asked again with the refresh token. If ClinicHub refuses (the role was removed, the person signed out everywhere), the session ends here too. If ClinicHub can't be reached, the session survives for 30 minutes and then ends."
+          ],
+          "examples": ["recheck", "local"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "oidc",
+          "h": "بدون کاربرهای خودش",
+          "p": [
+            "FinancePowerApp هیچ جدول کاربری ندارد. افراد با OpenID Connect (code flow همراه PKCE) از طریق ClinicHub وارد می‌شوند، و ClinicHub تصمیم می‌گیرد چه کسی، در کدام کلینیک، با کدام یک از سه مجوز از دفاتر استفاده کند: `ledger.view`، `ledger.post` و `admin` (کلیدهای `finance:*` آن). `admin` دو تای دیگر را هم در بر دارد. سندهای روزنامه فقط اسم فرد را حمل می‌کنند.",
+            "بیرون از حالت توسعه راه دیگری برای ورود نیست: بدون آدرس ClinicHub و client secret، API اصلاً بالا نمی‌آید. در حالت توسعه، و فقط آن‌جا، یک کاربر توسعه همه‌ی مجوزها را دارد."
+          ],
+          "examples": ["start", "policies"]
+        },
+        {
+          "id": "recheck",
+          "h": "هر پنج دقیقه دوباره چک می‌شود",
+          "p": [
+            "session یک کوکی است، ولی هر پنج دقیقه با refresh token دوباره از ClinicHub پرسیده می‌شود. اگر ClinicHub رد کند (نقش برداشته شده، فرد از همه‌جا خارج شده)، session این‌جا هم تمام می‌شود. اگر ClinicHub در دسترس نباشد، session سی دقیقه دوام می‌آورد و بعد تمام می‌شود."
+          ],
+          "examples": ["recheck", "local"]
+        }
+      ],
+      "examples": {
+        "start": {
+          "title": { "en": "No ClinicHub, no start", "fa": "بدون ClinicHub، بدون بالا آمدن" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/AuthSetup.cs",
+          "from": "if (!hub.SignInEnabled && !builder.Environment.IsDevelopment()",
+          "lines": 2
+        },
+        "policies": {
+          "title": { "en": "admin covers every permission", "fa": "admin همه‌ی مجوزها را دارد" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/AuthSetup.cs",
+          "from": "builder.Services.AddAuthorization(o =>",
+          "lines": 6
+        },
+        "recheck": {
+          "title": { "en": "Refused, or unreachable too long", "fa": "رد شده، یا خیلی طولانی در دسترس نبوده" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs",
+          "from": "if (DateTime.UtcNow - checkedAt >= TimeSpan.FromMinutes(options.RecheckMinutes))",
+          "lines": 15
+        },
+        "local": {
+          "title": { "en": "Only the finance permissions are kept", "fa": "فقط مجوزهای مالی نگه داشته می‌شوند" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs",
+          "from": "private static ClaimsPrincipal ToLocalPrincipal(",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "csrf",
+      "group": "access",
+      "title": { "en": "A cookie, and the X-Finance header", "fa": "یک کوکی، و هدر X-Finance" },
+      "files": ["src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs", "web/src/api.ts", "tests/FinancePowerApp.Tests/SignInTests.cs"],
+      "en": [
+        {
+          "id": "why",
+          "h": "Why a header",
+          "p": [
+            "A cookie goes with every request the browser makes, including one a foreign page triggers. So with sign-in through ClinicHub, an unsafe call to `/api` (anything but GET, HEAD, OPTIONS) must also carry `X-Finance`, which a browser can't add cross-site without the API allowing it by CORS. The cookie is `SameSite=Lax`, because the browser arrives from ClinicHub's sign-in page."
+          ],
+          "examples": ["check"]
+        },
+        {
+          "id": "apps",
+          "h": "The applications don't need it",
+          "p": [
+            "Documents from the applications carry a bearer token, which a browser never adds by itself, so they pass without the header. The React app sends it on every request."
+          ],
+          "examples": ["header", "test"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "چرا یک هدر",
+          "p": [
+            "کوکی با هر درخواستی که مرورگر می‌فرستد می‌رود، از جمله درخواستی که یک صفحه‌ی غریبه راه بیندازد. پس با ورود از طریق ClinicHub، یک call ناامن به `/api` (هر چیزی جز GET، HEAD، OPTIONS) باید `X-Finance` را هم داشته باشد، که مرورگر بدون اجازه‌ی API از راه CORS نمی‌تواند بین سایت‌ها اضافه کند. کوکی `SameSite=Lax` است، چون مرورگر از صفحه‌ی ورود ClinicHub برمی‌گردد."
+          ],
+          "examples": ["check"]
+        },
+        {
+          "id": "apps",
+          "h": "اپ‌ها لازمش ندارند",
+          "p": [
+            "سندهای اپ‌ها یک bearer token دارند، که مرورگر هیچ‌وقت خودش اضافه نمی‌کند، پس بدون هدر رد می‌شوند. اپ React آن را با هر درخواست می‌فرستد."
+          ],
+          "examples": ["header", "test"]
+        }
+      ],
+      "examples": {
+        "check": {
+          "title": { "en": "Unsafe /api calls need the header", "fa": "callهای ناامن /api هدر لازم دارند" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs",
+          "from": "public static IApplicationBuilder UseCsrfHeaderCheck(",
+          "lines": 12
+        },
+        "header": {
+          "title": { "en": "Sent by the React app", "fa": "فرستاده‌شده توسط اپ React" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "// X-Finance: with sign-in through ClinicHub",
+          "lines": 2
+        },
+        "test": {
+          "title": { "en": "No header: 400; a bearer token: through", "fa": "بدون هدر: 400؛ با bearer token: رد می‌شود" },
+          "lang": "csharp",
+          "file": "tests/FinancePowerApp.Tests/SignInTests.cs",
+          "from": "// The documents endpoint is open to the sign-in",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "senders",
+      "group": "access",
+      "title": { "en": "Which applications may send documents", "fa": "کدام اپ‌ها می‌توانند سند بفرستند" },
+      "files": ["src/FinancePowerApp.Api/Auth/AuthSetup.cs", "src/FinancePowerApp.Api/Endpoints/IntegrationEndpoints.cs", "src/FinancePowerApp.Api/appsettings.Development.json"],
+      "en": [
+        {
+          "id": "token",
+          "h": "A ClinicHub token for finance",
+          "p": [
+            "`POST /api/integration/documents` is outside the people's sign-in: it checks the sender itself. It wants a ClinicHub access token for the audience `finance` with the scope `finance`, issued to one of four applications: ClinicHub, LabFlow, ClinicReport and PharmaFlow. The applications get theirs with client credentials; ClinicHub signs its own.",
+            "In development, and in the tests, a per-application key in `X-Finance-Key` stands in for the token. Anywhere else the key is ignored."
+          ],
+          "examples": ["sources", "source"],
+          "data": { "kind": "endpoints", "only": ["Integration"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "token",
+          "h": "یک token از ClinicHub برای finance",
+          "p": [
+            "`POST /api/integration/documents` بیرون از ورود افراد است: فرستنده را خودش چک می‌کند. یک access token از ClinicHub برای audience‌ی `finance` با scope‌ی `finance` می‌خواهد، صادرشده برای یکی از چهار اپ: ClinicHub، LabFlow، ClinicReport و PharmaFlow. اپ‌ها token خودشان را با client credentials می‌گیرند؛ ClinicHub مال خودش را امضا می‌کند.",
+            "در حالت توسعه، و در تست‌ها، یک کلید مخصوص هر اپ در `X-Finance-Key` جای token را می‌گیرد. هر جای دیگری کلید نادیده گرفته می‌شود."
+          ],
+          "examples": ["sources", "source"],
+          "data": { "kind": "endpoints", "only": ["Integration"] }
+        }
+      ],
+      "examples": {
+        "sources": {
+          "title": { "en": "The four senders", "fa": "چهار فرستنده" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/AuthSetup.cs",
+          "from": "public static readonly string[] Sources",
+          "lines": 1
+        },
+        "source": {
+          "title": { "en": "Token first; a key only in development", "fa": "اول token؛ کلید فقط در حالت توسعه" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Auth/AuthSetup.cs",
+          "from": "var hub = http.RequestServices.GetRequiredService<IOptions<ClinicHubOptions>>().Value;",
+          "to": "return key.Length > 0"
+        }
+      }
+    },
+    {
+      "id": "businesses",
+      "group": "books",
+      "title": { "en": "Businesses and parties", "fa": "کسب‌وکارها و طرف‌حساب‌ها" },
+      "files": ["database/010_erp_schema.sql", "database/020_seed_reference.sql", "src/FinancePowerApp.Api/Data/Entities.cs", "src/FinancePowerApp.Api/Domain/Ledger.cs"],
+      "en": [
+        {
+          "id": "entities",
+          "h": "Several sets of books in one database",
+          "p": [
+            "Each clinic, the lab, the pharmacy and the head office keep their own books; in Ontario each is usually its own corporation with its own HST number. A filtered unique index allows exactly one default business (the head office), which takes the Power App's expenses.",
+            "Whether a business can claim back the HST it pays depends on its kind: a clinic or a lab makes only exempt health care supplies and can't, so the HST becomes part of the cost; a pharmacy's prescriptions are zero-rated, so it can."
+          ],
+          "examples": ["itc"],
+          "data": { "kind": "tables", "only": ["Entity", "EntitySource", "Party"] }
+        },
+        {
+          "id": "sources",
+          "h": "Whose document is this?",
+          "p": [
+            "An application names a business in its own words: ClinicHub's clinic slug, LabFlow's `lab`. `EntitySource` maps each application's word to a business, and a business can also be named by its own code."
+          ],
+          "examples": ["resolve"]
+        },
+        {
+          "id": "patients",
+          "h": "Patients are one party",
+          "p": [
+            "Parties are who owes or is owed: OHIP, ODB, WSIB, another province, an insurer, a physician, a supplier. Patients are never named: they are a single party, \"Patients (private pay)\", and a patient's balance is followed by the application's invoice number. The application keeps who the patient is."
+          ],
+          "examples": ["patient"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "entities",
+          "h": "چند دفتر در یک دیتابیس",
+          "p": [
+            "هر کلینیک، آزمایشگاه، داروخانه و دفتر مرکزی دفاتر خودشان را دارند؛ در انتاریو هر کدام معمولاً یک شرکت جدا با شماره‌ی HST خودش است. یک unique index فیلترشده دقیقاً یک کسب‌وکار پیش‌فرض (دفتر مرکزی) را اجازه می‌دهد، که هزینه‌های Power App را می‌گیرد.",
+            "این‌که یک کسب‌وکار بتواند HSTی را که پرداخته پس بگیرد به نوعش بستگی دارد: کلینیک یا آزمایشگاه فقط خدمات سلامت معاف عرضه می‌کند و نمی‌تواند، پس HST جزو هزینه می‌شود؛ نسخه‌های داروخانه نرخ صفر دارند، پس می‌تواند."
+          ],
+          "examples": ["itc"],
+          "data": { "kind": "tables", "only": ["Entity", "EntitySource", "Party"] }
+        },
+        {
+          "id": "sources",
+          "h": "این سند مال کیست؟",
+          "p": [
+            "اپ کسب‌وکار را با کلمه‌ی خودش نام می‌برد: slug کلینیک در ClinicHub، `lab` در LabFlow. `EntitySource` کلمه‌ی هر اپ را به یک کسب‌وکار وصل می‌کند، و کسب‌وکار را با کد خودش هم می‌شود نام برد."
+          ],
+          "examples": ["resolve"]
+        },
+        {
+          "id": "patients",
+          "h": "بیمارها یک طرف‌حساب‌اند",
+          "p": [
+            "طرف‌حساب‌ها کسانی‌اند که بدهکار یا طلبکارند: OHIP، ODB، WSIB، استانی دیگر، یک بیمه، یک پزشک، یک تأمین‌کننده. بیمارها هیچ‌وقت نام برده نمی‌شوند: یک طرف‌حساب واحدند، «Patients (private pay)»، و مانده‌ی هر بیمار با شماره‌ی فاکتور اپ دنبال می‌شود. این‌که بیمار کیست را خود اپ نگه می‌دارد."
+          ],
+          "examples": ["patient"]
+        }
+      ],
+      "examples": {
+        "itc": {
+          "title": { "en": "Who can claim HST back", "fa": "چه کسی می‌تواند HST را پس بگیرد" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Data/Entities.cs",
+          "from": "/// A business making zero-rated or taxable supplies",
+          "lines": 5
+        },
+        "resolve": {
+          "title": { "en": "The application's word, or the business's code", "fa": "کلمه‌ی اپ، یا کد کسب‌وکار" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "public async Task<Entity?> ResolveEntityAsync(",
+          "lines": 8
+        },
+        "patient": {
+          "title": { "en": "Never a patient's name", "fa": "هیچ‌وقت اسم بیمار" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "/// <summary>The party a document names, created the first time.",
+          "lines": 12
+        }
+      }
+    },
+    {
+      "id": "accounts",
+      "group": "books",
+      "title": { "en": "Chart of accounts and tax codes", "fa": "سرفصل حساب‌ها و کدهای مالیاتی" },
+      "files": ["database/010_erp_schema.sql", "database/020_seed_reference.sql", "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs"],
+      "en": [
+        {
+          "id": "coa",
+          "h": "Accounts for an Ontario clinic group",
+          "p": [
+            "Receivables per payer (OHIP, other provinces, ODB, WSIB, insurers, patients), revenue per line of business (OHIP professional and technical fees, uninsured services, lab, echo and ECG, prescriptions, dispensing fees, front store), physician fees, the cost of drugs. Each account carries its CRA GIFI line for the T2 return."
+          ],
+          "examples": ["coa"],
+          "data": { "kind": "tables", "only": ["Account", "TaxCode"] }
+        },
+        {
+          "id": "type",
+          "h": "An account with postings keeps its type",
+          "p": [
+            "Changing an asset into an expense would move its history from the balance sheet to the income statement. Once an account has postings its type is fixed; a new account is the way."
+          ],
+          "examples": ["type"]
+        },
+        {
+          "id": "tax",
+          "h": "Four tax codes",
+          "p": [
+            "HST at 13 % for taxable supplies; zero-rated for prescription drugs (no tax, credits can be claimed); exempt for health care services (no tax, no credits); and outside HST for what isn't a supply at all."
+          ],
+          "examples": ["tax"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "coa",
+          "h": "حساب‌هایی برای یک گروه کلینیک در انتاریو",
+          "p": [
+            "مطالبات به تفکیک پرداخت‌کننده (OHIP، استان‌های دیگر، ODB، WSIB، بیمه‌ها، بیمارها)، درآمد به تفکیک خط کسب‌وکار (حق‌الزحمه‌ی حرفه‌ای و فنی OHIP، خدمات غیربیمه‌ای، آزمایشگاه، اکو و ECG، نسخه‌ها، حق نسخه‌پیچی، فروشگاه)، حق‌الزحمه‌ی پزشکان، بهای تمام‌شده‌ی دارو. هر حساب خط GIFI خودش در CRA را برای اظهارنامه‌ی T2 دارد."
+          ],
+          "examples": ["coa"],
+          "data": { "kind": "tables", "only": ["Account", "TaxCode"] }
+        },
+        {
+          "id": "type",
+          "h": "حسابی که ثبت دارد نوعش را نگه می‌دارد",
+          "p": [
+            "عوض کردن یک دارایی به هزینه تاریخچه‌اش را از ترازنامه به صورت سود و زیان می‌برد. وقتی حسابی ثبت داشته باشد نوعش ثابت است؛ راهش یک حساب تازه است."
+          ],
+          "examples": ["type"]
+        },
+        {
+          "id": "tax",
+          "h": "چهار کد مالیاتی",
+          "p": [
+            "HST سیزده درصد برای عرضه‌های مشمول؛ نرخ صفر برای داروهای نسخه‌ای (بدون مالیات، با امکان پس گرفتن اعتبار)؛ معاف برای خدمات سلامت (بدون مالیات، بدون اعتبار)؛ و بیرون از HST برای چیزی که اصلاً عرضه نیست."
+          ],
+          "examples": ["tax"]
+        }
+      ],
+      "examples": {
+        "coa": {
+          "title": { "en": "Receivables, one per payer", "fa": "مطالبات، یکی برای هر پرداخت‌کننده" },
+          "lang": "sql",
+          "file": "database/020_seed_reference.sql",
+          "from": "('1100', N'Accounts receivable – OHIP'",
+          "lines": 5
+        },
+        "type": {
+          "title": { "en": "Refused once there are postings", "fa": "وقتی ثبت هست رد می‌شود" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs",
+          "from": "// An account with postings keeps its type",
+          "lines": 3
+        },
+        "tax": {
+          "title": { "en": "Ontario HST", "fa": "HST انتاریو" },
+          "lang": "sql",
+          "file": "database/020_seed_reference.sql",
+          "from": "INSERT tax.TaxCode",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "journal",
+      "group": "books",
+      "title": { "en": "The journal: double entry, never edited", "fa": "دفتر روزنامه: دوطرفه، هرگز ویرایش‌نشده" },
+      "files": ["src/FinancePowerApp.Api/Domain/Ledger.cs", "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs", "database/010_erp_schema.sql"],
+      "en": [
+        {
+          "id": "lines",
+          "h": "Every entry balances",
+          "p": [
+            "A manual entry needs at least two lines; each line is either a debit or a credit, in dollars and cents; debits equal credits; every account is active and takes postings. The database says the same in its own words: a CHECK on each line (a debit or a credit, never both, never zero), and one on each entry (a posted entry names who posted it and when)."
+          ],
+          "examples": ["lines"],
+          "data": { "kind": "tables", "only": ["JournalEntry", "JournalLine"] }
+        },
+        {
+          "id": "reverse",
+          "h": "Corrected by a mirror image",
+          "p": [
+            "A draft can be deleted. A posted entry never is, and never edited: it is reversed by its mirror image, dated in an open month, and both stay in the ledger. A unique index allows only one reversal per entry. Numbers come from a SQL sequence, per business: `JE-HV-000123`."
+          ],
+          "examples": ["draft", "reverse"]
+        },
+        {
+          "id": "api",
+          "h": "The ledger's endpoints",
+          "p": [
+            "Reading needs `ledger.view`, entries `ledger.post`, and setting up businesses, parties, accounts, months and maps `admin`. A rule of the books that refuses a request (an unbalanced entry, a closed month) answers 409 with the reason."
+          ],
+          "data": { "kind": "endpoints", "only": ["Ledger"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "lines",
+          "h": "هر سند تراز است",
+          "p": [
+            "سند دستی حداقل دو سطر لازم دارد؛ هر سطر یا بدهکار است یا بستانکار، به دلار و سنت؛ جمع بدهکار با جمع بستانکار برابر است؛ هر حساب فعال است و ثبت می‌پذیرد. دیتابیس همین را با زبان خودش می‌گوید: یک CHECK روی هر سطر (بدهکار یا بستانکار، هرگز هر دو، هرگز صفر)، و یکی روی هر سند (سند ثبت‌شده می‌گوید چه کسی و کی ثبتش کرده)."
+          ],
+          "examples": ["lines"],
+          "data": { "kind": "tables", "only": ["JournalEntry", "JournalLine"] }
+        },
+        {
+          "id": "reverse",
+          "h": "اصلاح با یک تصویر آینه‌ای",
+          "p": [
+            "پیش‌نویس را می‌شود پاک کرد. سند ثبت‌شده هرگز پاک نمی‌شود و هرگز ویرایش نمی‌شود: با تصویر آینه‌ای‌اش، با تاریخی در یک ماه باز، برگشت می‌خورد و هر دو در دفتر می‌مانند. یک unique index فقط یک برگشت برای هر سند اجازه می‌دهد. شماره‌ها از یک sequence در SQL می‌آیند، برای هر کسب‌وکار: `JE-HV-000123`."
+          ],
+          "examples": ["draft", "reverse"]
+        },
+        {
+          "id": "api",
+          "h": "endpointهای دفتر",
+          "p": [
+            "خواندن `ledger.view` لازم دارد، سندها `ledger.post`، و تنظیم کسب‌وکارها، طرف‌حساب‌ها، حساب‌ها، ماه‌ها و mapها `admin`. قانونی از دفاتر که درخواستی را رد کند (سند ناتراز، ماه بسته) با 409 و دلیلش جواب می‌دهد."
+          ],
+          "data": { "kind": "endpoints", "only": ["Ledger"] }
+        }
+      ],
+      "examples": {
+        "lines": {
+          "title": { "en": "What a manual entry must be", "fa": "سند دستی باید چه باشد" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "private async Task CheckLinesAsync(",
+          "lines": 17
+        },
+        "draft": {
+          "title": { "en": "Only a draft is deleted", "fa": "فقط پیش‌نویس پاک می‌شود" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "public async Task DeleteDraftAsync(",
+          "lines": 8
+        },
+        "reverse": {
+          "title": { "en": "Debits and credits swapped", "fa": "جای بدهکار و بستانکار عوض می‌شود" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "/// <summary>A posted entry is corrected by its mirror image",
+          "lines": 23
+        }
+      }
+    },
+    {
+      "id": "periods",
+      "group": "books",
+      "title": { "en": "Months: closing and late postings", "fa": "ماه‌ها: بستن و ثبت دیرهنگام" },
+      "files": ["src/FinancePowerApp.Api/Domain/Ledger.cs", "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs", "database/020_seed_reference.sql"],
+      "en": [
+        {
+          "id": "close",
+          "h": "Closing a month",
+          "p": [
+            "The months are the Power App's. A month closes only when nothing in it is unfinished: no draft entries, and no document dated in it still waiting for an account mapping. A closed month takes no entries; the Power App's trigger already refused expenses in it."
+          ],
+          "examples": ["close"]
+        },
+        {
+          "id": "late",
+          "h": "A document for a closed month",
+          "p": [
+            "An application can't know the accountant closed September. A document dated in a closed month is posted on the first day of the next open month, marked as a late posting, with its real date in the memo. Nothing is refused and nothing is lost."
+          ],
+          "examples": ["late", "memo"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "close",
+          "h": "بستن یک ماه",
+          "p": [
+            "ماه‌ها مال Power App هستند. یک ماه فقط وقتی بسته می‌شود که هیچ چیز نیمه‌کاره‌ای در آن نباشد: نه سند پیش‌نویس، نه سندی با تاریخ آن ماه که هنوز منتظر map حساب باشد. ماه بسته سند نمی‌پذیرد؛ trigger‌ی Power App هم از قبل هزینه در آن را رد می‌کرد."
+          ],
+          "examples": ["close"]
+        },
+        {
+          "id": "late",
+          "h": "سندی برای یک ماه بسته",
+          "p": [
+            "اپ نمی‌تواند بداند حسابدار شهریور را بسته. سندی با تاریخ یک ماه بسته در روز اول اولین ماه باز بعدی ثبت می‌شود، با علامت ثبت دیرهنگام و تاریخ واقعی‌اش در شرح. هیچ چیز رد نمی‌شود و هیچ چیز گم نمی‌شود."
+          ],
+          "examples": ["late", "memo"]
+        }
+      ],
+      "examples": {
+        "close": {
+          "title": { "en": "No drafts, nothing waiting", "fa": "بدون پیش‌نویس، بدون منتظر" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "public async Task ClosePeriodAsync(",
+          "lines": 15
+        },
+        "late": {
+          "title": { "en": "The next open month", "fa": "اولین ماه باز بعدی" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "/// <summary>The date's month, or, when it is closed",
+          "lines": 16
+        },
+        "memo": {
+          "title": { "en": "The real date in the memo", "fa": "تاریخ واقعی در شرح" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "private static string? Memo(FinancialDocument d, bool late) =>",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "documents",
+      "group": "inbox",
+      "title": { "en": "What the applications send", "fa": "اپ‌ها چه می‌فرستند" },
+      "files": ["src/FinancePowerApp.Api/Domain/FinancialDocument.cs", "src/FinancePowerApp.Api/Endpoints/IntegrationEndpoints.cs", "src/FinancePowerApp.Api/Domain/Ledger.cs", "README.md"],
+      "en": [
+        {
+          "id": "words",
+          "h": "In their own words, never accounts",
+          "p": [
+            "When money changes hands an application sends a document: its kind (Invoice, Receipt, Adjustment, Bill, Payment, Usage, Reversal), the other party, and what each line is, as a category like `OHIP.Professional` or `Pharmacy.Drug`. It never names an account; the ledger's maps decide. And no health information: no patient names, health card numbers, diagnoses or fee codes."
+          ],
+          "examples": ["contract", "record"],
+          "data": { "kind": "tables", "only": ["Document"] }
+        },
+        {
+          "id": "once",
+          "h": "Sent twice, counted once",
+          "p": [
+            "Each document is kept as it arrived, under a unique key of the application and its own id. Sending it again returns the stored one marked as a duplicate. Two copies arriving at the same moment both try to insert; the unique key lets one in, and the other finds it and answers the same."
+          ],
+          "examples": ["once", "race"]
+        },
+        {
+          "id": "batch",
+          "h": "Checked before anything is stored",
+          "p": [
+            "A call carries 1 to 200 documents, and every one is validated before any is stored: amounts positive in dollars and cents, a known tax code, a category where the kind needs one, a payment method where money moved. One bad document refuses the call, with the field that is wrong."
+          ],
+          "examples": ["limit"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "words",
+          "h": "با کلمه‌های خودشان، هرگز حساب",
+          "p": [
+            "وقتی پولی جابه‌جا می‌شود، اپ یک سند می‌فرستد: نوعش (Invoice، Receipt، Adjustment، Bill، Payment، Usage، Reversal)، طرف‌حساب، و این‌که هر سطر چیست، به‌صورت دسته‌ای مثل `OHIP.Professional` یا `Pharmacy.Drug`. هیچ‌وقت اسم حساب را نمی‌آورد؛ mapهای دفتر تصمیم می‌گیرند. و هیچ اطلاعات سلامتی: نه اسم بیمار، نه شماره‌ی کارت سلامت، نه تشخیص، نه کد خدمت."
+          ],
+          "examples": ["contract", "record"],
+          "data": { "kind": "tables", "only": ["Document"] }
+        },
+        {
+          "id": "once",
+          "h": "دو بار فرستاده، یک بار حساب‌شده",
+          "p": [
+            "هر سند همان‌طور که رسیده نگه داشته می‌شود، زیر یک کلید یکتا از اپ و id خود اپ. فرستادن دوباره‌اش همان سند ذخیره‌شده را با علامت تکراری برمی‌گرداند. دو نسخه که هم‌زمان برسند هر دو سعی می‌کنند insert کنند؛ کلید یکتا یکی را راه می‌دهد، و دیگری آن را پیدا می‌کند و همان جواب را می‌دهد."
+          ],
+          "examples": ["once", "race"]
+        },
+        {
+          "id": "batch",
+          "h": "قبل از ذخیره‌ی هر چیز چک می‌شود",
+          "p": [
+            "هر call یک تا ۲۰۰ سند می‌آورد، و همه قبل از ذخیره‌ی هر کدام اعتبارسنجی می‌شوند: مبلغ مثبت به دلار و سنت، کد مالیاتی شناخته‌شده، دسته جایی که نوع سند لازم دارد، روش پرداخت جایی که پول جابه‌جا شده. یک سند بد کل call را رد می‌کند، با فیلدی که اشتباه است."
+          ],
+          "examples": ["limit"]
+        }
+      ],
+      "examples": {
+        "contract": {
+          "title": { "en": "What a document is", "fa": "سند چیست" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/FinancialDocument.cs",
+          "from": "/// What an application sends when money changes hands",
+          "lines": 3
+        },
+        "record": {
+          "title": { "en": "The shape", "fa": "شکل آن" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/FinancialDocument.cs",
+          "from": "public record FinancialDocument(",
+          "lines": 3
+        },
+        "once": {
+          "title": { "en": "Already received", "fa": "قبلاً رسیده" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "var existing = await db.Documents.SingleOrDefaultAsync(x => x.Source == source && x.ExternalId == d.ExternalId);",
+          "lines": 3
+        },
+        "race": {
+          "title": { "en": "Two at the same moment", "fa": "دو تا در یک لحظه" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "catch (DbUpdateException)",
+          "lines": 8
+        },
+        "limit": {
+          "title": { "en": "1 to 200 at a time", "fa": "یک تا ۲۰۰ در هر بار" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Endpoints/IntegrationEndpoints.cs",
+          "from": "if (documents.Length is 0 or > 200)",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "posting",
+      "group": "inbox",
+      "title": { "en": "The posting engine", "fa": "موتور ثبت" },
+      "files": ["src/FinancePowerApp.Api/Domain/PostingEngine.cs", "src/FinancePowerApp.Api/Domain/Ledger.cs", "database/020_seed_reference.sql"],
+      "en": [
+        {
+          "id": "pure",
+          "h": "A pure function",
+          "p": [
+            "`PostingEngine.Plan` takes the document, the business and the maps, and returns the journal lines, what happens to receivables and payables, and which words have no account yet. It reads nothing and writes nothing, which is why it is tested without a database."
+          ],
+          "examples": ["pure"]
+        },
+        {
+          "id": "kinds",
+          "h": "Double entry for each kind",
+          "p": [
+            "An invoice debits the receivable of the party's type (OHIP's own account) and credits each line's category, plus HST payable. A bill debits each line's category and credits the payable, and here the business's kind matters: a pharmacy puts the HST it paid on the input tax credit account, a clinic adds it to the cost. Receipts, payments, adjustments and stock usage each have their own case."
+          ],
+          "examples": ["invoice", "bill"]
+        },
+        {
+          "id": "maps",
+          "h": "Three kinds of maps",
+          "p": [
+            "Category maps turn a line's word into an account, for every business or for one, and a business's own map wins. Control maps give each party type its receivable and payable account. Cash maps say where money went: EFT to the bank, cash to the drawer, a card to the clearing account."
+          ],
+          "examples": ["override"],
+          "data": { "kind": "tables", "only": ["CategoryMap", "ControlMap", "CashMap"] }
+        }
+      ],
+      "fa": [
+        {
+          "id": "pure",
+          "h": "یک تابع خالص",
+          "p": [
+            "`PostingEngine.Plan` سند، کسب‌وکار و mapها را می‌گیرد و سطرهای روزنامه، اتفاقی که برای مطالبات و بدهی‌ها می‌افتد، و کلمه‌هایی که هنوز حساب ندارند را برمی‌گرداند. هیچ چیز نمی‌خواند و هیچ چیز نمی‌نویسد، به همین دلیل بدون دیتابیس تست می‌شود."
+          ],
+          "examples": ["pure"]
+        },
+        {
+          "id": "kinds",
+          "h": "ثبت دوطرفه برای هر نوع",
+          "p": [
+            "Invoice حساب دریافتنی نوع طرف‌حساب (حساب خود OHIP) را بدهکار و دسته‌ی هر سطر را بستانکار می‌کند، به‌علاوه‌ی HST پرداختنی. Bill دسته‌ی هر سطر را بدهکار و حساب پرداختنی را بستانکار می‌کند، و این‌جا نوع کسب‌وکار مهم است: داروخانه HSTی را که پرداخته روی حساب input tax credit می‌گذارد، کلینیک آن را به هزینه اضافه می‌کند. دریافت، پرداخت، تعدیل و مصرف موجودی هر کدام حالت خودشان را دارند."
+          ],
+          "examples": ["invoice", "bill"]
+        },
+        {
+          "id": "maps",
+          "h": "سه نوع map",
+          "p": [
+            "map دسته کلمه‌ی یک سطر را به یک حساب تبدیل می‌کند، برای همه‌ی کسب‌وکارها یا برای یکی، و map خود کسب‌وکار برنده است. map کنترل به هر نوع طرف‌حساب حساب دریافتنی و پرداختنی‌اش را می‌دهد. map نقد می‌گوید پول کجا رفته: EFT به بانک، نقد به صندوق، کارت به حساب واسط."
+          ],
+          "examples": ["override"],
+          "data": { "kind": "tables", "only": ["CategoryMap", "ControlMap", "CashMap"] }
+        }
+      ],
+      "examples": {
+        "pure": {
+          "title": { "en": "Pure", "fa": "خالص" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/PostingEngine.cs",
+          "from": "/// Double entry for each kind of document. Pure",
+          "lines": 2
+        },
+        "invoice": {
+          "title": { "en": "An invoice", "fa": "یک Invoice" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/PostingEngine.cs",
+          "from": "case DocumentKinds.Invoice:",
+          "lines": 15
+        },
+        "bill": {
+          "title": { "en": "A bill: recoverable HST or cost", "fa": "یک Bill: HST قابل‌برگشت یا هزینه" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/PostingEngine.cs",
+          "from": "case DocumentKinds.Bill:",
+          "lines": 17
+        },
+        "override": {
+          "title": { "en": "The business's own map wins", "fa": "map خود کسب‌وکار برنده است" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "// A business's own mapping wins over the default.",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "waiting",
+      "group": "inbox",
+      "title": { "en": "Waiting for a mapping, and reversals", "fa": "منتظر map، و برگشت‌ها" },
+      "files": ["src/FinancePowerApp.Api/Domain/Ledger.cs", "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs", "tests/FinancePowerApp.Tests/LedgerApiTests.cs", "web/src/pages/Inbox.tsx"],
+      "en": [
+        {
+          "id": "wait",
+          "h": "A new word waits, it isn't refused",
+          "p": [
+            "When a document uses a category no map knows yet, or comes from a business no source map names, it is kept as `NeedsMapping` with the reason. The application has done its part; the accountant maps the word under Setup, and saving the map posts every document that was waiting for it."
+          ],
+          "examples": ["wait", "map"]
+        },
+        {
+          "id": "test",
+          "h": "In a test",
+          "p": [
+            "A travel-medicine invoice arrives before anyone mapped `Uninsured.TravelMedicine`: it waits. Mapping the word to the uninsured services account posts it."
+          ],
+          "examples": ["test"]
+        },
+        {
+          "id": "reversal",
+          "h": "A Reversal undoes an earlier document",
+          "p": [
+            "A voided claim is sent as a Reversal naming the original's id. Its entry is reversed, and its effect on the open item taken back: the receivable it raised drops to zero. A Reversal of something never received, or not posted, waits like any other."
+          ],
+          "examples": ["undo"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "wait",
+          "h": "کلمه‌ی تازه منتظر می‌ماند، رد نمی‌شود",
+          "p": [
+            "وقتی سندی از دسته‌ای استفاده کند که هنوز هیچ mapی نمی‌شناسد، یا از کسب‌وکاری بیاید که هیچ map منبعی نامش را نبرده، به‌صورت `NeedsMapping` با دلیلش نگه داشته می‌شود. اپ کار خودش را کرده؛ حسابدار کلمه را در Setup map می‌کند، و ذخیره‌ی map هر سندی را که منتظرش بوده ثبت می‌کند."
+          ],
+          "examples": ["wait", "map"]
+        },
+        {
+          "id": "test",
+          "h": "در یک تست",
+          "p": [
+            "فاکتور طب سفر قبل از این‌که کسی `Uninsured.TravelMedicine` را map کند می‌رسد: منتظر می‌ماند. map کردن این کلمه به حساب خدمات غیربیمه‌ای ثبتش می‌کند."
+          ],
+          "examples": ["test"]
+        },
+        {
+          "id": "reversal",
+          "h": "Reversal یک سند قبلی را برمی‌گرداند",
+          "p": [
+            "claim باطل‌شده به‌صورت یک Reversal با id سند اصلی فرستاده می‌شود. سند روزنامه‌اش برگشت می‌خورد، و اثرش روی قلم باز پس گرفته می‌شود: مطالبه‌ای که ایجاد کرده بود به صفر می‌رسد. Reversal چیزی که هرگز نرسیده، یا ثبت نشده، مثل بقیه منتظر می‌ماند."
+          ],
+          "examples": ["undo"]
+        }
+      ],
+      "examples": {
+        "wait": {
+          "title": { "en": "Missing words, then wait", "fa": "کلمه‌های بی‌حساب، بعد انتظار" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "var plan = PostingEngine.Plan(d, entity, maps);",
+          "lines": 8
+        },
+        "map": {
+          "title": { "en": "Saving a map posts what waited", "fa": "ذخیره‌ی map منتظرها را ثبت می‌کند" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs",
+          "from": "// Mapping a category (for every business, or one)",
+          "lines": 12
+        },
+        "test": {
+          "title": { "en": "Waits, then posts", "fa": "منتظر می‌ماند، بعد ثبت می‌شود" },
+          "lang": "csharp",
+          "file": "tests/FinancePowerApp.Tests/LedgerApiTests.cs",
+          "from": "public async Task An_unmapped_category_waits_and_mapping_it_posts_the_document()",
+          "lines": 17
+        },
+        "undo": {
+          "title": { "en": "The open item taken back", "fa": "پس گرفتن قلم باز" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "var undo = PostingEngine.Plan(od, entity, maps).Effects",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "openitems",
+      "group": "items",
+      "title": { "en": "Receivables and payables as open items", "fa": "مطالبات و بدهی‌ها به‌صورت قلم باز" },
+      "files": ["src/FinancePowerApp.Api/Domain/Ledger.cs", "src/FinancePowerApp.Api/Domain/PostingEngine.cs", "src/FinancePowerApp.Api/Domain/Reports.cs", "database/010_erp_schema.sql"],
+      "en": [
+        {
+          "id": "items",
+          "h": "An OHIP claim stays open until it's settled",
+          "p": [
+            "Each invoice or bill raises an open item, under a unique key of the business, the application and its reference (a claim's accounting number, an invoice number). Its balance is a persisted computed column: the amount, less what was paid, less what was adjusted (refused, short-paid, written off)."
+          ],
+          "examples": ["effects"],
+          "data": { "kind": "tables", "only": ["Item"] }
+        },
+        {
+          "id": "receipt",
+          "h": "A remittance, line by line",
+          "p": [
+            "An OHIP remittance pays many claims at once. Each line of a receipt says which reference it settles; a line without a category is money, and a line in an `Adjustment.*` category settles the rest without money. So a claim of $37.95 paid $30.00 closes with $7.95 adjusted as short-paid."
+          ],
+          "examples": ["receipt"]
+        },
+        {
+          "id": "aging",
+          "h": "Aging",
+          "p": [
+            "Open items are aged by their due date (the party's payment terms after the document's date), in buckets: current, 1–30, 31–60, 61–90 and 90+ days."
+          ],
+          "examples": ["bucket"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "items",
+          "h": "claim‌ی OHIP تا تسویه نشود باز می‌ماند",
+          "p": [
+            "هر Invoice یا Bill یک قلم باز ایجاد می‌کند، زیر یک کلید یکتا از کسب‌وکار، اپ و مرجعش (شماره‌ی حسابداری claim، شماره‌ی فاکتور). مانده‌اش یک ستون محاسبه‌شده‌ی ذخیره‌شده است: مبلغ، منهای آن‌چه پرداخت شده، منهای آن‌چه تعدیل شده (ردشده، کم‌پرداخت‌شده، سوخت‌شده)."
+          ],
+          "examples": ["effects"],
+          "data": { "kind": "tables", "only": ["Item"] }
+        },
+        {
+          "id": "receipt",
+          "h": "یک remittance، سطر به سطر",
+          "p": [
+            "یک remittance‌ی OHIP چندین claim را یک‌جا پرداخت می‌کند. هر سطر یک Receipt می‌گوید کدام مرجع را تسویه می‌کند؛ سطر بدون دسته پول است، و سطری در یک دسته‌ی `Adjustment.*` بقیه را بدون پول تسویه می‌کند. پس claim‌ی ۳۷٫۹۵ دلاری که ۳۰ دلار پرداخت شده با ۷٫۹۵ دلار تعدیل کم‌پرداخت بسته می‌شود."
+          ],
+          "examples": ["receipt"]
+        },
+        {
+          "id": "aging",
+          "h": "سن‌بندی",
+          "p": [
+            "قلم‌های باز با سررسیدشان (مهلت پرداخت طرف‌حساب بعد از تاریخ سند) سن‌بندی می‌شوند، در دسته‌های: جاری، ۱ تا ۳۰، ۳۱ تا ۶۰، ۶۱ تا ۹۰ و بیش از ۹۰ روز."
+          ],
+          "examples": ["bucket"]
+        }
+      ],
+      "examples": {
+        "effects": {
+          "title": { "en": "Raised, paid, adjusted", "fa": "ایجاد، پرداخت، تعدیل" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
+          "from": "var item = await db.Receivables.SingleOrDefaultAsync(",
+          "lines": 16
+        },
+        "receipt": {
+          "title": { "en": "Money, or an adjustment, per reference", "fa": "پول یا تعدیل، برای هر مرجع" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/PostingEngine.cs",
+          "from": "case DocumentKinds.Receipt:",
+          "lines": 26
+        },
+        "bucket": {
+          "title": { "en": "The buckets", "fa": "دسته‌ها" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Reports.cs",
+          "from": "static string Bucket(int days)",
+          "lines": 1
+        }
+      }
+    },
+    {
+      "id": "hst",
+      "group": "items",
+      "title": { "en": "HST and the GST34 return", "fa": "HST و اظهارنامه‌ی GST34" },
+      "files": ["src/FinancePowerApp.Api/Domain/PostingEngine.cs", "src/FinancePowerApp.Api/Domain/Reports.cs", "database/030_reports.sql"],
+      "en": [
+        {
+          "id": "line",
+          "h": "The tax on a line",
+          "p": [
+            "An application may say what tax it charged; if it doesn't, the line's code decides, rounded to the cent away from zero. Exempt and zero-rated lines both carry no tax; the difference shows on the bill side, where only a business with zero-rated or taxable supplies recovers what it paid."
+          ],
+          "examples": ["tax"]
+        },
+        {
+          "id": "return",
+          "h": "The return's lines",
+          "p": [
+            "Per business and month: line 101 sales, 103 tax collected (the HST payable account), 106 input tax credits (the recoverable account), and 109 net tax. The same numbers come from the API and from a SQL view for Power BI."
+          ],
+          "examples": ["view"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "line",
+          "h": "مالیات یک سطر",
+          "p": [
+            "اپ می‌تواند بگوید چه مالیاتی گرفته؛ اگر نگوید، کد سطر تصمیم می‌گیرد، گرد به سنت دور از صفر. سطرهای معاف و نرخ صفر هر دو مالیات ندارند؛ تفاوتشان در سمت Bill دیده می‌شود، جایی که فقط کسب‌وکاری با عرضه‌ی نرخ صفر یا مشمول آن‌چه پرداخته را پس می‌گیرد."
+          ],
+          "examples": ["tax"]
+        },
+        {
+          "id": "return",
+          "h": "سطرهای اظهارنامه",
+          "p": [
+            "برای هر کسب‌وکار و ماه: خط ۱۰۱ فروش، ۱۰۳ مالیات دریافتی (حساب HST پرداختنی)، ۱۰۶ input tax credit (حساب قابل‌برگشت)، و ۱۰۹ مالیات خالص. همین عددها از API و از یک view در SQL برای Power BI می‌آیند."
+          ],
+          "examples": ["view"]
+        }
+      ],
+      "examples": {
+        "tax": {
+          "title": { "en": "Sent, or computed from the code", "fa": "فرستاده‌شده، یا محاسبه از روی کد" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/PostingEngine.cs",
+          "from": "/// <summary>The tax on a line",
+          "lines": 4
+        },
+        "view": {
+          "title": { "en": "Lines 101, 103, 106, 109", "fa": "خط‌های ۱۰۱، ۱۰۳، ۱۰۶، ۱۰۹" },
+          "lang": "sql",
+          "file": "database/030_reports.sql",
+          "from": "-- The GST/HST return (GST34)",
+          "lines": 11
+        }
+      }
+    },
+    {
+      "id": "statements",
+      "group": "reports",
+      "title": { "en": "Statements and CSV", "fa": "صورت‌های مالی و CSV" },
+      "files": ["src/FinancePowerApp.Api/Domain/Reports.cs", "src/FinancePowerApp.Api/Endpoints/ReportEndpoints.cs", "database/030_reports.sql"],
+      "en": [
+        {
+          "id": "posted",
+          "h": "From the posted ledger",
+          "p": [
+            "Dashboard, trial balance, income statement, balance sheet, the HST lines and aging, for one business or all of them added together (the businesses don't bill each other here, so nothing needs eliminating). Only posted entries count; a reversed entry and its reversal both stay posted and cancel out."
+          ],
+          "data": { "kind": "endpoints", "only": ["Reports"] }
+        },
+        {
+          "id": "earnings",
+          "h": "Earnings not yet closed",
+          "p": [
+            "There is no year-end closing entry yet. So the balance sheet shows this year's revenue less expenses as current earnings, and the result of earlier years as its own line in equity. That is what keeps it in balance."
+          ],
+          "examples": ["bs"]
+        },
+        {
+          "id": "csv",
+          "h": "For the accountant's spreadsheet",
+          "p": [
+            "Every list downloads as CSV with `format=csv`: amounts with two decimals and a dot, dates as ISO, text quoted, and a UTF-8 byte order mark so Excel reads the accents."
+          ],
+          "examples": ["csv"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "posted",
+          "h": "از دفتر ثبت‌شده",
+          "p": [
+            "داشبورد، تراز آزمایشی، صورت سود و زیان، ترازنامه، خط‌های HST و سن‌بندی، برای یک کسب‌وکار یا همه با هم جمع‌شده (کسب‌وکارها این‌جا به هم صورت‌حساب نمی‌دهند، پس چیزی برای حذف نیست). فقط سندهای ثبت‌شده حساب می‌شوند؛ سند برگشت‌خورده و برگشتش هر دو ثبت‌شده می‌مانند و هم را خنثی می‌کنند."
+          ],
+          "data": { "kind": "endpoints", "only": ["Reports"] }
+        },
+        {
+          "id": "earnings",
+          "h": "سودی که هنوز بسته نشده",
+          "p": [
+            "هنوز سند بستن پایان سال وجود ندارد. پس ترازنامه درآمد منهای هزینه‌ی امسال را به‌صورت سود جاری نشان می‌دهد، و نتیجه‌ی سال‌های قبل را به‌صورت یک خط جدا در حقوق صاحبان سهام. همین است که ترازش را نگه می‌دارد."
+          ],
+          "examples": ["bs"]
+        },
+        {
+          "id": "csv",
+          "h": "برای spreadsheet حسابدار",
+          "p": [
+            "هر فهرستی با `format=csv` به‌صورت CSV دانلود می‌شود: مبلغ با دو رقم اعشار و نقطه، تاریخ به‌صورت ISO، متن داخل گیومه، و یک BOM‌ی UTF-8 تا Excel حروف خاص را درست بخواند."
+          ],
+          "examples": ["csv"]
+        }
+      ],
+      "examples": {
+        "bs": {
+          "title": { "en": "Current earnings and prior years", "fa": "سود جاری و سال‌های قبل" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Domain/Reports.cs",
+          "from": "/// <summary>Calendar fiscal years",
+          "lines": 18
+        },
+        "csv": {
+          "title": { "en": "A CSV Excel reads", "fa": "یک CSV که Excel می‌خواند" },
+          "lang": "csharp",
+          "file": "src/FinancePowerApp.Api/Endpoints/ReportEndpoints.cs",
+          "from": "private static IResult Csv(",
+          "lines": 12
+        }
+      }
+    },
+    {
+      "id": "analytics",
+      "group": "reports",
+      "title": { "en": "Analytics' read-only login", "fa": "login فقط‌خواندنی Analytics" },
+      "files": ["database/tools/analytics_reader.sql", "database/060_item_payments.sql", "README.md"],
+      "en": [
+        {
+          "id": "select",
+          "h": "SELECT, and not every column",
+          "p": [
+            "Analytics reads the books through its own login, `analytics_reader`: SELECT on the business, ledger, receivables, payables and tax schemas and on the months, nothing else. Columns that can hold personal details or free text are denied (emails, phone numbers, memos, references, descriptions), and a column DENY wins over the schema GRANT, so a mistake in Analytics can't load them. The tables on these pages show those DENYs.",
+            "It isn't a numbered script, because it needs a password and `deploy.ps1` runs every numbered one: it is run once per server, and the password lives only in Analytics' settings."
+          ],
+          "examples": ["deny"]
+        },
+        {
+          "id": "chain",
+          "h": "Views would get around it",
+          "p": [
+            "A view owned by dbo reads its tables through ownership chaining, and then the column DENYs don't apply: the ledger-lines view shows the memo. So every view and function in those schemas is denied, except three that carry no text: the period movements, the HST return, and the payment dates."
+          ],
+          "examples": ["chain"]
+        },
+        {
+          "id": "payments",
+          "h": "When each item was paid",
+          "p": [
+            "For Analytics' \"days to pay\" there is one view over the inbox: which receivable was paid, on what date, how much, read from the posted receipts' lines. No reference, party or text; the inbox itself stays closed to the login."
+          ],
+          "examples": ["payments"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "select",
+          "h": "SELECT، و نه همه‌ی ستون‌ها",
+          "p": [
+            "Analytics دفاتر را با login خودش، `analytics_reader`، می‌خواند: SELECT روی schemaهای کسب‌وکار، دفتر، مطالبات، بدهی‌ها و مالیات و روی ماه‌ها، و هیچ چیز دیگر. ستون‌هایی که ممکن است اطلاعات شخصی یا متن آزاد داشته باشند ممنوع‌اند (ایمیل، تلفن، شرح، مرجع، توضیح)، و DENY روی ستون بر GRANT‌ی schema برنده است، پس اشتباهی در Analytics نمی‌تواند آن‌ها را بخواند. جدول‌های این صفحه‌ها همین DENYها را نشان می‌دهند.",
+            "اسکریپت شماره‌دار نیست، چون رمز لازم دارد و `deploy.ps1` همه‌ی اسکریپت‌های شماره‌دار را اجرا می‌کند: برای هر سرور یک بار اجرا می‌شود، و رمز فقط در تنظیمات Analytics است."
+          ],
+          "examples": ["deny"]
+        },
+        {
+          "id": "chain",
+          "h": "viewها دورش می‌زدند",
+          "p": [
+            "viewی که مال dbo است جدول‌هایش را از راه ownership chaining می‌خواند، و آن‌وقت DENYهای ستونی اعمال نمی‌شوند: view‌ی سطرهای دفتر شرح را نشان می‌دهد. پس همه‌ی viewها و تابع‌های آن schemaها ممنوع‌اند، جز سه تا که هیچ متنی ندارند: گردش ماهانه، اظهارنامه‌ی HST، و تاریخ‌های پرداخت."
+          ],
+          "examples": ["chain"]
+        },
+        {
+          "id": "payments",
+          "h": "هر قلم کی پرداخت شد",
+          "p": [
+            "برای «روزهای تا پرداخت» در Analytics یک view روی صندوق ورودی هست: کدام مطالبه، در چه تاریخی، چقدر پرداخت شد، خوانده از سطرهای Receiptهای ثبت‌شده. بدون مرجع، طرف‌حساب یا متن؛ خود صندوق ورودی به روی این login بسته می‌ماند."
+          ],
+          "examples": ["payments"]
+        }
+      ],
+      "examples": {
+        "deny": {
+          "title": { "en": "Columns the login can't read", "fa": "ستون‌هایی که login نمی‌تواند بخواند" },
+          "lang": "sql",
+          "file": "database/tools/analytics_reader.sql",
+          "from": "-- Columns that can hold personal details",
+          "lines": 10
+        },
+        "chain": {
+          "title": { "en": "Every view denied, three excepted", "fa": "همه‌ی viewها ممنوع، جز سه تا" },
+          "lang": "sql",
+          "file": "database/tools/analytics_reader.sql",
+          "from": "-- Views and functions owned by dbo read their tables through ownership chaining",
+          "lines": 10
+        },
+        "payments": {
+          "title": { "en": "Item, date, amount", "fa": "قلم، تاریخ، مبلغ" },
+          "lang": "sql",
+          "file": "database/060_item_payments.sql",
+          "from": "CREATE OR ALTER VIEW ar.vw_ItemPayments AS",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "web",
+      "group": "reports",
+      "title": { "en": "The web app (React)", "fa": "اپ وب (React)" },
+      "files": ["web/src/App.tsx", "web/src/api.ts", "web/src/pages/Dashboard.tsx", "web/src/pages/Journal.tsx", "web/src/pages/Inbox.tsx", "web/src/pages/Reports.tsx", "web/src/pages/Setup.tsx"],
+      "en": [
+        {
+          "id": "pages",
+          "h": "Five pages",
+          "p": [
+            "A React app with React Router and no other library: the dashboard, the journal, the documents from the applications, the reports, and setup (businesses and their sources, parties, accounts, months, posting maps). A typed client mirrors the API's C# records."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "books",
+          "h": "Whose books",
+          "p": [
+            "A picker at the top of the sidebar chooses one business or all of them combined, and every page follows it; the choice is remembered in the browser."
+          ],
+          "examples": ["picker"]
+        },
+        {
+          "id": "can",
+          "h": "Signed in, and allowed",
+          "p": [
+            "With nobody signed in it shows the button to sign in through ClinicHub; someone ClinicHub let in with no finance permission is told so. Buttons for posting or setup appear only with the permission, but the API decides: hiding a button protects nothing."
+          ],
+          "examples": ["gate", "can"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "pages",
+          "h": "پنج صفحه",
+          "p": [
+            "یک اپ React با React Router و بدون هیچ کتابخانه‌ی دیگری: داشبورد، دفتر روزنامه، سندهای اپ‌ها، گزارش‌ها، و تنظیمات (کسب‌وکارها و منبع‌هایشان، طرف‌حساب‌ها، حساب‌ها، ماه‌ها، mapهای ثبت). یک client تایپ‌شده recordهای C# در API را بازتاب می‌دهد."
+          ],
+          "data": { "kind": "routes" }
+        },
+        {
+          "id": "books",
+          "h": "دفاتر چه کسی",
+          "p": [
+            "یک انتخابگر بالای نوار کناری یک کسب‌وکار یا همه با هم را انتخاب می‌کند، و هر صفحه دنبالش می‌کند؛ انتخاب در مرورگر به خاطر سپرده می‌شود."
+          ],
+          "examples": ["picker"]
+        },
+        {
+          "id": "can",
+          "h": "واردشده، و مجاز",
+          "p": [
+            "وقتی کسی وارد نشده، دکمه‌ی ورود از طریق ClinicHub را نشان می‌دهد؛ به کسی که ClinicHub راهش داده ولی هیچ مجوز مالی ندارد همین گفته می‌شود. دکمه‌های ثبت یا تنظیمات فقط با مجوز دیده می‌شوند، ولی API تصمیم می‌گیرد: پنهان کردن دکمه از چیزی محافظت نمی‌کند."
+          ],
+          "examples": ["gate", "can"]
+        }
+      ],
+      "examples": {
+        "picker": {
+          "title": { "en": "One business, or all combined", "fa": "یک کسب‌وکار، یا همه با هم" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "<label className=\"entity-pick\">Books of",
+          "lines": 6
+        },
+        "gate": {
+          "title": { "en": "Nobody, or no permission", "fa": "هیچ‌کس، یا بدون مجوز" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "if (!me.name) return <SignIn />",
+          "lines": 2
+        },
+        "can": {
+          "title": { "en": "admin can do everything", "fa": "admin همه کار می‌کند" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "const can = (p: string) =>",
+          "lines": 1
+        }
+      }
+    }
+  ]
+}

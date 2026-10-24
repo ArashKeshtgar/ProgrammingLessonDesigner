@@ -143,9 +143,12 @@ export interface SqlTable {
   table: string
   file: string
   line: number
-  columns: { name: string; type: string; nullable: boolean; notes: string[] }[]
+  // nullable: null for a computed column (its expression decides)
+  columns: { name: string; type: string; nullable: boolean | null; notes: string[] }[]
   denies: string[]
   checks?: string[]
+  // UNIQUE over several columns (a constraint or a unique index)
+  uniques?: string[]
   // MongoDB: Schema.index({...}) of the collection
   indexes?: string[]
 }

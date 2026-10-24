@@ -1280,7 +1280,10 @@
           "notes": []
         }
       ],
-      "denies": []
+      "denies": [],
+      "uniques": [
+        "(ApplicationId, Position)"
+      ]
     },
     {
       "database": "LedgerDashboard",
