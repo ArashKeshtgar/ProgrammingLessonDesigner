@@ -37,6 +37,14 @@ const openTopics = computed(() => {
   if (!topics) return []
   return topics.groups.map((g) => ({ ...g, pages: topics.pages.filter((x) => x.group === g.id) }))
 })
+// Clicking the open project again folds its topics away, and the next click opens them;
+// going to another project opens that one.
+const collapsed = ref<string | null>(null)
+watch(() => current.value.project?.id, (id) => id !== collapsed.value && (collapsed.value = null))
+const isOpen = (id: string) => id === current.value.project?.id && id !== collapsed.value
+const toggle = (id: string) => {
+  if (id === current.value.project?.id) collapsed.value = collapsed.value === id ? null : id
+}
 
 const titleOf = (id: string) => {
   const p = page(id)!
@@ -82,12 +90,14 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
           <template v-for="p in g.pages" :key="p.id">
             <RouterLink
               :to="href(p.id)"
-              :class="[`accent-${p.project!.id}`, { on: p.id === current.id, open: p.project!.id === current.project?.id }]"
+              :class="[`accent-${p.project!.id}`, { on: p.id === current.id, open: isOpen(p.project!.id) }]"
               :aria-current="p.id === current.id ? 'page' : undefined"
+              :aria-expanded="topicsOf(p.project!.id) ? isOpen(p.project!.id) : undefined"
+              @click="toggle(p.project!.id)"
             >
               {{ titleOf(p.id) }}
             </RouterLink>
-            <div v-if="p.project!.id === current.project?.id && openTopics.length" :class="['side-topics', `accent-${p.project!.id}`]">
+            <div v-if="isOpen(p.project!.id) && openTopics.length" :class="['side-topics', `accent-${p.project!.id}`]">
               <template v-for="tg in openTopics" :key="tg.id">
                 <h4>{{ tg.title[lang] }}</h4>
                 <RouterLink
