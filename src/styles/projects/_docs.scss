@@ -172,8 +172,10 @@ $-arrows: (
   }
 }
 
+// On .docs itself, not any [dir] ancestor: <html dir="rtl"> wraps every page of the
+// site and would otherwise win over the English pages' ltr.
 @each $dir, $arrow in $-arrows {
-  [dir='#{$dir}'] .docs-pager {
+  .docs[dir='#{$dir}'] .docs-pager {
     .prev::before {
       content: '#{map.get($arrow, prev)} ';
     }
@@ -355,3 +357,101 @@ $-arrows: (
 }
 
 // #endregion
+
+// The open project's topics, nested under it in the contents list.
+.side-topics {
+  margin: 0.2rem 0 0.6rem;
+  border-inline-start: 2px solid var(--project);
+  margin-inline-start: 0.8rem;
+
+  h4 {
+    margin: 0.6rem 0 0.1rem;
+    padding-inline-start: 0.8rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  a {
+    padding-block: 0.15rem;
+    font-size: 0.92rem;
+  }
+}
+
+.breadcrumb {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.topic-files {
+  @include surface(sm);
+
+  padding: 0.5rem 0.9rem;
+  margin: 1rem 0;
+
+  ul {
+    margin: 0.3rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.6rem;
+    align-items: baseline;
+  }
+
+  code {
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.contents-group ol {
+  margin-top: 0.2rem;
+}
+
+// HTTP verbs in the endpoint tables: reading is calm, changing is marked.
+$-http-tones: (
+  get: info,
+  post: accent,
+  put: warn,
+  delete: warn,
+);
+
+.http {
+  font: 600 0.75rem var(--mono);
+  border-radius: radius(sm);
+  padding: 0.05rem 0.4rem;
+
+  @each $verb, $tone in $-http-tones {
+    &.http-#{$verb} {
+      background: var(--#{$tone}-soft);
+      color: var(--#{$tone});
+    }
+  }
+}
+
+.data-table {
+  margin: 0.8rem 0;
+
+  .note {
+    display: inline-block;
+    margin-inline-end: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+}
+
+.sql-table h3 {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+
+.data-note {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}

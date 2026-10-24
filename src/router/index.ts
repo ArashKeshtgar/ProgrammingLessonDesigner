@@ -15,7 +15,7 @@ const router = createRouter({
     { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },
     // The Projects tab: the language is part of the address, so a link keeps it.
     { path: '/projects', redirect: () => `/projects/${savedLang()}` },
-    { path: '/projects/:lang(fa|en)/:page?', name: 'projects', component: () => import('../views/projects/ProjectsView.vue') },
+    { path: '/projects/:lang(fa|en)/:page?/:topic?', name: 'projects', component: () => import('../views/projects/ProjectsView.vue') },
   ],
   scrollBehavior: (to, from) => (to.path === from.path ? false : { top: 0 }),
 })

@@ -1,0 +1,2900 @@
+{
+  "project": "controlpanel",
+  "repo": "ControlPanel",
+  "scan": {
+    "nestControllers": [
+      "services/core-api/src"
+    ],
+    "expressApps": [
+      "services/adapters"
+    ],
+    "sql": [
+      "db"
+    ],
+    "angularRoutes": "frontend/src/app/app.routes.ts"
+  },
+  "groups": [
+    {
+      "id": "start",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع"
+      }
+    },
+    {
+      "id": "backend",
+      "title": {
+        "en": "Backend: core-api (NestJS)",
+        "fa": "بک‌اند: core-api (NestJS)"
+      }
+    },
+    {
+      "id": "adapters",
+      "title": {
+        "en": "Adapters (Express)",
+        "fa": "Adapterها (Express)"
+      }
+    },
+    {
+      "id": "frontend",
+      "title": {
+        "en": "Frontend (Angular)",
+        "fa": "فرانت‌اند (Angular)"
+      }
+    },
+    {
+      "id": "data",
+      "title": {
+        "en": "Data (SQL Server)",
+        "fa": "داده (SQL Server)"
+      }
+    },
+    {
+      "id": "deploy",
+      "title": {
+        "en": "Deploy",
+        "fa": "استقرار"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": {
+        "en": "Run it on the PC",
+        "fa": "اجرا روی PC"
+      },
+      "files": [
+        "README.md",
+        ".env.example",
+        "docker-compose.yml"
+      ],
+      "en": [
+        {
+          "id": "docker",
+          "h": "With Docker",
+          "p": [
+            "The recommended way. Copy the env template, fill in every value (the file shows how to generate the secrets) and start. The frontend opens on http://localhost:4100; set `FRONTEND_PORT` if that port is taken."
+          ],
+          "examples": [
+            "compose"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "What starts first",
+          "p": [
+            "Compose starts the pieces in order: SQL Server until its healthcheck passes, then `db-init` runs every `db/*.sql` script once, then `seed-users` creates the two accounts, and only then `core-api`. `service_completed_successfully` is what makes a one-off job a real step instead of a race."
+          ],
+          "examples": [
+            "order"
+          ]
+        },
+        {
+          "id": "local",
+          "h": "Without Docker",
+          "p": [
+            "Against a local SQL Server: run the five `db/` scripts with `sqlcmd`, then one `npm install` at the root (npm workspaces) and each service in its own terminal."
+          ],
+          "examples": [
+            "local"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "docker",
+          "h": "با Docker",
+          "p": [
+            "روش پیشنهادی. قالب env را کپی کنید، همه‌ی مقدارها را پر کنید (خود فایل می‌گوید secretها را چطور بسازید) و اجرا کنید. رابط روی http://localhost:4100 باز می‌شود؛ اگر آن پورت گرفته است، `FRONTEND_PORT` را عوض کنید."
+          ],
+          "examples": [
+            "compose"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "اول چه چیزی بالا می‌آید",
+          "p": [
+            "Compose بخش‌ها را به ترتیب بالا می‌آورد: SQL Server تا وقتی healthcheckش پاس شود، بعد `db-init` همه‌ی اسکریپت‌های `db/*.sql` را یک بار اجرا می‌کند، بعد `seed-users` دو حساب را می‌سازد، و فقط بعد از آن `core-api`. `service_completed_successfully` است که یک کار یک‌باره را به یک قدم واقعی تبدیل می‌کند، نه یک مسابقه‌ی هم‌زمان."
+          ],
+          "examples": [
+            "order"
+          ]
+        },
+        {
+          "id": "local",
+          "h": "بدون Docker",
+          "p": [
+            "با یک SQL Server محلی: پنج اسکریپت `db/` را با `sqlcmd` اجرا کنید، بعد یک `npm install` در ریشه (npm workspaces) و هر سرویس در ترمینال خودش."
+          ],
+          "examples": [
+            "local"
+          ]
+        }
+      ],
+      "examples": {
+        "compose": {
+          "title": {
+            "en": "Start everything",
+            "fa": "اجرای همه‌چیز"
+          },
+          "lang": "bash",
+          "file": "README.md",
+          "from": "cp .env.example .env",
+          "to": "docker compose up --build"
+        },
+        "order": {
+          "title": {
+            "en": "seed-users waits for db-init to finish",
+            "fa": "seed-users منتظر تمام شدن db-init می‌ماند"
+          },
+          "lang": "yaml",
+          "file": "docker-compose.yml",
+          "from": "  seed-users:",
+          "to": "condition: service_completed_successfully"
+        },
+        "local": {
+          "title": {
+            "en": "Each service in its own terminal",
+            "fa": "هر سرویس در ترمینال خودش"
+          },
+          "lang": "bash",
+          "file": "README.md",
+          "from": "# once, from the repo root (npm workspaces)",
+          "to": "npx ng serve --port 4100"
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": {
+        "en": "Tests",
+        "fa": "تست‌ها"
+      },
+      "files": [
+        "services/core-api/src/projects/adapter-url.spec.ts",
+        "services/core-api/src/auth/auth.service.spec.ts",
+        "services/core-api/src/services/docker-orchestrator.spec.ts",
+        "services/adapters/hisplus-adapter/src/app.spec.ts",
+        "frontend/src/app/auth/auth.interceptor.spec.ts"
+      ],
+      "en": [
+        {
+          "id": "suites",
+          "h": "Three suites",
+          "list": [
+            "`services/core-api`: `npm test` (Jest). Login and tokens, the role guard, the SSRF allowlist, service control, the assistant's loop with a fake Claude client.",
+            "`services/adapters/*`: `npm test` (Jest). Each adapter's `/status` over real HTTP, with the database or upstream API faked.",
+            "`frontend`: `npm run test:ci` (Karma, headless Chrome). Token refresh and retry, route guards, error messages, the assistant panel.",
+            "CI runs all of them on every push, plus the production builds and the five Docker images."
+          ]
+        },
+        {
+          "id": "shape",
+          "h": "Why the code is easy to test",
+          "p": [
+            "Every adapter is a `createApp(...)` function that receives what it needs (a query function, a fetch function). The test hands it a fake and calls the real HTTP endpoint: no SQL Server, no network. `DockerOrchestrator` takes a fetch function the same way."
+          ],
+          "examples": [
+            "spec"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "suites",
+          "h": "سه مجموعه تست",
+          "list": [
+            "`services/core-api`: `npm test` (Jest). ورود و توکن‌ها، guard نقش‌ها، فهرست مجاز SSRF، کنترل سرویس‌ها، و حلقه‌ی دستیار با یک کلاینت Claude جعلی.",
+            "`services/adapters/*`: `npm test` (Jest). `/status` هر adapter روی HTTP واقعی، با دیتابیس یا API بالادستی جعلی.",
+            "`frontend`: `npm run test:ci` (Karma، Chrome بی‌صفحه). refresh و تکرار درخواست، guardهای مسیر، پیام‌های خطا، پنل دستیار.",
+            "CI همه را در هر push اجرا می‌کند، به‌اضافه‌ی buildهای production و پنج image داکر."
+          ]
+        },
+        {
+          "id": "shape",
+          "h": "چرا تست کردن کد ساده است",
+          "p": [
+            "هر adapter یک تابع `createApp(...)` است که هر چه لازم دارد را از بیرون می‌گیرد (یک تابع query، یک تابع fetch). تست یک نسخه‌ی جعلی به آن می‌دهد و endpoint واقعی HTTP را صدا می‌زند: بدون SQL Server، بدون شبکه. `DockerOrchestrator` هم تابع fetch را همین‌طور می‌گیرد."
+          ],
+          "examples": [
+            "spec"
+          ]
+        }
+      ],
+      "examples": {
+        "spec": {
+          "title": {
+            "en": "The SSRF allowlist, one case per rule",
+            "fa": "فهرست مجاز SSRF، یک مورد برای هر قاعده"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/adapter-url.spec.ts",
+          "from": "describe('checkAdapterBaseUrl",
+          "lines": 18
+        }
+      }
+    },
+    {
+      "id": "bootstrap",
+      "group": "backend",
+      "title": {
+        "en": "Startup: main.ts and AppModule",
+        "fa": "راه‌اندازی: main.ts و AppModule"
+      },
+      "files": [
+        "services/core-api/src/main.ts",
+        "services/core-api/src/app.module.ts"
+      ],
+      "en": [
+        {
+          "id": "main",
+          "h": "main.ts",
+          "p": [
+            "`NestFactory.create` builds the app from `AppModule`. Before anything listens, the JWT secrets are checked: a missing, short or shared secret stops the process. CORS allows only the origins in `CORS_ORIGINS`.",
+            "`ValidationPipe({ whitelist: true })` runs the DTO rules on every request body and drops any field the DTO does not declare, so a client cannot slip in `role` or `isActive` where they are not expected. Swagger documents the API at `/docs`."
+          ],
+          "examples": [
+            "main"
+          ]
+        },
+        {
+          "id": "module",
+          "h": "AppModule",
+          "p": [
+            "The root module only lists the feature modules. `ConfigModule.forRoot({ isGlobal: true })` makes the environment available everywhere through `ConfigService`, so no module reads `process.env` directly."
+          ],
+          "examples": [
+            "module"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "main",
+          "h": "main.ts",
+          "p": [
+            "`NestFactory.create` اپ را از `AppModule` می‌سازد. قبل از اینکه چیزی گوش بدهد، secretهای JWT چک می‌شوند: secret نبودن، کوتاه بودن یا یکی بودن دو secret پروسه را متوقف می‌کند. CORS فقط originهای `CORS_ORIGINS` را قبول می‌کند.",
+            "`ValidationPipe({ whitelist: true })` قاعده‌های DTO را روی بدنه‌ی هر درخواست اجرا می‌کند و هر فیلدی را که DTO تعریف نکرده دور می‌ریزد، تا کلاینت نتواند `role` یا `isActive` را جایی که انتظارش نیست بفرستد. Swagger مستندات API را روی `/docs` نشان می‌دهد."
+          ],
+          "examples": [
+            "main"
+          ]
+        },
+        {
+          "id": "module",
+          "h": "AppModule",
+          "p": [
+            "ماژول ریشه فقط ماژول‌های اصلی را فهرست می‌کند. `ConfigModule.forRoot({ isGlobal: true })` متغیرهای محیط را از طریق `ConfigService` همه‌جا در دسترس می‌گذارد، پس هیچ ماژولی مستقیم `process.env` را نمی‌خواند."
+          ],
+          "examples": [
+            "module"
+          ]
+        }
+      ],
+      "examples": {
+        "main": {
+          "title": {
+            "en": "bootstrap()",
+            "fa": "bootstrap()"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/main.ts",
+          "from": "async function bootstrap",
+          "to": "app.useGlobalPipes"
+        },
+        "module": {
+          "title": {
+            "en": "The root module",
+            "fa": "ماژول ریشه"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/app.module.ts",
+          "from": "@Module({",
+          "to": "export class AppModule"
+        }
+      }
+    },
+    {
+      "id": "database",
+      "group": "backend",
+      "title": {
+        "en": "Database access",
+        "fa": "دسترسی به دیتابیس"
+      },
+      "files": [
+        "services/core-api/src/database/database.module.ts",
+        "services/core-api/src/database/database.service.ts",
+        "services/core-api/src/users/users.service.ts"
+      ],
+      "en": [
+        {
+          "id": "pool",
+          "h": "One connection pool for the whole app",
+          "p": [
+            "`DatabaseService` opens one `mssql` pool when the module starts and closes it on shutdown. `DatabaseModule` is `@Global()`, so every service gets the same instance through dependency injection instead of opening its own connections.",
+            "It signs in with SQL authentication as `controlpanel_svc`: Windows authentication would need a native driver that has to be compiled, and the login has only the rights the app needs."
+          ],
+          "examples": [
+            "pool"
+          ]
+        },
+        {
+          "id": "queries",
+          "h": "Plain SQL, always parameterized",
+          "p": [
+            "There is no ORM: each service writes its SQL. Values never go into the SQL text; they are bound with `.input(name, value)` and referenced as `@name`, so a username like `' OR 1=1 --` is just a string that matches nobody."
+          ],
+          "examples": [
+            "query"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "pool",
+          "h": "یک connection pool برای کل اپ",
+          "p": [
+            "`DatabaseService` وقتی ماژول بالا می‌آید یک pool از `mssql` باز می‌کند و موقع خاموش شدن می‌بندد. `DatabaseModule` با `@Global()` علامت خورده، پس هر سرویس همان نمونه را از طریق تزریق وابستگی می‌گیرد، به‌جای اینکه اتصال خودش را باز کند.",
+            "با احراز هویت SQL و login `controlpanel_svc` وصل می‌شود: احراز هویت ویندوز به یک درایور native نیاز دارد که باید کامپایل شود، و این login فقط همان دسترسی‌هایی را دارد که اپ لازم دارد."
+          ],
+          "examples": [
+            "pool"
+          ]
+        },
+        {
+          "id": "queries",
+          "h": "SQL ساده، همیشه پارامتری",
+          "p": [
+            "ORM در کار نیست: هر سرویس SQL خودش را می‌نویسد. مقدارها هیچ‌وقت داخل متن SQL نمی‌روند؛ با `.input(name, value)` بسته می‌شوند و با `@name` به آن‌ها اشاره می‌شود. پس نام کاربری مثل `' OR 1=1 --` فقط یک رشته است که به هیچ‌کس نمی‌خورد."
+          ],
+          "examples": [
+            "query"
+          ]
+        }
+      ],
+      "examples": {
+        "pool": {
+          "title": {
+            "en": "The pool opens when the module starts",
+            "fa": "pool وقتی ماژول بالا می‌آید باز می‌شود"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/database/database.service.ts",
+          "from": "async onModuleInit",
+          "to": "}).connect();"
+        },
+        "query": {
+          "title": {
+            "en": "A parameterized query",
+            "fa": "یک query پارامتری"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/users/users.service.ts",
+          "from": "async findByUsername",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "auth-tokens",
+      "group": "backend",
+      "title": {
+        "en": "Auth: login and tokens",
+        "fa": "احراز هویت: ورود و توکن‌ها"
+      },
+      "files": [
+        "services/core-api/src/auth/auth.controller.ts",
+        "services/core-api/src/auth/auth.service.ts",
+        "services/core-api/src/auth/jwt-config.ts",
+        "services/core-api/src/auth/dto/login.dto.ts",
+        "services/core-api/src/users/user.model.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "auth"
+            ]
+          }
+        },
+        {
+          "id": "pair",
+          "h": "Two tokens, two secrets",
+          "p": [
+            "Login checks the bcrypt hash and returns a pair. The **access token** lives 15 minutes and is the only one the API accepts as `Bearer`. The **refresh token** lives 7 days, is signed with a different secret and only works at `/auth/refresh`. Each also carries a `typ` claim, so even a misconfiguration cannot make one pass for the other."
+          ],
+          "examples": [
+            "issue"
+          ]
+        },
+        {
+          "id": "refresh",
+          "h": "Refresh re-reads the user",
+          "p": [
+            "A refresh does not trust the old token's content: it loads the user again and compares `TokenVersion`. Logout (and a password reset) increments that number, which revokes every refresh token issued before. A changed role takes effect on the next refresh, at most 15 minutes later."
+          ],
+          "examples": [
+            "refresh"
+          ]
+        },
+        {
+          "id": "secrets",
+          "h": "No default secrets",
+          "p": [
+            "Both secrets must exist, be at least 32 characters long and differ. Otherwise the app does not start, instead of signing tokens with a value that is in a public repository."
+          ],
+          "examples": [
+            "secret"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "auth"
+            ]
+          }
+        },
+        {
+          "id": "pair",
+          "h": "دو توکن، دو secret",
+          "p": [
+            "ورود hash نوع bcrypt را چک می‌کند و یک جفت توکن برمی‌گرداند. **توکن دسترسی** ۱۵ دقیقه عمر دارد و تنها توکنی است که API به‌عنوان `Bearer` قبول می‌کند. **توکن refresh** هفت روز عمر دارد، با secret دیگری امضا می‌شود و فقط روی `/auth/refresh` کار می‌کند. هر کدام یک claim به اسم `typ` هم دارند، پس حتی با تنظیم اشتباه هم یکی جای دیگری را نمی‌گیرد."
+          ],
+          "examples": [
+            "issue"
+          ]
+        },
+        {
+          "id": "refresh",
+          "h": "Refresh کاربر را دوباره می‌خواند",
+          "p": [
+            "Refresh به محتوای توکن قبلی اعتماد نمی‌کند: کاربر را دوباره از دیتابیس می‌خواند و `TokenVersion` را مقایسه می‌کند. Logout (و ریست رمز) این عدد را یکی زیاد می‌کند و همه‌ی توکن‌های refresh قبلی باطل می‌شوند. نقش عوض‌شده در refresh بعدی اثر می‌کند، حداکثر ۱۵ دقیقه بعد."
+          ],
+          "examples": [
+            "refresh"
+          ]
+        },
+        {
+          "id": "secrets",
+          "h": "هیچ secret پیش‌فرضی نیست",
+          "p": [
+            "هر دو secret باید باشند، حداقل ۳۲ کاراکتر باشند و با هم فرق کنند. وگرنه اپ بالا نمی‌آید، به‌جای اینکه توکن‌ها را با مقداری امضا کند که در یک repo عمومی است."
+          ],
+          "examples": [
+            "secret"
+          ]
+        }
+      ],
+      "examples": {
+        "issue": {
+          "title": {
+            "en": "Issuing the pair",
+            "fa": "ساختن جفت توکن"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/auth.service.ts",
+          "from": "private issueTokens",
+          "lines": 12
+        },
+        "refresh": {
+          "title": {
+            "en": "refresh(): verify, re-read the user, compare the version",
+            "fa": "refresh(): بررسی، خواندن دوباره‌ی کاربر، مقایسه‌ی نسخه"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/auth.service.ts",
+          "from": "async refresh(",
+          "lines": 16
+        },
+        "secret": {
+          "title": {
+            "en": "A secret is required, not defaulted",
+            "fa": "secret الزامی است، نه پیش‌فرض"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/jwt-config.ts",
+          "from": "export function requireSecret",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "auth-guards",
+      "group": "backend",
+      "title": {
+        "en": "Auth: guards and roles",
+        "fa": "احراز هویت: guardها و نقش‌ها"
+      },
+      "files": [
+        "services/core-api/src/auth/jwt.strategy.ts",
+        "services/core-api/src/auth/jwt-auth.guard.ts",
+        "services/core-api/src/auth/roles.decorator.ts",
+        "services/core-api/src/auth/roles.guard.ts"
+      ],
+      "en": [
+        {
+          "id": "jwt",
+          "h": "JwtAuthGuard: who is calling",
+          "p": [
+            "`JwtAuthGuard` is Passport's JWT strategy: it reads the `Authorization: Bearer` header, verifies the signature and the expiry, and puts the payload on `request.user`. `validate` rejects anything that is not an access token."
+          ],
+          "examples": [
+            "validate"
+          ]
+        },
+        {
+          "id": "roles",
+          "h": "@Roles and RolesGuard: what they may do",
+          "p": [
+            "`@Roles('Admin')` only writes metadata on a route. `RolesGuard` reads it with Nest's `Reflector` and compares it with the role inside the verified token, never with anything from the request body. A route without `@Roles` is open to any signed-in user."
+          ],
+          "examples": [
+            "decorator",
+            "guard"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "The order of the guards matters",
+          "p": [
+            "Controllers declare `@UseGuards(JwtAuthGuard, RolesGuard)`: the JWT guard runs first and sets `request.user`, which the roles guard then reads. The other way round, every role check would fail."
+          ],
+          "examples": [
+            "use"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "jwt",
+          "h": "JwtAuthGuard: چه کسی صدا می‌زند",
+          "p": [
+            "`JwtAuthGuard` همان استراتژی JWT کتابخانه‌ی Passport است: هدر `Authorization: Bearer` را می‌خواند، امضا و تاریخ انقضا را بررسی می‌کند و محتوای توکن را روی `request.user` می‌گذارد. `validate` هر چیزی جز توکن دسترسی را رد می‌کند."
+          ],
+          "examples": [
+            "validate"
+          ]
+        },
+        {
+          "id": "roles",
+          "h": "@Roles و RolesGuard: چه کاری اجازه دارند",
+          "p": [
+            "`@Roles('Admin')` فقط یک metadata روی route می‌نویسد. `RolesGuard` آن را با `Reflector` در Nest می‌خواند و با نقشی که داخل توکنِ بررسی‌شده است مقایسه می‌کند، هیچ‌وقت با چیزی از بدنه‌ی درخواست. routeی که `@Roles` ندارد برای هر کاربر واردشده باز است."
+          ],
+          "examples": [
+            "decorator",
+            "guard"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "ترتیب guardها مهم است",
+          "p": [
+            "Controllerها `@UseGuards(JwtAuthGuard, RolesGuard)` را اعلام می‌کنند: اول guard توکن اجرا می‌شود و `request.user` را پر می‌کند، بعد guard نقش آن را می‌خواند. اگر برعکس بود، همه‌ی چک‌های نقش شکست می‌خوردند."
+          ],
+          "examples": [
+            "use"
+          ]
+        }
+      ],
+      "examples": {
+        "validate": {
+          "title": {
+            "en": "Only access tokens get through",
+            "fa": "فقط توکن دسترسی رد می‌شود"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/jwt.strategy.ts",
+          "from": "validate(payload",
+          "lines": 6
+        },
+        "decorator": {
+          "title": {
+            "en": "@Roles is metadata",
+            "fa": "@Roles یک metadata است"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/roles.decorator.ts",
+          "from": "export const ROLES_KEY",
+          "to": "export const Roles"
+        },
+        "guard": {
+          "title": {
+            "en": "RolesGuard compares it with the token",
+            "fa": "RolesGuard آن را با توکن مقایسه می‌کند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/auth/roles.guard.ts",
+          "from": "canActivate(",
+          "lines": 11
+        },
+        "use": {
+          "title": {
+            "en": "A controller protected by both",
+            "fa": "یک controller که هر دو از آن محافظت می‌کنند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.controller.ts",
+          "from": "@ApiTags('projects')",
+          "to": "@Controller('projects')"
+        }
+      }
+    },
+    {
+      "id": "projects-status",
+      "group": "backend",
+      "title": {
+        "en": "Projects: registry and live status",
+        "fa": "پروژه‌ها: فهرست و وضعیت زنده"
+      },
+      "files": [
+        "services/core-api/src/projects/projects.controller.ts",
+        "services/core-api/src/projects/projects.service.ts",
+        "services/core-api/src/projects/project.model.ts",
+        "services/core-api/src/projects/dto/project.dto.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "projects"
+            ]
+          }
+        },
+        {
+          "id": "contract",
+          "h": "One contract for every project",
+          "p": [
+            "The registry (`dbo.Projects`) holds one row per project with the base URL of its adapter. Every adapter answers `GET /status` with the same shape, so `core-api` never needs to know how a project works inside."
+          ],
+          "examples": [
+            "contract"
+          ]
+        },
+        {
+          "id": "parallel",
+          "h": "All adapters at once, none can block",
+          "p": [
+            "`GET /projects` calls every adapter in parallel with `Promise.all`, each with a 3-second timeout. An adapter that is down or slow becomes `healthy: false` on its own card; it never fails the request or holds up the others."
+          ],
+          "examples": [
+            "list",
+            "fetch"
+          ]
+        },
+        {
+          "id": "update",
+          "h": "Partial update",
+          "p": [
+            "`PUT /projects/:id` changes only the fields that were sent, so the Manage ports page can send just a new URL or just `isActive`."
+          ],
+          "examples": [
+            "update"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "projects"
+            ]
+          }
+        },
+        {
+          "id": "contract",
+          "h": "یک قرارداد برای همه‌ی پروژه‌ها",
+          "p": [
+            "فهرست پروژه‌ها (`dbo.Projects`) برای هر پروژه یک ردیف با آدرس پایه‌ی adapterش دارد. همه‌ی adapterها به `GET /status` با یک شکل جواب می‌دهند، پس `core-api` هیچ‌وقت لازم ندارد بداند هر پروژه از داخل چطور کار می‌کند."
+          ],
+          "examples": [
+            "contract"
+          ]
+        },
+        {
+          "id": "parallel",
+          "h": "همه‌ی adapterها با هم، هیچ‌کدام نمی‌تواند بقیه را نگه دارد",
+          "p": [
+            "`GET /projects` همه‌ی adapterها را با `Promise.all` هم‌زمان صدا می‌زند، هر کدام با سقف ۳ ثانیه. adapterی که خاموش یا کند است روی کارت خودش `healthy: false` می‌شود؛ نه کل درخواست را خراب می‌کند و نه بقیه را معطل."
+          ],
+          "examples": [
+            "list",
+            "fetch"
+          ]
+        },
+        {
+          "id": "update",
+          "h": "به‌روزرسانی جزئی",
+          "p": [
+            "`PUT /projects/:id` فقط فیلدهایی را که فرستاده شده عوض می‌کند، پس صفحه‌ی Manage ports می‌تواند فقط آدرس تازه یا فقط `isActive` را بفرستد."
+          ],
+          "examples": [
+            "update"
+          ]
+        }
+      ],
+      "examples": {
+        "contract": {
+          "title": {
+            "en": "What every adapter returns",
+            "fa": "چیزی که هر adapter برمی‌گرداند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/project.model.ts",
+          "from": "export interface AdapterStatus",
+          "to": "}"
+        },
+        "list": {
+          "title": {
+            "en": "Every adapter in parallel",
+            "fa": "همه‌ی adapterها هم‌زمان"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.service.ts",
+          "from": "async listWithStatus",
+          "lines": 10
+        },
+        "fetch": {
+          "title": {
+            "en": "A failure becomes a status, not an error",
+            "fa": "شکست به یک وضعیت تبدیل می‌شود، نه یک خطا"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.service.ts",
+          "from": "private async fetchStatus",
+          "lines": 10
+        },
+        "update": {
+          "title": {
+            "en": "Only what was sent changes",
+            "fa": "فقط چیزی که فرستاده شده عوض می‌شود"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.service.ts",
+          "from": "async update(id",
+          "to": "const merged = { ...existing, ...dto };"
+        }
+      }
+    },
+    {
+      "id": "projects-allowlist",
+      "group": "backend",
+      "title": {
+        "en": "Projects: the SSRF allowlist",
+        "fa": "پروژه‌ها: فهرست مجاز در برابر SSRF"
+      },
+      "files": [
+        "services/core-api/src/projects/adapter-url.ts",
+        "services/core-api/src/projects/projects.service.ts"
+      ],
+      "en": [
+        {
+          "id": "why",
+          "h": "Why the registry is dangerous",
+          "p": [
+            "The server fetches `<adapterBaseUrl>/status` for every row, so the registry is a list of URLs the server will request. Without a check, an Admin (or a stolen Admin token) could point a row at the cloud metadata address or another container's admin port and make `core-api` call it: server-side request forgery."
+          ]
+        },
+        {
+          "id": "rules",
+          "h": "The rules",
+          "p": [
+            "Only plain `http` or `https` base URLs, without credentials, path, query or fragment, on a host listed in `ADAPTER_ALLOWED_HOSTS`. A rejected URL gets a 400 with the reason, which the Manage ports page shows as it is."
+          ],
+          "examples": [
+            "check"
+          ]
+        },
+        {
+          "id": "twice",
+          "h": "Checked when written and again when used",
+          "p": [
+            "The check runs on create and update, and again before every request: a row edited directly in SQL cannot bypass it. `redirect: 'error'` refuses redirects, so an allowed host cannot bounce the request somewhere else."
+          ],
+          "examples": [
+            "request"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "چرا فهرست پروژه‌ها خطرناک است",
+          "p": [
+            "سرور برای هر ردیف `<adapterBaseUrl>/status` را صدا می‌زند، پس این فهرست در واقع فهرستی از URLهایی است که سرور درخواست می‌دهد. بدون چک، یک Admin (یا کسی که توکن Admin را دزدیده) می‌توانست ردیفی را به آدرس metadata سرویس ابری یا پورت مدیریتی یک کانتینر دیگر ببرد و `core-api` را وادار کند آن را صدا بزند: جعل درخواست سمت سرور (SSRF)."
+          ]
+        },
+        {
+          "id": "rules",
+          "h": "قاعده‌ها",
+          "p": [
+            "فقط آدرس پایه‌ی ساده با `http` یا `https`، بدون نام کاربری و رمز، مسیر، query یا fragment، روی میزبانی که در `ADAPTER_ALLOWED_HOSTS` آمده. آدرس رد‌شده یک ۴۰۰ با دلیلش می‌گیرد که صفحه‌ی Manage ports همان را نشان می‌دهد."
+          ],
+          "examples": [
+            "check"
+          ]
+        },
+        {
+          "id": "twice",
+          "h": "موقع نوشتن چک می‌شود، و دوباره موقع استفاده",
+          "p": [
+            "چک در ساختن و ویرایش اجرا می‌شود، و دوباره قبل از هر درخواست: ردیفی که مستقیم در SQL ویرایش شده نمی‌تواند از آن رد شود. `redirect: 'error'` هر redirect را رد می‌کند، تا یک میزبان مجاز نتواند درخواست را جای دیگری بفرستد."
+          ],
+          "examples": [
+            "request"
+          ]
+        }
+      ],
+      "examples": {
+        "check": {
+          "title": {
+            "en": "checkAdapterBaseUrl(): null means accepted",
+            "fa": "checkAdapterBaseUrl(): null یعنی قبول"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/adapter-url.ts",
+          "from": "export function checkAdapterBaseUrl",
+          "lines": 22
+        },
+        "request": {
+          "title": {
+            "en": "Checked again before every request",
+            "fa": "دوباره قبل از هر درخواست چک می‌شود"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.service.ts",
+          "from": "private async requestAdapter",
+          "lines": 15
+        }
+      }
+    },
+    {
+      "id": "services-api",
+      "group": "backend",
+      "title": {
+        "en": "Services: start, stop, audit",
+        "fa": "سرویس‌ها: روشن، خاموش، audit"
+      },
+      "files": [
+        "services/core-api/src/services/services.controller.ts",
+        "services/core-api/src/services/services.service.ts",
+        "services/core-api/src/services/services.module.ts",
+        "services/core-api/src/services/audit.service.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "services"
+            ]
+          }
+        },
+        {
+          "id": "confirm",
+          "h": "The API itself wants the name typed back",
+          "p": [
+            "Stopping a service is the one action that hurts if it is a misclick, so stop and restart need `{\"confirm\": \"<name>\"}` in the body. The check is in the API, not only in the UI, so a script or a crafted request gets the same protection."
+          ],
+          "examples": [
+            "confirm"
+          ]
+        },
+        {
+          "id": "act",
+          "h": "One action at a time, and every attempt audited",
+          "p": [
+            "A `Set` of busy names returns 409 when a second action on the same service arrives. Every attempt is written to `dbo.AuditLog`, including the ones that fail; a failed audit write is logged loudly instead of hiding the action."
+          ],
+          "examples": [
+            "act"
+          ]
+        },
+        {
+          "id": "optional",
+          "h": "Optional by configuration",
+          "p": [
+            "Without `DOCKER_PROXY_URL` (for example `core-api` started with npm on the host) the module provides no orchestrator and every `/services` endpoint answers 503 with that reason."
+          ],
+          "examples": [
+            "module"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "services"
+            ]
+          }
+        },
+        {
+          "id": "confirm",
+          "h": "خود API می‌خواهد نام دوباره تایپ شود",
+          "p": [
+            "خاموش کردن یک سرویس تنها کاری است که اگر اشتباهی کلیک شود ضرر دارد، پس stop و restart در بدنه `{\"confirm\": \"<name>\"}` می‌خواهند. این چک در API است، نه فقط در رابط، پس یک اسکریپت یا درخواست دست‌ساز هم همین محافظت را می‌گیرد."
+          ],
+          "examples": [
+            "confirm"
+          ]
+        },
+        {
+          "id": "act",
+          "h": "در هر لحظه یک کار، و audit برای هر تلاش",
+          "p": [
+            "یک `Set` از نام‌های مشغول، وقتی کار دوم روی همان سرویس برسد ۴۰۹ برمی‌گرداند. هر تلاش در `dbo.AuditLog` نوشته می‌شود، حتی آن‌هایی که شکست می‌خورند؛ اگر نوشتن audit شکست بخورد، با صدای بلند لاگ می‌شود به‌جای اینکه کار پنهان بماند."
+          ],
+          "examples": [
+            "act"
+          ]
+        },
+        {
+          "id": "optional",
+          "h": "اختیاری با تنظیمات",
+          "p": [
+            "بدون `DOCKER_PROXY_URL` (مثلاً وقتی `core-api` با npm روی خود PC اجرا شده) ماژول هیچ orchestratorی نمی‌سازد و همه‌ی endpointهای `/services` با همین دلیل ۵۰۳ جواب می‌دهند."
+          ],
+          "examples": [
+            "module"
+          ]
+        }
+      ],
+      "examples": {
+        "confirm": {
+          "title": {
+            "en": "confirmed(): the name must come back",
+            "fa": "confirmed(): نام باید برگردد"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/services.controller.ts",
+          "from": "function confirmed",
+          "lines": 7
+        },
+        "act": {
+          "title": {
+            "en": "act(): busy check, action, audit",
+            "fa": "act(): چک مشغول بودن، کار، audit"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/services.service.ts",
+          "from": "async act(",
+          "lines": 15
+        },
+        "module": {
+          "title": {
+            "en": "No proxy URL, no orchestrator",
+            "fa": "بدون آدرس پراکسی، بدون orchestrator"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/services.module.ts",
+          "from": "provide: ORCHESTRATOR",
+          "to": ": null;"
+        }
+      }
+    },
+    {
+      "id": "services-docker",
+      "group": "backend",
+      "title": {
+        "en": "Services: Docker through a proxy",
+        "fa": "سرویس‌ها: Docker از پشت پراکسی"
+      },
+      "files": [
+        "services/core-api/src/services/orchestrator.ts",
+        "services/core-api/src/services/docker-orchestrator.ts"
+      ],
+      "en": [
+        {
+          "id": "interface",
+          "h": "An interface, not Docker everywhere",
+          "p": [
+            "The controller and the audit only know `Orchestrator`: list, start, stop, restart, logs. `DockerOrchestrator` is today's implementation; a Kubernetes one could replace it without touching the rest."
+          ],
+          "examples": [
+            "interface"
+          ]
+        },
+        {
+          "id": "proxy",
+          "h": "Never the Docker socket itself",
+          "p": [
+            "Whoever holds the Docker socket is root on the host. So `core-api` talks to `socket-proxy`, on an internal network only it joins, and the proxy forwards only list, logs, start and stop. Create, exec and delete answer 403 there, so even a bug here cannot run a new container."
+          ]
+        },
+        {
+          "id": "resolve",
+          "h": "Only labelled containers, ids only from Docker",
+          "p": [
+            "A name from the request is checked against a strict pattern, then looked up in a fresh listing filtered by `controlpanel.managed=true`. The id sent to Docker always comes from that listing, never from the caller, and has to look like a container id."
+          ],
+          "examples": [
+            "resolve"
+          ]
+        },
+        {
+          "id": "errors",
+          "h": "Docker's answers, translated",
+          "p": [
+            "304 (already started or stopped) counts as success, 404 becomes Not Found, 403 from the proxy becomes Bad Gateway, and an unreachable proxy becomes 503. Restart is stop plus start, because the proxy's restart permission would also allow kill."
+          ],
+          "examples": [
+            "call"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "interface",
+          "h": "یک interface، نه Docker همه‌جا",
+          "p": [
+            "Controller و audit فقط `Orchestrator` را می‌شناسند: فهرست، روشن، خاموش، راه‌اندازی دوباره، لاگ. `DockerOrchestrator` پیاده‌سازی امروز است؛ یک نسخه‌ی Kubernetes می‌تواند جایش را بگیرد بی‌آنکه بقیه دست بخورند."
+          ],
+          "examples": [
+            "interface"
+          ]
+        },
+        {
+          "id": "proxy",
+          "h": "هیچ‌وقت خود سوکت Docker",
+          "p": [
+            "هر کس سوکت Docker را داشته باشد روی سیستم میزبان root است. پس `core-api` با `socket-proxy` حرف می‌زند، روی یک شبکه‌ی داخلی که فقط خودش به آن وصل است، و پراکسی فقط فهرست، لاگ، روشن و خاموش را رد می‌کند. ساختن، exec و حذف آنجا ۴۰۳ می‌گیرند، پس حتی یک باگ اینجا نمی‌تواند کانتینر تازه اجرا کند."
+          ]
+        },
+        {
+          "id": "resolve",
+          "h": "فقط کانتینرهای برچسب‌دار، id فقط از خود Docker",
+          "p": [
+            "نامی که در درخواست آمده با یک الگوی سخت‌گیر چک می‌شود، بعد در یک فهرست تازه که با `controlpanel.managed=true` فیلتر شده پیدا می‌شود. idی که به Docker فرستاده می‌شود همیشه از همان فهرست می‌آید، هیچ‌وقت از صدازننده، و باید شکل id کانتینر داشته باشد."
+          ],
+          "examples": [
+            "resolve"
+          ]
+        },
+        {
+          "id": "errors",
+          "h": "جواب‌های Docker، ترجمه‌شده",
+          "p": [
+            "۳۰۴ (از قبل روشن یا خاموش بوده) موفقیت حساب می‌شود، ۴۰۴ می‌شود Not Found، ۴۰۳ پراکسی می‌شود Bad Gateway، و پراکسیِ در دسترس‌نبودن می‌شود ۵۰۳. Restart یعنی stop و بعد start، چون اجازه‌ی restart در پراکسی kill را هم باز می‌کرد."
+          ],
+          "examples": [
+            "call"
+          ]
+        }
+      ],
+      "examples": {
+        "interface": {
+          "title": {
+            "en": "What Control Panel may do to a service",
+            "fa": "کارهایی که کنترل پنل می‌تواند با یک سرویس بکند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/orchestrator.ts",
+          "from": "export interface Orchestrator {",
+          "to": "}"
+        },
+        "resolve": {
+          "title": {
+            "en": "From a name to a container id",
+            "fa": "از نام به id کانتینر"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/docker-orchestrator.ts",
+          "from": "private async resolve",
+          "lines": 13
+        },
+        "call": {
+          "title": {
+            "en": "One request to Docker, with its answer translated",
+            "fa": "یک درخواست به Docker، با جواب ترجمه‌شده"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/docker-orchestrator.ts",
+          "from": "private async call",
+          "lines": 17
+        }
+      }
+    },
+    {
+      "id": "services-logs",
+      "group": "backend",
+      "title": {
+        "en": "Services: reading logs safely",
+        "fa": "سرویس‌ها: خواندن امن لاگ‌ها"
+      },
+      "files": [
+        "services/core-api/src/services/docker-logs.ts"
+      ],
+      "en": [
+        {
+          "id": "demux",
+          "h": "Docker's log format",
+          "p": [
+            "Without a terminal, Docker returns logs in frames: an 8-byte header (stream type, three zero bytes, a big-endian length) and then that many bytes. Printed as it is, the header shows up as garbage at the start of every line; `demuxDockerLogs` strips the headers and joins the frames."
+          ],
+          "examples": [
+            "demux"
+          ]
+        },
+        {
+          "id": "redact",
+          "h": "Secrets masked before they leave",
+          "p": [
+            "Logs end up in a browser and in screenshots. Before they leave `core-api`, anything that looks like a bearer token, a JWT, an Anthropic key or a `password=` / `token=` value is replaced. The UI only ever shows the last 200 lines (500 at most)."
+          ],
+          "examples": [
+            "redact"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "demux",
+          "h": "قالب لاگ Docker",
+          "p": [
+            "Docker وقتی ترمینالی در کار نیست لاگ را به‌صورت قاب‌های جدا برمی‌گرداند: یک هدر ۸ بایتی (نوع جریان، سه بایت صفر، و طول به‌صورت big-endian) و بعد همان تعداد بایت. اگر همان‌طور چاپ شود، هدر اول هر خط به‌صورت کاراکترهای بی‌معنی دیده می‌شود؛ `demuxDockerLogs` هدرها را برمی‌دارد و قاب‌ها را به هم وصل می‌کند."
+          ],
+          "examples": [
+            "demux"
+          ]
+        },
+        {
+          "id": "redact",
+          "h": "secretها قبل از بیرون رفتن پوشانده می‌شوند",
+          "p": [
+            "لاگ‌ها در مرورگر و در اسکرین‌شات‌ها می‌مانند. قبل از اینکه از `core-api` بیرون بروند، هر چیزی که شبیه توکن bearer، JWT، کلید Anthropic یا مقدار `password=` / `token=` باشد جایگزین می‌شود. رابط فقط ۲۰۰ خط آخر (حداکثر ۵۰۰) را نشان می‌دهد."
+          ],
+          "examples": [
+            "redact"
+          ]
+        }
+      ],
+      "examples": {
+        "demux": {
+          "title": {
+            "en": "Removing the frame headers",
+            "fa": "برداشتن هدر قاب‌ها"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/docker-logs.ts",
+          "from": "export function demuxDockerLogs",
+          "lines": 12
+        },
+        "redact": {
+          "title": {
+            "en": "What gets masked",
+            "fa": "چه چیزهایی پوشانده می‌شوند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/services/docker-logs.ts",
+          "from": "const REDACTIONS",
+          "to": "];"
+        }
+      }
+    },
+    {
+      "id": "assistant-loop",
+      "group": "backend",
+      "title": {
+        "en": "Assistant: the tool loop",
+        "fa": "دستیار: حلقه‌ی ابزارها"
+      },
+      "files": [
+        "services/core-api/src/assistant/assistant.controller.ts",
+        "services/core-api/src/assistant/assistant.service.ts",
+        "services/core-api/src/assistant/assistant.module.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "assistant"
+            ]
+          }
+        },
+        {
+          "id": "loop",
+          "h": "Ask, call tools, answer",
+          "p": [
+            "The question goes to Claude with three tools. When the model asks for tools, `core-api` runs them all, in parallel, and sends every result back in one message; when it answers, the loop ends. At most 6 rounds per question, so a confused model cannot run up the bill."
+          ],
+          "examples": [
+            "loop"
+          ]
+        },
+        {
+          "id": "prompt",
+          "h": "The system prompt",
+          "p": [
+            "The prompt sets the rules: base every statement on tool results, treat tool results as data and never as instructions, say where to change things instead of trying, answer in the question's language, plain text only (the panel never renders HTML)."
+          ],
+          "examples": [
+            "prompt"
+          ]
+        },
+        {
+          "id": "limits",
+          "h": "Limits",
+          "p": [
+            "20 questions per user per hour, a refusal answered politely, an answer cut off by `max_tokens` reported as an error, and without `ANTHROPIC_API_KEY` the endpoint answers 503 while the rest of `core-api` runs normally."
+          ],
+          "examples": [
+            "rate"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "assistant"
+            ]
+          }
+        },
+        {
+          "id": "loop",
+          "h": "پرسیدن، صدا زدن ابزار، جواب",
+          "p": [
+            "سؤال با سه ابزار به Claude فرستاده می‌شود. وقتی مدل ابزاری می‌خواهد، `core-api` همه را هم‌زمان اجرا می‌کند و همه‌ی نتیجه‌ها را در یک پیام برمی‌گرداند؛ وقتی مدل جواب داد، حلقه تمام می‌شود. حداکثر ۶ دور برای هر سؤال، تا مدلی که گیج شده نتواند هزینه را بالا ببرد."
+          ],
+          "examples": [
+            "loop"
+          ]
+        },
+        {
+          "id": "prompt",
+          "h": "System prompt",
+          "p": [
+            "Prompt قاعده‌ها را می‌گذارد: هر ادعا باید بر نتیجه‌ی ابزارها تکیه کند، نتیجه‌ی ابزار داده است و هیچ‌وقت دستور نیست، به‌جای تلاش برای تغییر بگو کجا باید عوضش کرد، به زبان سؤال جواب بده، و فقط متن ساده (پنل هیچ‌وقت HTML نمایش نمی‌دهد)."
+          ],
+          "examples": [
+            "prompt"
+          ]
+        },
+        {
+          "id": "limits",
+          "h": "محدودیت‌ها",
+          "p": [
+            "۲۰ سؤال برای هر کاربر در هر ساعت، جواب مؤدبانه به رد شدن درخواست، جواب نیمه‌کاره به‌خاطر `max_tokens` به‌عنوان خطا، و بدون `ANTHROPIC_API_KEY` این endpoint ۵۰۳ می‌دهد در حالی که بقیه‌ی `core-api` عادی کار می‌کند."
+          ],
+          "examples": [
+            "rate"
+          ]
+        }
+      ],
+      "examples": {
+        "loop": {
+          "title": {
+            "en": "One round: tool calls in parallel, results in one message",
+            "fa": "یک دور: ابزارها هم‌زمان، نتیجه‌ها در یک پیام"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/assistant/assistant.service.ts",
+          "from": "for (let turn = 0; turn < MAX_TURNS",
+          "to": "messages.push({ role: 'user', content: results });"
+        },
+        "prompt": {
+          "title": {
+            "en": "The rules the model gets",
+            "fa": "قاعده‌هایی که مدل می‌گیرد"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/assistant/assistant.service.ts",
+          "from": "const SYSTEM_PROMPT = [",
+          "to": "].join("
+        },
+        "rate": {
+          "title": {
+            "en": "Per-user rate limit",
+            "fa": "محدودیت تعداد برای هر کاربر"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/assistant/assistant.service.ts",
+          "from": "private checkRate",
+          "lines": 9
+        }
+      }
+    },
+    {
+      "id": "assistant-tools",
+      "group": "backend",
+      "title": {
+        "en": "Assistant: read-only tools",
+        "fa": "دستیار: ابزارهای فقط‌خواندنی"
+      },
+      "files": [
+        "services/core-api/src/assistant/assistant.tools.ts",
+        "services/core-api/src/projects/projects.service.ts"
+      ],
+      "en": [
+        {
+          "id": "three",
+          "h": "Three tools, nothing that writes",
+          "list": [
+            "`list_projects`: every project's live status, the same data as the dashboard.",
+            "`get_project_status`: one project by its key.",
+            "`get_job_search_insight`: `followups`, `funnel` or `gaps`, read from `ledgerdash-adapter`."
+          ],
+          "p": [
+            "No tool writes, runs SQL or takes a URL. Whatever text a tool result contains, the worst the model can do with it is answer badly; it has nothing to act with."
+          ],
+          "examples": [
+            "tool"
+          ]
+        },
+        {
+          "id": "run",
+          "h": "Running a call",
+          "p": [
+            "`runAssistantTool` checks the tool name and its input again on the server (the schema is `strict`, but the server does not rely on it) and returns JSON. An error becomes an error result the model sees, not a crash."
+          ],
+          "examples": [
+            "run"
+          ]
+        },
+        {
+          "id": "paths",
+          "h": "Adapter paths on a fixed list",
+          "p": [
+            "The insights go through `fetchAdapterJson`, which only accepts three known paths and uses the same allowlist and timeout as `/status`."
+          ],
+          "examples": [
+            "paths"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "three",
+          "h": "سه ابزار، هیچ‌کدام چیزی نمی‌نویسد",
+          "list": [
+            "`list_projects`: وضعیت زنده‌ی همه‌ی پروژه‌ها، همان داده‌ی داشبورد.",
+            "`get_project_status`: یک پروژه با key آن.",
+            "`get_job_search_insight`: `followups`، `funnel` یا `gaps`، خوانده‌شده از `ledgerdash-adapter`."
+          ],
+          "p": [
+            "هیچ ابزاری چیزی نمی‌نویسد، SQL اجرا نمی‌کند یا URL نمی‌گیرد. هر متنی که در نتیجه‌ی ابزار باشد، بدترین کاری که مدل با آن می‌تواند بکند جواب بد است؛ ابزاری برای انجام کار ندارد."
+          ],
+          "examples": [
+            "tool"
+          ]
+        },
+        {
+          "id": "run",
+          "h": "اجرای یک فراخوانی",
+          "p": [
+            "`runAssistantTool` نام ابزار و ورودی‌اش را دوباره روی سرور چک می‌کند (schema حالت `strict` دارد، ولی سرور به آن تکیه نمی‌کند) و JSON برمی‌گرداند. خطا به نتیجه‌ی خطایی تبدیل می‌شود که مدل می‌بیند، نه به crash."
+          ],
+          "examples": [
+            "run"
+          ]
+        },
+        {
+          "id": "paths",
+          "h": "مسیرهای adapter روی یک فهرست ثابت",
+          "p": [
+            "تحلیل‌ها از `fetchAdapterJson` رد می‌شوند که فقط سه مسیر شناخته‌شده را قبول می‌کند و از همان فهرست مجاز و سقف زمانی `/status` استفاده می‌کند."
+          ],
+          "examples": [
+            "paths"
+          ]
+        }
+      ],
+      "examples": {
+        "tool": {
+          "title": {
+            "en": "A tool definition with a strict schema",
+            "fa": "تعریف یک ابزار با schema سخت‌گیر"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/assistant/assistant.tools.ts",
+          "from": "name: 'get_job_search_insight'",
+          "to": "strict: true,"
+        },
+        "run": {
+          "title": {
+            "en": "runAssistantTool()",
+            "fa": "runAssistantTool()"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/assistant/assistant.tools.ts",
+          "from": "export async function runAssistantTool",
+          "to": "default:"
+        },
+        "paths": {
+          "title": {
+            "en": "Only these paths may be read",
+            "fa": "فقط همین مسیرها خوانده می‌شوند"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/projects/projects.service.ts",
+          "from": "static readonly ADAPTER_READ_PATHS",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "health-seed",
+      "group": "backend",
+      "title": {
+        "en": "Health check and seed users",
+        "fa": "Health check و ساختن کاربرها"
+      },
+      "files": [
+        "services/core-api/src/health.controller.ts",
+        "services/core-api/src/scripts/seed-users.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "health"
+            ]
+          }
+        },
+        {
+          "id": "health",
+          "h": "Liveness only",
+          "p": [
+            "`GET /health` is what the container healthcheck calls. It needs no token, touches no database and says nothing about the system, so it is safe to leave open."
+          ],
+          "examples": [
+            "health"
+          ]
+        },
+        {
+          "id": "seed",
+          "h": "The two accounts",
+          "p": [
+            "`seed-users` creates `admin` and `viewer` from `ADMIN_PASSWORD` and `VIEWER_PASSWORD` (12 characters or more), hashed with bcrypt at cost 12. No password is in the repository. Running it again resets the passwords and increments `TokenVersion`, which signs everyone out."
+          ],
+          "examples": [
+            "seed"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "health"
+            ]
+          }
+        },
+        {
+          "id": "health",
+          "h": "فقط زنده بودن",
+          "p": [
+            "`GET /health` همان چیزی است که healthcheck کانتینر صدا می‌زند. توکن نمی‌خواهد، به دیتابیس دست نمی‌زند و چیزی درباره‌ی سیستم نمی‌گوید، پس باز گذاشتنش امن است."
+          ],
+          "examples": [
+            "health"
+          ]
+        },
+        {
+          "id": "seed",
+          "h": "دو حساب",
+          "p": [
+            "`seed-users` حساب‌های `admin` و `viewer` را از `ADMIN_PASSWORD` و `VIEWER_PASSWORD` (حداقل ۱۲ کاراکتر) می‌سازد، با hash نوع bcrypt و هزینه‌ی ۱۲. هیچ رمزی در repo نیست. اجرای دوباره رمزها را ریست می‌کند و `TokenVersion` را زیاد می‌کند، که همه را از حساب بیرون می‌برد."
+          ],
+          "examples": [
+            "seed"
+          ]
+        }
+      ],
+      "examples": {
+        "health": {
+          "title": {
+            "en": "The whole health controller",
+            "fa": "کل controller سلامت"
+          },
+          "lang": "typescript",
+          "file": "services/core-api/src/health.controller.ts",
+          "from": "@Controller('health')",
+          "lines": 7
+        },
+        "seed": {
+          "title": {
+            "en": "Create, or reset and sign out",
+            "fa": "ساختن، یا ریست و بیرون کردن از حساب"
+          },
+          "lang": "sql",
+          "file": "services/core-api/src/scripts/seed-users.ts",
+          "from": "IF EXISTS (SELECT 1 FROM dbo.Users",
+          "to": "INSERT INTO dbo.Users"
+        }
+      }
+    },
+    {
+      "id": "wutility-adapter",
+      "group": "adapters",
+      "title": {
+        "en": "wutility-adapter: the proxy pattern",
+        "fa": "wutility-adapter: الگوی پراکسی"
+      },
+      "files": [
+        "services/adapters/wutility-adapter/src/app.ts",
+        "services/adapters/wutility-adapter/src/main.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "wutility-adapter"
+            ]
+          }
+        },
+        {
+          "id": "proxy",
+          "h": "Calling an API that already exists",
+          "p": [
+            "wUtility Web has its own .NET API on Azure. The adapter re-implements nothing: it calls `/api/db-config-settings` with the `X-Api-Key` header, counts the active sites, and returns the common `/status` shape. A 3-second timeout and a catch-all keep a slow or failing API from becoming an error in `core-api`."
+          ],
+          "examples": [
+            "status"
+          ]
+        },
+        {
+          "id": "key",
+          "h": "No key, no start",
+          "p": [
+            "`main.ts` only wires the configuration. Without `WUTILITY_API_KEY` the adapter exits at once with a clear message instead of calling the API unauthenticated."
+          ],
+          "examples": [
+            "main"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "wutility-adapter"
+            ]
+          }
+        },
+        {
+          "id": "proxy",
+          "h": "صدا زدن APIی که از قبل هست",
+          "p": [
+            "wUtility Web یک API با .NET روی Azure دارد. Adapter چیزی را دوباره نمی‌سازد: `/api/db-config-settings` را با هدر `X-Api-Key` صدا می‌زند، سایت‌های فعال را می‌شمارد و همان شکل مشترک `/status` را برمی‌گرداند. سقف ۳ ثانیه و یک catch کلی نمی‌گذارند API کند یا خراب در `core-api` به خطا تبدیل شود."
+          ],
+          "examples": [
+            "status"
+          ]
+        },
+        {
+          "id": "key",
+          "h": "بدون کلید، بالا نمی‌آید",
+          "p": [
+            "`main.ts` فقط تنظیمات را وصل می‌کند. بدون `WUTILITY_API_KEY` adapter همان اول با پیام روشن خارج می‌شود، به‌جای اینکه API را بدون احراز هویت صدا بزند."
+          ],
+          "examples": [
+            "main"
+          ]
+        }
+      ],
+      "examples": {
+        "status": {
+          "title": {
+            "en": "/status: call, count, normalize",
+            "fa": "/status: صدا زدن، شمردن، یکدست کردن"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/wutility-adapter/src/app.ts",
+          "from": "app.get('/status'",
+          "lines": 27
+        },
+        "main": {
+          "title": {
+            "en": "A missing key stops the adapter",
+            "fa": "نبودن کلید adapter را متوقف می‌کند"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/wutility-adapter/src/main.ts",
+          "from": "const apiKey",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "hisplus-adapter",
+      "group": "adapters",
+      "title": {
+        "en": "hisplus-adapter: reading the database",
+        "fa": "hisplus-adapter: خواندن از دیتابیس"
+      },
+      "files": [
+        "services/adapters/hisplus-adapter/src/app.ts",
+        "services/adapters/hisplus-adapter/src/main.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "hisplus-adapter"
+            ]
+          }
+        },
+        {
+          "id": "direct",
+          "h": "When the project has no API",
+          "p": [
+            "HIS+ is a WinForms desktop application with no HTTP API. So the adapter reads its database directly, read-only, from the same table the application writes: a reporting service over another system's database. Here it is the `HisPlusDemo` stand-in with made-up rows, never real hospital data."
+          ],
+          "examples": [
+            "sql"
+          ]
+        },
+        {
+          "id": "null",
+          "h": "SUM over nothing is NULL",
+          "p": [
+            "On an empty table `SUM(...)` returns NULL, not 0. The handler turns those into 0 before building the summary, so a new database shows \"0 reports today\" instead of \"null\"."
+          ],
+          "examples": [
+            "status"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpoint",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "hisplus-adapter"
+            ]
+          }
+        },
+        {
+          "id": "direct",
+          "h": "وقتی پروژه API ندارد",
+          "p": [
+            "HIS+ یک اپ دسکتاپ WinForms است و هیچ API از نوع HTTP ندارد. پس adapter دیتابیسش را مستقیم و فقط‌خواندنی می‌خواند، از همان جدولی که خود اپ در آن می‌نویسد: یک سرویس گزارش‌گیری روی دیتابیس یک سیستم دیگر. اینجا جایگزین آزمایشی `HisPlusDemo` با ردیف‌های ساختگی است، هیچ‌وقت داده‌ی واقعی بیمارستان."
+          ],
+          "examples": [
+            "sql"
+          ]
+        },
+        {
+          "id": "null",
+          "h": "SUM روی هیچ، NULL است",
+          "p": [
+            "روی جدول خالی `SUM(...)` به‌جای ۰ مقدار NULL برمی‌گرداند. Handler قبل از ساختن خلاصه آن‌ها را ۰ می‌کند، تا دیتابیس تازه «۰ گزارش امروز» نشان بدهد نه «null»."
+          ],
+          "examples": [
+            "status"
+          ]
+        }
+      ],
+      "examples": {
+        "sql": {
+          "title": {
+            "en": "One query for all the numbers",
+            "fa": "یک query برای همه‌ی عددها"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/hisplus-adapter/src/app.ts",
+          "from": "export const OR_REPORT_STATS_SQL",
+          "to": "FROM dbo.ORReports"
+        },
+        "status": {
+          "title": {
+            "en": "/status, with NULL turned into 0",
+            "fa": "/status، با NULL تبدیل‌شده به ۰"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/hisplus-adapter/src/app.ts",
+          "from": "app.get('/status'",
+          "lines": 21
+        }
+      }
+    },
+    {
+      "id": "ledgerdash-adapter",
+      "group": "adapters",
+      "title": {
+        "en": "ledgerdash-adapter: views and insights",
+        "fa": "ledgerdash-adapter: viewها و تحلیل‌ها"
+      },
+      "files": [
+        "services/adapters/ledgerdash-adapter/src/app.ts",
+        "services/adapters/ledgerdash-adapter/src/main.ts"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "ledgerdash-adapter"
+            ]
+          }
+        },
+        {
+          "id": "views",
+          "h": "Through the views, with a login that cannot see the tables",
+          "p": [
+            "This adapter reads LedgerDashboard's database as `ledger_reader`, which may only SELECT the reporting views. The views compute the current stage and the follow-up rule the same way the dashboard does, so the numbers on the Control Panel card match LedgerDashboard's own screens."
+          ],
+          "examples": [
+            "sql"
+          ]
+        },
+        {
+          "id": "insights",
+          "h": "Three extra lists for the assistant",
+          "p": [
+            "Besides `/status`, three read-only endpoints return rows for the assistant: follow-ups due, the funnel by source, and skill-gap tags. A database error becomes a 503 with a short message; the SQL error itself never leaves the adapter."
+          ],
+          "examples": [
+            "insight"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "Endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "ledgerdash-adapter"
+            ]
+          }
+        },
+        {
+          "id": "views",
+          "h": "از طریق viewها، با loginی که جدول‌ها را نمی‌بیند",
+          "p": [
+            "این adapter دیتابیس LedgerDashboard را با `ledger_reader` می‌خواند، که فقط اجازه‌ی SELECT روی viewهای گزارش‌گیری دارد. Viewها مرحله‌ی فعلی و قاعده‌ی پیگیری را دقیقاً مثل خود داشبورد حساب می‌کنند، پس عددهای کارت کنترل پنل با صفحه‌های خود LedgerDashboard یکی است."
+          ],
+          "examples": [
+            "sql"
+          ]
+        },
+        {
+          "id": "insights",
+          "h": "سه فهرست اضافه برای دستیار",
+          "p": [
+            "کنار `/status`، سه endpoint فقط‌خواندنی برای دستیار ردیف برمی‌گردانند: پیگیری‌های عقب‌افتاده، قیف بر اساس منبع، و برچسب‌های کمبود مهارت. خطای دیتابیس به ۵۰۳ با یک پیام کوتاه تبدیل می‌شود؛ خود خطای SQL هیچ‌وقت از adapter بیرون نمی‌رود."
+          ],
+          "examples": [
+            "insight"
+          ]
+        }
+      ],
+      "examples": {
+        "sql": {
+          "title": {
+            "en": "The status query, over a view",
+            "fa": "query وضعیت، روی یک view"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/ledgerdash-adapter/src/app.ts",
+          "from": "status: `",
+          "to": "FROM dbo.vApplicationCurrentStage`,"
+        },
+        "insight": {
+          "title": {
+            "en": "One helper for the three insight endpoints",
+            "fa": "یک تابع کمکی برای سه endpoint تحلیلی"
+          },
+          "lang": "typescript",
+          "file": "services/adapters/ledgerdash-adapter/src/app.ts",
+          "from": "const insight =",
+          "to": "app.get('/insights/gaps'"
+        }
+      }
+    },
+    {
+      "id": "fe-routes",
+      "group": "frontend",
+      "title": {
+        "en": "Routes, guards and the /api proxy",
+        "fa": "مسیرها، guardها و پراکسی /api"
+      },
+      "files": [
+        "frontend/src/app/app.routes.ts",
+        "frontend/src/app/app.config.ts",
+        "frontend/src/app/auth/auth.guard.ts",
+        "frontend/src/app/auth/admin.guard.ts",
+        "frontend/nginx.conf"
+      ],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Routes",
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "guards",
+          "h": "Guards are for the user, not for security",
+          "p": [
+            "`authGuard` sends a visitor without a token to the login page; `adminGuard` keeps a Viewer off Manage ports. They only make the app pleasant: anyone can edit their browser's storage. The real protection is on the server, where `RolesGuard` checks the signed token."
+          ],
+          "examples": [
+            "admin"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "One origin, no CORS",
+          "p": [
+            "In development (`ng serve`) the app calls `http://localhost:4000` directly. The built app calls `/api` on its own origin, and the frontend's nginx forwards it to `core-api`; nothing in the build names a host or a port."
+          ],
+          "examples": [
+            "nginx"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "مسیرها",
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "guards",
+          "h": "Guardها برای کاربرند، نه برای امنیت",
+          "p": [
+            "`authGuard` بازدیدکننده‌ی بدون توکن را به صفحه‌ی ورود می‌برد؛ `adminGuard` نمی‌گذارد Viewer وارد Manage ports شود. این‌ها فقط کار با اپ را راحت می‌کنند: هر کسی می‌تواند حافظه‌ی مرورگرش را ویرایش کند. محافظت واقعی روی سرور است، جایی که `RolesGuard` توکن امضاشده را چک می‌کند."
+          ],
+          "examples": [
+            "admin"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "یک origin، بدون CORS",
+          "p": [
+            "در حالت توسعه (`ng serve`) اپ مستقیم `http://localhost:4000` را صدا می‌زند. نسخه‌ی build شده `/api` را روی origin خودش صدا می‌زند و nginx رابط آن را به `core-api` می‌فرستد؛ هیچ جای build اسم میزبان یا پورت نیامده."
+          ],
+          "examples": [
+            "nginx"
+          ]
+        }
+      ],
+      "examples": {
+        "admin": {
+          "title": {
+            "en": "adminGuard",
+            "fa": "adminGuard"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/auth/admin.guard.ts",
+          "from": "export const adminGuard",
+          "to": "};"
+        },
+        "nginx": {
+          "title": {
+            "en": "nginx forwards /api to core-api",
+            "fa": "nginx مسیر /api را به core-api می‌فرستد"
+          },
+          "lang": "nginx",
+          "file": "frontend/nginx.conf",
+          "from": "location /api/",
+          "to": "  }"
+        }
+      }
+    },
+    {
+      "id": "fe-auth",
+      "group": "frontend",
+      "title": {
+        "en": "Session: tokens and automatic refresh",
+        "fa": "نشست: توکن‌ها و refresh خودکار"
+      },
+      "files": [
+        "frontend/src/app/auth/auth.service.ts",
+        "frontend/src/app/auth/auth.interceptor.ts"
+      ],
+      "en": [
+        {
+          "id": "interceptor",
+          "h": "The interceptor",
+          "p": [
+            "Every request gets `Authorization: Bearer <access token>`. When the API answers 401 (the 15-minute token expired), the interceptor refreshes once and retries the original request; if the refresh fails too, the session ends and the user lands on the login page. Login and refresh themselves are skipped, or a failing refresh would trigger another refresh."
+          ],
+          "examples": [
+            "interceptor"
+          ]
+        },
+        {
+          "id": "shared",
+          "h": "One refresh for many failed requests",
+          "p": [
+            "The dashboard sends several requests at once, so several 401s arrive together. The server rotates refresh tokens, so parallel refreshes with the same token would race. `refreshInFlight` with `shareReplay(1)` makes them all wait for one refresh."
+          ],
+          "examples": [
+            "refresh"
+          ]
+        },
+        {
+          "id": "storage",
+          "h": "Where the tokens live",
+          "p": [
+            "In `localStorage`. It is simple and survives a reload, but an XSS bug could read it; an httpOnly cookie for the refresh token is the next hardening step, as the README says."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "interceptor",
+          "h": "Interceptor",
+          "p": [
+            "هر درخواست هدر `Authorization: Bearer <access token>` می‌گیرد. وقتی API جواب ۴۰۱ می‌دهد (توکن ۱۵ دقیقه‌ای منقضی شده)، interceptor یک بار refresh می‌کند و درخواست اصلی را تکرار می‌کند؛ اگر refresh هم شکست بخورد، نشست تمام می‌شود و کاربر به صفحه‌ی ورود می‌رود. خود ورود و refresh از این قاعده بیرون‌اند، وگرنه refresh شکست‌خورده یک refresh دیگر راه می‌انداخت."
+          ],
+          "examples": [
+            "interceptor"
+          ]
+        },
+        {
+          "id": "shared",
+          "h": "یک refresh برای چند درخواست شکست‌خورده",
+          "p": [
+            "داشبورد چند درخواست را هم‌زمان می‌فرستد، پس چند ۴۰۱ با هم می‌رسند. سرور توکن refresh را با هر بار استفاده عوض می‌کند، پس چند refresh هم‌زمان با یک توکن با هم مسابقه می‌دادند. `refreshInFlight` همراه با `shareReplay(1)` همه را منتظر یک refresh نگه می‌دارد."
+          ],
+          "examples": [
+            "refresh"
+          ]
+        },
+        {
+          "id": "storage",
+          "h": "توکن‌ها کجا نگه داشته می‌شوند",
+          "p": [
+            "در `localStorage`. ساده است و با reload از بین نمی‌رود، ولی یک باگ XSS می‌تواند آن را بخواند؛ همان‌طور که README می‌گوید، قدم بعدیِ سخت‌تر کردن، یک cookie از نوع httpOnly برای توکن refresh است."
+          ]
+        }
+      ],
+      "examples": {
+        "interceptor": {
+          "title": {
+            "en": "Attach, and on 401 refresh once",
+            "fa": "اضافه کردن توکن، و در ۴۰۱ یک بار refresh"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/auth/auth.interceptor.ts",
+          "from": "export const authInterceptor",
+          "to": "};"
+        },
+        "refresh": {
+          "title": {
+            "en": "One shared refresh",
+            "fa": "یک refresh مشترک"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/auth/auth.service.ts",
+          "from": "refreshAccessToken(): Observable<string>",
+          "lines": 18
+        }
+      }
+    },
+    {
+      "id": "fe-dashboard",
+      "group": "frontend",
+      "title": {
+        "en": "Page: Dashboard",
+        "fa": "صفحه: داشبورد"
+      },
+      "files": [
+        "frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
+        "frontend/src/app/pages/dashboard-page/dashboard-page.component.html",
+        "frontend/src/app/projects.service.ts"
+      ],
+      "en": [
+        {
+          "id": "load",
+          "h": "One request, grouped by category",
+          "p": [
+            "The page asks for `GET /projects` once and groups the cards by category on the client. The categories come from the data itself, so a new category in the registry needs no code change."
+          ],
+          "examples": [
+            "group"
+          ]
+        },
+        {
+          "id": "card",
+          "h": "A card",
+          "p": [
+            "Online or Offline from `healthy`, the adapter's summary, its error when it is down, and every metric the adapter chose to send, as label and value. The card does not know which project it shows."
+          ],
+          "examples": [
+            "card"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "load",
+          "h": "یک درخواست، دسته‌بندی‌شده",
+          "p": [
+            "صفحه یک بار `GET /projects` را می‌خواهد و کارت‌ها را در خود مرورگر بر اساس دسته گروه‌بندی می‌کند. دسته‌ها از خود داده می‌آیند، پس دسته‌ی تازه در فهرست پروژه‌ها تغییری در کد لازم ندارد."
+          ],
+          "examples": [
+            "group"
+          ]
+        },
+        {
+          "id": "card",
+          "h": "یک کارت",
+          "p": [
+            "Online یا Offline از روی `healthy`، خلاصه‌ی adapter، خطایش وقتی خاموش است، و هر metricی که adapter فرستاده، به‌صورت نام و مقدار. کارت نمی‌داند کدام پروژه را نشان می‌دهد."
+          ],
+          "examples": [
+            "card"
+          ]
+        }
+      ],
+      "examples": {
+        "group": {
+          "title": {
+            "en": "Categories from the data",
+            "fa": "دسته‌ها از روی داده"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
+          "from": "get categories()",
+          "lines": 7
+        },
+        "card": {
+          "title": {
+            "en": "The project card",
+            "fa": "کارت پروژه"
+          },
+          "lang": "xml",
+          "file": "frontend/src/app/pages/dashboard-page/dashboard-page.component.html",
+          "from": "<div class=\"project-card\"",
+          "to": "<p class=\"summary muted\""
+        }
+      }
+    },
+    {
+      "id": "fe-login",
+      "group": "frontend",
+      "title": {
+        "en": "Page: Login",
+        "fa": "صفحه: ورود"
+      },
+      "files": [
+        "frontend/src/app/pages/login-page/login-page.component.ts",
+        "frontend/src/app/pages/login-page/login-page.component.html"
+      ],
+      "en": [
+        {
+          "id": "messages",
+          "h": "An error message for each cause",
+          "p": [
+            "Only a 401 means the password was wrong. When `core-api` is not running the browser gets status 0, which used to show \"Invalid username or password\" too and sent people hunting for a password that was correct. Now each status has its own message, and the function is tested on its own."
+          ],
+          "examples": [
+            "messages"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "messages",
+          "h": "برای هر علت یک پیام خطا",
+          "p": [
+            "فقط ۴۰۱ یعنی رمز اشتباه بوده. وقتی `core-api` اجرا نشده، مرورگر وضعیت ۰ می‌گیرد، که قبلاً هم «Invalid username or password» نشان می‌داد و آدم را دنبال رمزی می‌فرستاد که درست بود. حالا هر وضعیت پیام خودش را دارد، و این تابع جداگانه تست شده."
+          ],
+          "examples": [
+            "messages"
+          ]
+        }
+      ],
+      "examples": {
+        "messages": {
+          "title": {
+            "en": "loginErrorMessage()",
+            "fa": "loginErrorMessage()"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/pages/login-page/login-page.component.ts",
+          "from": "export function loginErrorMessage",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "fe-manage-ports",
+      "group": "frontend",
+      "title": {
+        "en": "Page: Manage ports",
+        "fa": "صفحه: Manage ports"
+      },
+      "files": [
+        "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.ts",
+        "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.html"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "The registry, editable",
+          "p": [
+            "Admin only. Each row's adapter URL can be edited in place, a project can be switched on or off, added, or removed after a confirmation. Every change is a real `PUT`, `POST` or `DELETE` on `/projects`, then the list reloads."
+          ],
+          "examples": [
+            "save"
+          ]
+        },
+        {
+          "id": "server",
+          "h": "The server explains the refusal",
+          "p": [
+            "When the allowlist refuses a URL, the 400 response says why (for example \"Host 'x' is not in ADAPTER_ALLOWED_HOSTS\"). The page shows that sentence rather than a generic \"update failed\"."
+          ],
+          "examples": [
+            "message"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "فهرست پروژه‌ها، قابل ویرایش",
+          "p": [
+            "فقط برای Admin. آدرس adapter هر ردیف در همان‌جا ویرایش می‌شود، پروژه را می‌شود روشن یا خاموش کرد، اضافه کرد، یا بعد از تأیید حذف کرد. هر تغییر یک `PUT`، `POST` یا `DELETE` واقعی روی `/projects` است و بعد فهرست دوباره بارگذاری می‌شود."
+          ],
+          "examples": [
+            "save"
+          ]
+        },
+        {
+          "id": "server",
+          "h": "سرور دلیل رد کردن را می‌گوید",
+          "p": [
+            "وقتی فهرست مجاز یک URL را رد می‌کند، جواب ۴۰۰ می‌گوید چرا (مثلاً «Host 'x' is not in ADAPTER_ALLOWED_HOSTS»). صفحه همان جمله را نشان می‌دهد، نه یک «به‌روزرسانی شکست خورد» کلی."
+          ],
+          "examples": [
+            "message"
+          ]
+        }
+      ],
+      "examples": {
+        "save": {
+          "title": {
+            "en": "Saving a new adapter URL",
+            "fa": "ذخیره‌ی آدرس تازه‌ی adapter"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.ts",
+          "from": "saveUrl(p",
+          "to": "    });"
+        },
+        "message": {
+          "title": {
+            "en": "The server's reason, when there is one",
+            "fa": "دلیل سرور، وقتی هست"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.ts",
+          "from": "function serverMessage",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "fe-services",
+      "group": "frontend",
+      "title": {
+        "en": "Page: Services",
+        "fa": "صفحه: Services"
+      },
+      "files": [
+        "frontend/src/app/pages/services-page/services-page.component.ts",
+        "frontend/src/app/pages/services-page/services-page.component.html",
+        "frontend/src/app/services.service.ts"
+      ],
+      "en": [
+        {
+          "id": "poll",
+          "h": "Live, every 5 seconds",
+          "p": [
+            "The list of managed containers refreshes itself every 5 seconds, quietly (no loading text). The timer is cleared when the page closes, so leaving the page does not leave requests running."
+          ],
+          "examples": [
+            "poll"
+          ]
+        },
+        {
+          "id": "confirm",
+          "h": "Type the name to stop",
+          "p": [
+            "Stop and Restart open a row under the service that asks for its name; the button stays disabled until it matches. The service sends the name as `confirm`, which the API checks again."
+          ],
+          "examples": [
+            "row",
+            "act"
+          ]
+        },
+        {
+          "id": "admin",
+          "h": "What a Viewer sees",
+          "p": [
+            "A Viewer sees the list and the health of every service, without buttons. An Admin also gets Start, Stop, Restart, Logs and the recent actions from the audit log."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "poll",
+          "h": "زنده، هر ۵ ثانیه",
+          "p": [
+            "فهرست کانتینرهای کنترل‌شده هر ۵ ثانیه بی‌صدا (بدون متن «در حال بارگذاری») به‌روز می‌شود. وقتی صفحه بسته شود تایمر پاک می‌شود، پس ترک صفحه درخواستی را در جریان نمی‌گذارد."
+          ],
+          "examples": [
+            "poll"
+          ]
+        },
+        {
+          "id": "confirm",
+          "h": "برای خاموش کردن، نام را تایپ کنید",
+          "p": [
+            "Stop و Restart زیر سرویس ردیفی باز می‌کنند که نامش را می‌خواهد؛ تا نام درست نباشد دکمه غیرفعال می‌ماند. سرویس نام را به‌صورت `confirm` می‌فرستد و API دوباره چکش می‌کند."
+          ],
+          "examples": [
+            "row",
+            "act"
+          ]
+        },
+        {
+          "id": "admin",
+          "h": "Viewer چه می‌بیند",
+          "p": [
+            "Viewer فهرست و سلامت همه‌ی سرویس‌ها را می‌بیند، بدون دکمه. Admin علاوه بر آن Start، Stop، Restart، Logs و کارهای اخیر از جدول audit را هم دارد."
+          ]
+        }
+      ],
+      "examples": {
+        "poll": {
+          "title": {
+            "en": "Start and stop the timer with the page",
+            "fa": "روشن و خاموش کردن تایمر همراه با صفحه"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/pages/services-page/services-page.component.ts",
+          "from": "ngOnInit(): void {",
+          "lines": 8
+        },
+        "row": {
+          "title": {
+            "en": "The confirmation row",
+            "fa": "ردیف تأیید"
+          },
+          "lang": "xml",
+          "file": "frontend/src/app/pages/services-page/services-page.component.html",
+          "from": "<tr *ngIf=\"pending?.name === s.name\"",
+          "to": "</tr>"
+        },
+        "act": {
+          "title": {
+            "en": "The name goes along as confirm",
+            "fa": "نام به‌صورت confirm همراهش می‌رود"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/services.service.ts",
+          "from": "act(name: string",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "fe-assistant",
+      "group": "frontend",
+      "title": {
+        "en": "Component: the assistant panel",
+        "fa": "کامپوننت: پنل دستیار"
+      },
+      "files": [
+        "frontend/src/app/components/assistant-panel/assistant-panel.component.ts",
+        "frontend/src/app/components/assistant-panel/assistant-panel.component.html",
+        "frontend/src/app/assistant.service.ts"
+      ],
+      "en": [
+        {
+          "id": "ask",
+          "h": "One question at a time",
+          "p": [
+            "A text box, three example questions as buttons, and the answer with the tools it used. Enter asks, Shift+Enter starts a new line, and a second question cannot start while one is running."
+          ],
+          "examples": [
+            "keys"
+          ]
+        },
+        {
+          "id": "text",
+          "h": "Plain text, in its own direction",
+          "p": [
+            "The answer is shown with `{{ }}`, which Angular escapes, so nothing in it can become HTML. `dir=\"auto\"` lets a Persian answer read right to left inside an English page."
+          ],
+          "examples": [
+            "answer"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "ask",
+          "h": "در هر لحظه یک سؤال",
+          "p": [
+            "یک جعبه‌ی متن، سه سؤال نمونه به‌صورت دکمه، و جواب همراه با ابزارهایی که استفاده شده. Enter می‌پرسد، Shift+Enter خط تازه می‌سازد، و تا سؤالی در جریان است سؤال دوم شروع نمی‌شود."
+          ],
+          "examples": [
+            "keys"
+          ]
+        },
+        {
+          "id": "text",
+          "h": "متن ساده، با جهت خودش",
+          "p": [
+            "جواب با `{{ }}` نمایش داده می‌شود که Angular آن را escape می‌کند، پس هیچ چیزی در آن به HTML تبدیل نمی‌شود. `dir=\"auto\"` می‌گذارد جواب فارسی داخل یک صفحه‌ی انگلیسی راست‌به‌چپ خوانده شود."
+          ],
+          "examples": [
+            "answer"
+          ]
+        }
+      ],
+      "examples": {
+        "keys": {
+          "title": {
+            "en": "Enter asks, Shift+Enter is a new line",
+            "fa": "Enter می‌پرسد، Shift+Enter خط تازه است"
+          },
+          "lang": "typescript",
+          "file": "frontend/src/app/components/assistant-panel/assistant-panel.component.ts",
+          "from": "onKeydown(event",
+          "lines": 7
+        },
+        "answer": {
+          "title": {
+            "en": "The answer and the tools it used",
+            "fa": "جواب و ابزارهایی که استفاده شد"
+          },
+          "lang": "xml",
+          "file": "frontend/src/app/components/assistant-panel/assistant-panel.component.html",
+          "from": "<p class=\"answer-text\"",
+          "to": "Looked at:"
+        }
+      }
+    },
+    {
+      "id": "data-setup",
+      "group": "data",
+      "title": {
+        "en": "Databases, login and init",
+        "fa": "دیتابیس‌ها، login و راه‌اندازی"
+      },
+      "files": [
+        "db/01-databases.sql",
+        "db/02-service-login.sql",
+        "db/init.sh"
+      ],
+      "en": [
+        {
+          "id": "two",
+          "h": "Two databases",
+          "p": [
+            "`ControlPanelDb` holds the users, the project registry and the audit log. `HisPlusDemo` stands in for the real HIS+ database, with made-up rows only. Every script checks before it creates, so running them again is safe."
+          ]
+        },
+        {
+          "id": "login",
+          "h": "A login with only what it needs",
+          "p": [
+            "`controlpanel_svc` reads and writes `ControlPanelDb` but is not its owner (no schema changes) and only reads `HisPlusDemo`. If an earlier version made it `db_owner`, the script removes that. The password comes in as a `sqlcmd` variable, never written in the file."
+          ],
+          "examples": [
+            "login"
+          ]
+        },
+        {
+          "id": "init",
+          "h": "How Docker runs them",
+          "p": [
+            "The one-off `db-init` container runs every `db/*.sql` in order against SQL Server and passes the same variables a person would pass on the command line."
+          ],
+          "examples": [
+            "init"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "two",
+          "h": "دو دیتابیس",
+          "p": [
+            "`ControlPanelDb` کاربرها، فهرست پروژه‌ها و جدول audit را نگه می‌دارد. `HisPlusDemo` جایگزین دیتابیس واقعی HIS+ است و فقط ردیف‌های ساختگی دارد. هر اسکریپت قبل از ساختن چک می‌کند، پس اجرای دوباره امن است."
+          ]
+        },
+        {
+          "id": "login",
+          "h": "یک login فقط با چیزی که لازم دارد",
+          "p": [
+            "`controlpanel_svc` روی `ControlPanelDb` می‌خواند و می‌نویسد ولی صاحب آن نیست (تغییر ساختار ممنوع) و `HisPlusDemo` را فقط می‌خواند. اگر نسخه‌ی قبلی آن را `db_owner` کرده بود، اسکریپت این را برمی‌دارد. رمز به‌صورت متغیر `sqlcmd` می‌آید و هیچ‌وقت در فایل نوشته نمی‌شود."
+          ],
+          "examples": [
+            "login"
+          ]
+        },
+        {
+          "id": "init",
+          "h": "Docker چطور اجرایشان می‌کند",
+          "p": [
+            "کانتینر یک‌باره‌ی `db-init` همه‌ی `db/*.sql`ها را به ترتیب روی SQL Server اجرا می‌کند و همان متغیرهایی را می‌دهد که آدم در خط فرمان می‌داد."
+          ],
+          "examples": [
+            "init"
+          ]
+        }
+      ],
+      "examples": {
+        "login": {
+          "title": {
+            "en": "Read and write, but not owner",
+            "fa": "خواندن و نوشتن، ولی نه صاحب"
+          },
+          "lang": "sql",
+          "file": "db/02-service-login.sql",
+          "from": "USE ControlPanelDb;",
+          "to": "ALTER ROLE db_datawriter"
+        },
+        "init": {
+          "title": {
+            "en": "Every script, in order",
+            "fa": "همه‌ی اسکریپت‌ها، به ترتیب"
+          },
+          "lang": "bash",
+          "file": "db/init.sh",
+          "from": "for script in /db/*.sql",
+          "to": "done"
+        }
+      }
+    },
+    {
+      "id": "data-tables",
+      "group": "data",
+      "title": {
+        "en": "Tables: Users, Projects, AuditLog",
+        "fa": "جدول‌ها: Users، Projects، AuditLog"
+      },
+      "files": [
+        "db/03-controlpanel-schema.sql"
+      ],
+      "en": [
+        {
+          "id": "tables",
+          "h": "The tables",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Users",
+              "Projects",
+              "AuditLog"
+            ]
+          }
+        },
+        {
+          "id": "rules",
+          "h": "Rules in the database, not only in the code",
+          "p": [
+            "`Role` can only be `Admin` or `Viewer` and `Outcome` only `ok` or `failed` (CHECK constraints); usernames and project keys are unique. A bug in `core-api` cannot write a role that does not exist."
+          ]
+        },
+        {
+          "id": "migration",
+          "h": "A migration that can run twice",
+          "p": [
+            "`TokenVersion` was added after the first release. The script adds the column only when it is missing, so the same file builds a new database and upgrades an old one."
+          ],
+          "examples": [
+            "migration"
+          ]
+        },
+        {
+          "id": "deny",
+          "h": "An audit log nobody can rewrite",
+          "p": [
+            "`db_datawriter` would let the service login update or delete rows. For `AuditLog` that right is explicitly denied: `core-api` can only add rows, so history cannot be changed from the application."
+          ],
+          "examples": [
+            "deny"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Users",
+              "Projects",
+              "AuditLog"
+            ]
+          }
+        },
+        {
+          "id": "rules",
+          "h": "قاعده‌ها در دیتابیس، نه فقط در کد",
+          "p": [
+            "`Role` فقط می‌تواند `Admin` یا `Viewer` باشد و `Outcome` فقط `ok` یا `failed` (قیدهای CHECK)؛ نام کاربری و key پروژه یکتا هستند. یک باگ در `core-api` نمی‌تواند نقشی بنویسد که وجود ندارد."
+          ]
+        },
+        {
+          "id": "migration",
+          "h": "migrationی که دو بار اجرا شدنش ایرادی ندارد",
+          "p": [
+            "`TokenVersion` بعد از اولین نسخه اضافه شد. اسکریپت ستون را فقط وقتی نیست اضافه می‌کند، پس همین یک فایل هم دیتابیس تازه می‌سازد و هم دیتابیس قدیمی را به‌روز می‌کند."
+          ],
+          "examples": [
+            "migration"
+          ]
+        },
+        {
+          "id": "deny",
+          "h": "جدول auditی که کسی نمی‌تواند بازنویسی‌اش کند",
+          "p": [
+            "`db_datawriter` به login سرویس اجازه‌ی ویرایش و حذف ردیف را می‌داد. برای `AuditLog` این اجازه صریحاً گرفته شده: `core-api` فقط می‌تواند ردیف اضافه کند، پس تاریخچه از داخل اپ عوض نمی‌شود."
+          ],
+          "examples": [
+            "deny"
+          ]
+        }
+      ],
+      "examples": {
+        "migration": {
+          "title": {
+            "en": "Add the column only when it is missing",
+            "fa": "اضافه کردن ستون فقط وقتی نیست"
+          },
+          "lang": "sql",
+          "file": "db/03-controlpanel-schema.sql",
+          "from": "IF COL_LENGTH(N'dbo.Users', N'TokenVersion') IS NULL",
+          "lines": 2
+        },
+        "deny": {
+          "title": {
+            "en": "Insert-only",
+            "fa": "فقط درج"
+          },
+          "lang": "sql",
+          "file": "db/03-controlpanel-schema.sql",
+          "from": "IF USER_ID(N'controlpanel_svc') IS NOT NULL",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "data-seed",
+      "group": "data",
+      "title": {
+        "en": "Seed data and the HIS+ demo",
+        "fa": "داده‌ی اولیه و دموی HIS+"
+      },
+      "files": [
+        "db/04-controlpanel-seed.sql",
+        "db/05-hisplus-demo.sql"
+      ],
+      "en": [
+        {
+          "id": "merge",
+          "h": "The registry: insert what is missing, touch nothing else",
+          "p": [
+            "The nine projects are added with `MERGE ... WHEN NOT MATCHED THEN INSERT`: a project that already exists is left as it is, so an address changed on the Manage ports page survives the next deploy. The adapter addresses come in as `sqlcmd` variables, so the same script works with Docker host names and with localhost.",
+            "The comment at the top of the file still says only HIS+ and wUtility have adapters; `ledgerdash-adapter` exists too."
+          ],
+          "examples": [
+            "merge"
+          ]
+        },
+        {
+          "id": "demo",
+          "h": "The HIS+ demo table",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "ORReports"
+            ]
+          },
+          "p": [
+            "Four made-up reports with fictional codes, so `hisplus-adapter` has something to count."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "merge",
+          "h": "فهرست پروژه‌ها: چیزی که نیست اضافه شود، به بقیه دست نخورد",
+          "p": [
+            "نه پروژه با `MERGE ... WHEN NOT MATCHED THEN INSERT` اضافه می‌شوند: پروژه‌ای که از قبل هست همان‌طور می‌ماند، پس آدرسی که در Manage ports عوض شده با deploy بعدی از بین نمی‌رود. آدرس adapterها به‌صورت متغیر `sqlcmd` می‌آیند، پس همین اسکریپت هم با نام‌های میزبان Docker کار می‌کند و هم با localhost.",
+            "توضیح بالای فایل هنوز می‌گوید فقط HIS+ و wUtility adapter دارند؛ `ledgerdash-adapter` هم هست."
+          ],
+          "examples": [
+            "merge"
+          ]
+        },
+        {
+          "id": "demo",
+          "h": "جدول دموی HIS+",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "ORReports"
+            ]
+          },
+          "p": [
+            "چهار گزارش ساختگی با کدهای غیرواقعی، تا `hisplus-adapter` چیزی برای شمردن داشته باشد."
+          ]
+        }
+      ],
+      "examples": {
+        "merge": {
+          "title": {
+            "en": "MERGE: only the missing rows",
+            "fa": "MERGE: فقط ردیف‌هایی که نیستند"
+          },
+          "lang": "sql",
+          "file": "db/04-controlpanel-seed.sql",
+          "from": "MERGE dbo.Projects AS target",
+          "to": "VALUES (source.[Key]"
+        }
+      }
+    },
+    {
+      "id": "deploy-compose",
+      "group": "deploy",
+      "title": {
+        "en": "Docker Compose",
+        "fa": "Docker Compose"
+      },
+      "files": [
+        "docker-compose.yml",
+        "compose.apps.yml"
+      ],
+      "en": [
+        {
+          "id": "files",
+          "h": "Two files",
+          "p": [
+            "`docker-compose.yml` runs Control Panel itself: SQL Server, the init jobs, `core-api`, the socket proxy, the three adapters and the frontend. `compose.apps.yml` adds the portfolio's apps, built from their own repos, so the panel has something to control."
+          ]
+        },
+        {
+          "id": "proxy",
+          "h": "The socket proxy on its own network",
+          "p": [
+            "The proxy mounts the Docker socket read-only, has a read-only filesystem, allows only list, logs, start and stop, and sits on `docker-control`, an internal network. Only `core-api` joins it, so no other container can even reach the proxy."
+          ],
+          "examples": [
+            "proxy",
+            "network"
+          ]
+        },
+        {
+          "id": "secrets",
+          "h": "No secret has a default",
+          "p": [
+            "Every secret is written as `${VAR:?message}`: when it is missing from `.env`, compose stops with that message instead of starting with an empty password."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "files",
+          "h": "دو فایل",
+          "p": [
+            "`docker-compose.yml` خود کنترل پنل را اجرا می‌کند: SQL Server، کارهای راه‌اندازی، `core-api`، پراکسی سوکت، سه adapter و رابط. `compose.apps.yml` اپ‌های دیگر را اضافه می‌کند که از repo خودشان ساخته می‌شوند، تا پنل چیزی برای کنترل داشته باشد."
+          ]
+        },
+        {
+          "id": "proxy",
+          "h": "پراکسی سوکت روی شبکه‌ی خودش",
+          "p": [
+            "پراکسی سوکت Docker را فقط‌خواندنی mount می‌کند، فایل‌سیستمش فقط‌خواندنی است، فقط فهرست، لاگ، روشن و خاموش را اجازه می‌دهد، و روی `docker-control` است که یک شبکه‌ی داخلی است. فقط `core-api` به آن وصل است، پس هیچ کانتینر دیگری حتی به پراکسی نمی‌رسد."
+          ],
+          "examples": [
+            "proxy",
+            "network"
+          ]
+        },
+        {
+          "id": "secrets",
+          "h": "هیچ secretی مقدار پیش‌فرض ندارد",
+          "p": [
+            "هر secret به شکل `${VAR:?message}` نوشته شده: اگر در `.env` نباشد، compose با همان پیام متوقف می‌شود، به‌جای اینکه با رمز خالی بالا بیاید."
+          ]
+        }
+      ],
+      "examples": {
+        "proxy": {
+          "title": {
+            "en": "socket-proxy: only four permissions",
+            "fa": "socket-proxy: فقط چهار اجازه"
+          },
+          "lang": "yaml",
+          "file": "docker-compose.yml",
+          "from": "  socket-proxy:",
+          "to": "    restart: unless-stopped"
+        },
+        "network": {
+          "title": {
+            "en": "An internal network",
+            "fa": "یک شبکه‌ی داخلی"
+          },
+          "lang": "yaml",
+          "file": "docker-compose.yml",
+          "from": "docker-control:",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "deploy-vps",
+      "group": "deploy",
+      "title": {
+        "en": "On the VPS",
+        "fa": "روی VPS"
+      },
+      "files": [
+        "deploy/vps/compose.vps.yml",
+        "deploy/vps/Caddyfile",
+        "deploy/vps/deploy.sh",
+        "deploy/vps/release.ps1"
+      ],
+      "en": [
+        {
+          "id": "overlay",
+          "h": "An overlay, not a copy",
+          "p": [
+            "`compose.vps.yml` is applied on top of the two compose files and changes only what differs on the server: it adds Caddy, removes every published port with `!reset []`, and points `core-api` and the apps at their public domains."
+          ],
+          "examples": [
+            "overlay"
+          ]
+        },
+        {
+          "id": "caddy",
+          "h": "Behind Caddy",
+          "p": [
+            "`panel.<domain>` goes to the frontend; Caddy gets the HTTPS certificate itself. `core-api` is never reached from outside except through the frontend's `/api`."
+          ],
+          "examples": [
+            "caddy"
+          ]
+        },
+        {
+          "id": "ship",
+          "h": "Shipping",
+          "p": [
+            "From the PC, `release.ps1` checks every repo, asks, pushes, tags and runs `deploy.sh` on the server, which pulls, rebuilds and waits for the health checks. The Ops booklet goes through both scripts line by line."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "overlay",
+          "h": "یک لایه‌ی روی هم، نه یک کپی",
+          "p": [
+            "`compose.vps.yml` روی دو فایل compose اعمال می‌شود و فقط چیزهایی را که روی سرور فرق دارند عوض می‌کند: Caddy را اضافه می‌کند، همه‌ی پورت‌های publish‌شده را با `!reset []` برمی‌دارد، و `core-api` و اپ‌ها را به دامنه‌های عمومی‌شان وصل می‌کند."
+          ],
+          "examples": [
+            "overlay"
+          ]
+        },
+        {
+          "id": "caddy",
+          "h": "پشت Caddy",
+          "p": [
+            "`panel.<domain>` به رابط می‌رود؛ Caddy گواهی HTTPS را خودش می‌گیرد. `core-api` از بیرون هیچ‌وقت مستقیم در دسترس نیست، فقط از طریق `/api` رابط."
+          ],
+          "examples": [
+            "caddy"
+          ]
+        },
+        {
+          "id": "ship",
+          "h": "فرستادن",
+          "p": [
+            "از PC، `release.ps1` همه‌ی repoها را چک می‌کند، می‌پرسد، push می‌کند، tag می‌زند و `deploy.sh` را روی سرور اجرا می‌کند، که pull می‌کند، دوباره می‌سازد و منتظر health checkها می‌ماند. جزوه‌ی Ops هر دو اسکریپت را خط به خط توضیح می‌دهد."
+          ]
+        }
+      ],
+      "examples": {
+        "overlay": {
+          "title": {
+            "en": "core-api on the VPS: no port, the public origin",
+            "fa": "core-api روی VPS: بدون پورت، با origin عمومی"
+          },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.vps.yml",
+          "from": "  core-api:",
+          "to": "CORS_ORIGINS: https://"
+        },
+        "caddy": {
+          "title": {
+            "en": "The panel's site in the Caddyfile",
+            "fa": "سایت پنل در Caddyfile"
+          },
+          "lang": "nginx",
+          "file": "deploy/vps/Caddyfile",
+          "from": "{$PANEL_DOMAIN} {",
+          "to": "reverse_proxy frontend:80"
+        }
+      }
+    }
+  ]
+}

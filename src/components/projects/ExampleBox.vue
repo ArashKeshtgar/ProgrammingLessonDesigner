@@ -38,6 +38,7 @@ async function copy() {
       <b>{{ t.example }}</b>
       <span>{{ example.title[lang] }}</span>
       <code v-if="example.file" class="example-path" dir="ltr">src/{{ example.file }}</code>
+      <code v-else-if="example.source" class="example-path" dir="ltr">{{ example.source }}</code>
       <button type="button" class="example-copy" @click="copy">{{ copied ? t.copied : t.copy }}</button>
     </figcaption>
     <pre dir="ltr"><code class="hljs" v-html="html"></code></pre>

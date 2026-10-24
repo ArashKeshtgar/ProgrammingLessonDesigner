@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "check": "node scripts/check-lessons.mjs && node scripts/check-projects.mjs && node scripts/project-map.mjs --check",
+    "check": "node scripts/check-lessons.mjs && node scripts/check-projects.mjs && node scripts/project-map.mjs --check && node scripts/project-code.mjs --check",
     "pdf": "node scripts/pdf.mjs",
     "map": "node scripts/project-map.mjs",
-    "lint:css": "stylelint \"src/**/*.scss\""
+    "lint:css": "stylelint \"src/**/*.scss\"",
+    "code": "node scripts/project-code.mjs"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.3.0",

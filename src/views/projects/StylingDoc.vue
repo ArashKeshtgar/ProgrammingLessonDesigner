@@ -13,6 +13,6 @@ const content = doc('styling')!
   <article>
     <h1>{{ t.styling }}</h1>
     <p v-if="content.summary" class="project-summary">{{ content.summary[lang] }}</p>
-    <DocSections :content="content" :lang="lang" />
+    <DocSections :sections="content[lang] ?? []" :examples="content.examples" :lang="lang" />
   </article>
 </template>

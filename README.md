@@ -43,6 +43,12 @@ points at an existing file and line.
 - `src/data/project-map.json` is generated, never edited: `npm run map` reads Control
   Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template (read
   only) and writes it. `npm run check` fails locally when it no longer matches them.
+- `src/data/topics/<project>.json`: the project as topics, W3Schools-style (Control Panel
+  so far: 29 topics in 6 groups, backend, adapters, frontend, data, deploy). Each topic lists
+  its files and quotes the real code, found by text anchors (`from` / `to` or `lines`).
+  `npm run code` snapshots those excerpts, plus the endpoints, SQL tables and Angular routes
+  read from the code, into `<project>.code.json`; `npm run check` fails locally when a
+  snapshot no longer matches the repo, and when a topic's Persian and English differ.
 - `src/data/projects/<id>.json`: the hand-written page of a project, a summary and
   optionally sections in both `fa` and `en` (same section ids), with code examples shared
   by the two languages and `refs` into the real projects. `npm run check` validates them.
@@ -84,7 +90,7 @@ examples/ops/proxy/test.sh
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run check    # lessons, Projects pages, and the map against Control Panel
+npm run check    # lessons, Projects pages, the map and the code snapshots against the repos
 npm run lint:css # stylelint
 npm run build
 npm run pdf      # needs a served build: npx vite preview, then SITE_URL=http://localhost:4173/ npm run pdf

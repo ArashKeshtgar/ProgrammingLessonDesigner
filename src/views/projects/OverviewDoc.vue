@@ -32,7 +32,7 @@ const sites = computed(() => MAP.sites.map((s) => ({ ...s, project: projectById(
 <template>
   <article>
     <h1>{{ t.overview }}</h1>
-    <DocSections v-if="intro" :content="intro" :lang="lang" />
+    <DocSections v-if="intro" :sections="intro[lang] ?? []" :lang="lang" />
 
     <SystemMap :nodes="nodes" :arrows="arrows" :label="t.overview" />
     <ul class="map-legend" :aria-label="t.legend">

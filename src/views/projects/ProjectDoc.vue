@@ -13,12 +13,14 @@ import {
   projectOfNode,
   serviceById,
   sitesOf,
+  topicsOf,
   type MapProject,
 } from '../../projects/model'
 
 const props = defineProps<{ project: MapProject; lang: DocLang }>()
 const t = computed(() => STRINGS[props.lang])
 const content = computed(() => doc(props.project.id))
+const topics = computed(() => topicsOf(props.project.id))
 const runs = computed(() => (!props.project.inCompose ? t.value.runsExternal : props.project.onVps ? t.value.runsVps : t.value.runsPc))
 const services = computed(() => props.project.services.map((id) => serviceById(id)!))
 const out = computed(() => linksFrom(props.project.id))
@@ -124,7 +126,19 @@ const nameOf = (id: string) => projectById(id)!.name
       <SystemMap :nodes="nodes" :arrows="arrows" :label="`${project.name}: ${t.diagram}`" />
     </template>
 
-    <p v-if="!content?.[lang]" class="doc-note">{{ t.noWriteup }}</p>
-    <DocSections v-if="content" :content="content" :lang="lang" />
+    <template v-if="topics">
+      <h2>{{ t.contents }}</h2>
+      <p>{{ t.contentsIntro }}</p>
+      <section v-for="g in topics.groups" :key="g.id" class="contents-group">
+        <h3>{{ g.title[lang] }}</h3>
+        <ol>
+          <li v-for="topic in topics.pages.filter((x) => x.group === g.id)" :key="topic.id">
+            <RouterLink :to="`/projects/${lang}/${project.id}/${topic.id}`">{{ topic.title[lang] }}</RouterLink>
+          </li>
+        </ol>
+      </section>
+    </template>
+    <p v-else-if="!content?.[lang]" class="doc-note">{{ t.noWriteup }}</p>
+    <DocSections v-if="content" :sections="content[lang] ?? []" :examples="content.examples" :refs="content.refs" :lang="lang" />
   </article>
 </template>

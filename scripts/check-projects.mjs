@@ -75,6 +75,55 @@ for (const id of accents)
   if (!map.projects.some((p) => p.id === id)) problems.push(`$project-accents has "${id}", which is not in the map`)
 for (const id of ['overview', 'styling']) if (!docs[id]) problems.push(`missing src/data/projects/${id}.json`)
 
+// --- topics (src/data/topics/<project>.json) and their code snapshots -------------
+const topicsDir = path.join(root, 'src', 'data', 'topics')
+const KINDS = ['endpoints', 'tables', 'routes']
+for (const f of readdirSync(topicsDir).filter((x) => x.endsWith('.json') && !x.endsWith('.code.json'))) {
+  const t = JSON.parse(readFileSync(path.join(topicsDir, f), 'utf-8'))
+  const at = (m) => problems.push(`topics/${f}: ${m}`)
+  if (!map.projects.some((p) => p.id === t.project)) at(`project "${t.project}" is not in the map`)
+  const snapFile = path.join(topicsDir, f.replace(/\.json$/, '.code.json'))
+  const snap = existsSync(snapFile) ? JSON.parse(readFileSync(snapFile, 'utf-8')) : null
+  if (!snap) at('no code snapshot; run npm run code')
+
+  const groups = new Set(t.groups.map((g) => g.id))
+  for (const g of t.groups) for (const l of LANGS) if (!g.title?.[l]) at(`group ${g.id} has no ${l} title`)
+  const ids = new Set()
+  for (const page of t.pages) {
+    const where = `topic ${page.id}`
+    if (ids.has(page.id)) at(`${where}: duplicate id`)
+    ids.add(page.id)
+    if (!groups.has(page.group)) at(`${where}: unknown group "${page.group}"`)
+    for (const l of LANGS) if (!page.title?.[l]) at(`${where}: no ${l} title`)
+    for (const l of LANGS) if (!page[l]?.length) at(`${where}: no ${l} sections`)
+    const fa = page.fa ?? []
+    const en = page.en ?? []
+    if (fa.map((s) => s.id).join() !== en.map((s) => s.id).join()) at(`${where}: fa and en sections differ`)
+    const used = new Set()
+    en.forEach((s, i) => {
+      const other = fa[i]
+      if (JSON.stringify(s.examples ?? []) !== JSON.stringify(other?.examples ?? [])) at(`${where}/${s.id}: fa and en show different examples`)
+      if (JSON.stringify(s.data ?? null) !== JSON.stringify(other?.data ?? null)) at(`${where}/${s.id}: fa and en show different data`)
+      for (const ex of s.examples ?? []) {
+        used.add(ex)
+        if (!page.examples?.[ex]) at(`${where}/${s.id}: names a missing example "${ex}"`)
+      }
+      if (s.data) {
+        if (!KINDS.includes(s.data.kind)) at(`${where}/${s.id}: unknown data kind "${s.data.kind}"`)
+        const known = s.data.kind === 'endpoints' ? snap?.endpoints.map((e) => e.area) : s.data.kind === 'tables' ? snap?.tables.map((x) => x.table) : null
+        for (const name of s.data.only ?? []) if (known && !known.includes(name)) at(`${where}/${s.id}: "${name}" is not in the code snapshot`)
+      }
+    })
+    for (const [id, ex] of Object.entries(page.examples ?? {})) {
+      if (!used.has(id)) at(`${where}: example "${id}" is never shown`)
+      for (const l of LANGS) if (!ex.title?.[l]) at(`${where}: example ${id} has no ${l} title`)
+      if (!ex.file || !ex.from || !ex.lang) at(`${where}: example ${id} needs file, from and lang`)
+      if (snap && !snap.examples[`${page.id}/${id}`]) at(`${where}: example ${id} is not in the snapshot; run npm run code`)
+    }
+    for (const file of page.files ?? []) if (snap && snap.files[file] === undefined) at(`${where}: ${file} is not in the snapshot; run npm run code`)
+  }
+}
+
 if (problems.length) {
   console.error(problems.join('\n'))
   process.exit(1)
