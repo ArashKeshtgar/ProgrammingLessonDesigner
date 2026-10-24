@@ -107,9 +107,7 @@
         "labflow-api",
         "labflow-web"
       ],
-      "domains": [
-        "labflow.arashkeshtgar.ca"
-      ]
+      "domains": []
     },
     {
       "id": "languagelessondesigner",
@@ -606,10 +604,7 @@
     },
     {
       "from": "caddy",
-      "to": "labflow-web",
-      "labels": [
-        "labflow.arashkeshtgar.ca"
-      ]
+      "to": "labflow-web"
     },
     {
       "from": "caddy",
@@ -870,13 +865,6 @@
         "lessons-web"
       ],
       "private": false
-    },
-    {
-      "domain": "labflow.arashkeshtgar.ca",
-      "services": [
-        "labflow-web"
-      ],
-      "private": true
     },
     {
       "domain": "ledger.arashkeshtgar.ca",

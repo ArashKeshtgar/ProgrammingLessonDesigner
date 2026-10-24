@@ -38,7 +38,7 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
 
     <template v-else-if="data.kind === 'tables'">
       <div v-for="x in tables" :key="x.table" class="sql-table">
-        <h3 dir="ltr">{{ x.database }}.dbo.{{ x.table }}</h3>
+        <h3 dir="ltr">{{ x.database }}.{{ x.schema ?? 'dbo' }}.{{ x.table }}</h3>
         <div class="doc-table-wrap">
           <table class="doc-table">
             <thead>
@@ -59,6 +59,9 @@ const tables = computed(() => props.code.tables.filter((x) => keep(x.table)))
             </tbody>
           </table>
         </div>
+        <p v-if="x.checks?.length" class="muted">
+          {{ t.checks }}: <code v-for="c in x.checks" :key="c" dir="ltr" class="note">{{ c }}</code>
+        </p>
         <p v-if="x.denies.length" class="muted">
           {{ t.denied }}: <code v-for="d in x.denies" :key="d" dir="ltr">{{ d }}</code>
         </p>

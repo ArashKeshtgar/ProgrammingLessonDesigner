@@ -43,11 +43,12 @@ points at an existing file and line.
 - `src/data/project-map.json` is generated, never edited: `npm run map` reads Control
   Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template (read
   only) and writes it. `npm run check` fails locally when it no longer matches them.
-- `src/data/topics/<project>.json`: the project as topics, W3Schools-style (Control Panel
-  so far: 29 topics in 6 groups, backend, adapters, frontend, data, deploy). Each topic lists
+- `src/data/topics/<project>.json`: the project as topics, W3Schools-style (so far Control
+  Panel, 29 topics in 6 groups, and ClinicHub, 26 topics in 8 groups). Each topic lists
   its files and quotes the real code, found by text anchors (`from` / `to` or `lines`).
-  `npm run code` snapshots those excerpts, plus the endpoints, SQL tables and Angular routes
-  read from the code, into `<project>.code.json`; `npm run check` fails locally when a
+  `npm run code` snapshots those excerpts, plus what its `scan` reads from the code: endpoints
+  (NestJS, Express, ASP.NET Core Minimal APIs), tables (SQL scripts, EF Core model snapshots)
+  and routes (Angular, React), into `<project>.code.json`; `npm run check` fails locally when a
   snapshot no longer matches the repo, and when a topic's Persian and English differ.
 - `src/data/projects/<id>.json`: the hand-written page of a project, a summary and
   optionally sections in both `fa` and `en` (same section ids), with code examples shared

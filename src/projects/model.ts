@@ -136,11 +136,14 @@ export interface Endpoint {
 }
 export interface SqlTable {
   database: string
+  // EF Core tables live in named schemas; SQL scripts here use dbo
+  schema?: string
   table: string
   file: string
   line: number
   columns: { name: string; type: string; nullable: boolean; notes: string[] }[]
   denies: string[]
+  checks?: string[]
 }
 export interface CodeSnapshot {
   repo: string

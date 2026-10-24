@@ -1,0 +1,5100 @@
+{
+  "project": "clinichub",
+  "repo": "ClinicHub",
+  "files": {
+    "README.md": 121,
+    "src/ClinicHub.Api/appsettings.Development.json": 107,
+    "web/vite.config.ts": 20,
+    "src/ClinicHub.Api/Program.cs": 109,
+    "tests/ClinicHub.Tests/FrontDeskTests.cs": 259,
+    "src/ClinicHub.Api/Catalog/ClinicDatabases.cs": 95,
+    "docs/architecture.md": 405,
+    "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs": 76,
+    "src/ClinicHub.Api/Endpoints/UserEndpoints.cs": 404,
+    "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs": 258,
+    "src/ClinicHub.Api/Auth/AuthSetup.cs": 163,
+    "web/src/api.ts": 383,
+    "src/ClinicHub.Api/Auth/Totp.cs": 92,
+    "src/ClinicHub.Api/Auth/Permissions.cs": 184,
+    "src/ClinicHub.Api/Catalog/SecurityLog.cs": 44,
+    "src/ClinicHub.Api/Data/Security.cs": 45,
+    "src/ClinicHub.Api/Sso/SsoEndpoints.cs": 201,
+    "src/ClinicHub.Api/Sso/SsoSetup.cs": 194,
+    "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs": 223,
+    "src/ClinicHub.Api/Domain/HealthCard.cs": 38,
+    "src/ClinicHub.Api/Domain/HcvSimulator.cs": 40,
+    "src/ClinicHub.Api/Domain/PatientMatching.cs": 171,
+    "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs": 494,
+    "src/ClinicHub.Api/Domain/ConsentGuard.cs": 81,
+    "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs": 181,
+    "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs": 399,
+    "src/ClinicHub.Api/Domain/EncounterSigning.cs": 57,
+    "src/ClinicHub.Api/Domain/OhipFiles.cs": 295,
+    "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs": 333,
+    "docs/ohip-billing.md": 87,
+    "src/ClinicHub.Api/Domain/OhipSimulator.cs": 63,
+    "src/ClinicHub.Api/Integrations/FinanceFeed.cs": 189,
+    "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs": 218,
+    "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs": 262,
+    "src/ClinicHub.Api/Integrations/FhirOrders.cs": 250,
+    "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs": 205,
+    "web/src/App.tsx": 215,
+    "web/src/pages/EncounterPage.tsx": 752,
+    "src/ClinicHub.Api/Catalog/CatalogDbContext.cs": 60,
+    "src/ClinicHub.Api/Catalog/CatalogEntities.cs": 150,
+    "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs": 560,
+    "src/ClinicHub.Api/Data/ClinicHubDbContext.cs": 404,
+    "docs/schema.md": 194,
+    "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs": 2710
+  },
+  "examples": {
+    "run/vite": {
+      "file": "web/vite.config.ts",
+      "start": 6,
+      "end": 20,
+      "code": "export default defineConfig({\n  plugins: [react()],\n  server: {\n    port: 5301,\n    strictPort: true,\n    proxy: {\n      '/api': 'http://localhost:5300',\n      // Keep the browser's Host so the sign-in server advertises its endpoints on :5301, where its pages are.\n      '/connect': { target: 'http://localhost:5300', changeOrigin: false },\n      '/.well-known': { target: 'http://localhost:5300', changeOrigin: false },\n      // Results from LabFlow and ClinicReport (FHIR DiagnosticReport).\n      '/fhir': { target: 'http://localhost:5300', changeOrigin: false },\n    },\n  },\n})"
+    },
+    "run/settings": {
+      "file": "src/ClinicHub.Api/appsettings.Development.json",
+      "start": 2,
+      "end": 5,
+      "code": "\"ConnectionStrings\": {\n  \"Catalog\": \"Server=.;Database=ClinicHub_Catalog;Integrated Security=True;TrustServerCertificate=True\",\n  \"ClinicServer\": \"Server=.;Integrated Security=True;TrustServerCertificate=True\"\n},"
+    },
+    "run/demo": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 64,
+      "end": 65,
+      "code": "if (services.GetRequiredService<IOptions<DemoOptions>>().Value.Enabled)\n    await DemoSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>(), provisioning, services.GetRequiredService<ClinicDatabases>(),"
+    },
+    "tests/prefix": {
+      "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+      "start": 15,
+      "end": 17,
+      "code": "private readonly string _server = Environment.GetEnvironmentVariable(\"CLINICHUB_TEST_SQL\")\n    ?? \"Server=.;Integrated Security=True;TrustServerCertificate=True\";\nprivate readonly string _prefix = $\"ClinicHub_Test_{Guid.NewGuid():N}_\";"
+    },
+    "tests/settings": {
+      "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+      "start": 23,
+      "end": 27,
+      "code": "builder.UseEnvironment(\"Testing\");\nbuilder.UseSetting(\"ConnectionStrings:Catalog\", Catalog);\nbuilder.UseSetting(\"ConnectionStrings:ClinicServer\", _server);\nbuilder.UseSetting(\"Clinics:DatabasePrefix\", _prefix);\nbuilder.UseSetting(\"Demo:Enabled\", \"true\");"
+    },
+    "tests/drop": {
+      "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+      "start": 82,
+      "end": 98,
+      "code": "async Task IAsyncLifetime.DisposeAsync()\n{\n    await base.DisposeAsync();\n    SqlConnection.ClearAllPools();\n    await using var conn = new SqlConnection(_server);\n    await conn.OpenAsync();\n    var names = new List<string>();\n    await using (var list = new SqlCommand(\"SELECT name FROM sys.databases WHERE name LIKE @p\", conn))\n    {\n        list.Parameters.AddWithValue(\"@p\", _prefix + \"%\");\n        await using var r = await list.ExecuteReaderAsync();\n        while (await r.ReadAsync()) names.Add(r.GetString(0));\n    }\n    foreach (var name in names)\n    {\n        await using var drop = new SqlCommand($\"ALTER DATABASE [{name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{name}];\", conn);\n        await drop.ExecuteNonQueryAsync();"
+    },
+    "tests/signin": {
+      "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+      "start": 67,
+      "end": 77,
+      "code": "public async Task<HttpClient> SignInAsync(string user, string clinic = \"harbourview\", bool followRedirects = true)\n{\n    var c = CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true, AllowAutoRedirect = followRedirects });\n    c.DefaultRequestHeaders.Add(\"X-ClinicHub\", \"1\");\n    var me = await (await c.PostAsJsonAsync(\"/api/auth/demo-login\", new { userName = user })).EnsureSuccessStatusCode().Content.ReadFromJsonAsync<JsonNode>();\n    if (me![\"clinic\"] is null)\n    {\n        var id = me[\"clinics\"]!.AsArray().Single(x => (string)x![\"slug\"]! == clinic)![\"id\"]!.GetValue<int>();\n        (await c.PostAsJsonAsync(\"/api/auth/clinic\", new { clinicId = id })).EnsureSuccessStatusCode();\n    }\n    return c;"
+    },
+    "tests/fake": {
+      "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+      "start": 55,
+      "end": 60,
+      "code": "builder.UseSetting(\"Integrations:PollSeconds\", \"0\");\nbuilder.UseSetting(\"Integrations:LabFlow:FhirBaseUrl\", \"https://lab.test/fhir\");\nbuilder.UseSetting(\"Integrations:ClinicReport:FhirBaseUrl\", \"https://report.test/fhir\");\nbuilder.UseSetting(\"Integrations:PharmaFlow:FhirBaseUrl\", \"https://pharmacy.test/fhir\");\nbuilder.ConfigureTestServices(services =>\n    services.AddHttpClient(ClinicHub.Api.Integrations.OutboxDispatcher.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => Fhir));"
+    },
+    "startup/secrets": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 13,
+      "end": 14,
+      "code": "// Secrets as files, one per setting (e.g. ConnectionStrings__Finance), the way Docker mounts them; none outside a container.\nbuilder.Configuration.AddKeyPerFile(\"/run/secrets\", optional: true);"
+    },
+    "startup/upgrade": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 55,
+      "end": 66,
+      "code": "using (var scope = app.Services.CreateScope())\n{\n    var services = scope.ServiceProvider;\n    var provisioning = services.GetRequiredService<ClinicProvisioning>();\n    await provisioning.UpgradeAllAsync();\n    await SsoSetup.RegisterClientsAsync(services);\n    // A one-off command (seed-demo, admin): run it and exit instead of serving.\n    if (await AdminCommands.RunAsync(args, services))\n        return;\n    if (services.GetRequiredService<IOptions<DemoOptions>>().Value.Enabled)\n        await DemoSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>(), provisioning, services.GetRequiredService<ClinicDatabases>(),\n            services.GetRequiredService<IPasswordHasher<Account>>(), services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);"
+    },
+    "startup/pipeline": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 82,
+      "end": 90,
+      "code": "app.UseDefaultFiles();\napp.UseStaticFiles();\nif (app.Environment.IsDevelopment())\n    app.MapOpenApi().AllowAnonymous();\napp.UseRateLimiter();\napp.UseSsoCors();\napp.UseAuthentication();\napp.UseAuthorization();\napp.UseCsrfHeaderCheck();"
+    },
+    "startup/noclinic": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 72,
+      "end": 81,
+      "code": "// Clinic data asked for before a clinic was chosen: tell the page to show the clinic picker.\napp.Use(async (ctx, next) =>\n{\n    try { await next(); }\n    catch (NoClinicException ex) when (!ctx.Response.HasStarted)\n    {\n        ctx.Response.StatusCode = StatusCodes.Status409Conflict;\n        await ctx.Response.WriteAsJsonAsync(new { title = ex.Message, chooseClinic = true });\n    }\n});"
+    },
+    "clinic-db/scoped": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 85,
+      "end": 90,
+      "code": "services.AddScoped(sp =>\n{\n    var user = sp.GetRequiredService<IHttpContextAccessor>().HttpContext?.User;\n    var clinicId = user?.ClinicId() ?? throw new NoClinicException();\n    return sp.GetRequiredService<ClinicDatabases>().Open(clinicId);\n});"
+    },
+    "clinic-db/open": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 37,
+      "end": 47,
+      "code": "public async Task<ClinicHubDbContext> OpenAsync(int clinicId)\n{\n    if (!_connections.TryGetValue(clinicId, out var cs))\n    {\n        using var scope = scopes.CreateScope();\n        var catalog = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();\n        var clinic = await catalog.Clinics.AsNoTracking().SingleOrDefaultAsync(c => c.Id == clinicId && c.IsActive)\n            ?? throw new NoClinicException();\n        cs = _connections[clinicId] = ConnectionStringFor(clinic);\n    }\n    return Create(cs);"
+    },
+    "clinic-db/connection": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 29,
+      "end": 31,
+      "code": "public string ConnectionStringFor(Clinic clinic) => clinic.ConnectionString is { } protectedValue\n    ? protection.CreateProtector(ConnectionPurpose).Unprotect(protectedValue)\n    : new SqlConnectionStringBuilder(Server) { InitialCatalog = clinic.DatabaseName }.ConnectionString;"
+    },
+    "provisioning/create": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+      "start": 14,
+      "end": 39,
+      "code": "public async Task<Clinic> CreateAsync(string slug, string name, int? creatorAccountId)\n{\n    var now = clock.GetUtcNow().UtcDateTime;\n    var clinic = new Clinic { Slug = slug, Name = name, DatabaseName = options.Value.DatabasePrefix + slug, CreatedUtc = now };\n    catalog.Clinics.Add(clinic);\n    await catalog.SaveChangesAsync();\n    await EnsureRolesAsync(clinic);\n    await databases.MigrateAsync(clinic);\n    // A first location under the clinic's name, so the day board works from the start; address and rooms are filled in later.\n    await using (var clinicDb = databases.Open(clinic))\n    {\n        clinicDb.Locations.Add(new Data.Location { Name = name });\n        await clinicDb.SaveChangesAsync();\n    }\n\n    if (creatorAccountId is { } creator)\n    {\n        var admin = await catalog.Roles.SingleAsync(r => r.ClinicId == clinic.Id && r.Name == SystemRoles.Administrator);\n        catalog.AccountRoles.Add(new AccountRole { AccountId = creator, RoleId = admin.Id });\n        await catalog.SaveChangesAsync();\n        var account = await catalog.Accounts.SingleAsync(a => a.Id == creator);\n        await using var db = databases.Open(clinic);\n        await StaffSync.EnsureAsync(db, account, member: true, now);\n    }\n    await log.WriteAsync(SecurityEventTypes.ClinicCreated, creatorAccountId, detail: $\"{clinic.Name} ({clinic.Slug}, database {clinic.DatabaseName})\", clinicId: clinic.Id);\n    return clinic;"
+    },
+    "provisioning/roles": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+      "start": 46,
+      "end": 63,
+      "code": "public async Task EnsureRolesAsync(Clinic clinic)\n{\n    var tracked = await catalog.Clinics.SingleAsync(c => c.Id == clinic.Id);\n    // Clinics opened before this was tracked knew ClinicHub's own permissions, none of the other applications'.\n    var known = (tracked.KnownPermissions is null ? Permissions.All.Where(p => !p.Contains(':')) : Permissions.Parse(tracked.KnownPermissions)).ToHashSet();\n    var fresh = Permissions.All.Where(p => !known.Contains(p)).ToHashSet();\n    var existing = await catalog.Roles.Where(r => r.ClinicId == clinic.Id).ToDictionaryAsync(r => r.Name);\n    foreach (var (name, description, permissions) in SystemRoles.Defaults)\n    {\n        if (!existing.TryGetValue(name, out var role))\n            catalog.Roles.Add(new Role { ClinicId = clinic.Id, Name = name, Description = description, Permissions = Permissions.Format(permissions), IsSystem = true });\n        else if (role.IsSystem && permissions.Any(fresh.Contains))\n            role.Permissions = Permissions.Format(Permissions.Parse(role.Permissions).Union(permissions.Where(fresh.Contains)));\n    }\n    if (existing.TryGetValue(SystemRoles.Administrator, out var admin))\n        admin.Permissions = Permissions.Format(Permissions.All);\n    tracked.KnownPermissions = Permissions.Format(Permissions.All);\n    await catalog.SaveChangesAsync();"
+    },
+    "sign-in/lockout": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 49,
+      "end": 54,
+      "code": "if (account?.LockoutEndUtc is { } until && until > now.UtcDateTime)\n{\n    await log.WriteAsync(SecurityEventTypes.LoginFailed, null, account.Id, \"Account locked\");\n    return Results.Problem($\"Too many failed attempts. Try again after {Math.Ceiling((until - now.UtcDateTime).TotalMinutes)} minutes, or ask an administrator to unlock the account.\",\n        statusCode: StatusCodes.Status423Locked);\n}"
+    },
+    "sign-in/failed": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 75,
+      "end": 84,
+      "code": "async Task<IResult> Failed(Account? a, string detail, string message, bool twoFactor = false)\n{\n    if (a is not null && ++a.FailedLoginCount >= MaxFailedLogins)\n    {\n        a.FailedLoginCount = 0;\n        a.LockoutEndUtc = now.UtcDateTime + LockoutDuration;\n        log.Add(SecurityEventTypes.LockedOut, a.Id);\n    }\n    log.Add(SecurityEventTypes.LoginFailed, a?.Id, detail: a is null ? $\"Unknown user name \\\"{Short(userName)}\\\"\" : detail);\n    await catalog.SaveChangesAsync();"
+    },
+    "sign-in/rate": {
+      "file": "src/ClinicHub.Api/Program.cs",
+      "start": 44,
+      "end": 51,
+      "code": "var loginsPerMinute = builder.Configuration.GetValue(\"RateLimits:LoginsPerMinute\", 10);\nbuilder.Services.AddRateLimiter(o =>\n{\n    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;\n    o.AddPolicy(AuthEndpoints.LoginRateLimit, ctx => RateLimitPartition.GetFixedWindowLimiter(\n        ctx.Connection.RemoteIpAddress?.ToString() ?? \"unknown\",\n        _ => new FixedWindowRateLimiterOptions { PermitLimit = loginsPerMinute, Window = TimeSpan.FromMinutes(1) }));\n});"
+    },
+    "sign-in/dummy": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 56,
+      "end": 59,
+      "code": "// Hash even when the account does not exist so timing does not reveal valid user names.\nvar result = hasher.VerifyHashedPassword(account ?? new Account(), account?.PasswordHash ?? DummyHash, req.Password ?? \"\");\nif (account is null || result == PasswordVerificationResult.Failed)\n    return await Failed(account, \"Wrong password\", \"Wrong user name or password.\");"
+    },
+    "sign-in/single": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 202,
+      "end": 215,
+      "code": "/// <summary>Signs in, straight into the clinic when the person belongs to only one.</summary>\nprivate static async Task<IResult> SignIn(CatalogDbContext catalog, ClinicDatabases clinics, SecurityLog log, Account account,\n    DateTime now, HttpContext http, string how)\n{\n    account.FailedLoginCount = 0;\n    account.LockoutEndUtc = null;\n    account.LastLoginUtc = now;\n    log.Add(SecurityEventTypes.LoginSucceeded, account.Id, detail: how);\n    await catalog.SaveChangesAsync();\n    var memberOf = Access.Clinics(account).ToList();\n    if (memberOf.Count == 1)\n        return Results.Ok(await EnterClinic(clinics, log, account, memberOf[0].Id, now, http));\n    await AuthSetup.SignInAsync(http, account, null);\n    return Results.Ok(ToMe(account, AuthSetup.CreatePrincipal(account, null)));"
+    },
+    "session/cookie": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 65,
+      "end": 75,
+      "code": "o.Cookie.Name = \"clinichub.auth\";\no.Cookie.HttpOnly = true;\n// Lax, not Strict: an application on another site (ClinicReport) sends people here to sign in, and\n// that navigation must carry the session. Unsafe API calls still need the X-ClinicHub header.\no.Cookie.SameSite = SameSiteMode.Lax;\no.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;\no.ExpireTimeSpan = TimeSpan.FromHours(10);\no.SlidingExpiration = true;\no.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = 401; return Task.CompletedTask; };\no.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = 403; return Task.CompletedTask; };\no.Events.OnValidatePrincipal = LoadCurrentAccess;"
+    },
+    "session/validate": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 90,
+      "end": 112,
+      "code": "private static async Task LoadCurrentAccess(CookieValidatePrincipalContext ctx)\n{\n    var id = ctx.Principal?.UserId();\n    var stamp = ctx.Principal?.FindFirstValue(AppClaims.Stamp);\n    var catalog = ctx.HttpContext.RequestServices.GetRequiredService<CatalogDbContext>();\n    var account = id is null ? null : await catalog.Accounts.AsNoTracking().WithRoles().SingleOrDefaultAsync(a => a.Id == id);\n    if (account is null || !account.IsActive || account.SecurityStamp != stamp)\n    {\n        ctx.RejectPrincipal();\n        await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);\n        return;\n    }\n    // A clinic the person no longer belongs to (or that was closed) is dropped; they choose again.\n    var clinicId = ctx.Principal!.ClinicId();\n    if (clinicId is not null && !Access.Clinics(account).Any(c => c.Id == clinicId))\n        clinicId = null;\n    int? providerId = null;\n    if (clinicId is not null)\n    {\n        await using var clinicDb = await ctx.HttpContext.RequestServices.GetRequiredService<ClinicDatabases>().OpenAsync(clinicId.Value);\n        providerId = await clinicDb.Providers.Where(p => p.UserId == account.Id).Select(p => (int?)p.Id).FirstOrDefaultAsync();\n    }\n    ctx.ReplacePrincipal(CreatePrincipal(account, clinicId, providerId));"
+    },
+    "session/access": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 32,
+      "end": 43,
+      "code": "public static Access For(Account account, int? clinicId)\n{\n    var roles = account.Roles.Select(ar => ar.Role).Where(r => clinicId != null && r.ClinicId == clinicId).ToList();\n    var permissions = roles.Any(r => r.IsSystem && r.Name == SystemRoles.Administrator)\n        ? Auth.Permissions.All\n        : Auth.Permissions.All.Where(p => roles.Any(r => Auth.Permissions.Parse(r.Permissions).Contains(p))).ToArray();\n    // A role anywhere that requires two-factor protects the whole account: it is one sign-in for every clinic.\n    var twoFactorRequired = account.Roles.Any(ar => ar.Role.RequireTwoFactor);\n    var pending = account.MustChangePassword ? PendingActions.ChangePassword\n        : twoFactorRequired && !account.TwoFactorEnabled ? PendingActions.SetupTwoFactor\n        : null;\n    return new Access(roles.Select(r => r.Name).OrderBy(n => n).ToArray(), pending is null ? permissions : [], twoFactorRequired, pending);"
+    },
+    "session/fallback": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 78,
+      "end": 82,
+      "code": "var auth = services.AddAuthorizationBuilder()\n    .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());\nforeach (var p in Permissions.All)\n    auth.AddPolicy(p, policy => policy.RequireClaim(AppClaims.Permission, p));\nauth.AddPolicy(PlatformAdmin, policy => policy.RequireClaim(PlatformAdmin, \"true\"));"
+    },
+    "session/csrf": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 152,
+      "end": 161,
+      "code": "public static IApplicationBuilder UseCsrfHeaderCheck(this IApplicationBuilder app) => app.Use(async (ctx, next) =>\n{\n    var unsafeMethod = !(HttpMethods.IsGet(ctx.Request.Method) || HttpMethods.IsHead(ctx.Request.Method) || HttpMethods.IsOptions(ctx.Request.Method));\n    if (unsafeMethod && ctx.Request.Path.StartsWithSegments(\"/api\") && !ctx.Request.Headers.ContainsKey(CsrfHeader))\n    {\n        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;\n        await ctx.Response.WriteAsJsonAsync(new { title = $\"Missing {CsrfHeader} header.\" });\n        return;\n    }\n    await next();"
+    },
+    "session/client": {
+      "file": "web/src/api.ts",
+      "start": 39,
+      "end": 54,
+      "code": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {\n  const res = await fetch(url, {\n    method,\n    credentials: 'same-origin',\n    headers: { 'X-ClinicHub': '1', ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },\n    body: body !== undefined ? JSON.stringify(body) : undefined,\n  })\n  if (res.status === 204) return undefined as T\n  const text = await res.text()\n  const data = text ? JSON.parse(text) : undefined\n  if (!res.ok) {\n    if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('clinichub:signed-out'))\n    // Problem details: the specific message is in detail; title is the generic status text unless no detail was given.\n    throw new ApiError(res.status, data?.detail ?? data?.title ?? `Request failed (${res.status})`, data?.errors ?? {}, data ?? {})\n  }\n  return data as T"
+    },
+    "two-factor/code": {
+      "file": "src/ClinicHub.Api/Auth/Totp.cs",
+      "start": 23,
+      "end": 31,
+      "code": "public static string Code(string secret, long step)\n{\n    var counter = BitConverter.GetBytes(step);\n    if (BitConverter.IsLittleEndian)\n        Array.Reverse(counter);\n    var hash = HMACSHA1.HashData(Base32Decode(secret), counter);\n    var offset = hash[^1] & 0x0F;\n    var binary = ((hash[offset] & 0x7F) << 24) | (hash[offset + 1] << 16) | (hash[offset + 2] << 8) | hash[offset + 3];\n    return (binary % 1_000_000).ToString(\"D6\");"
+    },
+    "two-factor/verify": {
+      "file": "src/ClinicHub.Api/Auth/Totp.cs",
+      "start": 38,
+      "end": 52,
+      "code": "public static long? Verify(string secret, string? code, DateTimeOffset now, long lastUsedStep)\n{\n    code = new string((code ?? \"\").Where(char.IsDigit).ToArray());\n    if (code.Length != 6)\n        return null;\n    var current = StepAt(now);\n    for (var step = current - 1; step <= current + 1; step++)\n    {\n        if (step <= lastUsedStep)\n            continue;\n        if (CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(Code(secret, step)), Encoding.ASCII.GetBytes(code)))\n            return step;\n    }\n    return null;\n}"
+    },
+    "two-factor/setup": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 147,
+      "end": 155,
+      "code": "account.MapPost(\"/two-factor/setup\", async (ClaimsPrincipal principal, CatalogDbContext catalog, IDataProtectionProvider protection) =>\n{\n    var a = (await LoadAccount(catalog, principal.RequiredUserId(), tracked: true))!;\n    if (a.TwoFactorEnabled)\n        return Results.Problem(\"Two-factor sign-in is already on. Turn it off first to use a new device.\", statusCode: StatusCodes.Status409Conflict);\n    var secret = Totp.NewSecret();\n    a.TwoFactorSecret = protection.CreateProtector(TwoFactorPurpose).Protect(secret);\n    await catalog.SaveChangesAsync();\n    return Results.Ok(new TwoFactorSetup(secret, Totp.OtpAuthUri(\"ClinicHub\", a.UserName, secret)));"
+    },
+    "two-factor/pending": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 40,
+      "end": 42,
+      "code": "var pending = account.MustChangePassword ? PendingActions.ChangePassword\n    : twoFactorRequired && !account.TwoFactorEnabled ? PendingActions.SetupTwoFactor\n    : null;"
+    },
+    "permissions/keys": {
+      "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+      "start": 11,
+      "end": 14,
+      "code": "public const string PatientsView = \"patients.view\";\npublic const string PatientsEdit = \"patients.edit\";\npublic const string PatientsMerge = \"patients.merge\";\npublic const string ScheduleView = \"schedule.view\";"
+    },
+    "permissions/appkeys": {
+      "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+      "start": 51,
+      "end": 55,
+      "code": "// LabFlow: the laboratory.\npublic const string LabFrontDesk = \"labflow:frontdesk\";\npublic const string LabResultsView = \"labflow:results.view\";\npublic const string LabResultsEnter = \"labflow:results.enter\";\npublic const string LabAdmin = \"labflow:admin\";"
+    },
+    "permissions/forapp": {
+      "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+      "start": 134,
+      "end": 135,
+      "code": "public static string[] ForApp(IEnumerable<string> granted, string app) =>\n    granted.Where(p => p.StartsWith(app + \":\", StringComparison.Ordinal)).Select(p => p[(app.Length + 1)..]).ToArray();"
+    },
+    "permissions/defaults": {
+      "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+      "start": 162,
+      "end": 164,
+      "code": "(FrontDesk, \"Registration, booking and check-in; lab bookings.\",\n    [Permissions.PatientsView, Permissions.PatientsEdit, Permissions.ScheduleView, Permissions.ScheduleManage, Permissions.BillingView,\n     Permissions.LabFrontDesk]),"
+    },
+    "logs/security": {
+      "file": "src/ClinicHub.Api/Catalog/SecurityLog.cs",
+      "start": 7,
+      "end": 21,
+      "code": "public class SecurityLog(CatalogDbContext catalog, IHttpContextAccessor http, TimeProvider clock)\n{\n    /// <summary>Adds an event; it is saved with the caller's next SaveChanges on the catalog.</summary>\n    public void Add(string type, int? actor, int? target = null, string? detail = null, int? clinicId = null) =>\n        catalog.SecurityEvents.Add(new SecurityEvent\n        {\n            AtUtc = clock.GetUtcNow().UtcDateTime, Type = type, ClinicId = clinicId, ActorAccountId = actor, TargetAccountId = target,\n            Detail = detail is { Length: > 500 } ? detail[..500] : detail,\n            IpAddress = http.HttpContext?.Connection.RemoteIpAddress?.ToString(),\n        });\n\n    public async Task WriteAsync(string type, int? actor, int? target = null, string? detail = null, int? clinicId = null)\n    {\n        Add(type, actor, target, detail, clinicId);\n        await catalog.SaveChangesAsync();"
+    },
+    "logs/access": {
+      "file": "src/ClinicHub.Api/Data/Security.cs",
+      "start": 32,
+      "end": 44,
+      "code": "/// <summary>Every open, edit, print or export of a patient's record (PHIPA: \"who has looked at my record?\").</summary>\npublic class PatientAccessLog\n{\n    public long Id { get; set; }\n    public DateTime AtUtc { get; set; }\n    public int UserId { get; set; }\n    public int PatientId { get; set; }\n    [MaxLength(10)] public string Action { get; set; } = AccessActions.View;\n\n    /// <summary>What was opened, e.g. \"Encounter 120\", \"Chart\", \"Invoice 33\".</summary>\n    [MaxLength(60)] public string Context { get; set; } = \"\";\n    public int? ConsentOverrideId { get; set; }\n    [MaxLength(64)] public string? IpAddress { get; set; }"
+    },
+    "logs/write": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 67,
+      "end": 68,
+      "code": "db.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = userId, PatientId = appt.PatientId, Action = AccessActions.Edit,\n    Context = $\"Check-in, appointment {appt.Id}\", IpAddress = AuthEndpoints.Ip(http) });"
+    },
+    "sso/authorize": {
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "start": 58,
+      "end": 81,
+      "code": "var cookie = await http.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);\nif (request.HasPromptValue(PromptValues.Login))\n{\n    await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);\n    return ToClinicHub();\n}\nif (!cookie.Succeeded)\n    return request.HasPromptValue(PromptValues.None) ? Refuse(Errors.LoginRequired, \"Not signed in to ClinicHub.\") : ToClinicHub();\n\nvar principal = cookie.Principal!;\nvar account = await catalog.Accounts.AsNoTracking().WithRoles().SingleOrDefaultAsync(a => a.Id == principal.UserId() && a.IsActive);\nif (account is null)\n    return ToClinicHub();\nvar clinicId = principal.ClinicId();\nvar access = Access.For(account, clinicId);\nif (access.Pending is not null || clinicId is null)\n    return request.HasPromptValue(PromptValues.None) ? Refuse(Errors.InteractionRequired, \"Finish signing in to ClinicHub first.\") : ToClinicHub();\n\nvar appPermissions = Permissions.ForApp(access.Permissions, http.RequestServices.GetRequiredService<IOptions<SsoOptions>>().Value.AppOf(request.ClientId!));\nvar clinic = account.Roles.Select(r => r.Role.Clinic).First(c => c.Id == clinicId);\nif (appPermissions.Length == 0)\n{\n    await log.WriteAsync(SecurityEventTypes.SsoRefused, account.Id, detail: $\"{request.ClientId}: no permission\", clinicId: clinicId);\n    return Refuse(Errors.AccessDenied, $\"No role you hold at {clinic.Name} gives access to {request.ClientId}.\");"
+    },
+    "sso/token": {
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "start": 116,
+      "end": 124,
+      "code": "var account = await catalog.Accounts.AsNoTracking().WithRoles().SingleOrDefaultAsync(a => a.Id == accountId && a.IsActive);\nif (account is null || account.SecurityStamp != previous.GetClaim(SsoClaims.Stamp))\n    return Refuse(Errors.InvalidGrant, \"The ClinicHub session has ended. Sign in again.\");\n\nvar access = Access.For(account, clinicId);\nvar appPermissions = Permissions.ForApp(access.Permissions, http.RequestServices.GetRequiredService<IOptions<SsoOptions>>().Value.AppOf(request.ClientId!));\nvar clinic = account.Roles.Select(r => r.Role.Clinic).FirstOrDefault(c => c.Id == clinicId);\nif (clinic is null || appPermissions.Length == 0)\n    return Refuse(Errors.InvalidGrant, \"Access to this application at this clinic has been removed.\");"
+    },
+    "sso/clientcreds": {
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "start": 96,
+      "end": 107,
+      "code": "if (request.IsClientCredentialsGrantType())\n{\n    // An application on its own behalf (OpenIddict has already checked its secret): it may send results here, and\n    // financial documents to FinancePowerApp (a token for the audience \"finance\").\n    var app = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, Claims.Name, Claims.Role);\n    app.SetClaim(Claims.Subject, request.ClientId).SetClaim(Claims.ClientId, request.ClientId);\n    var scopes = request.GetScopes().Intersect([SsoClaims.ResultsScope, SsoClaims.FinanceScope]).ToList();\n    app.SetScopes(scopes);\n    if (scopes.Contains(SsoClaims.FinanceScope))\n        app.SetResources(SsoClaims.FinanceScope);\n    app.SetDestinations(_ => [OpenIddictConstants.Destinations.AccessToken]);\n    return Results.SignIn(new ClaimsPrincipal(app), properties: null, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);"
+    },
+    "frontdesk/transitions": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 191,
+      "end": 200,
+      "code": "private static readonly Dictionary<string, string[]> Transitions = new()\n{\n    [AppointmentStatus.Booked] = [AppointmentStatus.NoShow, AppointmentStatus.Cancelled],\n    [AppointmentStatus.Arrived] = [AppointmentStatus.Roomed, AppointmentStatus.Cancelled],\n    [AppointmentStatus.Roomed] = [AppointmentStatus.WithProvider],\n    [AppointmentStatus.WithProvider] = [AppointmentStatus.Completed],\n};\n\n/// <summary>Check-in (Booked → Arrived) has its own endpoint because it validates the health card.</summary>\npublic static bool Allowed(string from, string to) => Transitions.TryGetValue(from, out var next) && next.Contains(to);"
+    },
+    "frontdesk/checkin": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 40,
+      "end": 70,
+      "code": "api.MapPost(\"/appointments/{id:int}/check-in\", async (int id, CheckInRequest req, ClaimsPrincipal user, ClinicHubDbContext db, TimeProvider clock, HttpContext http) =>\n{\n    var appt = await db.Appointments.Include(a => a.Patient).Include(a => a.AppointmentType).SingleOrDefaultAsync(a => a.Id == id);\n    if (appt is null)\n        return Results.NotFound();\n    if (appt.Status != AppointmentStatus.Booked)\n        return Results.Problem($\"Already {Words(appt.Status)}.\", statusCode: StatusCodes.Status409Conflict);\n\n    var now = clock.GetUtcNow().UtcDateTime;\n    var userId = user.RequiredUserId();\n    var reciprocal = await db.Provinces.ToDictionaryAsync(p => p.Code, p => p.ReciprocalBilling);\n    var result = HcvSimulator.Check(appt.Patient, req.PresentedVersion, Today(clock), reciprocal);\n\n    var check = new EligibilityCheck\n    {\n        PatientId = appt.PatientId, CheckedUtc = now, HealthCardNumber = appt.Patient.HealthCardNumber ?? \"\",\n        HealthCardVersion = req.PresentedVersion ?? appt.Patient.HealthCardVersion, ResponseCode = result.Code,\n        IsEligible = result.Eligible, Message = result.Message, CheckedByUserId = userId,\n    };\n    db.Encounters.Add(new Encounter\n    {\n        PatientId = appt.PatientId, ProviderId = appt.ProviderId, LocationId = appt.LocationId, Appointment = appt,\n        EligibilityCheck = check, PaymentProgram = result.PaymentProgram, ReasonForVisit = appt.Reason, CheckInUtc = now,\n        Kind = appt.Source == AppointmentSources.WalkIn ? EncounterKinds.WalkIn\n            : appt.AppointmentType.Name == \"Virtual visit\" ? EncounterKinds.Virtual : EncounterKinds.Office,\n    });\n    Move(appt, AppointmentStatus.Arrived, now, userId);\n    db.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = userId, PatientId = appt.PatientId, Action = AccessActions.Edit,\n        Context = $\"Check-in, appointment {appt.Id}\", IpAddress = AuthEndpoints.Ip(http) });\n    await db.SaveChangesAsync();\n    return Results.Ok(new { eligibility = new EligibilityBrief(result.Code, result.Eligible, result.Message, result.PaymentProgram) });"
+    },
+    "frontdesk/room": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 82,
+      "end": 91,
+      "code": "if (req.Status == AppointmentStatus.Roomed)\n{\n    var room = await db.Rooms.SingleOrDefaultAsync(r => r.Id == req.RoomId && r.LocationId == appt.LocationId && r.IsActive);\n    if (room is null)\n        return Results.ValidationProblem(new Dictionary<string, string[]> { [\"roomId\"] = [\"Pick a room.\"] });\n    var occupied = await db.Appointments.AnyAsync(a => a.RoomId == room.Id && a.Id != appt.Id\n        && (a.Status == AppointmentStatus.Roomed || a.Status == AppointmentStatus.WithProvider));\n    if (occupied)\n        return Results.Problem($\"{room.Name} is occupied.\", statusCode: StatusCodes.Status409Conflict);\n    appt.RoomId = room.Id;"
+    },
+    "frontdesk/concurrency": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 113,
+      "end": 116,
+      "code": "catch (DbUpdateConcurrencyException)\n{\n    return Results.Problem(\"Someone else just changed this appointment. Refresh and try again.\", statusCode: StatusCodes.Status409Conflict);\n}"
+    },
+    "frontdesk/walkin": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 132,
+      "end": 138,
+      "code": "var providerId = req.ProviderId is { } chosen && walkInProviders.Contains(chosen) ? chosen\n    : (await db.Appointments.Where(a => a.StartUtc >= dayStart && a.StartUtc < dayEnd && walkInProviders.Contains(a.ProviderId)\n            && (a.Status == AppointmentStatus.Booked || a.Status == AppointmentStatus.Arrived))\n        .GroupBy(a => a.ProviderId).Select(g => new { g.Key, Count = g.Count() }).ToListAsync())\n      .Concat(walkInProviders.Select(p => new { Key = p, Count = 0 }))\n      .GroupBy(x => x.Key).Select(g => new { Provider = g.Key, Count = g.Sum(x => x.Count) })\n      .OrderBy(x => x.Count).First().Provider;"
+    },
+    "health-card/luhn": {
+      "file": "src/ClinicHub.Api/Domain/HealthCard.cs",
+      "start": 16,
+      "end": 32,
+      "code": "public static bool IsValidNumber(string? number)\n{\n    if (number is null || number.Length != 10 || !number.All(char.IsAsciiDigit))\n        return false;\n\n    var sum = 0;\n    for (var i = 0; i < 10; i++)\n    {\n        var digit = number[9 - i] - '0';\n        if (i % 2 == 1)\n        {\n            digit *= 2;\n            if (digit > 9) digit -= 9;\n        }\n        sum += digit;\n    }\n    return sum % 10 == 0;"
+    },
+    "health-card/hcv": {
+      "file": "src/ClinicHub.Api/Domain/HcvSimulator.cs",
+      "start": 15,
+      "end": 38,
+      "code": "public static HcvResult Check(Patient patient, string? presentedVersion, DateOnly today, IReadOnlyDictionary<string, bool> reciprocalByProvince)\n{\n    if (patient.HealthCardNumber is null)\n    {\n        if (patient.CoverageProvince is { } p && p != \"ON\" && reciprocalByProvince.GetValueOrDefault(p))\n            return new(\"RMB\", true, PaymentPrograms.Rmb, $\"Insured in {p}: bill OHIP under reciprocal medical billing.\");\n        if (patient.CoverageProvince == \"QC\")\n            return new(\"QC\", false, PaymentPrograms.Uninsured, \"Quebec is not part of reciprocal billing: the patient pays and claims RAMQ.\");\n        return new(\"NONE\", false, PaymentPrograms.Uninsured, \"No provincial coverage on file: uninsured visit, the patient pays.\");\n    }\n\n    if (!HealthCard.IsValidNumber(patient.HealthCardNumber))\n        return new(\"INV\", false, PaymentPrograms.Uninsured, \"Health number fails the check digit. Re-enter it from the card.\");\n\n    var version = (presentedVersion ?? patient.HealthCardVersion ?? \"\").Trim().ToUpperInvariant();\n    if (!HealthCard.IsValidVersion(version))\n        return new(\"VFMT\", false, PaymentPrograms.Uninsured, \"Version code must be up to two letters.\");\n    if (!string.Equals(version, patient.HealthCardVersion ?? \"\", StringComparison.OrdinalIgnoreCase))\n        return new(\"VER\", false, PaymentPrograms.Uninsured, \"Version code does not match the card on file. Ask for the current card.\");\n\n    if (patient.HealthCardExpiry is { } expiry && expiry < today)\n        return new(\"EXP\", false, PaymentPrograms.Uninsured, $\"Card expired on {expiry:yyyy-MM-dd}. Ask the patient to renew at ServiceOntario.\");\n\n    return new(\"OK\", true, PaymentPrograms.Hcp, \"Eligible for OHIP-insured services.\");"
+    },
+    "health-card/check": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 140,
+      "end": 140,
+      "code": "t.HasCheckConstraint(\"CK_Patient_HealthCard\", \"HealthCardNumber IS NULL OR (LEN(HealthCardNumber) = 10 AND HealthCardNumber NOT LIKE '%[^0-9]%')\");"
+    },
+    "patients/score": {
+      "file": "src/ClinicHub.Api/Domain/PatientMatching.cs",
+      "start": 23,
+      "end": 55,
+      "code": "public static Match Score(Patient a, Patient b)\n{\n    if (a.HealthCardNumber is not null && a.HealthCardNumber == b.HealthCardNumber)\n        return new(100, [\"Same health card\"]);\n\n    var score = 0;\n    var reasons = new List<string>();\n    void Add(int points, string reason) { score += points; reasons.Add(reason); }\n\n    if (a.DateOfBirth == b.DateOfBirth) Add(35, \"Same date of birth\");\n    else if (OneDateTypo(a.DateOfBirth, b.DateOfBirth)) Add(20, \"Date of birth differs by one typo\");\n\n    var (lastA, lastB) = (Name(a.LastName), Name(b.LastName));\n    if (lastA == lastB) Add(25, \"Same last name\");\n    else if (Distance(lastA, lastB) == 1) Add(18, \"Last name differs by one letter\");\n    else if (Soundex(lastA) == Soundex(lastB)) Add(12, \"Last name sounds the same\");\n\n    var (firstA, firstB) = (Name(a.FirstName), Name(b.FirstName));\n    var preferredMatch = Name(a.PreferredName) is { Length: > 0 } pa && (pa == firstB || pa == Name(b.PreferredName))\n        || Name(b.PreferredName) is { Length: > 0 } pb && pb == firstA;\n    if (firstA == firstB) Add(20, \"Same first name\");\n    else if (preferredMatch) Add(15, \"First name matches a preferred name\");\n    else if (Distance(firstA, firstB) == 1) Add(15, \"First name differs by one letter\");\n    else if (firstA.Length >= 3 && firstB.Length >= 3 && (firstA.StartsWith(firstB) || firstB.StartsWith(firstA))) Add(12, \"Short form of the first name\");\n\n    if (Digits(a.Phone) is { Length: >= 7 } phone && phone == Digits(b.Phone)) Add(10, \"Same phone\");\n    if (!string.IsNullOrWhiteSpace(a.Email) && string.Equals(a.Email.Trim(), b.Email?.Trim(), StringComparison.OrdinalIgnoreCase)) Add(10, \"Same email\");\n    if (Postal(a.PostalCode) is { Length: 6 } postal && postal == Postal(b.PostalCode)) Add(5, \"Same postal code\");\n\n    if (a.Sex is \"M\" or \"F\" or \"X\" && b.Sex is \"M\" or \"F\" or \"X\" && a.Sex != b.Sex) Add(-10, \"Different sex\");\n    if (a.HealthCardNumber is not null && b.HealthCardNumber is not null) Add(-40, \"Different health cards\");\n\n    return new(Math.Clamp(score, 0, 100), [.. reasons]);"
+    },
+    "patients/thresholds": {
+      "file": "src/ClinicHub.Api/Domain/PatientMatching.cs",
+      "start": 15,
+      "end": 19,
+      "code": "/// <summary>At or above this, the pair waits in the duplicates queue for a person to decide.</summary>\npublic const int Candidate = 60;\n\n/// <summary>At or above this, registering the new record is stopped until the clerk confirms.</summary>\npublic const int Likely = 80;"
+    },
+    "patients/register": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 85,
+      "end": 92,
+      "code": "var matches = PatientMatching.FindMatches(patient, await Neighbours(db, patient));\nif (!req.ConfirmNew && matches.Any(m => m.Match.Score >= PatientMatching.Likely))\n    return Results.Problem(\"This person may already be registered. Open the existing record, or confirm this is someone else.\",\n        statusCode: StatusCodes.Status409Conflict, extensions: new Dictionary<string, object?>\n        {\n            [\"possibleDuplicates\"] = matches.Select(m => new PossibleDuplicate(Brief(m.Other, today), m.Other.DateOfBirth, m.Other.Phone,\n                m.Match.Score, m.Match.Reasons)).ToArray(),\n        });"
+    },
+    "patients/moves": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 220,
+      "end": 228,
+      "code": "await db.Appointments.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Encounters.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.EligibilityChecks.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Referrals.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ServiceRequests.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Prescriptions.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Claims.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.Invoices.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));\nawait db.ConsentDirectives.Where(x => x.PatientId == from).ExecuteUpdateAsync(s => s.SetProperty(x => x.PatientId, to));"
+    },
+    "patients/live": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 230,
+      "end": 234,
+      "code": "// The merged record leaves the live set first, so its health card can move to the survivor\n// (one live record per card is a unique index).\nmerged.MergedIntoPatientId = to;\nmerged.UpdatedUtc = now;\nawait db.SaveChangesAsync();"
+    },
+    "consent/applies": {
+      "file": "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+      "start": 71,
+      "end": 79,
+      "code": "private bool Applies(ConsentDirective d, int encounterId, int encounterProviderId, string status)\n{\n    var ownVisit = ProviderId == encounterProviderId;\n    return d.Scope switch\n    {\n        ConsentScopes.Encounter => d.EncounterId == encounterId && !ownVisit,\n        ConsentScopes.Provider => d.ExcludedProviderId is { } excluded && excluded == ProviderId && !ownVisit,\n        _ => !ownVisit && status != EncounterStatus.Open,\n    };"
+    },
+    "consent/decide": {
+      "file": "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+      "start": 56,
+      "end": 66,
+      "code": "public Decision Decide(int encounterId, int encounterProviderId, string encounterStatus)\n{\n    int? used = null;\n    foreach (var d in Directives.Where(d => Applies(d, encounterId, encounterProviderId, encounterStatus)))\n    {\n        var o = Overrides.FirstOrDefault(o => o.ConsentDirectiveId == d.Id);\n        if (o is null)\n            return new(true, null);\n        used ??= o.Id;\n    }\n    return new(false, used);"
+    },
+    "consent/filter": {
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "start": 136,
+      "end": 150,
+      "code": "public static async ValueTask<object?> EncounterFilter(EndpointFilterInvocationContext ctx, EndpointFilterDelegate next)\n{\n    var http = ctx.HttpContext;\n    if (!int.TryParse(http.Request.RouteValues[\"id\"]?.ToString(), out var id))\n        return await next(ctx);\n    var db = http.RequestServices.GetRequiredService<ClinicHubDbContext>();\n    var e = await db.Encounters.AsNoTracking().Where(x => x.Id == id)\n        .Select(x => new { x.PatientId, x.ProviderId, x.Status, x.Patient.FirstName, x.Patient.LastName, x.Patient.Mrn }).SingleOrDefaultAsync();\n    if (e is null)\n        return await next(ctx);\n    var now = http.RequestServices.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;\n    var decision = (await ConsentView.LoadAsync(db, e.PatientId, http.User, now)).Decide(id, e.ProviderId, e.Status);\n    if (decision.Withheld)\n        return Withheld(http.User, e.PatientId, $\"{e.LastName}, {e.FirstName}\", e.Mrn);\n    http.Items[OverrideItem] = decision.OverrideId;"
+    },
+    "consent/override": {
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "start": 110,
+      "end": 117,
+      "code": "var overrides = directives.Select(d => new ConsentOverride\n{\n    ConsentDirectiveId = d.Id, UserId = userId, Reason = reason, AtUtc = now, ExpiresUtc = now + ConsentView.OverrideLength,\n}).ToList();\ndb.ConsentOverrides.AddRange(overrides);\nawait db.SaveChangesAsync();\ndb.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = userId, PatientId = id, Action = AccessActions.View,\n    Context = \"Emergency override of consent directive\", ConsentOverrideId = overrides[0].Id, IpAddress = AuthEndpoints.Ip(http) });"
+    },
+    "visits/note": {
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "start": 103,
+      "end": 134,
+      "code": "// Saved as the clinician types (the page sends it after a pause), so it returns only the time it was saved.\napi.MapPut(\"/{id:int}/note\", async (int id, NoteRequest req, ClaimsPrincipal user, ClinicHubDbContext db, TimeProvider clock) =>\n{\n    var e = await db.Encounters.Include(x => x.Note).SingleOrDefaultAsync(x => x.Id == id);\n    if (Locked(e) is { } locked)\n        return locked;\n    var now = clock.GetUtcNow().UtcDateTime;\n    void Apply(ClinicalNote n)\n    {\n        n.Subjective = Clean(req.Subjective);\n        n.Objective = Clean(req.Objective);\n        n.Assessment = Clean(req.Assessment);\n        n.Plan = Clean(req.Plan);\n        n.AuthorUserId = user.RequiredUserId();\n        n.UpdatedUtc = now;\n    }\n    var creating = e!.Note is null;\n    e.Note ??= new ClinicalNote();\n    Apply(e.Note);\n    try\n    {\n        await db.SaveChangesAsync();\n    }\n    catch (DbUpdateException) when (creating)\n    {\n        // A save from another tab or request created the note first: update that one.\n        db.ChangeTracker.Clear();\n        var existing = await db.ClinicalNotes.SingleAsync(n => n.EncounterId == id);\n        Apply(existing);\n        await db.SaveChangesAsync();\n    }\n    return Results.Ok(new { updatedUtc = now });"
+    },
+    "visits/sign": {
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "start": 191,
+      "end": 205,
+      "code": "api.MapPost(\"/{id:int}/sign\", async (int id, ClaimsPrincipal user, ClinicHubDbContext db, TimeProvider clock, HttpContext http) =>\n{\n    var e = await db.Encounters.Include(x => x.Patient).Include(x => x.Provider).Include(x => x.Note).Include(x => x.Vitals)\n        .Include(x => x.Diagnoses).Include(x => x.Services).ThenInclude(s => s.UninsuredService)\n        .SingleOrDefaultAsync(x => x.Id == id);\n    if (Locked(e) is { } locked)\n        return locked;\n    if (user.ProviderId() != e!.ProviderId)\n        return Results.Problem(\"Only the treating provider can sign this visit.\", statusCode: StatusCodes.Status403Forbidden);\n    var missing = ReadyToSign(e);\n    if (missing.Length > 0)\n        return Results.ValidationProblem(new Dictionary<string, string[]> { [\"sign\"] = missing });\n\n    var now = clock.GetUtcNow().UtcDateTime;\n    EncounterSigning.Sign(db, e, user.RequiredUserId(), now);"
+    },
+    "visits/claim": {
+      "file": "src/ClinicHub.Api/Domain/EncounterSigning.cs",
+      "start": 26,
+      "end": 38,
+      "code": "// Salaried providers (most nurse practitioners) have no billing number: their insured services are recorded, not claimed.\nif (insured.Count > 0 && e.PaymentProgram != PaymentPrograms.Uninsured && e.Provider.OhipBillingNumber is not null)\n    db.Claims.Add(new Claim\n    {\n        EncounterId = e.Id, PatientId = e.PatientId, ProviderId = e.ProviderId, PaymentProgram = e.PaymentProgram,\n        HealthCardNumber = e.Patient.HealthCardNumber ?? e.Patient.OutOfProvinceNumber, HealthCardVersion = e.Patient.HealthCardVersion,\n        Province = e.PaymentProgram == PaymentPrograms.Rmb ? e.Patient.CoverageProvince : \"ON\",\n        // One claim per encounter and program, so the encounter number is unique and readable on the remittance.\n        AccountingNumber = e.Id.ToString(\"D8\", CultureInfo.InvariantCulture),\n        Status = ClaimStatus.Ready, AmountSubmitted = insured.Sum(s => s.Fee), CreatedUtc = now,\n        Items = insured.Select(s => new ClaimItem { ServiceCode = s.FeeCodeServiceCode!, ServiceDate = s.ServiceDate, Units = s.Units,\n            DiagnosticCode = primary, FeeSubmitted = s.Fee }).ToList(),\n    });"
+    },
+    "visits/addendum": {
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "start": 220,
+      "end": 234,
+      "code": "// A signed note never changes; a correction is appended with its author and time.\napi.MapPost(\"/{id:int}/addendum\", async (int id, AddendumRequest req, ClaimsPrincipal user, ClinicHubDbContext db, TimeProvider clock) =>\n{\n    var e = await db.Encounters.Include(x => x.Note).SingleOrDefaultAsync(x => x.Id == id);\n    if (e is null)\n        return Results.NotFound();\n    if (e.Status != EncounterStatus.Signed || e.Note is null)\n        return Results.Problem(\"Addenda are for signed visits; edit the note instead.\", statusCode: StatusCodes.Status409Conflict);\n    var text = Clean(req.Text);\n    if (text is null)\n        return Results.ValidationProblem(new Dictionary<string, string[]> { [\"text\"] = [\"Write the addendum.\"] });\n    var now = clock.GetUtcNow().UtcDateTime;\n    var local = TimeZoneInfo.ConvertTimeFromUtc(now, DemoSeeder.Toronto);\n    var entry = $\"[{local:yyyy-MM-dd HH:mm}, {user.Identity!.Name}] {text}\";\n    e.Note.Addendum = e.Note.Addendum is null ? entry : e.Note.Addendum + \"\\n\\n\" + entry;"
+    },
+    "claims/write": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 22,
+      "end": 32,
+      "code": "public static string Write(string recordId, Field[] layout, IReadOnlyDictionary<string, object?> values)\n{\n    var sb = new StringBuilder(recordId, RecordLength);\n    foreach (var f in layout)\n    {\n        values.TryGetValue(f.Name, out var v);\n        sb.Append(f.Kind == Kind.Numeric ? Numeric(v, f) : Alpha(v?.ToString(), f.Length));\n    }\n    if (sb.Length != RecordLength)\n        throw new InvalidOperationException($\"{recordId} layout is {sb.Length} characters, not {RecordLength}.\");\n    return sb.ToString();"
+    },
+    "claims/numeric": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 55,
+      "end": 68,
+      "code": "/// <summary>Right-justified, zero-filled. Money is written in cents.</summary>\nprivate static string Numeric(object? value, Field f)\n{\n    var n = value switch\n    {\n        null => 0L,\n        decimal d => (long)Math.Round(d * 100m, MidpointRounding.AwayFromZero),\n        DateOnly date => long.Parse(date.ToString(\"yyyyMMdd\", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture),\n        _ => Convert.ToInt64(value, CultureInfo.InvariantCulture),\n    };\n    var text = Math.Abs(n).ToString(CultureInfo.InvariantCulture);\n    if (text.Length > f.Length)\n        throw new InvalidOperationException($\"{f.Name} value {n} does not fit in {f.Length} digits.\");\n    return text.PadLeft(f.Length, '0');"
+    },
+    "claims/layout": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 100,
+      "end": 103,
+      "code": "public static readonly FixedWidth.Field[] Het =\n[\n    new(\"ServiceCode\", 5), new(\"Reserved1\", 2), new(\"FeeSubmitted\", 6, N), new(\"NumberOfServices\", 2, N), new(\"ServiceDate\", 8, N),\n    new(\"DiagnosticCode\", 4), new(\"Reserved\", 49),"
+    },
+    "claims/filename": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 117,
+      "end": 118,
+      "code": "/// <summary>H + month letter (A = January) + billing number + \".\" + batch sequence, e.g. HJ123456.004.</summary>\npublic static string FileName(Batch b) => $\"H{(char)('A' + b.Date.Month - 1)}{b.ProviderNumber}.{b.Sequence % 1000:000}\";"
+    },
+    "claims/batch": {
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "start": 124,
+      "end": 140,
+      "code": "foreach (var group in claims.GroupBy(c => c.Provider))\n{\n    var p = group.Key;\n    var number = (await db.ClaimBatches.Where(b => b.ProviderId == p.Id).MaxAsync(b => (int?)b.BatchNumber) ?? 0) + 1;\n    var file = new ClaimFile.Batch(today, number, location.OhipGroupNumber, p.OhipBillingNumber!, p.SpecialtyCode ?? \"00\",\n        group.Select(c => new ClaimFile.ClaimEntry(c.AccountingNumber, c.PaymentProgram, c.HealthCardNumber, c.HealthCardVersion,\n            c.Patient.DateOfBirth, c.ReferringProviderNumber,\n            c.Items.OrderBy(i => i.Id).Select(i => new ClaimFile.Item(i.ServiceCode, i.FeeSubmitted, i.Units, i.ServiceDate, i.DiagnosticCode)).ToArray(),\n            c.PaymentProgram == PaymentPrograms.Rmb ? (c.Patient.LastName, c.Patient.FirstName, c.Patient.Sex, c.Province ?? \"\") : null)).ToArray());\n    var batch = new ClaimBatch\n    {\n        ProviderId = p.Id, GroupNumber = location.OhipGroupNumber, BatchNumber = number, FileName = ClaimFile.FileName(file),\n        FileContent = ClaimFile.Build(file), ClaimCount = group.Count(), Total = group.Sum(c => c.AmountSubmitted), CreatedUtc = now,\n        Claims = group.ToList(),\n    };\n    db.ClaimBatches.Add(batch);\n    created.Add(batch);"
+    },
+    "remittance/match": {
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "start": 239,
+      "end": 262,
+      "code": "foreach (var entry in advice.Claims)\n{\n    claims.TryGetValue(entry.AccountingNumber, out var claim);\n    var unmatched = claim?.Items.ToList() ?? [];\n    foreach (var line in entry.Items)\n    {\n        var item = unmatched.FirstOrDefault(i => i.ServiceCode == line.ServiceCode && i.ServiceDate == line.ServiceDate);\n        if (item is not null)\n        {\n            unmatched.Remove(item);\n            item.FeePaid = line.Paid;\n            item.ExplanatoryCode = line.ExplanatoryCode;\n        }\n        ra.Items.Add(new RemittanceItem\n        {\n            AccountingNumber = entry.AccountingNumber, ServiceCode = line.ServiceCode, ServiceDate = line.ServiceDate,\n            AmountSubmitted = line.Submitted, AmountPaid = line.Paid, ExplanatoryCode = line.ExplanatoryCode, ClaimItem = item,\n        });\n    }\n    if (claim is null)\n        continue;\n    claim.AmountPaid = claim.Items.Sum(i => i.FeePaid ?? 0);\n    claim.Status = claim.AmountPaid <= 0 ? ClaimStatus.Rejected\n        : claim.Items.All(i => i.FeePaid >= i.FeeSubmitted) ? ClaimStatus.Paid : ClaimStatus.PartiallyPaid;"
+    },
+    "remittance/once": {
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "start": 228,
+      "end": 229,
+      "code": "if (await db.Remittances.AnyAsync(r => r.FileName == fileName))\n    return Results.Problem($\"{fileName} was already imported.\", statusCode: StatusCodes.Status409Conflict);"
+    },
+    "remittance/overhead": {
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "start": 287,
+      "end": 294,
+      "code": "var payments = items.Where(i => i.Claim != null).GroupBy(i => i.Claim!.ProviderId).Select(g =>\n{\n    var p = providers[g.Key];\n    var paid = g.Sum(i => i.AmountPaid);\n    var overhead = Math.Round(paid * p.OverheadPercent / 100m, 2, MidpointRounding.AwayFromZero);\n    return new ProviderPayment(p.Id, p.DisplayName, p.OhipBillingNumber, g.Select(i => i.AccountingNumber).Distinct().Count(),\n        g.Sum(i => i.AmountSubmitted), paid, p.OverheadPercent, overhead, paid - overhead);\n}).OrderBy(p => p.Provider).ToArray();"
+    },
+    "remittance/resubmit": {
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "start": 88,
+      "end": 102,
+      "code": "// A refused claim goes back to Ready once the cause (usually the health card) is fixed.\napi.MapPost(\"/claims/{id:int}/resubmit\", async (int id, ClinicHubDbContext db) =>\n{\n    var claim = await db.Claims.Include(c => c.Items).Include(c => c.Patient).SingleOrDefaultAsync(c => c.Id == id);\n    if (claim is null)\n        return Results.NotFound();\n    if (claim.Status != ClaimStatus.Rejected)\n        return Results.Problem(\"Only refused claims are resubmitted.\", statusCode: StatusCodes.Status409Conflict);\n    // The claim carries the card as it is now on file.\n    claim.HealthCardNumber = claim.PaymentProgram == PaymentPrograms.Rmb ? claim.Patient.OutOfProvinceNumber : claim.Patient.HealthCardNumber;\n    claim.HealthCardVersion = claim.Patient.HealthCardVersion;\n    claim.Status = ClaimStatus.Ready;\n    claim.ClaimBatchId = null;\n    claim.AmountPaid = 0;\n    foreach (var i in claim.Items) { i.FeePaid = null; i.ExplanatoryCode = null; }"
+    },
+    "finance/what": {
+      "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+      "start": 12,
+      "end": 24,
+      "code": "/// The clinic's money, sent to FinancePowerApp (the group's accounting) as financial documents. Built from the\n/// billing tables as they are, each with an id that never changes (claim:12:raised), so a document is sent once and a\n/// resent one is recognised there. No health information leaves: no patient names, health cards, diagnoses or fee\n/// codes. Patients are one party; invoices are known by their number.\n///\n/// <list type=\"bullet\">\n/// <item>A claim ready for OHIP (or WSIB): an invoice to the payer, OHIP professional fees (reciprocal billing for\n/// another province's patient: OHIP pays it and recovers it).</item>\n/// <item>A remittance advice: a receipt from OHIP, one line per claim paid; a claim paid less than billed, once final,\n/// adjusts the rest (short-paid). A refused claim stays owed until it is resubmitted and paid, or written off there.</item>\n/// <item>Each physician's share of a remittance, net of the clinic's overhead: a bill from the physician.</item>\n/// <item>An invoice for uninsured services: owed by the patient, with its HST; a payment against it: a receipt.</item>\n/// </list>"
+    },
+    "finance/send": {
+      "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+      "start": 35,
+      "end": 40,
+      "code": "public async Task<int> SendAsync(ClinicHubDbContext db, Clinic clinic, ServiceTokens tokens, CancellationToken ct = default)\n{\n    if (!Connected)\n        return 0;\n    var sent = (await db.FinanceExports.AsNoTracking().Select(x => x.ExternalId).ToListAsync(ct)).ToHashSet();\n    var pending = (await BuildAsync(db, clinic, ct)).Where(d => !sent.Contains((string)d[\"externalId\"]!)).ToList();"
+    },
+    "orders/tx": {
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "start": 71,
+      "end": 75,
+      "code": "// One transaction, run by the database's retrying strategy (it repeats the whole unit on a transient failure).\nawait db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>\n{\n    db.ChangeTracker.Clear();\n    await using var tx = await db.Database.BeginTransactionAsync();"
+    },
+    "orders/place": {
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "start": 94,
+      "end": 109,
+      "code": "var message = new OutboxMessage { Destination = group.Key, Kind = OutboxKinds.Order, CreatedUtc = now };\ndb.Outbox.Add(message);\nawait db.SaveChangesAsync();\nvar orders = group.Select(i => new ServiceRequest\n{\n    EncounterId = encounter.Id, PatientId = encounter.PatientId, RequesterProviderId = providerId, TargetSystem = group.Key,\n    Code = i!.Code, Display = i.Display, Priority = priority, ClinicalNotes = notes, Status = ServiceRequestStatus.Draft,\n    CreatedUtc = now, OutboxMessageId = message.Id,\n}).ToList();\ndb.ServiceRequests.AddRange(orders);\nawait db.SaveChangesAsync();\n// The message is written now, with the order, so what was ordered is what gets sent.\nmessage.ServiceRequestId = orders[0].Id;\nvar label = await ConfidentialityLabels.ForAsync(db, encounter.PatientId, encounter.Id);\nmessage.PayloadJson = FhirOrderBundle.Build(clinic, encounter.Patient, requester, orders, now, label).ToJsonString();\nplaced.AddRange(orders);"
+    },
+    "orders/due": {
+      "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+      "start": 36,
+      "end": 37,
+      "code": "var due = await db.Outbox.Where(m => m.SentUtc == null && m.Attempts < MaxAttempts && (m.NextAttemptUtc == null || m.NextAttemptUtc <= now))\n    .OrderBy(m => m.Id).Take(20).ToListAsync(ct);"
+    },
+    "orders/backoff": {
+      "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+      "start": 111,
+      "end": 114,
+      "code": "catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)\n{\n    message.LastError = ex.Message.Length > 1000 ? ex.Message[..1000] : ex.Message;\n    message.NextAttemptUtc = now.AddSeconds(Math.Min(10 * Math.Pow(2, message.Attempts - 1), 1800));"
+    },
+    "orders/refused": {
+      "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+      "start": 71,
+      "end": 81,
+      "code": "if (cancel && (int)response.StatusCode is 400 or 404 or 409 or 422)\n{\n    // An answer, not a failure: the application will not cancel (e.g. the specimen is already resulted).\n    foreach (var o in orders)\n        Refused(o, $\"{message.Destination} did not cancel: {Problem(body)}\");\n    message.SentUtc = now;\n    message.LastError = Problem(body);\n    message.NextAttemptUtc = null;\n    await db.SaveChangesAsync(ct);\n    logger.LogInformation(\"{Destination} refused to cancel order {Id} for {Clinic}\", message.Destination, message.ServiceRequestId, clinic.Slug);\n    return true;"
+    },
+    "orders/token": {
+      "file": "src/ClinicHub.Api/Integrations/FhirOrders.cs",
+      "start": 80,
+      "end": 98,
+      "code": "public string Create(string audience, Clinic clinic, string scope = OrdersScope)\n{\n    var issuer = sso.Value.Issuer ?? server.CurrentValue.Issuer?.AbsoluteUri\n        ?? throw new InvalidOperationException(\"Set Sso:Issuer: tokens ClinicHub sends on its own need its public address.\");\n    var now = clock.GetUtcNow().UtcDateTime;\n    return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor\n    {\n        Issuer = issuer,\n        Audience = audience,\n        IssuedAt = now,\n        NotBefore = now,\n        Expires = now.AddMinutes(5),\n        SigningCredentials = server.CurrentValue.SigningCredentials.First(),\n        Subject = new ClaimsIdentity(\n        [\n            new Claim(\"sub\", \"clinichub\"), new Claim(\"scope\", scope),\n            new Claim(SsoClaims.ClinicSlug, clinic.Slug), new Claim(SsoClaims.ClinicName, clinic.Name),\n        ]),\n    });"
+    },
+    "results/policy": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 30,
+      "end": 34,
+      "code": "public static void AddResultsPolicy(this IServiceCollection services) =>\n    services.AddAuthorizationBuilder().AddPolicy(ResultsPolicy, p => p\n        .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)\n        .RequireAuthenticatedUser()\n        .RequireAssertion(ctx => ctx.User.HasScope(SsoClaims.ResultsScope)));"
+    },
+    "results/sender": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 111,
+      "end": 116,
+      "code": "var client = sender.GetClaim(OpenIddictConstants.Claims.ClientId) ?? sender.GetClaim(OpenIddictConstants.Claims.Subject);\nvar target = client switch { \"labflow\" => TargetSystems.LabFlow, \"clinicreport\" => TargetSystems.ClinicReport,\n    // IntegrationHub brings in the HL7 results of a laboratory outside the group.\n    \"integrationhub\" => TargetSystems.ExternalLab, _ => null };\nif (target is null)\n    return Outcome($\"{client} does not send results to ClinicHub.\", StatusCodes.Status403Forbidden);"
+    },
+    "results/basedon": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 122,
+      "end": 134,
+      "code": "var basedOn = report![\"basedOn\"]?.AsArray().Select(b => b?[\"identifier\"]).FirstOrDefault(i => ((string?)i?[\"system\"])?.EndsWith(\":service-request\") == true);\nvar system = (string?)basedOn?[\"system\"] ?? \"\";\nvar parts = system.Split(':');\nif (parts is not [\"urn\", \"clinichub\", var slug, \"service-request\"] || !int.TryParse((string?)basedOn?[\"value\"], out var orderId))\n    return Outcome(\"Each DiagnosticReport needs basedOn.identifier with ClinicHub's order (urn:clinichub:{clinic}:service-request).\");\nvar clinic = await catalog.Clinics.AsNoTracking().SingleOrDefaultAsync(c => c.Slug == slug && c.IsActive);\nif (clinic is null)\n    return Outcome($\"No clinic '{slug}'.\");\n\nawait using var db = databases.Open(clinic);\nvar order = await db.ServiceRequests.SingleOrDefaultAsync(s => s.Id == orderId);\nif (order is null || order.TargetSystem != target)\n    return Outcome($\"Order {orderId} at {slug} was not sent to {client}.\", StatusCodes.Status403Forbidden);"
+    },
+    "results/withheld": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 72,
+      "end": 85,
+      "code": "private static async Task<List<ResultRow>> HideWithheld(ClinicHubDbContext db, List<ResultRow> rows, ClaimsPrincipal user, DateTime now)\n{\n    var patients = rows.Select(r => r.PatientId).Distinct().ToList();\n    var guarded = await db.ConsentDirectives.Where(d => patients.Contains(d.PatientId) && d.RevokedUtc == null).Select(d => d.PatientId).Distinct().ToListAsync();\n    if (guarded.Count == 0)\n        return rows;\n    var encounterIds = rows.Where(r => guarded.Contains(r.PatientId)).Select(r => r.EncounterId).Distinct().ToList();\n    var visits = await db.Encounters.AsNoTracking().Where(e => encounterIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => new { e.ProviderId, e.Status });\n    var views = new Dictionary<int, ConsentView>();\n    foreach (var p in guarded)\n        views[p] = await ConsentView.LoadAsync(db, p, user, now);\n    return rows.Select(r => views.TryGetValue(r.PatientId, out var v) && v.Decide(r.EncounterId, visits[r.EncounterId].ProviderId, visits[r.EncounterId].Status).Withheld\n        ? r with { Summary = null, ExternalUrl = null, IsAbnormal = false, Withheld = true }\n        : r).ToList();"
+    },
+    "fe-shell/landing": {
+      "file": "web/src/App.tsx",
+      "start": 109,
+      "end": 114,
+      "code": "<Route path=\"/\" element={<Navigate replace to={\n  can(me, 'encounters.sign') && me.providerId ? '/visits'\n    : can(me, 'billing.manage') && !can(me, 'schedule.manage') ? '/billing'\n    : can(me, 'schedule.view') ? '/frontdesk'\n    : can(me, 'audit.view') ? '/logs'\n    : '/account'} />} />"
+    },
+    "fe-shell/nav": {
+      "file": "web/src/App.tsx",
+      "start": 87,
+      "end": 94,
+      "code": "{can(me, 'schedule.view') && <NavLink to=\"/frontdesk\">Front desk</NavLink>}\n{can(me, 'patients.view') && <NavLink to=\"/patients\">Patients</NavLink>}\n{can(me, 'encounters.view') && <NavLink to=\"/visits\">Visits</NavLink>}\n{can(me, 'results.review') && <NavLink to=\"/results\">Results{waiting > 0 && <span className=\"count\">{waiting}</span>}</NavLink>}\n{can(me, 'billing.view') && <NavLink to=\"/billing\">Billing</NavLink>}\n{can(me, 'users.manage') && <NavLink to=\"/people\">People</NavLink>}\n{can(me, 'audit.view') && <NavLink to=\"/logs\">Logs</NavLink>}\n{me.isPlatformAdmin && <NavLink to=\"/clinics\">Clinics</NavLink>}"
+    },
+    "fe-shell/apps": {
+      "file": "web/src/App.tsx",
+      "start": 95,
+      "end": 96,
+      "code": "{/* Other applications sign in through ClinicHub: opening one needs no second password. */}\n{apps.filter(a => a.url).map(a => <a key={a.clientId} href={a.url} className=\"app-link\" title={`Open ${a.name} (signs in with ClinicHub)`}>{a.name} ↗</a>)}"
+    },
+    "fe-shell/switch": {
+      "file": "web/src/App.tsx",
+      "start": 80,
+      "end": 85,
+      "code": "{me.clinics.length > 1 ? (\n  <select className=\"clinic-switch\" value={clinic.id} aria-label=\"Clinic\" title=\"Switch clinic\"\n    onChange={async e => { setMe(await api.selectClinic(Number(e.target.value))); navigate('/') }}>\n    {me.clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}\n  </select>\n) : <span className=\"clinic-name\">{clinic.name}</span>}"
+    },
+    "fe-autosave/change": {
+      "file": "web/src/pages/EncounterPage.tsx",
+      "start": 200,
+      "end": 207,
+      "code": "const change = (key: keyof Soap, value: string) => {\n  latest.current = { ...latest.current, [key]: value }\n  setSoap(latest.current)\n  dirty.current = true\n  setStatus('Editing…')\n  window.clearTimeout(timer.current)\n  timer.current = window.setTimeout(flush, 800)\n}"
+    },
+    "fe-autosave/flush": {
+      "file": "web/src/pages/EncounterPage.tsx",
+      "start": 182,
+      "end": 198,
+      "code": "// One save at a time: a blur and the typing timer can both fire, and each waits for the one before.\nconst flush = useCallback(() => {\n  window.clearTimeout(timer.current)\n  inFlight.current = inFlight.current.then(async () => {\n    if (!dirty.current) return\n    dirty.current = false\n    setStatus('Saving…')\n    try {\n      const { updatedUtc } = await encounters.saveNote(id, latest.current)\n      setStatus(dirty.current ? 'Editing…' : `Saved ${localTime(updatedUtc)}`)\n    } catch (e) {\n      dirty.current = true\n      setStatus(e instanceof ApiError ? `Not saved: ${e.message}` : 'Not saved, retrying when you type again.')\n    }\n  })\n  return inFlight.current\n}, [id])"
+    },
+    "fe-autosave/leave": {
+      "file": "web/src/pages/EncounterPage.tsx",
+      "start": 209,
+      "end": 210,
+      "code": "// Leaving the page saves what was typed.\nuseEffect(() => () => { if (dirty.current) encounters.saveNote(id, latest.current) }, [id])"
+    },
+    "data-catalog/migrate": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 60,
+      "end": 65,
+      "code": "public async Task MigrateAsync(Clinic clinic)\n{\n    await using var db = Open(clinic);\n    await db.Database.MigrateAsync();\n    await ReferenceSeeder.SeedAsync(db);\n}"
+    },
+    "data-care/conventions": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 60,
+      "end": 66,
+      "code": "protected override void ConfigureConventions(ModelConfigurationBuilder b)\n{\n    b.Properties<decimal>().HavePrecision(10, 2);\n    b.Properties<decimal?>().HavePrecision(10, 2);\n    // UTC instants: datetime2 without time zone, the \"Utc\" suffix says what they hold.\n    b.Properties<DateTime>().HaveColumnType(\"datetime2(3)\");\n    b.Properties<DateTime?>().HaveColumnType(\"datetime2(3)\");"
+    },
+    "data-care/cascade": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 80,
+      "end": 84,
+      "code": "// SQL Server refuses multiple cascade paths, and clinical history must not vanish with a parent\n// row anyway: nothing cascades except pure child rows configured explicitly below.\nforeach (var fk in b.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))\n    if (fk.DeleteBehavior == DeleteBehavior.Cascade && !CascadingChildren.Contains(fk.DeclaringEntityType.ClrType))\n        fk.DeleteBehavior = DeleteBehavior.Restrict;"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 42
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/demo-login",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 91
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 100
+    },
+    {
+      "area": "Auth",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 108
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/clinic",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 115
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/password",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 126
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/setup",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 147
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/enable",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 158
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/two-factor/disable",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 175
+    },
+    {
+      "area": "Auth",
+      "method": "POST",
+      "path": "/api/auth/sessions/revoke",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "line": 191
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/overview",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 47
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/claims",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 64
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/claims/{id:int}",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 72
+    },
+    {
+      "area": "Billing",
+      "method": "POST",
+      "path": "/api/billing/claims/{id:int}/resubmit",
+      "access": "billing.manage",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 89
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/batches",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 107
+    },
+    {
+      "area": "Billing",
+      "method": "POST",
+      "path": "/api/billing/batches",
+      "access": "billing.manage",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 111
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/batches/{id:int}/file",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 146
+    },
+    {
+      "area": "Billing",
+      "method": "POST",
+      "path": "/api/billing/batches/{id:int}/submit",
+      "access": "billing.manage",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 152
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/remittances",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 166
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/remittances/{id:int}",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 169
+    },
+    {
+      "area": "Billing",
+      "method": "GET",
+      "path": "/api/billing/remittances/{id:int}/file",
+      "access": "billing.view",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 173
+    },
+    {
+      "area": "Billing",
+      "method": "POST",
+      "path": "/api/billing/remittances/simulate",
+      "access": "billing.manage",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 179
+    },
+    {
+      "area": "Billing",
+      "method": "POST",
+      "path": "/api/billing/remittances",
+      "access": "billing.manage",
+      "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+      "line": 209
+    },
+    {
+      "area": "Consent",
+      "method": "GET",
+      "path": "/api/patients/{id:int}/consent",
+      "access": "patients.view",
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "line": 32
+    },
+    {
+      "area": "Consent",
+      "method": "POST",
+      "path": "/api/patients/{id:int}/consent",
+      "access": "consent.manage",
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "line": 49
+    },
+    {
+      "area": "Consent",
+      "method": "POST",
+      "path": "/api/consent/{id:int}/revoke",
+      "access": "consent.manage",
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "line": 83
+    },
+    {
+      "area": "Consent",
+      "method": "POST",
+      "path": "/api/patients/{id:int}/consent/override",
+      "access": "consent.override",
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "line": 100
+    },
+    {
+      "area": "Consent",
+      "method": "GET",
+      "path": "/api/consent/overrides",
+      "access": "audit.view",
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "line": 123
+    },
+    {
+      "area": "Encounters",
+      "method": "GET",
+      "path": "/api/encounters",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 53
+    },
+    {
+      "area": "Encounters",
+      "method": "GET",
+      "path": "/api/encounters/{id:int}",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 68
+    },
+    {
+      "area": "Encounters",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/start",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 80
+    },
+    {
+      "area": "Encounters",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/finish",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 82
+    },
+    {
+      "area": "Encounters",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/vitals",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 85
+    },
+    {
+      "area": "Encounters",
+      "method": "PUT",
+      "path": "/api/encounters/{id:int}/note",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 104
+    },
+    {
+      "area": "Encounters",
+      "method": "PUT",
+      "path": "/api/encounters/{id:int}/coding",
+      "access": "encounters.sign",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 138
+    },
+    {
+      "area": "Encounters",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/sign",
+      "access": "encounters.sign",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 191
+    },
+    {
+      "area": "Encounters",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/addendum",
+      "access": "encounters.document",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 221
+    },
+    {
+      "area": "Reference",
+      "method": "GET",
+      "path": "/api/codes",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "line": 239
+    },
+    {
+      "area": "Front desk",
+      "method": "GET",
+      "path": "/api/frontdesk/day",
+      "access": "schedule.view",
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "line": 34
+    },
+    {
+      "area": "Front desk",
+      "method": "POST",
+      "path": "/api/frontdesk/appointments/{id:int}/check-in",
+      "access": "schedule.manage",
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "line": 40
+    },
+    {
+      "area": "Front desk",
+      "method": "POST",
+      "path": "/api/frontdesk/appointments/{id:int}/status",
+      "access": "schedule.manage",
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "line": 73
+    },
+    {
+      "area": "Front desk",
+      "method": "POST",
+      "path": "/api/frontdesk/walk-ins",
+      "access": "schedule.manage",
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "line": 121
+    },
+    {
+      "area": "Orders",
+      "method": "GET",
+      "path": "/api/orders/catalog",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "line": 33
+    },
+    {
+      "area": "Orders",
+      "method": "GET",
+      "path": "/api/encounters/{id:int}/orders",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "line": 39
+    },
+    {
+      "area": "Orders",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/orders",
+      "access": "orders.manage",
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "line": 42
+    },
+    {
+      "area": "Orders",
+      "method": "POST",
+      "path": "/api/orders/{id:int}/cancel",
+      "access": "orders.manage",
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "line": 121
+    },
+    {
+      "area": "Orders",
+      "method": "POST",
+      "path": "/api/orders/{id:int}/resend",
+      "access": "orders.manage",
+      "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+      "line": 188
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients",
+      "access": "patients.view",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 43
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients/{id:int}",
+      "access": "patients.view",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 61
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients",
+      "access": "patients.edit",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 73
+    },
+    {
+      "area": "Patients",
+      "method": "PUT",
+      "path": "/api/patients/{id:int}",
+      "access": "patients.edit",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 103
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients/duplicates",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 136
+    },
+    {
+      "area": "Patients",
+      "method": "GET",
+      "path": "/api/patients/duplicates/{id:int}",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 147
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients/duplicates/scan",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 161
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients/duplicates/{id:int}/not-duplicate",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 167
+    },
+    {
+      "area": "Patients",
+      "method": "POST",
+      "path": "/api/patients/merge",
+      "access": "patients.merge",
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "line": 181
+    },
+    {
+      "area": "Prescriptions",
+      "method": "GET",
+      "path": "/api/prescriptions/catalog",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 30
+    },
+    {
+      "area": "Prescriptions",
+      "method": "GET",
+      "path": "/api/encounters/{id:int}/prescriptions",
+      "access": "encounters.view",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 35
+    },
+    {
+      "area": "Prescriptions",
+      "method": "POST",
+      "path": "/api/encounters/{id:int}/prescriptions",
+      "access": "prescriptions.write",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 38
+    },
+    {
+      "area": "Prescriptions",
+      "method": "POST",
+      "path": "/api/prescriptions/{id:int}/cancel",
+      "access": "prescriptions.write",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 102
+    },
+    {
+      "area": "Prescriptions",
+      "method": "POST",
+      "path": "/api/prescriptions/{id:int}/resend",
+      "access": "prescriptions.write",
+      "file": "src/ClinicHub.Api/Endpoints/PrescriptionEndpoints.cs",
+      "line": 167
+    },
+    {
+      "area": "Result",
+      "method": "POST",
+      "path": "/fhir",
+      "access": "results.post",
+      "handler": "Receive",
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "line": 38
+    },
+    {
+      "area": "Results",
+      "method": "GET",
+      "path": "/api/results",
+      "access": "results.review",
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "line": 41
+    },
+    {
+      "area": "Results",
+      "method": "POST",
+      "path": "/api/results/{id:int}/review",
+      "access": "results.review",
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "line": 52
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/permissions",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 46
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/users",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 48
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 57
+    },
+    {
+      "area": "Users",
+      "method": "PUT",
+      "path": "/api/users/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 107
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/password",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 144
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/unlock",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 161
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/two-factor/reset",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 175
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/users/{id:int}/sessions/revoke",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 187
+    },
+    {
+      "area": "Users",
+      "method": "GET",
+      "path": "/api/roles",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 200
+    },
+    {
+      "area": "Users",
+      "method": "POST",
+      "path": "/api/roles",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 204
+    },
+    {
+      "area": "Users",
+      "method": "PUT",
+      "path": "/api/roles/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 216
+    },
+    {
+      "area": "Users",
+      "method": "DELETE",
+      "path": "/api/roles/{id:int}",
+      "access": "users.manage",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 238
+    },
+    {
+      "area": "Audit",
+      "method": "GET",
+      "path": "/api/audit",
+      "access": "audit.view",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 257
+    },
+    {
+      "area": "Audit",
+      "method": "GET",
+      "path": "/api/audit/access",
+      "access": "audit.view",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 274
+    },
+    {
+      "area": "Platform",
+      "method": "GET",
+      "path": "/api/platform/clinics",
+      "access": "platform-admin",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 293
+    },
+    {
+      "area": "Platform",
+      "method": "POST",
+      "path": "/api/platform/clinics",
+      "access": "platform-admin",
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "line": 300
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/healthz",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Program.cs",
+      "line": 92
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/settings",
+      "access": "public",
+      "file": "src/ClinicHub.Api/Program.cs",
+      "line": 93
+    },
+    {
+      "area": "Sso",
+      "method": "GET",
+      "path": "/connect/authorize",
+      "access": "public",
+      "handler": "Authorize",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 30
+    },
+    {
+      "area": "Sso",
+      "method": "POST",
+      "path": "/connect/authorize",
+      "access": "public",
+      "handler": "Authorize",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 30
+    },
+    {
+      "area": "Sso",
+      "method": "POST",
+      "path": "/connect/token",
+      "access": "public",
+      "handler": "Token",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 31
+    },
+    {
+      "area": "Sso",
+      "method": "GET",
+      "path": "/connect/userinfo",
+      "access": "public",
+      "handler": "UserInfo",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 33
+    },
+    {
+      "area": "Sso",
+      "method": "POST",
+      "path": "/connect/userinfo",
+      "access": "public",
+      "handler": "UserInfo",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 33
+    },
+    {
+      "area": "Sso",
+      "method": "GET",
+      "path": "/connect/logout",
+      "access": "public",
+      "handler": "Logout",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 34
+    },
+    {
+      "area": "Sso",
+      "method": "POST",
+      "path": "/connect/logout",
+      "access": "public",
+      "handler": "Logout",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 34
+    },
+    {
+      "area": "Auth",
+      "method": "GET",
+      "path": "/api/apps",
+      "access": "signed-in",
+      "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+      "line": 37
+    }
+  ],
+  "tables": [
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "Account",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 94,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Credentials",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(128)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FailedLoginCount",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsPlatformAdmin",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LastLoginUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "LockoutEndUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "MustChangePassword",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PasswordHash",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SecurityStamp",
+          "type": "NVARCHAR(64)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TwoFactorEnabled",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TwoFactorLastStep",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TwoFactorSecret",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "UserName",
+          "type": "NVARCHAR(64)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "AccountRole",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 109,
+      "columns": [
+        {
+          "name": "AccountId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "→ catalog.Account"
+          ]
+        },
+        {
+          "name": "RoleId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "→ catalog.Role"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "Clinic",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 157,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ConnectionString",
+          "type": "NVARCHAR(2000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DatabaseName",
+          "type": "NVARCHAR(128)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "KnownPermissions",
+          "type": "NVARCHAR(4000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(120)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Slug",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Slug NOT LIKE '%[^a-z0-9-]%' AND LEN(Slug) >= 2"
+      ]
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "Role",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 199,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ClinicId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ catalog.Clinic"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsSystem",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(64)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Permissions",
+          "type": "NVARCHAR(2000)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RequireTwoFactor",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "SecurityEvent",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 245,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ActorAccountId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ catalog.Account"
+          ]
+        },
+        {
+          "name": "AtUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ClinicId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ catalog.Clinic"
+          ]
+        },
+        {
+          "name": "Detail",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IpAddress",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TargetAccountId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ catalog.Account"
+          ]
+        },
+        {
+          "name": "Type",
+          "type": "NVARCHAR(32)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "OpenIddictApplications",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 311,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "ApplicationType",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ClientId",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": [
+            "unique where [ClientId] IS NOT NULL"
+          ]
+        },
+        {
+          "name": "ClientSecret",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ClientType",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ConcurrencyToken",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "ConsentType",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayNames",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "JsonWebKeySet",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Permissions",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PostLogoutRedirectUris",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Properties",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RedirectUris",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Requirements",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Settings",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "OpenIddictAuthorizations",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 353,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "ApplicationId",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "→ catalog.OpenIddictApplications"
+          ]
+        },
+        {
+          "name": "ConcurrencyToken",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "CreationDate",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Properties",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Scopes",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Subject",
+          "type": "NVARCHAR(400)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Type",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "OpenIddictScopes",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 395,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "ConcurrencyToken",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Descriptions",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayNames",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": [
+            "unique where [Name] IS NOT NULL"
+          ]
+        },
+        {
+          "name": "Properties",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Resources",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_Catalog",
+      "schema": "catalog",
+      "table": "OpenIddictTokens",
+      "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+      "line": 456,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "ApplicationId",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "→ catalog.OpenIddictApplications"
+          ]
+        },
+        {
+          "name": "AuthorizationId",
+          "type": "NVARCHAR(450)",
+          "nullable": true,
+          "notes": [
+            "→ catalog.OpenIddictAuthorizations"
+          ]
+        },
+        {
+          "name": "ConcurrencyToken",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "CreationDate",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ExpirationDate",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Payload",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Properties",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RedemptionDate",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReferenceId",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": [
+            "unique where [ReferenceId] IS NOT NULL"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(50)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Subject",
+          "type": "NVARCHAR(400)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Type",
+          "type": "NVARCHAR(150)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sched",
+      "table": "Appointment",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 105,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AppointmentTypeId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ ref.AppointmentType"
+          ]
+        },
+        {
+          "name": "CancelReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EndUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LocationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Location"
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "QueueNumber",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Reason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RoomId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ clinic.Room"
+          ]
+        },
+        {
+          "name": "RowVersion",
+          "type": "ROWVERSION",
+          "nullable": false,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "Source",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "StartUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Status IN ('Booked','Arrived','Roomed','WithProvider','Completed','NoShow','Cancelled')",
+        "EndUtc > StartUtc"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sched",
+      "table": "AppointmentStatusChange",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 141,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sched.Appointment"
+          ]
+        },
+        {
+          "name": "AtUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "ref",
+      "table": "AppointmentType",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 176,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "BookableOnline",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Color",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DurationMinutes",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "DurationMinutes BETWEEN 5 AND 480"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "Claim",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 260,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AccountingNumber",
+          "type": "NVARCHAR(8)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "AmountPaid",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AmountSubmitted",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ClaimBatchId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ billing.ClaimBatch"
+          ]
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "HealthCardNumber",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "HealthCardVersion",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "PaymentProgram",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "Province",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReferringProviderNumber",
+          "type": "NVARCHAR(6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "AmountSubmitted >= 0 AND AmountPaid >= 0",
+        "PaymentProgram IN ('HCP','RMB','WCB')",
+        "Status IN ('Draft','Ready','Submitted','Paid','PartiallyPaid','Rejected')"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "ClaimBatch",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 321,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "BatchNumber",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ClaimCount",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FileContent",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FileName",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "GroupNumber",
+          "type": "NVARCHAR(4)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SubmittedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Total",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "ClaimItem",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 366,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ClaimId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ billing.Claim"
+          ]
+        },
+        {
+          "name": "DiagnosticCode",
+          "type": "NVARCHAR(4)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ExplanatoryCode",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FeePaid",
+          "type": "DECIMAL(10,2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FeeSubmitted",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ServiceCode",
+          "type": "NVARCHAR(5)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ServiceDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Units",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Units BETWEEN 1 AND 99 AND FeeSubmitted >= 0"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "ClinicalNote",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 416,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Addendum",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Assessment",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "AuthorUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "Objective",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Plan",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Subjective",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "UpdatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "people",
+      "table": "ConsentDirective",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 464,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "ExcludedProviderId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "Note",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "RecordedByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "RevokedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Scope",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "people",
+      "table": "ConsentOverride",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 498,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AtUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ConsentDirectiveId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.ConsentDirective"
+          ]
+        },
+        {
+          "name": "ExpiresUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Reason",
+          "type": "NVARCHAR(300)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "ExpiresUtc > AtUtc"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "ref",
+      "table": "DiagnosticCode",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 520,
+      "columns": [
+        {
+          "name": "Code",
+          "type": "NVARCHAR(4)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "orders",
+      "table": "DiagnosticResult",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 573,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ExternalReportId",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ExternalUrl",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsAbnormal",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReceivedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReviewedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "ReviewedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ServiceRequestId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ orders.ServiceRequest"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Summary",
+          "type": "NVARCHAR(MAX)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "EligibilityCheck",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 624,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "CheckedByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "CheckedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "HealthCardNumber",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "HealthCardVersion",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsEligible",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Message",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "ResponseCode",
+          "type": "NVARCHAR(4)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Simulated",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "Encounter",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 709,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "unique where AppointmentId IS NOT NULL",
+            "→ sched.Appointment"
+          ]
+        },
+        {
+          "name": "CheckInUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CtasLevel",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "EligibilityCheckId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ care.EligibilityCheck"
+          ]
+        },
+        {
+          "name": "EndedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LocationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Location"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "PaymentProgram",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "ReasonForVisit",
+          "type": "NVARCHAR(300)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RowVersion",
+          "type": "ROWVERSION",
+          "nullable": false,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "SignedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "SignedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "StartedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "CtasLevel IS NULL OR CtasLevel BETWEEN 1 AND 5",
+        "PaymentProgram IN ('HCP','RMB','WCB','Uninsured')",
+        "Status <> 'Signed' OR (SignedUtc IS NOT NULL AND SignedByUserId IS NOT NULL)",
+        "Status IN ('Open','Signed','Voided')"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "EncounterDiagnosis",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 753,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "DiagnosticCodeCode",
+          "type": "NVARCHAR(4)",
+          "nullable": false,
+          "notes": [
+            "→ ref.DiagnosticCode"
+          ]
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "unique where IsPrimary = 1",
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "IsPrimary",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Note",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "EncounterService",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 792,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "Fee",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FeeCodeServiceCode",
+          "type": "NVARCHAR(5)",
+          "nullable": true,
+          "notes": [
+            "→ ref.FeeCode"
+          ]
+        },
+        {
+          "name": "ServiceDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UninsuredServiceId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ ref.UninsuredService"
+          ]
+        },
+        {
+          "name": "Units",
+          "type": "TINYINT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "(FeeCodeServiceCode IS NOT NULL AND UninsuredServiceId IS NULL) OR (FeeCodeServiceCode IS NULL AND UninsuredServiceId IS NOT NULL)",
+        "Units BETWEEN 1 AND 99 AND Fee >= 0"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "ref",
+      "table": "FeeCode",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 826,
+      "columns": [
+        {
+          "name": "ServiceCode",
+          "type": "NVARCHAR(5)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Fee",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsIllustrative",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Fee >= 0"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "FinanceExport",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 843,
+      "columns": [
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "SentUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "orders",
+      "table": "InboundMessage",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 881,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Error",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PayloadJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ProcessedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ReceivedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Source",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "Invoice",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 949,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Balance",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "IssuedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Number",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "RowVersion",
+          "type": "ROWVERSION",
+          "nullable": false,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Subtotal",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Tax",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ThirdPartyName",
+          "type": "NVARCHAR(120)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Total",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "PatientId IS NOT NULL OR ThirdPartyName IS NOT NULL",
+        "Total = Subtotal + Tax AND Balance BETWEEN 0 AND Total"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "InvoiceLine",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 998,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Description",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "InvoiceId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ billing.Invoice"
+          ]
+        },
+        {
+          "name": "LineTotal",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Quantity",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TaxRatePercent",
+          "type": "DECIMAL(5,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UninsuredServiceId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ ref.UninsuredService"
+          ]
+        },
+        {
+          "name": "UnitPrice",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Quantity > 0 AND UnitPrice >= 0"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "clinic",
+      "table": "Location",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1050,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AddressLine1",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "City",
+          "type": "NVARCHAR(80)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(120)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "OhipGroupNumber",
+          "type": "NVARCHAR(4)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Phone",
+          "type": "NVARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PostalCode",
+          "type": "NVARCHAR(7)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Province",
+          "type": "NVARCHAR(2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "orders",
+      "table": "OutboxMessage",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1108,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Attempts",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Destination",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LastError",
+          "type": "NVARCHAR(1000)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "NextAttemptUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PayloadJson",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PrescriptionId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ orders.Prescription"
+          ]
+        },
+        {
+          "name": "SentUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ServiceRequestId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ orders.ServiceRequest"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "people",
+      "table": "Patient",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1240,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AddressLine1",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "City",
+          "type": "NVARCHAR(80)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CoverageProvince",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DateOfBirth",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DeceasedDate",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(120)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FamilyProviderName",
+          "type": "NVARCHAR(120)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FamilyProviderOhipNumber",
+          "type": "NVARCHAR(6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FirstName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "HealthCardExpiry",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "HealthCardNumber",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": [
+            "unique where HealthCardNumber IS NOT NULL AND MergedIntoPatientId IS NULL"
+          ]
+        },
+        {
+          "name": "HealthCardVersion",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "IsDeceased",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LastName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "MergedIntoPatientId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "MiddleName",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Mrn",
+          "type": "NVARCHAR(12)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "OutOfProvinceNumber",
+          "type": "NVARCHAR(12)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Phone",
+          "type": "NVARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PostalCode",
+          "type": "NVARCHAR(7)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PreferredLanguage",
+          "type": "NVARCHAR(2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PreferredName",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Province",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RowVersion",
+          "type": "ROWVERSION",
+          "nullable": false,
+          "notes": [
+            "concurrency"
+          ]
+        },
+        {
+          "name": "Sex",
+          "type": "NVARCHAR(1)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UpdatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "HealthCardNumber IS NULL OR (LEN(HealthCardNumber) = 10 AND HealthCardNumber NOT LIKE '%[^0-9]%')",
+        "MergedIntoPatientId IS NULL OR MergedIntoPatientId <> Id",
+        "Sex IN ('M','F','X','U')",
+        "HealthCardVersion IS NULL OR HealthCardVersion NOT LIKE '%[^A-Z]%'"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sec",
+      "table": "PatientAccessLog",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1294,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Action",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AtUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ConsentOverrideId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ people.ConsentOverride"
+          ]
+        },
+        {
+          "name": "Context",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IpAddress",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "people",
+      "table": "PatientDuplicateCandidate",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1342,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "FoundUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PatientAId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "PatientBId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "Reasons",
+          "type": "NVARCHAR(300)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReviewedByUserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "ReviewedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Score",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "PatientAId < PatientBId",
+        "Score BETWEEN 0 AND 100"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "Payment",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1386,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Amount",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "InvoiceId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ billing.Invoice"
+          ]
+        },
+        {
+          "name": "Method",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReceivedByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "ReceivedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Reference",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Amount > 0"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "orders",
+      "table": "Prescription",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1487,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "CancelReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CancelledUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DaysSupply",
+          "type": "INT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Din",
+          "type": "NVARCHAR(8)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Directions",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Display",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "GroupNumber",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NoSubstitution",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Note",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "OutboxMessageId",
+          "type": "BIGINT",
+          "nullable": true,
+          "notes": [
+            "→ orders.OutboxMessage"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "PrescriberProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "Quantity",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "QuantityUnit",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Repeats",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SentUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "StatusNote",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "DaysSupply IS NULL OR DaysSupply BETWEEN 1 AND 365",
+        "Din NOT LIKE '%[^0-9]%' AND LEN(Din) = 8",
+        "Quantity > 0",
+        "Repeats BETWEEN 0 AND 11",
+        "Status IN ('Draft','Accepted','Cancelled','Failed','Cancelling')"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "clinic",
+      "table": "Provider",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1568,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Email",
+          "type": "NVARCHAR(120)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "FirstName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LastName",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "OhipBillingNumber",
+          "type": "NVARCHAR(6)",
+          "nullable": true,
+          "notes": [
+            "unique where OhipBillingNumber IS NOT NULL"
+          ]
+        },
+        {
+          "name": "OverheadPercent",
+          "type": "DECIMAL(5,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RegistrationNumber",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SpecialtyCode",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SpecialtyName",
+          "type": "NVARCHAR(60)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Title",
+          "type": "NVARCHAR(10)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "UserId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "unique where UserId IS NOT NULL",
+            "→ sec.User"
+          ]
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "OhipBillingNumber IS NULL OR (LEN(OhipBillingNumber) = 6 AND OhipBillingNumber NOT LIKE '%[^0-9]%')",
+        "OverheadPercent BETWEEN 0 AND 100"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "ref",
+      "table": "Province",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1592,
+      "columns": [
+        {
+          "name": "Code",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ReciprocalBilling",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "Referral",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1647,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Channel",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "Reason",
+          "type": "NVARCHAR(1000)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SentUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ToProviderName",
+          "type": "NVARCHAR(120)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ToSpecialty",
+          "type": "NVARCHAR(60)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Urgency",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "RemittanceAdvice",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1691,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "FileContent",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "FileName",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "GroupNumber",
+          "type": "NVARCHAR(4)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ImportedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "OhipBillingNumber",
+          "type": "NVARCHAR(6)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "PaymentDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Simulated",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TotalPaid",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "billing",
+      "table": "RemittanceItem",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1741,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "BIGINT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AccountingNumber",
+          "type": "NVARCHAR(8)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AmountPaid",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "AmountSubmitted",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ClaimItemId",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ billing.ClaimItem"
+          ]
+        },
+        {
+          "name": "ExplanatoryCode",
+          "type": "NVARCHAR(2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RemittanceAdviceId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ billing.RemittanceAdvice"
+          ]
+        },
+        {
+          "name": "ServiceCode",
+          "type": "NVARCHAR(5)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ServiceDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "clinic",
+      "table": "Room",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1773,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LocationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Location"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sched",
+      "table": "ScheduleException",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1809,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Date",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EndTime",
+          "type": "TIME",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Kind",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "Reason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "StartTime",
+          "type": "TIME",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sched",
+      "table": "ScheduleTemplate",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1853,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "AcceptsWalkIns",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DayOfWeek",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EffectiveTo",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "EndTime",
+          "type": "TIME",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "LocationId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Location"
+          ]
+        },
+        {
+          "name": "ProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "SlotMinutes",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "StartTime",
+          "type": "TIME",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "EndTime > StartTime",
+        "SlotMinutes BETWEEN 5 AND 120"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "orders",
+      "table": "ServiceRequest",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1947,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "CancelReason",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CancelledUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "ClinicalNotes",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Code",
+          "type": "NVARCHAR(40)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CompletedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "CreatedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Display",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "ExternalId",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "OutboxMessageId",
+          "type": "BIGINT",
+          "nullable": true,
+          "notes": [
+            "→ orders.OutboxMessage"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ people.Patient"
+          ]
+        },
+        {
+          "name": "Priority",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "RequesterProviderId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ clinic.Provider"
+          ]
+        },
+        {
+          "name": "SentUtc",
+          "type": "DATETIME2(3)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Status",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "StatusNote",
+          "type": "NVARCHAR(500)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TargetSystem",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Priority IN ('Routine','Stat')",
+        "TargetSystem IN ('LabFlow','ClinicReport','ExternalLab')"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "ref",
+      "table": "UninsuredService",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 1989,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "Code",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(200)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Price",
+          "type": "DECIMAL(10,2)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TaxRatePercent",
+          "type": "DECIMAL(5,2)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "Price >= 0 AND TaxRatePercent BETWEEN 0 AND 100"
+      ]
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "sec",
+      "table": "User",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 2025,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Credentials",
+          "type": "NVARCHAR(64)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(128)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "IsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "SyncedUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "UserName",
+          "type": "NVARCHAR(64)",
+          "nullable": false,
+          "notes": [
+            "unique"
+          ]
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "ClinicHub_<clinic>",
+      "schema": "care",
+      "table": "VitalSigns",
+      "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+      "line": 2078,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "DiastolicMmHg",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "EncounterId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ care.Encounter"
+          ]
+        },
+        {
+          "name": "HeartRate",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "HeightCm",
+          "type": "DECIMAL(5,1)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "RespiratoryRate",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SpO2",
+          "type": "TINYINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "SystolicMmHg",
+          "type": "SMALLINT",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "TakenByUserId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ sec.User"
+          ]
+        },
+        {
+          "name": "TakenUtc",
+          "type": "DATETIME2(3)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "TemperatureC",
+          "type": "DECIMAL(4,1)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "WeightKg",
+          "type": "DECIMAL(5,1)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": [],
+      "checks": [
+        "(SpO2 IS NULL OR SpO2 <= 100) AND (TemperatureC IS NULL OR TemperatureC BETWEEN 25 AND 45) AND (HeartRate IS NULL OR HeartRate BETWEEN 10 AND 300)"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "Navigate",
+      "guards": []
+    },
+    {
+      "path": "/frontdesk",
+      "component": "FrontDesk",
+      "guards": []
+    },
+    {
+      "path": "/patients",
+      "component": "Patients",
+      "guards": []
+    },
+    {
+      "path": "/visits",
+      "component": "Visits",
+      "guards": []
+    },
+    {
+      "path": "/visits/:id",
+      "component": "EncounterPage",
+      "guards": []
+    },
+    {
+      "path": "/billing",
+      "component": "Billing",
+      "guards": []
+    },
+    {
+      "path": "/results",
+      "component": "Results",
+      "guards": []
+    },
+    {
+      "path": "/people",
+      "component": "Users",
+      "guards": []
+    },
+    {
+      "path": "/logs",
+      "component": "Audit",
+      "guards": []
+    },
+    {
+      "path": "/clinics",
+      "component": "Clinics",
+      "guards": []
+    },
+    {
+      "path": "/account",
+      "component": "Account",
+      "guards": []
+    },
+    {
+      "path": "*",
+      "redirect": "/",
+      "guards": []
+    }
+  ]
+}

@@ -75,9 +75,9 @@
     "db/04-controlpanel-seed.sql": 34,
     "db/05-hisplus-demo.sql": 26,
     "compose.apps.yml": 507,
-    "deploy/vps/compose.vps.yml": 169,
-    "deploy/vps/Caddyfile": 103,
-    "deploy/vps/deploy.sh": 77,
+    "deploy/vps/compose.vps.yml": 171,
+    "deploy/vps/Caddyfile": 101,
+    "deploy/vps/deploy.sh": 94,
     "deploy/vps/release.ps1": 235
   },
   "examples": {
@@ -467,8 +467,8 @@
     },
     "deploy-vps/overlay": {
       "file": "deploy/vps/compose.vps.yml",
-      "start": 65,
-      "end": 68,
+      "start": 67,
+      "end": 70,
       "code": "core-api:\n  ports: !reset []\n  environment:\n    CORS_ORIGINS: https://${PANEL_DOMAIN}"
     },
     "deploy-vps/caddy": {

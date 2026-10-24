@@ -1,0 +1,3558 @@
+{
+  "project": "clinichub",
+  "repo": "ClinicHub",
+  "scan": {
+    "aspnetEndpoints": [
+      "src/ClinicHub.Api"
+    ],
+    "efSnapshots": [
+      {
+        "file": "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs",
+        "database": "ClinicHub_Catalog"
+      },
+      {
+        "file": "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs",
+        "database": "ClinicHub_<clinic>"
+      }
+    ],
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    {
+      "id": "start",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع"
+      }
+    },
+    {
+      "id": "platform",
+      "title": {
+        "en": "Platform: one sign-in, a database per clinic",
+        "fa": "پلتفرم: یک ورود، یک دیتابیس برای هر کلینیک"
+      }
+    },
+    {
+      "id": "security",
+      "title": {
+        "en": "Security and access",
+        "fa": "امنیت و دسترسی"
+      }
+    },
+    {
+      "id": "clinic",
+      "title": {
+        "en": "The clinic's day",
+        "fa": "روز کاری کلینیک"
+      }
+    },
+    {
+      "id": "billing",
+      "title": {
+        "en": "OHIP billing and money",
+        "fa": "صورت‌حساب OHIP و پول"
+      }
+    },
+    {
+      "id": "integrations",
+      "title": {
+        "en": "Orders and results (FHIR)",
+        "fa": "درخواست‌ها و جواب‌ها (FHIR)"
+      }
+    },
+    {
+      "id": "frontend",
+      "title": {
+        "en": "Frontend (React)",
+        "fa": "فرانت‌اند (React)"
+      }
+    },
+    {
+      "id": "data",
+      "title": {
+        "en": "Data (SQL Server, EF Core)",
+        "fa": "داده (SQL Server، EF Core)"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": {
+        "en": "Run it on the PC",
+        "fa": "اجرا روی PC"
+      },
+      "files": [
+        "README.md",
+        "src/ClinicHub.Api/appsettings.Development.json",
+        "web/vite.config.ts",
+        "src/ClinicHub.Api/Program.cs"
+      ],
+      "en": [
+        {
+          "id": "two",
+          "h": "Two processes, one origin",
+          "p": [
+            "`dotnet run --project src/ClinicHub.Api` starts the API on http://localhost:5300; `npm --prefix web run dev` starts the React page on http://localhost:5301. Vite forwards `/api`, `/connect`, `/.well-known` and `/fhir` to the API, so the browser sees one origin: the sign-in cookie needs no CORS, and the OpenID Connect issuer is the address people actually open."
+          ],
+          "examples": [
+            "vite"
+          ]
+        },
+        {
+          "id": "sql",
+          "h": "A SQL Server and nothing else",
+          "p": [
+            "Development uses Windows authentication against the local SQL Server. `Catalog` is the shared database (clinics, accounts, roles); `ClinicServer` is the server where each clinic gets its own database. Neither is created by hand: the API migrates them on start."
+          ],
+          "examples": [
+            "settings"
+          ]
+        },
+        {
+          "id": "demo",
+          "h": "Demo clinics on start",
+          "p": [
+            "With `Demo:Enabled` (on in Development) the start-up seeds two synthetic clinics, Harbourview and Lakeshore, with providers, patients and a rolling week of appointments. The sign-in page then offers one-click staff roles. Dr. Patel works at both clinics, which is the easiest way to see the clinic picker."
+          ],
+          "examples": [
+            "demo"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "two",
+          "h": "دو پروسه، یک origin",
+          "p": [
+            "`dotnet run --project src/ClinicHub.Api` API را روی http://localhost:5300 بالا می‌آورد و `npm --prefix web run dev` صفحه‌ی React را روی http://localhost:5301. Vite مسیرهای `/api` و `/connect` و `/.well-known` و `/fhir` را به API می‌فرستد، پس مرورگر فقط یک origin می‌بیند: کوکی ورود به CORS نیاز ندارد و issuer در OpenID Connect همان آدرسی است که آدم‌ها باز می‌کنند."
+          ],
+          "examples": [
+            "vite"
+          ]
+        },
+        {
+          "id": "sql",
+          "h": "فقط یک SQL Server لازم است",
+          "p": [
+            "در Development با Windows authentication به SQL Server محلی وصل می‌شود. `Catalog` دیتابیس مشترک است (کلینیک‌ها، حساب‌ها، نقش‌ها) و `ClinicServer` سروری است که هر کلینیک روی آن دیتابیس خودش را می‌گیرد. هیچ‌کدام دستی ساخته نمی‌شوند: API موقع شروع migrationها را اجرا می‌کند."
+          ],
+          "examples": [
+            "settings"
+          ]
+        },
+        {
+          "id": "demo",
+          "h": "کلینیک‌های دمو موقع شروع",
+          "p": [
+            "با `Demo:Enabled` (که در Development روشن است) برنامه موقع شروع دو کلینیک ساختگی می‌سازد، Harbourview و Lakeshore، با پزشک، بیمار و نوبت‌های یک هفته. صفحه‌ی ورود هم نقش‌های کارکنان را با یک کلیک می‌دهد. Dr. Patel در هر دو کلینیک کار می‌کند؛ ساده‌ترین راه برای دیدن انتخاب کلینیک همین است."
+          ],
+          "examples": [
+            "demo"
+          ]
+        }
+      ],
+      "examples": {
+        "vite": {
+          "title": {
+            "en": "One origin through the Vite proxy",
+            "fa": "یک origin با proxy در Vite"
+          },
+          "lang": "typescript",
+          "file": "web/vite.config.ts",
+          "from": "export default defineConfig({",
+          "to": "})"
+        },
+        "settings": {
+          "title": {
+            "en": "The two connection strings",
+            "fa": "دو connection string"
+          },
+          "lang": "json",
+          "file": "src/ClinicHub.Api/appsettings.Development.json",
+          "from": "\"ConnectionStrings\": {",
+          "lines": 4
+        },
+        "demo": {
+          "title": {
+            "en": "Seeding only when the demo is on",
+            "fa": "seed فقط وقتی دمو روشن است"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "if (services.GetRequiredService<IOptions<DemoOptions>>().Value.Enabled)",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": {
+        "en": "Tests against a real SQL Server",
+        "fa": "تست روی SQL Server واقعی"
+      },
+      "files": [
+        "tests/ClinicHub.Tests/FrontDeskTests.cs"
+      ],
+      "en": [
+        {
+          "id": "real",
+          "h": "Throw-away databases, not an in-memory fake",
+          "p": [
+            "Every test class gets its own `ApiFactory`: the whole API in memory (`WebApplicationFactory<Program>`) but a real SQL Server, under a prefix with a fresh GUID. The CHECK constraints, filtered unique indexes and rowversion checks the code relies on only exist in SQL Server, so an in-memory provider would pass tests the real database fails. `CLINICHUB_TEST_SQL` points the tests at another server."
+          ],
+          "examples": [
+            "prefix",
+            "settings"
+          ]
+        },
+        {
+          "id": "drop",
+          "h": "Cleaning up after itself",
+          "p": [
+            "When the class is done, the factory drops every database with its prefix: the catalog and one per demo clinic. `SINGLE_USER WITH ROLLBACK IMMEDIATE` closes connections the pool still holds."
+          ],
+          "examples": [
+            "drop"
+          ]
+        },
+        {
+          "id": "signin",
+          "h": "Signing in like the page does",
+          "p": [
+            "Tests use the demo sign-in, keep the cookie, send the `X-ClinicHub` header every unsafe request needs, and choose the clinic when the person works at more than one. So every test goes through the real cookie, permission and clinic-database path."
+          ],
+          "examples": [
+            "signin"
+          ]
+        },
+        {
+          "id": "fake",
+          "h": "Stand-ins for the other applications",
+          "p": [
+            "The background worker is off (`PollSeconds` 0) so a test sends the outbox when it chooses, and the FHIR HTTP client is given a `FakeFhirServer` that records each request and answers as the test tells it. LabFlow, ClinicReport and PharmaFlow never need to run."
+          ],
+          "examples": [
+            "fake"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "real",
+          "h": "دیتابیس‌های یک‌بارمصرف، نه یک بدل در حافظه",
+          "p": [
+            "هر کلاس تست `ApiFactory` خودش را می‌گیرد: کل API در حافظه (`WebApplicationFactory<Program>`) اما با SQL Server واقعی، زیر یک پیشوند با GUID تازه. قیدهای CHECK، ایندکس‌های unique فیلترشده و چک rowversion که کد به آن‌ها تکیه می‌کند فقط در SQL Server وجود دارند؛ provider درون‌حافظه تست‌هایی را قبول می‌کند که دیتابیس واقعی رد می‌کند. `CLINICHUB_TEST_SQL` تست‌ها را به سرور دیگری می‌فرستد."
+          ],
+          "examples": [
+            "prefix",
+            "settings"
+          ]
+        },
+        {
+          "id": "drop",
+          "h": "بعد از خودش تمیز می‌کند",
+          "p": [
+            "وقتی کلاس تمام شد، factory همه‌ی دیتابیس‌های آن پیشوند را حذف می‌کند: catalog و یکی برای هر کلینیک دمو. `SINGLE_USER WITH ROLLBACK IMMEDIATE` اتصال‌هایی را که pool هنوز نگه داشته می‌بندد."
+          ],
+          "examples": [
+            "drop"
+          ]
+        },
+        {
+          "id": "signin",
+          "h": "ورود، همان‌طور که صفحه وارد می‌شود",
+          "p": [
+            "تست‌ها با ورود دمو وارد می‌شوند، کوکی را نگه می‌دارند، هدر `X-ClinicHub` را که هر درخواست ناامن لازم دارد می‌فرستند، و اگر آدم در چند کلینیک کار کند کلینیک را انتخاب می‌کنند. پس هر تست از مسیر واقعی کوکی، مجوز و دیتابیس کلینیک رد می‌شود."
+          ],
+          "examples": [
+            "signin"
+          ]
+        },
+        {
+          "id": "fake",
+          "h": "بدل برنامه‌های دیگر",
+          "p": [
+            "worker پس‌زمینه خاموش است (`PollSeconds` صفر)، پس خود تست تصمیم می‌گیرد outbox کی فرستاده شود. HTTP client مخصوص FHIR هم یک `FakeFhirServer` می‌گیرد که هر درخواست را ثبت می‌کند و همان جوابی را می‌دهد که تست گفته. لازم نیست LabFlow و ClinicReport و PharmaFlow اجرا باشند."
+          ],
+          "examples": [
+            "fake"
+          ]
+        }
+      ],
+      "examples": {
+        "prefix": {
+          "title": {
+            "en": "A server and a fresh prefix per class",
+            "fa": "یک سرور و یک پیشوند تازه برای هر کلاس"
+          },
+          "lang": "csharp",
+          "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+          "from": "private readonly string _server",
+          "lines": 3
+        },
+        "settings": {
+          "title": {
+            "en": "The API configured for the test",
+            "fa": "تنظیم API برای تست"
+          },
+          "lang": "csharp",
+          "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+          "from": "builder.UseEnvironment(\"Testing\");",
+          "lines": 5
+        },
+        "drop": {
+          "title": {
+            "en": "Every database of the prefix dropped",
+            "fa": "حذف همه‌ی دیتابیس‌های پیشوند"
+          },
+          "lang": "csharp",
+          "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+          "from": "async Task IAsyncLifetime.DisposeAsync()",
+          "to": "await drop.ExecuteNonQueryAsync();"
+        },
+        "signin": {
+          "title": {
+            "en": "A signed-in client",
+            "fa": "یک client واردشده"
+          },
+          "lang": "csharp",
+          "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+          "from": "public async Task<HttpClient> SignInAsync",
+          "to": "return c;"
+        },
+        "fake": {
+          "title": {
+            "en": "No worker, a fake FHIR server",
+            "fa": "بدون worker، با سرور FHIR بدلی"
+          },
+          "lang": "csharp",
+          "file": "tests/ClinicHub.Tests/FrontDeskTests.cs",
+          "from": "Integrations:PollSeconds",
+          "to": "ConfigurePrimaryHttpMessageHandler"
+        }
+      }
+    },
+    {
+      "id": "startup",
+      "group": "platform",
+      "title": {
+        "en": "Program.cs: start-up and the pipeline",
+        "fa": "Program.cs: شروع و pipeline"
+      },
+      "files": [
+        "src/ClinicHub.Api/Program.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints of its own",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Program"
+            ]
+          }
+        },
+        {
+          "id": "secrets",
+          "h": "Secrets as files",
+          "p": [
+            "Besides appsettings and environment variables, every file in `/run/secrets` is a setting named after the file (`ConnectionStrings__Finance`), which is how Docker mounts secrets. Outside a container the folder does not exist and is skipped."
+          ],
+          "examples": [
+            "secrets"
+          ]
+        },
+        {
+          "id": "upgrade",
+          "h": "Every clinic upgraded before the first request",
+          "p": [
+            "Before serving, the start-up migrates the catalog and then every active clinic's database, registers the sign-in clients, runs a one-off admin command if one was given (and exits), and seeds the demo. A new version therefore never meets a clinic database with an old schema."
+          ],
+          "examples": [
+            "upgrade"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "Middleware in a deliberate order",
+          "p": [
+            "Static files come first, then rate limiting, CORS for the sign-in endpoints, authentication, authorization and last the CSRF header check, so an unsafe `/api` call is refused before any endpoint runs."
+          ],
+          "examples": [
+            "pipeline"
+          ]
+        },
+        {
+          "id": "noclinic",
+          "h": "\"Choose a clinic first\" as a 409",
+          "p": [
+            "Clinic data asked for before a clinic was chosen throws `NoClinicException` from deep inside dependency injection. This small middleware, placed inside the exception handler, turns it into `409` with `chooseClinic: true`, and the page shows the clinic picker instead of an error."
+          ],
+          "examples": [
+            "noclinic"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointهای خودش",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Program"
+            ]
+          }
+        },
+        {
+          "id": "secrets",
+          "h": "secretها به شکل فایل",
+          "p": [
+            "علاوه بر appsettings و متغیرهای محیطی، هر فایل در `/run/secrets` یک تنظیم است که اسمش اسم فایل است (`ConnectionStrings__Finance`)؛ Docker هم secretها را همین‌طور mount می‌کند. بیرون از container این پوشه وجود ندارد و نادیده گرفته می‌شود."
+          ],
+          "examples": [
+            "secrets"
+          ]
+        },
+        {
+          "id": "upgrade",
+          "h": "همه‌ی کلینیک‌ها قبل از اولین درخواست به‌روز می‌شوند",
+          "p": [
+            "برنامه قبل از جواب دادن، اول catalog و بعد دیتابیس هر کلینیک فعال را migrate می‌کند، clientهای ورود را ثبت می‌کند، اگر یک فرمان مدیریتی داده شده باشد اجرایش می‌کند (و خارج می‌شود) و دمو را seed می‌کند. پس نسخه‌ی تازه هیچ‌وقت به دیتابیس کلینیکی با schema قدیمی نمی‌خورد."
+          ],
+          "examples": [
+            "upgrade"
+          ]
+        },
+        {
+          "id": "order",
+          "h": "middlewareها با ترتیب حساب‌شده",
+          "p": [
+            "اول فایل‌های static، بعد محدودیت نرخ درخواست، CORS برای endpointهای ورود، authentication، authorization و در آخر چک هدر CSRF؛ پس درخواست ناامن به `/api` قبل از اجرای هر endpointی رد می‌شود."
+          ],
+          "examples": [
+            "pipeline"
+          ]
+        },
+        {
+          "id": "noclinic",
+          "h": "«اول کلینیک را انتخاب کن» به شکل 409",
+          "p": [
+            "اگر قبل از انتخاب کلینیک داده‌ی کلینیک خواسته شود، `NoClinicException` از عمق dependency injection پرتاب می‌شود. این middleware کوچک، که داخل exception handler قرار دارد، آن را به `409` با `chooseClinic: true` تبدیل می‌کند و صفحه به‌جای خطا انتخاب کلینیک را نشان می‌دهد."
+          ],
+          "examples": [
+            "noclinic"
+          ]
+        }
+      ],
+      "examples": {
+        "secrets": {
+          "title": {
+            "en": "One file, one setting",
+            "fa": "هر فایل یک تنظیم"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "// Secrets as files",
+          "lines": 2
+        },
+        "upgrade": {
+          "title": {
+            "en": "Before the first request",
+            "fa": "قبل از اولین درخواست"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "using (var scope = app.Services.CreateScope())",
+          "to": "services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);"
+        },
+        "pipeline": {
+          "title": {
+            "en": "The pipeline",
+            "fa": "pipeline"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "app.UseDefaultFiles();",
+          "to": "app.UseCsrfHeaderCheck();"
+        },
+        "noclinic": {
+          "title": {
+            "en": "No clinic yet: 409 and the picker",
+            "fa": "هنوز کلینیکی نیست: 409 و انتخاب کلینیک"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "// Clinic data asked for before a clinic was chosen",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "clinic-db",
+      "group": "platform",
+      "title": {
+        "en": "Which database serves the request",
+        "fa": "کدام دیتابیس به درخواست جواب می‌دهد"
+      },
+      "files": [
+        "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+        "docs/architecture.md"
+      ],
+      "en": [
+        {
+          "id": "why",
+          "h": "One database per clinic",
+          "p": [
+            "A clinic is a separate custodian of health information under PHIPA, so each one keeps its patients in its own database (`ClinicHub_harbourview`, `ClinicHub_lakeshore`). What is shared is only the catalog: clinics, accounts and roles. One person has one sign-in and chooses the clinic after it."
+          ]
+        },
+        {
+          "id": "scoped",
+          "h": "From the clinic claim to a DbContext",
+          "p": [
+            "`ClinicHubDbContext` is registered with a factory: it reads the `clinic` claim of the signed-in person and opens that clinic's database. Endpoints just ask for `ClinicHubDbContext`; none of them chooses a database, so none can read another clinic's rows by mistake."
+          ],
+          "examples": [
+            "scoped"
+          ]
+        },
+        {
+          "id": "cache",
+          "h": "Connection strings cached, and encrypted when they are special",
+          "p": [
+            "The catalog is asked once per clinic and the connection string kept in a `ConcurrentDictionary`. Most clinics share `ConnectionStrings:ClinicServer` with their own database name; a clinic on its own server stores its connection string encrypted with ASP.NET Data Protection."
+          ],
+          "examples": [
+            "open",
+            "connection"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "هر کلینیک یک دیتابیس",
+          "p": [
+            "طبق PHIPA هر کلینیک امانت‌دار جداگانه‌ی اطلاعات سلامت است، پس بیمارانش را در دیتابیس خودش نگه می‌دارد (`ClinicHub_harbourview`، `ClinicHub_lakeshore`). فقط catalog مشترک است: کلینیک‌ها، حساب‌ها و نقش‌ها. هر آدم یک ورود دارد و بعد از آن کلینیک را انتخاب می‌کند."
+          ]
+        },
+        {
+          "id": "scoped",
+          "h": "از claim کلینیک تا DbContext",
+          "p": [
+            "`ClinicHubDbContext` با یک factory ثبت شده: claim `clinic` آدم واردشده را می‌خواند و دیتابیس همان کلینیک را باز می‌کند. endpointها فقط `ClinicHubDbContext` می‌خواهند و هیچ‌کدام دیتابیس انتخاب نمی‌کند، پس هیچ‌کدام نمی‌تواند اشتباهی ردیف‌های کلینیک دیگری را بخواند."
+          ],
+          "examples": [
+            "scoped"
+          ]
+        },
+        {
+          "id": "cache",
+          "h": "connection stringها cache می‌شوند و اگر خاص باشند رمز می‌شوند",
+          "p": [
+            "برای هر کلینیک فقط یک بار از catalog پرسیده می‌شود و connection string در یک `ConcurrentDictionary` می‌ماند. بیشتر کلینیک‌ها `ConnectionStrings:ClinicServer` را با اسم دیتابیس خودشان شریک‌اند؛ کلینیکی که سرور جدا دارد connection stringش را با Data Protection در ASP.NET رمزشده نگه می‌دارد."
+          ],
+          "examples": [
+            "open",
+            "connection"
+          ]
+        }
+      ],
+      "examples": {
+        "scoped": {
+          "title": {
+            "en": "The request's clinic database",
+            "fa": "دیتابیس کلینیکِ درخواست"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+          "from": "services.AddScoped(sp =>",
+          "to": "});"
+        },
+        "open": {
+          "title": {
+            "en": "Asked once, then cached",
+            "fa": "یک بار پرسیده، بعد cache"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+          "from": "public async Task<ClinicHubDbContext> OpenAsync(int clinicId)",
+          "to": "return Create(cs);"
+        },
+        "connection": {
+          "title": {
+            "en": "Shared server or an encrypted string of its own",
+            "fa": "سرور مشترک یا رشته‌ی رمزشده‌ی خودش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+          "from": "public string ConnectionStringFor(Clinic clinic)",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "provisioning",
+      "group": "platform",
+      "title": {
+        "en": "Opening a clinic",
+        "fa": "باز کردن یک کلینیک"
+      },
+      "files": [
+        "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+        "src/ClinicHub.Api/Endpoints/UserEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints (platform administrators)",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Platform"
+            ]
+          }
+        },
+        {
+          "id": "create",
+          "h": "Everything a new clinic needs, in one call",
+          "p": [
+            "A platform administrator opens a clinic from the Clinics page: a catalog row, the built-in roles, its own database created and migrated, a first location so the day board works at once, and the creator as its first Administrator so somebody can sign in and manage it."
+          ],
+          "examples": [
+            "create"
+          ]
+        },
+        {
+          "id": "roles",
+          "h": "New permissions without overwriting a clinic's choices",
+          "p": [
+            "Each clinic remembers which permissions existed when its roles were last updated (`KnownPermissions`). When a new version adds one, it is given once to the built-in roles that list it; a permission the clinic took away from a role on purpose is never given back."
+          ],
+          "examples": [
+            "roles"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها (مدیران پلتفرم)",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Platform"
+            ]
+          }
+        },
+        {
+          "id": "create",
+          "h": "هر چیزی که کلینیک تازه لازم دارد، با یک فراخوانی",
+          "p": [
+            "مدیر پلتفرم از صفحه‌ی Clinics یک کلینیک باز می‌کند: یک ردیف در catalog، نقش‌های پیش‌فرض، دیتابیس خودش که ساخته و migrate می‌شود، اولین مکان تا تابلوی روز از همان اول کار کند، و سازنده به‌عنوان اولین Administrator تا کسی بتواند وارد شود و مدیریتش کند."
+          ],
+          "examples": [
+            "create"
+          ]
+        },
+        {
+          "id": "roles",
+          "h": "مجوزهای تازه بدون پاک کردن انتخاب‌های کلینیک",
+          "p": [
+            "هر کلینیک یادش می‌ماند آخرین بار که نقش‌هایش به‌روز شد چه مجوزهایی وجود داشت (`KnownPermissions`). وقتی نسخه‌ی تازه مجوزی اضافه می‌کند، فقط یک بار به نقش‌های پیش‌فرضی داده می‌شود که آن را دارند؛ مجوزی که کلینیک عمداً از یک نقش گرفته هیچ‌وقت برنمی‌گردد."
+          ],
+          "examples": [
+            "roles"
+          ]
+        }
+      ],
+      "examples": {
+        "create": {
+          "title": {
+            "en": "A clinic, its roles, its database",
+            "fa": "کلینیک، نقش‌ها، دیتابیس"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+          "from": "public async Task<Clinic> CreateAsync",
+          "to": "return clinic;"
+        },
+        "roles": {
+          "title": {
+            "en": "Only what is new since last time",
+            "fa": "فقط چیزی که از دفعه‌ی قبل تازه است"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+          "from": "public async Task EnsureRolesAsync",
+          "to": "await catalog.SaveChangesAsync();"
+        }
+      }
+    },
+    {
+      "id": "sign-in",
+      "group": "security",
+      "title": {
+        "en": "Signing in",
+        "fa": "ورود"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Auth"
+            ]
+          }
+        },
+        {
+          "id": "lockout",
+          "h": "Five wrong passwords, fifteen minutes",
+          "p": [
+            "A locked account answers `423 Locked` with how long is left. Each failure counts; the fifth sets `LockoutEndUtc` and writes `LockedOut` to the security log. On top of that the `login` rate limit allows 10 attempts a minute per IP address, whatever the user name."
+          ],
+          "examples": [
+            "lockout",
+            "failed",
+            "rate"
+          ]
+        },
+        {
+          "id": "timing",
+          "h": "The same work for a user name that does not exist",
+          "p": [
+            "When nobody has that user name the password is still checked, against a dummy hash. Answering faster for an unknown name would tell an attacker which names are real."
+          ],
+          "examples": [
+            "dummy"
+          ]
+        },
+        {
+          "id": "clinic",
+          "h": "Straight into the only clinic",
+          "p": [
+            "Someone who works at one clinic is signed in to it directly; someone who works at several gets a cookie without a clinic and chooses one. Switching clinic later (`POST /api/auth/clinic`) is a new sign-in to that clinic, with that clinic's roles."
+          ],
+          "examples": [
+            "single"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Auth"
+            ]
+          }
+        },
+        {
+          "id": "lockout",
+          "h": "پنج رمز اشتباه، پانزده دقیقه",
+          "p": [
+            "حساب قفل‌شده `423 Locked` جواب می‌دهد و می‌گوید چقدر مانده. هر شکست شمرده می‌شود؛ پنجمی `LockoutEndUtc` را می‌گذارد و `LockedOut` را در لاگ امنیتی می‌نویسد. علاوه بر این، محدودیت نرخ `login` برای هر IP دقیقه‌ای ۱۰ تلاش اجازه می‌دهد، هر اسم کاربری که باشد."
+          ],
+          "examples": [
+            "lockout",
+            "failed",
+            "rate"
+          ]
+        },
+        {
+          "id": "timing",
+          "h": "همان کار برای اسم کاربری‌ای که وجود ندارد",
+          "p": [
+            "وقتی هیچ کسی آن اسم کاربری را ندارد، رمز باز هم بررسی می‌شود، با یک hash ساختگی. اگر جواب برای اسم ناشناخته سریع‌تر بیاید، مهاجم می‌فهمد کدام اسم‌ها واقعی‌اند."
+          ],
+          "examples": [
+            "dummy"
+          ]
+        },
+        {
+          "id": "clinic",
+          "h": "مستقیم به تنها کلینیک",
+          "p": [
+            "کسی که فقط در یک کلینیک کار می‌کند مستقیم وارد همان می‌شود؛ کسی که در چند کلینیک کار می‌کند کوکی بدون کلینیک می‌گیرد و یکی را انتخاب می‌کند. عوض کردن کلینیک بعداً (`POST /api/auth/clinic`) یک ورود تازه به آن کلینیک است، با نقش‌های همان کلینیک."
+          ],
+          "examples": [
+            "single"
+          ]
+        }
+      ],
+      "examples": {
+        "lockout": {
+          "title": {
+            "en": "A locked account",
+            "fa": "حساب قفل‌شده"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+          "from": "if (account?.LockoutEndUtc is { } until",
+          "lines": 6
+        },
+        "failed": {
+          "title": {
+            "en": "Counting failures",
+            "fa": "شمردن شکست‌ها"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+          "from": "async Task<IResult> Failed(Account? a",
+          "to": "await catalog.SaveChangesAsync();"
+        },
+        "rate": {
+          "title": {
+            "en": "The login rate limit",
+            "fa": "محدودیت نرخ ورود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Program.cs",
+          "from": "var loginsPerMinute",
+          "lines": 8
+        },
+        "dummy": {
+          "title": {
+            "en": "Hashing even without an account",
+            "fa": "hash حتی بدون حساب"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+          "from": "// Hash even when the account does not exist",
+          "lines": 4
+        },
+        "single": {
+          "title": {
+            "en": "One clinic: in at once",
+            "fa": "یک کلینیک: فوراً داخل"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+          "from": "/// <summary>Signs in, straight into the clinic",
+          "to": "return Results.Ok(ToMe(account, AuthSetup.CreatePrincipal(account, null)));"
+        }
+      }
+    },
+    {
+      "id": "session",
+      "group": "security",
+      "title": {
+        "en": "The session cookie and the CSRF header",
+        "fa": "کوکی نشست و هدر CSRF"
+      },
+      "files": [
+        "src/ClinicHub.Api/Auth/AuthSetup.cs",
+        "web/src/api.ts"
+      ],
+      "en": [
+        {
+          "id": "cookie",
+          "h": "A small cookie, read again on every request",
+          "p": [
+            "The cookie is HttpOnly and holds only the account id, its security stamp and the chosen clinic. Roles, permissions and the provider link are loaded again on every request (`OnValidatePrincipal`), so a role taken away applies at once, and a new stamp (password change, \"sign out everywhere\") ends every other session. An API answers `401` / `403` instead of redirecting to a login page."
+          ],
+          "examples": [
+            "cookie",
+            "validate"
+          ]
+        },
+        {
+          "id": "access",
+          "h": "What a person may do in one clinic",
+          "p": [
+            "`Access.For` reads the roles held in the chosen clinic. Administrator always has every permission. A pending step (a temporary password to change, two-factor to set up) leaves the person with no permissions at all until it is done."
+          ],
+          "examples": [
+            "access"
+          ]
+        },
+        {
+          "id": "fallback",
+          "h": "Signed in unless an endpoint says otherwise",
+          "p": [
+            "The fallback policy requires a signed-in user, so an endpoint that forgets `RequireAuthorization` is still closed. Every permission is also a policy of the same name, which is what the endpoint table shows."
+          ],
+          "examples": [
+            "fallback"
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "Lax cookie, plus a header",
+          "p": [
+            "The cookie is `SameSite=Lax`, not Strict: ClinicReport and LabFlow send people here to sign in, and that navigation must carry the session. So every unsafe `/api` request must also carry `X-ClinicHub`, a header another site's form cannot add. The page's `request` helper always sends it, and a `401` tells the app the session is over."
+          ],
+          "examples": [
+            "csrf",
+            "client"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "cookie",
+          "h": "کوکی کوچک که در هر درخواست دوباره خوانده می‌شود",
+          "p": [
+            "کوکی HttpOnly است و فقط شناسه‌ی حساب، security stamp آن و کلینیک انتخاب‌شده را نگه می‌دارد. نقش‌ها، مجوزها و پیوند به provider در هر درخواست دوباره خوانده می‌شوند (`OnValidatePrincipal`)، پس نقشی که گرفته شود همان لحظه اثر دارد و stamp تازه (عوض کردن رمز، «خروج از همه‌جا») بقیه‌ی نشست‌ها را تمام می‌کند. API به‌جای redirect به صفحه‌ی ورود، `401` یا `403` جواب می‌دهد."
+          ],
+          "examples": [
+            "cookie",
+            "validate"
+          ]
+        },
+        {
+          "id": "access",
+          "h": "هر آدم در یک کلینیک چه کاری می‌تواند بکند",
+          "p": [
+            "`Access.For` نقش‌هایی را می‌خواند که آدم در کلینیک انتخاب‌شده دارد. Administrator همیشه همه‌ی مجوزها را دارد. اگر قدمی معوق باشد (رمز موقتی که باید عوض شود، two-factor که باید راه بیفتد)، تا تمام نشده هیچ مجوزی ندارد."
+          ],
+          "examples": [
+            "access"
+          ]
+        },
+        {
+          "id": "fallback",
+          "h": "واردشده، مگر endpoint چیز دیگری بگوید",
+          "p": [
+            "fallback policy کاربر واردشده می‌خواهد، پس endpointی که `RequireAuthorization` را فراموش کند باز هم بسته است. هر مجوز یک policy هم‌نام هم هست، و جدول endpointها همین را نشان می‌دهد."
+          ],
+          "examples": [
+            "fallback"
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "کوکی Lax، به‌علاوه‌ی یک هدر",
+          "p": [
+            "کوکی `SameSite=Lax` است، نه Strict: ClinicReport و LabFlow آدم‌ها را برای ورود به این‌جا می‌فرستند و آن navigation باید نشست را همراه داشته باشد. برای همین هر درخواست ناامن به `/api` باید `X-ClinicHub` را هم داشته باشد، هدری که فرم یک سایت دیگر نمی‌تواند اضافه کند. تابع `request` صفحه همیشه آن را می‌فرستد و `401` به اپ می‌گوید نشست تمام شده."
+          ],
+          "examples": [
+            "csrf",
+            "client"
+          ]
+        }
+      ],
+      "examples": {
+        "cookie": {
+          "title": {
+            "en": "The cookie",
+            "fa": "کوکی"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "clinichub.auth",
+          "lines": 11
+        },
+        "validate": {
+          "title": {
+            "en": "Every request: the account as it is now",
+            "fa": "هر درخواست: حساب همان‌طور که الان هست"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "private static async Task LoadCurrentAccess",
+          "to": "ctx.ReplacePrincipal(CreatePrincipal(account, clinicId, providerId));"
+        },
+        "access": {
+          "title": {
+            "en": "Roles in this clinic, permissions from them",
+            "fa": "نقش‌ها در این کلینیک و مجوزها از آن‌ها"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "public static Access For(Account account, int? clinicId)",
+          "to": "return new Access("
+        },
+        "fallback": {
+          "title": {
+            "en": "Closed by default; one policy per permission",
+            "fa": "پیش‌فرض بسته؛ یک policy برای هر مجوز"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "var auth = services.AddAuthorizationBuilder()",
+          "lines": 5
+        },
+        "csrf": {
+          "title": {
+            "en": "No header, no unsafe call",
+            "fa": "بدون هدر، بدون درخواست ناامن"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "public static IApplicationBuilder UseCsrfHeaderCheck",
+          "to": "await next();"
+        },
+        "client": {
+          "title": {
+            "en": "The page's side",
+            "fa": "سمت صفحه"
+          },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "async function request<T>",
+          "to": "return data as T"
+        }
+      }
+    },
+    {
+      "id": "two-factor",
+      "group": "security",
+      "title": {
+        "en": "Two-factor sign-in (TOTP)",
+        "fa": "ورود دومرحله‌ای (TOTP)"
+      },
+      "files": [
+        "src/ClinicHub.Api/Auth/Totp.cs",
+        "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "rfc",
+          "h": "RFC 6238 in one small class",
+          "p": [
+            "The codes authenticator apps show are an HMAC-SHA1 of the 30-second step number, cut down to 6 digits. `Totp` implements it directly, with no package: a 20-byte random secret in base32, and the `otpauth://` URI the QR code holds."
+          ],
+          "examples": [
+            "code"
+          ]
+        },
+        {
+          "id": "verify",
+          "h": "Clock drift allowed, a code used once",
+          "p": [
+            "The current step and one either side are accepted, for a phone whose clock is a little off. The step that matched is stored (`TwoFactorLastStep`) and earlier ones are refused, so a code seen over someone's shoulder cannot be used again. Codes are compared in constant time."
+          ],
+          "examples": [
+            "verify"
+          ]
+        },
+        {
+          "id": "setup",
+          "h": "Encrypted secret, enforced by roles",
+          "p": [
+            "The secret is stored encrypted with Data Protection and is only turned on after the person proves it with a code. A role can require two-factor: then the person cannot turn it off, and until it is set up they hold no permissions anywhere, since one sign-in serves every clinic."
+          ],
+          "examples": [
+            "setup",
+            "pending"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "rfc",
+          "h": "RFC 6238 در یک کلاس کوچک",
+          "p": [
+            "کدهایی که اپ‌های authenticator نشان می‌دهند HMAC-SHA1 شماره‌ی قدم ۳۰ ثانیه‌ای است که به ۶ رقم کوتاه شده. `Totp` همین را مستقیم و بدون پکیج پیاده می‌کند: یک secret تصادفی ۲۰ بایتی به base32 و URI `otpauth://` که داخل QR code است."
+          ],
+          "examples": [
+            "code"
+          ]
+        },
+        {
+          "id": "verify",
+          "h": "خطای ساعت قبول، هر کد فقط یک بار",
+          "p": [
+            "قدم فعلی و یک قدم قبل و بعد قبول می‌شوند، برای گوشی‌ای که ساعتش کمی جلو یا عقب است. قدمی که جور شد ذخیره می‌شود (`TwoFactorLastStep`) و قدم‌های قبل از آن رد می‌شوند، پس کدی که کسی از پشت شانه دیده دوباره کار نمی‌کند. مقایسه‌ی کدها زمان ثابت دارد."
+          ],
+          "examples": [
+            "verify"
+          ]
+        },
+        {
+          "id": "setup",
+          "h": "secret رمزشده، اجباری از طریق نقش‌ها",
+          "p": [
+            "secret با Data Protection رمزشده ذخیره می‌شود و فقط وقتی روشن می‌شود که آدم با یک کد ثابتش کند. یک نقش می‌تواند two-factor را اجباری کند: آن‌وقت آدم نمی‌تواند خاموشش کند و تا راهش نیندازد هیچ‌جا هیچ مجوزی ندارد، چون یک ورود برای همه‌ی کلینیک‌هاست."
+          ],
+          "examples": [
+            "setup",
+            "pending"
+          ]
+        }
+      ],
+      "examples": {
+        "code": {
+          "title": {
+            "en": "A code from the secret and the step",
+            "fa": "کد از secret و قدم"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Totp.cs",
+          "from": "public static string Code(string secret, long step)",
+          "to": "return (binary % 1_000_000)"
+        },
+        "verify": {
+          "title": {
+            "en": "One step either side, never twice",
+            "fa": "یک قدم این طرف و آن طرف، هیچ‌وقت دو بار"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Totp.cs",
+          "from": "public static long? Verify",
+          "lines": 15
+        },
+        "setup": {
+          "title": {
+            "en": "Setup keeps the secret encrypted",
+            "fa": "راه‌اندازی secret را رمزشده نگه می‌دارد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+          "from": "two-factor/setup",
+          "to": "return Results.Ok(new TwoFactorSetup"
+        },
+        "pending": {
+          "title": {
+            "en": "A pending step before anything else",
+            "fa": "قدم معوق قبل از هر کاری"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+          "from": "var pending = account.MustChangePassword",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "permissions",
+      "group": "security",
+      "title": {
+        "en": "Permissions and roles",
+        "fa": "مجوزها و نقش‌ها"
+      },
+      "files": [
+        "src/ClinicHub.Api/Auth/Permissions.cs",
+        "src/ClinicHub.Api/Endpoints/UserEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints (people and roles)",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Users"
+            ]
+          }
+        },
+        {
+          "id": "keys",
+          "h": "Endpoints check permissions, never role names",
+          "p": [
+            "A permission is a string constant (`encounters.sign`); a role is just a named set of them, which each clinic can change. Code never asks \"is this a Physician?\", so a clinic can create a \"Locum\" role without a code change."
+          ],
+          "examples": [
+            "keys"
+          ]
+        },
+        {
+          "id": "apps",
+          "h": "Other applications' permissions live here too",
+          "p": [
+            "LabFlow, ClinicReport, PharmaFlow, FinancePowerApp, Analytics and IntegrationHub sign in through ClinicHub, so their permissions are part of the same roles, with the application's id as a prefix (`labflow:results.enter`). An application only ever receives its own keys, without the prefix."
+          ],
+          "examples": [
+            "appkeys",
+            "forapp"
+          ]
+        },
+        {
+          "id": "defaults",
+          "h": "The roles a clinic starts with",
+          "p": [
+            "Nine built-in roles cover the people of a walk-in clinic and its neighbours: Administrator, Front desk, Nurse, Physician, Billing clerk, Privacy officer, Report typist, Lab technologist and Pharmacist."
+          ],
+          "examples": [
+            "defaults"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها (آدم‌ها و نقش‌ها)",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Users"
+            ]
+          }
+        },
+        {
+          "id": "keys",
+          "h": "endpointها مجوز را چک می‌کنند، هیچ‌وقت اسم نقش را",
+          "p": [
+            "مجوز یک ثابت رشته‌ای است (`encounters.sign`)؛ نقش فقط مجموعه‌ای اسم‌دار از آن‌هاست که هر کلینیک می‌تواند عوضش کند. کد هیچ‌وقت نمی‌پرسد «این آدم Physician است؟»، پس کلینیک می‌تواند بدون تغییر کد نقشی مثل «Locum» بسازد."
+          ],
+          "examples": [
+            "keys"
+          ]
+        },
+        {
+          "id": "apps",
+          "h": "مجوزهای برنامه‌های دیگر هم همین‌جاست",
+          "p": [
+            "LabFlow، ClinicReport، PharmaFlow، FinancePowerApp، Analytics و IntegrationHub از طریق ClinicHub وارد می‌شوند، پس مجوزهایشان جزو همین نقش‌هاست، با شناسه‌ی برنامه به‌عنوان پیشوند (`labflow:results.enter`). هر برنامه فقط کلیدهای خودش را می‌گیرد، بدون پیشوند."
+          ],
+          "examples": [
+            "appkeys",
+            "forapp"
+          ]
+        },
+        {
+          "id": "defaults",
+          "h": "نقش‌هایی که هر کلینیک با آن‌ها شروع می‌کند",
+          "p": [
+            "نه نقش پیش‌فرض آدم‌های یک کلینیک walk-in و همسایه‌هایش را پوشش می‌دهند: Administrator، Front desk، Nurse، Physician، Billing clerk، Privacy officer، Report typist، Lab technologist و Pharmacist."
+          ],
+          "examples": [
+            "defaults"
+          ]
+        }
+      ],
+      "examples": {
+        "keys": {
+          "title": {
+            "en": "ClinicHub's own keys",
+            "fa": "کلیدهای خود ClinicHub"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+          "from": "public const string PatientsView",
+          "lines": 4
+        },
+        "appkeys": {
+          "title": {
+            "en": "Another application's keys",
+            "fa": "کلیدهای یک برنامه‌ی دیگر"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+          "from": "// LabFlow: the laboratory.",
+          "lines": 5
+        },
+        "forapp": {
+          "title": {
+            "en": "What an application receives",
+            "fa": "چیزی که هر برنامه می‌گیرد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+          "from": "public static string[] ForApp",
+          "lines": 2
+        },
+        "defaults": {
+          "title": {
+            "en": "A built-in role",
+            "fa": "یک نقش پیش‌فرض"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+          "from": "(FrontDesk, ",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "logs",
+      "group": "security",
+      "title": {
+        "en": "The security log and the PHIPA access log",
+        "fa": "لاگ امنیتی و لاگ دسترسی PHIPA"
+      },
+      "files": [
+        "src/ClinicHub.Api/Catalog/SecurityLog.cs",
+        "src/ClinicHub.Api/Data/Security.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Audit"
+            ]
+          }
+        },
+        {
+          "id": "two",
+          "h": "Two logs, in two places",
+          "p": [
+            "Sign-ins, lockouts, password and role changes belong to the account, so they go to the catalog's `SecurityEvent`. Who opened which patient's record belongs to the clinic, so it goes to that clinic's own `PatientAccessLog`, which answers a patient's PHIPA question \"who has looked at my record?\". Both are only ever added to."
+          ],
+          "examples": [
+            "security",
+            "access"
+          ]
+        },
+        {
+          "id": "write",
+          "h": "Written next to the work",
+          "p": [
+            "Endpoints that open or change a record add the access-log row in the same `SaveChanges` as the change itself, so there is no change without its log line. An emergency consent override is logged with the override's id."
+          ],
+          "examples": [
+            "write"
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "SecurityEvent",
+              "PatientAccessLog"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Audit"
+            ]
+          }
+        },
+        {
+          "id": "two",
+          "h": "دو لاگ، در دو جا",
+          "p": [
+            "ورودها، قفل شدن‌ها، تغییر رمز و نقش مال حساب‌اند، پس به `SecurityEvent` در catalog می‌روند. این‌که چه کسی پرونده‌ی کدام بیمار را باز کرده مال کلینیک است، پس به `PatientAccessLog` در دیتابیس خود همان کلینیک می‌رود و جواب سؤال PHIPA بیمار است: «چه کسی پرونده‌ی من را دیده؟». به هر دو فقط اضافه می‌شود."
+          ],
+          "examples": [
+            "security",
+            "access"
+          ]
+        },
+        {
+          "id": "write",
+          "h": "کنار خود کار نوشته می‌شود",
+          "p": [
+            "endpointهایی که پرونده‌ای را باز یا عوض می‌کنند، ردیف لاگ دسترسی را در همان `SaveChanges` خود تغییر اضافه می‌کنند؛ پس هیچ تغییری بدون خط لاگش نیست. override اضطراری consent با شناسه‌ی خود override ثبت می‌شود."
+          ],
+          "examples": [
+            "write"
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "SecurityEvent",
+              "PatientAccessLog"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "security": {
+          "title": {
+            "en": "The security log",
+            "fa": "لاگ امنیتی"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/SecurityLog.cs",
+          "from": "public class SecurityLog",
+          "to": "await catalog.SaveChangesAsync();"
+        },
+        "access": {
+          "title": {
+            "en": "One row per open, edit, print or export",
+            "fa": "یک ردیف برای هر باز کردن، ویرایش، چاپ یا خروجی"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Data/Security.cs",
+          "from": "/// <summary>Every open, edit, print or export",
+          "to": "[MaxLength(64)] public string? IpAddress"
+        },
+        "write": {
+          "title": {
+            "en": "Check-in logs itself",
+            "fa": "پذیرش خودش را ثبت می‌کند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "db.PatientAccessLog.Add(new PatientAccessLog",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "sso",
+      "group": "security",
+      "title": {
+        "en": "ClinicHub as an OpenID Connect provider",
+        "fa": "ClinicHub به‌عنوان OpenID Connect provider"
+      },
+      "files": [
+        "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+        "src/ClinicHub.Api/Sso/SsoSetup.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Sso"
+            ]
+          }
+        },
+        {
+          "id": "authorize",
+          "h": "Authorize: back at once, or through ClinicHub's pages",
+          "p": [
+            "An application sends the person to `/connect/authorize` (code flow with PKCE, OpenIddict underneath). Signed in with a clinic chosen, they go straight back with a code. Otherwise they go to ClinicHub's own sign-in page, finish any pending step, choose a clinic, and come back to the same request. No role in that clinic for that application means `access_denied`, and a line in the security log."
+          ],
+          "examples": [
+            "authorize"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "A refresh reads the person again",
+          "p": [
+            "Exchanging a code or a refresh token loads the account again: deactivated, a new security stamp, or the application's permissions removed, and the application's session ends at its next refresh. The tokens carry the clinic and only that application's permissions."
+          ],
+          "examples": [
+            "token"
+          ]
+        },
+        {
+          "id": "machine",
+          "h": "Applications on their own behalf",
+          "p": [
+            "LabFlow, ClinicReport and IntegrationHub also use client credentials, with a secret, to send results to ClinicHub (`results` scope) or financial documents to FinancePowerApp (`finance`). Those tokens name the application and nobody else."
+          ],
+          "examples": [
+            "clientcreds"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Sso"
+            ]
+          }
+        },
+        {
+          "id": "authorize",
+          "h": "Authorize: فوراً برمی‌گردد یا از صفحه‌های ClinicHub رد می‌شود",
+          "p": [
+            "برنامه آدم را به `/connect/authorize` می‌فرستد (code flow با PKCE، با OpenIddict زیر کار). اگر وارد شده و کلینیک انتخاب کرده باشد، فوراً با یک code برمی‌گردد. وگرنه به صفحه‌ی ورود خود ClinicHub می‌رود، قدم معوق را تمام می‌کند، کلینیک را انتخاب می‌کند و به همان درخواست برمی‌گردد. اگر در آن کلینیک هیچ نقشی برای آن برنامه نداشته باشد، جواب `access_denied` است و یک خط در لاگ امنیتی."
+          ],
+          "examples": [
+            "authorize"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "هر refresh آدم را دوباره می‌خواند",
+          "p": [
+            "عوض کردن code یا refresh token حساب را دوباره می‌خواند: اگر غیرفعال شده باشد، security stamp تازه داشته باشد یا مجوزهای آن برنامه گرفته شده باشد، نشست برنامه در refresh بعدی تمام می‌شود. tokenها کلینیک و فقط مجوزهای همان برنامه را دارند."
+          ],
+          "examples": [
+            "token"
+          ]
+        },
+        {
+          "id": "machine",
+          "h": "برنامه‌ها از طرف خودشان",
+          "p": [
+            "LabFlow و ClinicReport و IntegrationHub برای فرستادن جواب‌ها به ClinicHub (scope `results`) یا سندهای مالی به FinancePowerApp (`finance`) از client credentials با secret هم استفاده می‌کنند. آن tokenها فقط اسم برنامه را دارند و هیچ آدمی را نه."
+          ],
+          "examples": [
+            "clientcreds"
+          ]
+        }
+      ],
+      "examples": {
+        "authorize": {
+          "title": {
+            "en": "Signed in, a clinic, a permission",
+            "fa": "واردشده، یک کلینیک، یک مجوز"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+          "from": "var cookie = await http.AuthenticateAsync(CookieAuthenticationDefaults",
+          "to": "return Refuse(Errors.AccessDenied"
+        },
+        "token": {
+          "title": {
+            "en": "The account read again at the token endpoint",
+            "fa": "خواندن دوباره‌ی حساب در token endpoint"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+          "from": "var account = await catalog.Accounts.AsNoTracking().WithRoles().SingleOrDefaultAsync(a => a.Id == accountId",
+          "to": "Access to this application at this clinic"
+        },
+        "clientcreds": {
+          "title": {
+            "en": "Client credentials: results and finance only",
+            "fa": "client credentials: فقط results و finance"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
+          "from": "if (request.IsClientCredentialsGrantType())",
+          "to": "return Results.SignIn(new ClaimsPrincipal(app)"
+        }
+      }
+    },
+    {
+      "id": "frontdesk",
+      "group": "clinic",
+      "title": {
+        "en": "Front desk: the day board and check-in",
+        "fa": "پذیرش: تابلوی روز و پذیرش بیمار"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Front desk"
+            ]
+          }
+        },
+        {
+          "id": "states",
+          "h": "An appointment moves only forward",
+          "p": [
+            "Booked → Arrived → Roomed → WithProvider → Completed, with NoShow and Cancelled as the ways out. The allowed moves are one dictionary; anything else is `409`. Check-in (Booked → Arrived) has its own endpoint because it validates the health card. Every move is also a row in `AppointmentStatusChange`, which is where the waiting times on the board come from."
+          ],
+          "examples": [
+            "transitions"
+          ]
+        },
+        {
+          "id": "checkin",
+          "h": "Check-in opens the visit",
+          "p": [
+            "Checking in validates the health card (simulated HCV, see the next page), records the result, opens the `Encounter` with the payment program that result decided (OHIP, reciprocal, uninsured), moves the appointment and writes the access log, all in one save."
+          ],
+          "examples": [
+            "checkin"
+          ]
+        },
+        {
+          "id": "rooms",
+          "h": "A room holds one patient; two clerks cannot both win",
+          "p": [
+            "Rooming checks the room is free. If two people move the same appointment at once, the `rowversion` column makes the second save fail with `DbUpdateConcurrencyException`, which becomes \"someone else just changed this appointment\"."
+          ],
+          "examples": [
+            "room",
+            "concurrency"
+          ]
+        },
+        {
+          "id": "walkin",
+          "h": "Walk-ins go to the shortest queue",
+          "p": [
+            "A walk-in gets the next queue number of the day and the provider taking walk-ins today with the fewest people still waiting, unless the clerk picked one."
+          ],
+          "examples": [
+            "walkin"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Front desk"
+            ]
+          }
+        },
+        {
+          "id": "states",
+          "h": "نوبت فقط رو به جلو می‌رود",
+          "p": [
+            "Booked → Arrived → Roomed → WithProvider → Completed، و NoShow و Cancelled راه‌های خروج‌اند. حرکت‌های مجاز یک dictionary است؛ هر حرکت دیگری `409` است. پذیرش (Booked → Arrived) endpoint جدا دارد چون کارت سلامت را بررسی می‌کند. هر حرکت یک ردیف در `AppointmentStatusChange` هم هست و زمان‌های انتظار روی تابلو از همین می‌آید."
+          ],
+          "examples": [
+            "transitions"
+          ]
+        },
+        {
+          "id": "checkin",
+          "h": "پذیرش ویزیت را باز می‌کند",
+          "p": [
+            "پذیرش کارت سلامت را بررسی می‌کند (HCV شبیه‌سازی‌شده، صفحه‌ی بعد)، نتیجه را ثبت می‌کند، `Encounter` را با برنامه‌ی پرداختی که همان نتیجه تعیین کرده باز می‌کند (OHIP، reciprocal، بدون بیمه)، نوبت را جلو می‌برد و لاگ دسترسی را می‌نویسد؛ همه در یک save."
+          ],
+          "examples": [
+            "checkin"
+          ]
+        },
+        {
+          "id": "rooms",
+          "h": "هر اتاق یک بیمار؛ دو منشی نمی‌توانند هر دو برنده شوند",
+          "p": [
+            "قبل از فرستادن بیمار به اتاق، خالی بودن اتاق بررسی می‌شود. اگر دو نفر هم‌زمان یک نوبت را جابه‌جا کنند، ستون `rowversion` باعث می‌شود save دوم با `DbUpdateConcurrencyException` شکست بخورد و پیام «کس دیگری همین الان این نوبت را عوض کرد» نشان داده شود."
+          ],
+          "examples": [
+            "room",
+            "concurrency"
+          ]
+        },
+        {
+          "id": "walkin",
+          "h": "بیمار walk-in به کوتاه‌ترین صف می‌رود",
+          "p": [
+            "بیمار walk-in شماره‌ی بعدی صف روز را می‌گیرد و به پزشکی می‌رسد که امروز walk-in قبول می‌کند و کمترین آدم منتظر را دارد، مگر این‌که منشی خودش کسی را انتخاب کرده باشد."
+          ],
+          "examples": [
+            "walkin"
+          ]
+        }
+      ],
+      "examples": {
+        "transitions": {
+          "title": {
+            "en": "The allowed moves",
+            "fa": "حرکت‌های مجاز"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "private static readonly Dictionary<string, string[]> Transitions",
+          "lines": 10
+        },
+        "checkin": {
+          "title": {
+            "en": "Check-in",
+            "fa": "پذیرش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "MapPost(\"/appointments/{id:int}/check-in\"",
+          "to": "return Results.Ok(new { eligibility"
+        },
+        "room": {
+          "title": {
+            "en": "Is the room free?",
+            "fa": "اتاق خالی است؟"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "if (req.Status == AppointmentStatus.Roomed)",
+          "lines": 10
+        },
+        "concurrency": {
+          "title": {
+            "en": "The second save loses",
+            "fa": "save دوم می‌بازد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "catch (DbUpdateConcurrencyException)",
+          "lines": 4
+        },
+        "walkin": {
+          "title": {
+            "en": "The provider with the fewest waiting",
+            "fa": "پزشکی که کمترین منتظر را دارد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+          "from": "var providerId = req.ProviderId is { } chosen",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "health-card",
+      "group": "clinic",
+      "title": {
+        "en": "The Ontario health card and HCV",
+        "fa": "کارت سلامت انتاریو و HCV"
+      },
+      "files": [
+        "src/ClinicHub.Api/Domain/HealthCard.cs",
+        "src/ClinicHub.Api/Domain/HcvSimulator.cs"
+      ],
+      "en": [
+        {
+          "id": "luhn",
+          "h": "Ten digits, the last one a Luhn check digit",
+          "p": [
+            "An Ontario health number is 10 digits and its last digit is a Luhn (mod 10) check, so most typos are caught at the desk. The version code is empty (old red-and-white cards) or one or two letters."
+          ],
+          "examples": [
+            "luhn"
+          ]
+        },
+        {
+          "id": "hcv",
+          "h": "Health Card Validation, simulated",
+          "p": [
+            "The Ministry's HCV service needs onboarding, so `HcvSimulator` applies the checks a front desk relies on: check digit, version code against the card on file, expiry, and who pays when there is no Ontario card (reciprocal billing for another province, except Quebec). Its response codes are its own, not the Ministry's."
+          ],
+          "examples": [
+            "hcv"
+          ]
+        },
+        {
+          "id": "db",
+          "h": "The database checks it too",
+          "p": [
+            "The same rule is a CHECK constraint on `people.Patient`, so a bad import or a manual UPDATE cannot store a 9-digit card either."
+          ],
+          "examples": [
+            "check"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "luhn",
+          "h": "ده رقم، رقم آخر check digit به روش Luhn",
+          "p": [
+            "شماره‌ی سلامت انتاریو ۱۰ رقم است و رقم آخرش check digit به روش Luhn (mod 10) است، پس بیشتر اشتباه‌های تایپی همان پشت میز پذیرش گرفته می‌شوند. version code یا خالی است (کارت‌های قدیمی قرمز و سفید) یا یک یا دو حرف."
+          ],
+          "examples": [
+            "luhn"
+          ]
+        },
+        {
+          "id": "hcv",
+          "h": "Health Card Validation، شبیه‌سازی‌شده",
+          "p": [
+            "سرویس HCV وزارت بهداشت نیاز به onboarding دارد، پس `HcvSimulator` همان چک‌هایی را انجام می‌دهد که پذیرش به آن‌ها تکیه می‌کند: check digit، تطابق version code با کارت ثبت‌شده، تاریخ انقضا، و این‌که وقتی کارت انتاریو نیست چه کسی پول می‌دهد (reciprocal billing برای استان‌های دیگر، به‌جز کبک). کدهای جوابش مال خودش است، نه مال وزارتخانه."
+          ],
+          "examples": [
+            "hcv"
+          ]
+        },
+        {
+          "id": "db",
+          "h": "دیتابیس هم چکش می‌کند",
+          "p": [
+            "همین قاعده یک قید CHECK روی `people.Patient` است، پس import خراب یا UPDATE دستی هم نمی‌تواند کارت ۹ رقمی ذخیره کند."
+          ],
+          "examples": [
+            "check"
+          ]
+        }
+      ],
+      "examples": {
+        "luhn": {
+          "title": {
+            "en": "Luhn, from the right",
+            "fa": "Luhn، از سمت راست"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/HealthCard.cs",
+          "from": "public static bool IsValidNumber",
+          "to": "return sum % 10 == 0;"
+        },
+        "hcv": {
+          "title": {
+            "en": "What the desk is told",
+            "fa": "چیزی که به پذیرش گفته می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/HcvSimulator.cs",
+          "from": "public static HcvResult Check",
+          "to": "return new(\"OK\""
+        },
+        "check": {
+          "title": {
+            "en": "The CHECK constraint, as EF Core configures it",
+            "fa": "قید CHECK، همان‌طور که EF Core تنظیمش می‌کند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+          "from": "t.HasCheckConstraint(\"CK_Patient_HealthCard\"",
+          "lines": 1
+        }
+      }
+    },
+    {
+      "id": "patients",
+      "group": "clinic",
+      "title": {
+        "en": "Patients: one person, one record",
+        "fa": "بیماران: یک آدم، یک پرونده"
+      },
+      "files": [
+        "src/ClinicHub.Api/Domain/PatientMatching.cs",
+        "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Patients"
+            ]
+          }
+        },
+        {
+          "id": "score",
+          "h": "How alike two records are",
+          "p": [
+            "The master patient index scores a pair out of 100 from the mistakes a front desk really makes: a card left out, one letter wrong in a name, a nickname, day and month swapped. The same health card is 100; two different cards count strongly against, since that is almost always two people."
+          ],
+          "examples": [
+            "score"
+          ]
+        },
+        {
+          "id": "thresholds",
+          "h": "Two thresholds",
+          "p": [
+            "From 80 the new registration is stopped (`409` with the possible duplicates) until the clerk opens the existing record or confirms this is someone else. From 60 the pair waits in a review queue for the privacy officer, even after the clerk said it is someone else, in case they were wrong."
+          ],
+          "examples": [
+            "thresholds",
+            "register"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "Merging moves everything to the survivor",
+          "p": [
+            "In one transaction every appointment, visit, order, claim, invoice and consent directive moves to the surviving record; the merged one stays, pointing at it. It leaves the live set first, because a filtered unique index allows one live record per health card. The applications that already have orders or prescriptions for it are told."
+          ],
+          "examples": [
+            "moves",
+            "live"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Patients"
+            ]
+          }
+        },
+        {
+          "id": "score",
+          "h": "دو پرونده چقدر شبیه‌اند",
+          "p": [
+            "master patient index به هر جفت از ۱۰۰ امتیاز می‌دهد، بر اساس اشتباه‌هایی که پذیرش واقعاً می‌کند: کارت جا افتاده، یک حرف اشتباه در اسم، اسم خودمانی، جابه‌جایی روز و ماه. کارت سلامت یکسان یعنی ۱۰۰؛ دو کارت متفاوت امتیاز را خیلی پایین می‌آورد، چون تقریباً همیشه یعنی دو آدم."
+          ],
+          "examples": [
+            "score"
+          ]
+        },
+        {
+          "id": "thresholds",
+          "h": "دو آستانه",
+          "p": [
+            "از ۸۰ به بالا ثبت تازه متوقف می‌شود (`409` با پرونده‌های احتمالاً تکراری) تا منشی پرونده‌ی موجود را باز کند یا تأیید کند که این آدم دیگری است. از ۶۰ به بالا جفت در صف بررسی مسئول حریم خصوصی می‌ماند، حتی بعد از این‌که منشی گفت آدم دیگری است، اگر اشتباه کرده باشد."
+          ],
+          "examples": [
+            "thresholds",
+            "register"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "ادغام همه‌چیز را به پرونده‌ی باقی‌مانده منتقل می‌کند",
+          "p": [
+            "در یک تراکنش هر نوبت، ویزیت، درخواست، claim، فاکتور و consent directive به پرونده‌ی باقی‌مانده منتقل می‌شود؛ پرونده‌ی ادغام‌شده می‌ماند و به آن اشاره می‌کند. اول از مجموعه‌ی زنده بیرون می‌رود، چون یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک پرونده‌ی زنده اجازه می‌دهد. برنامه‌هایی که برای آن پرونده درخواست یا نسخه دارند خبردار می‌شوند."
+          ],
+          "examples": [
+            "moves",
+            "live"
+          ]
+        }
+      ],
+      "examples": {
+        "score": {
+          "title": {
+            "en": "The score",
+            "fa": "امتیاز"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/PatientMatching.cs",
+          "from": "public static Match Score(Patient a, Patient b)",
+          "to": "return new(Math.Clamp(score, 0, 100)"
+        },
+        "thresholds": {
+          "title": {
+            "en": "Queue and stop",
+            "fa": "صف و توقف"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/PatientMatching.cs",
+          "from": "/// <summary>At or above this, the pair waits",
+          "lines": 5
+        },
+        "register": {
+          "title": {
+            "en": "Registration stopped by a likely match",
+            "fa": "ثبتی که با یک تطابق محتمل متوقف می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "var matches = PatientMatching.FindMatches(patient",
+          "to": "});"
+        },
+        "moves": {
+          "title": {
+            "en": "Everything moves",
+            "fa": "همه‌چیز منتقل می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "await db.Appointments.Where(x => x.PatientId == from)",
+          "to": "await db.ConsentDirectives.Where(x => x.PatientId == from)"
+        },
+        "live": {
+          "title": {
+            "en": "Out of the live set before the card moves",
+            "fa": "قبل از انتقال کارت، بیرون از مجموعه‌ی زنده"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+          "from": "// The merged record leaves the live set first",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "consent",
+      "group": "clinic",
+      "title": {
+        "en": "PHIPA consent directives (the lockbox)",
+        "fa": "consent directiveهای PHIPA (lockbox)"
+      },
+      "files": [
+        "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+        "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Consent"
+            ]
+          }
+        },
+        {
+          "id": "scopes",
+          "h": "Three things a patient can withhold",
+          "p": [
+            "The entire record (each visit only for the provider who saw it, and the team while it is still open), one visit (only its provider), or everything from one provider. Who the patient is, their appointments and their bills are never withheld: the clinic needs them to book, check in and be paid."
+          ],
+          "examples": [
+            "applies"
+          ]
+        },
+        {
+          "id": "decide",
+          "h": "One decision, used everywhere",
+          "p": [
+            "`ConsentView.Decide` answers for one visit and one person: withheld, or visible (and if only thanks to an override, which one). Every endpoint with a visit id runs it through an endpoint filter, which answers `403` with `consentWithheld` so the page can show \"withheld at the patient's request\"."
+          ],
+          "examples": [
+            "decide",
+            "filter"
+          ]
+        },
+        {
+          "id": "override",
+          "h": "Emergency override: an hour, a reason, a record",
+          "p": [
+            "A clinician with `consent.override` can open the record in an emergency by giving a reason of 10 to 300 characters. It lasts one hour, is written to the access log with the override's id, and is listed for the privacy officer."
+          ],
+          "examples": [
+            "override"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Consent"
+            ]
+          }
+        },
+        {
+          "id": "scopes",
+          "h": "سه چیزی که بیمار می‌تواند پنهان کند",
+          "p": [
+            "کل پرونده (هر ویزیت فقط برای پزشکی که بیمار را دیده و برای تیم تا وقتی ویزیت باز است)، یک ویزیت (فقط برای پزشک خودش)، یا همه‌چیز از یک پزشک خاص. هویت بیمار، نوبت‌ها و صورت‌حساب‌هایش هیچ‌وقت پنهان نمی‌شوند: کلینیک برای نوبت دادن، پذیرش و گرفتن پول به آن‌ها نیاز دارد."
+          ],
+          "examples": [
+            "applies"
+          ]
+        },
+        {
+          "id": "decide",
+          "h": "یک تصمیم، که همه‌جا استفاده می‌شود",
+          "p": [
+            "`ConsentView.Decide` برای یک ویزیت و یک آدم جواب می‌دهد: پنهان، یا قابل دیدن (و اگر فقط به‌خاطر یک override، کدام). هر endpointی که شناسه‌ی ویزیت دارد آن را با یک endpoint filter اجرا می‌کند که `403` با `consentWithheld` جواب می‌دهد تا صفحه بنویسد «به درخواست بیمار پنهان شده»."
+          ],
+          "examples": [
+            "decide",
+            "filter"
+          ]
+        },
+        {
+          "id": "override",
+          "h": "override اضطراری: یک ساعت، یک دلیل، یک ثبت",
+          "p": [
+            "پزشکی که `consent.override` دارد می‌تواند در شرایط اضطراری با نوشتن دلیلی بین ۱۰ تا ۳۰۰ کاراکتر پرونده را باز کند. اثرش یک ساعت است، با شناسه‌ی override در لاگ دسترسی ثبت می‌شود و در فهرست مسئول حریم خصوصی می‌آید."
+          ],
+          "examples": [
+            "override"
+          ]
+        }
+      ],
+      "examples": {
+        "applies": {
+          "title": {
+            "en": "Which directive applies to a visit",
+            "fa": "کدام directive شامل یک ویزیت می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+          "from": "private bool Applies(ConsentDirective d",
+          "to": "};"
+        },
+        "decide": {
+          "title": {
+            "en": "Withheld, or visible through an override",
+            "fa": "پنهان، یا قابل دیدن با override"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+          "from": "public Decision Decide(int encounterId",
+          "to": "return new(false, used);"
+        },
+        "filter": {
+          "title": {
+            "en": "The filter on every visit route",
+            "fa": "filter روی همه‌ی routeهای ویزیت"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+          "from": "public static async ValueTask<object?> EncounterFilter",
+          "to": "http.Items[OverrideItem]"
+        },
+        "override": {
+          "title": {
+            "en": "One override per directive, logged",
+            "fa": "یک override برای هر directive، با ثبت"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+          "from": "var overrides = directives.Select(d => new ConsentOverride",
+          "to": "Emergency override of consent directive"
+        }
+      }
+    },
+    {
+      "id": "visits",
+      "group": "clinic",
+      "title": {
+        "en": "The visit: note, signing, addenda",
+        "fa": "ویزیت: یادداشت، امضا، addendum"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+        "src/ClinicHub.Api/Domain/EncounterSigning.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Encounters",
+              "Reference"
+            ]
+          }
+        },
+        {
+          "id": "note",
+          "h": "A SOAP note saved as you type",
+          "p": [
+            "The page sends the note after a short pause, and the endpoint answers only with the time it was saved. Two tabs can both try to create the note; the unique index on `EncounterId` lets one win, and the other catches the error and updates that one instead."
+          ],
+          "examples": [
+            "note"
+          ]
+        },
+        {
+          "id": "sign",
+          "h": "Only the treating provider signs",
+          "p": [
+            "Signing needs `encounters.sign` and also that the signer is the visit's provider: a colleague with the same role cannot sign for them. Missing pieces (a primary diagnosis, a service) come back as validation errors."
+          ],
+          "examples": [
+            "sign"
+          ]
+        },
+        {
+          "id": "billing",
+          "h": "Signing is where the bill starts",
+          "p": [
+            "Signing locks the note and turns the visit's insured services into an OHIP claim ready for the next batch, and the services the patient pays for into an invoice with its tax. The demo seeder calls the same `EncounterSigning.Sign`, so its history bills exactly like a real signature."
+          ],
+          "examples": [
+            "claim"
+          ]
+        },
+        {
+          "id": "addendum",
+          "h": "A signed note never changes",
+          "p": [
+            "After signing, a correction is an addendum appended with its author and the time in Toronto. The original text stays as it was signed."
+          ],
+          "examples": [
+            "addendum"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Encounters",
+              "Reference"
+            ]
+          }
+        },
+        {
+          "id": "note",
+          "h": "یادداشت SOAP که هم‌زمان با تایپ ذخیره می‌شود",
+          "p": [
+            "صفحه یادداشت را بعد از یک مکث کوتاه می‌فرستد و endpoint فقط زمان ذخیره را جواب می‌دهد. ممکن است دو تب هر دو بخواهند یادداشت را بسازند؛ ایندکس unique روی `EncounterId` یکی را برنده می‌کند و دیگری خطا را می‌گیرد و همان یادداشت را به‌روز می‌کند."
+          ],
+          "examples": [
+            "note"
+          ]
+        },
+        {
+          "id": "sign",
+          "h": "فقط پزشک معالج امضا می‌کند",
+          "p": [
+            "امضا `encounters.sign` می‌خواهد و این‌که امضاکننده همان پزشک ویزیت باشد: همکاری با همان نقش نمی‌تواند به جایش امضا کند. چیزهای جاافتاده (تشخیص اصلی، یک خدمت) به شکل خطای validation برمی‌گردند."
+          ],
+          "examples": [
+            "sign"
+          ]
+        },
+        {
+          "id": "billing",
+          "h": "صورت‌حساب از امضا شروع می‌شود",
+          "p": [
+            "امضا یادداشت را قفل می‌کند، خدمات بیمه‌شده‌ی ویزیت را به یک claim برای OHIP آماده‌ی batch بعدی تبدیل می‌کند، و خدماتی را که بیمار خودش می‌پردازد به فاکتوری با مالیاتش. seeder دمو هم همان `EncounterSigning.Sign` را صدا می‌زند، پس تاریخچه‌اش دقیقاً مثل امضای واقعی صورت‌حساب می‌شود."
+          ],
+          "examples": [
+            "claim"
+          ]
+        },
+        {
+          "id": "addendum",
+          "h": "یادداشت امضاشده هیچ‌وقت عوض نمی‌شود",
+          "p": [
+            "بعد از امضا، اصلاح یک addendum است که با نویسنده و زمان تورنتو به آخر اضافه می‌شود. متن اصلی همان‌طور که امضا شده می‌ماند."
+          ],
+          "examples": [
+            "addendum"
+          ]
+        }
+      ],
+      "examples": {
+        "note": {
+          "title": {
+            "en": "Saving the note, and the race on creating it",
+            "fa": "ذخیره‌ی یادداشت و رقابت سر ساختنش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+          "from": "// Saved as the clinician types",
+          "to": "return Results.Ok(new { updatedUtc = now });"
+        },
+        "sign": {
+          "title": {
+            "en": "The sign endpoint",
+            "fa": "endpoint امضا"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+          "from": "MapPost(\"/{id:int}/sign\"",
+          "to": "EncounterSigning.Sign(db, e, user.RequiredUserId(), now);"
+        },
+        "claim": {
+          "title": {
+            "en": "Insured services become a claim",
+            "fa": "خدمات بیمه‌شده claim می‌شوند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/EncounterSigning.cs",
+          "from": "// Salaried providers",
+          "to": "});"
+        },
+        "addendum": {
+          "title": {
+            "en": "Appended, never edited",
+            "fa": "اضافه می‌شود، هیچ‌وقت ویرایش نمی‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+          "from": "// A signed note never changes",
+          "to": "e.Note.Addendum = e.Note.Addendum is null"
+        }
+      }
+    },
+    {
+      "id": "claims",
+      "group": "billing",
+      "title": {
+        "en": "OHIP claims: the MC EDT file",
+        "fa": "claimهای OHIP: فایل MC EDT"
+      },
+      "files": [
+        "src/ClinicHub.Api/Domain/OhipFiles.cs",
+        "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+        "docs/ohip-billing.md"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Billing"
+            ]
+          }
+        },
+        {
+          "id": "fixed",
+          "h": "Fixed-width records of 79 characters",
+          "p": [
+            "Ontario's claim and remittance files are fixed-width records: a 3-character record id, then fields that are either left-justified text or right-justified, zero-filled numbers, with money in cents. One table of fields per record type drives both the writer and the reader, and a layout that does not add up to 79 throws."
+          ],
+          "examples": [
+            "write",
+            "numeric",
+            "layout"
+          ]
+        },
+        {
+          "id": "batch",
+          "h": "One file per billing number",
+          "p": [
+            "Creating a batch takes every Ready OHIP or reciprocal claim not yet in a file and writes one file per provider's billing number, named the way the Ministry names them. WSIB claims are billed to the WSIB, not here. The files have the real shape but have not been certified, so treat them as realistic samples."
+          ],
+          "examples": [
+            "filename",
+            "batch"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Billing"
+            ]
+          }
+        },
+        {
+          "id": "fixed",
+          "h": "رکوردهای fixed-width با ۷۹ کاراکتر",
+          "p": [
+            "فایل‌های claim و remittance انتاریو رکوردهای fixed-width هستند: شناسه‌ی رکورد سه‌کاراکتری، بعد فیلدهایی که یا متن چپ‌چین‌اند یا عدد راست‌چین با صفر پرشده، و پول به سنت. یک جدول فیلد برای هر نوع رکورد هم نویسنده و هم خواننده را می‌گرداند، و layoutی که جمعش ۷۹ نشود exception می‌دهد."
+          ],
+          "examples": [
+            "write",
+            "numeric",
+            "layout"
+          ]
+        },
+        {
+          "id": "batch",
+          "h": "یک فایل برای هر شماره‌ی billing",
+          "p": [
+            "ساختن batch همه‌ی claimهای Ready برای OHIP یا reciprocal را که هنوز در فایلی نیستند برمی‌دارد و برای شماره‌ی billing هر پزشک یک فایل می‌نویسد، با همان قاعده‌ی نام‌گذاری وزارتخانه. claimهای WSIB به خود WSIB می‌روند، نه این‌جا. شکل فایل‌ها واقعی است ولی تأییدیه ندارند؛ نمونه‌ی واقع‌گرایانه حسابشان کنید."
+          ],
+          "examples": [
+            "filename",
+            "batch"
+          ]
+        }
+      ],
+      "examples": {
+        "write": {
+          "title": {
+            "en": "A record from its layout",
+            "fa": "یک رکورد از روی layoutش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+          "from": "public static string Write(string recordId",
+          "to": "return sb.ToString();"
+        },
+        "numeric": {
+          "title": {
+            "en": "Numbers: zero-filled, money in cents",
+            "fa": "عددها: پرشده با صفر، پول به سنت"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+          "from": "/// <summary>Right-justified, zero-filled.",
+          "to": "return text.PadLeft(f.Length, '0');"
+        },
+        "layout": {
+          "title": {
+            "en": "The item record",
+            "fa": "رکورد آیتم"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+          "from": "public static readonly FixedWidth.Field[] Het =",
+          "lines": 4
+        },
+        "filename": {
+          "title": {
+            "en": "The file's name",
+            "fa": "اسم فایل"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+          "from": "/// <summary>H + month letter",
+          "lines": 2
+        },
+        "batch": {
+          "title": {
+            "en": "One batch per provider",
+            "fa": "یک batch برای هر پزشک"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+          "from": "foreach (var group in claims.GroupBy(c => c.Provider))",
+          "to": "created.Add(batch);"
+        }
+      }
+    },
+    {
+      "id": "remittance",
+      "group": "billing",
+      "title": {
+        "en": "The remittance advice and reconciliation",
+        "fa": "remittance advice و تطبیق"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+        "src/ClinicHub.Api/Domain/OhipSimulator.cs"
+      ],
+      "en": [
+        {
+          "id": "match",
+          "h": "Matched line by line",
+          "p": [
+            "Weeks after submission OHIP pays and sends a remittance advice. Each paid line is matched to the claim item it pays by accounting number, service code and date; the claim then becomes Paid, PartiallyPaid or Rejected from what was actually paid. A line that matches no claim is kept and shown as an exception."
+          ],
+          "examples": [
+            "match"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "A file is imported once",
+          "p": [
+            "The same remittance file imported twice would pay twice, so its name is checked first. Both simulated remittances and real files of that shape go through the same import."
+          ],
+          "examples": [
+            "once"
+          ]
+        },
+        {
+          "id": "providers",
+          "h": "What each physician is owed",
+          "p": [
+            "The remittance page shows each physician's share: what OHIP paid for their claims, the clinic's overhead percentage taken off, and the net. Rounding is explicit (`AwayFromZero`), not left to the default banker's rounding."
+          ],
+          "examples": [
+            "overhead"
+          ]
+        },
+        {
+          "id": "resubmit",
+          "h": "A refused claim goes back to Ready",
+          "p": [
+            "Once the cause is fixed (usually the health card), a rejected claim is resubmitted: it takes the card as it is now on file, leaves its old batch and clears what the remittance said, ready for the next file."
+          ],
+          "examples": [
+            "resubmit"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "match",
+          "h": "تطبیق خط به خط",
+          "p": [
+            "چند هفته بعد از فرستادن، OHIP پول می‌دهد و یک remittance advice می‌فرستد. هر خط پرداخت‌شده با شماره‌ی حسابداری، کد خدمت و تاریخ به آیتم claimی که پرداخت می‌کند وصل می‌شود؛ بعد claim بر اساس چیزی که واقعاً پرداخت شده Paid یا PartiallyPaid یا Rejected می‌شود. خطی که به هیچ claimی نخورد نگه داشته می‌شود و به‌عنوان استثنا نشان داده می‌شود."
+          ],
+          "examples": [
+            "match"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "هر فایل فقط یک بار import می‌شود",
+          "p": [
+            "اگر یک فایل remittance دو بار import شود، دو بار پرداخت حساب می‌شود؛ برای همین اول اسمش چک می‌شود. remittanceهای شبیه‌سازی‌شده و فایل‌های واقعی با همین شکل از یک import رد می‌شوند."
+          ],
+          "examples": [
+            "once"
+          ]
+        },
+        {
+          "id": "providers",
+          "h": "طلب هر پزشک",
+          "p": [
+            "صفحه‌ی remittance سهم هر پزشک را نشان می‌دهد: چیزی که OHIP برای claimهایش پرداخته، درصد سربار کلینیک که کم می‌شود، و خالص. گرد کردن صریح است (`AwayFromZero`)، نه گرد کردن بانکی پیش‌فرض."
+          ],
+          "examples": [
+            "overhead"
+          ]
+        },
+        {
+          "id": "resubmit",
+          "h": "claim ردشده به Ready برمی‌گردد",
+          "p": [
+            "وقتی علت درست شد (معمولاً کارت سلامت)، claim ردشده دوباره فرستاده می‌شود: کارت را همان‌طور که الان ثبت شده برمی‌دارد، از batch قبلی بیرون می‌آید و چیزهایی را که remittance گفته بود پاک می‌کند تا برای فایل بعدی آماده باشد."
+          ],
+          "examples": [
+            "resubmit"
+          ]
+        }
+      ],
+      "examples": {
+        "match": {
+          "title": {
+            "en": "Each paid line to its claim item",
+            "fa": "هر خط پرداخت به آیتم claim خودش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+          "from": "foreach (var entry in advice.Claims)",
+          "to": ": claim.Items.All(i => i.FeePaid >= i.FeeSubmitted)"
+        },
+        "once": {
+          "title": {
+            "en": "Already imported?",
+            "fa": "قبلاً import شده؟"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+          "from": "if (await db.Remittances.AnyAsync(r => r.FileName == fileName))",
+          "lines": 2
+        },
+        "overhead": {
+          "title": {
+            "en": "Paid, overhead, net",
+            "fa": "پرداخت‌شده، سربار، خالص"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+          "from": "var payments = items.Where(i => i.Claim != null)",
+          "to": "}).OrderBy(p => p.Provider).ToArray();"
+        },
+        "resubmit": {
+          "title": {
+            "en": "Back to Ready",
+            "fa": "برگشت به Ready"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
+          "from": "// A refused claim goes back to Ready",
+          "to": "foreach (var i in claim.Items)"
+        }
+      }
+    },
+    {
+      "id": "finance",
+      "group": "billing",
+      "title": {
+        "en": "Money to the group's accounting",
+        "fa": "پول به حسابداری گروه"
+      },
+      "files": [
+        "src/ClinicHub.Api/Integrations/FinanceFeed.cs"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "Financial documents, no health information",
+          "p": [
+            "FinancePowerApp keeps the books of every business of the group. ClinicHub sends it what the clinic's money did: claims raised, remittances, each physician's share, invoices and payments. No patient names, health cards, diagnoses or fee codes leave: a patient is just one party, and an invoice is known by its number."
+          ],
+          "examples": [
+            "what"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "Each document sent once",
+          "p": [
+            "Every document has an id that never changes (`claim:12:raised`), and the ids already accepted are kept in `FinanceExport`. Each outbox pass sends only the rest, so a pass that dies halfway just sends the remainder next time, and FinancePowerApp recognises a document sent again."
+          ],
+          "examples": [
+            "send"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "سندهای مالی، بدون اطلاعات سلامت",
+          "p": [
+            "FinancePowerApp دفترهای همه‌ی کسب‌وکارهای گروه را نگه می‌دارد. ClinicHub کارهایی را که با پول کلینیک شده برایش می‌فرستد: claimهای ثبت‌شده، remittanceها، سهم هر پزشک، فاکتورها و پرداخت‌ها. هیچ اسم بیمار، کارت سلامت، تشخیص یا کد خدمتی بیرون نمی‌رود: بیمار فقط یک طرف حساب است و فاکتور با شماره‌اش شناخته می‌شود."
+          ],
+          "examples": [
+            "what"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "هر سند یک بار فرستاده می‌شود",
+          "p": [
+            "هر سند شناسه‌ای دارد که هیچ‌وقت عوض نمی‌شود (`claim:12:raised`) و شناسه‌هایی که قبول شده‌اند در `FinanceExport` می‌مانند. هر دور outbox فقط بقیه را می‌فرستد؛ دوری که وسط کار بمیرد، دفعه‌ی بعد باقی‌مانده را می‌فرستد و FinancePowerApp سندی را که دوباره رسیده می‌شناسد."
+          ],
+          "examples": [
+            "send"
+          ]
+        }
+      ],
+      "examples": {
+        "what": {
+          "title": {
+            "en": "What goes, and what never does",
+            "fa": "چه می‌رود و چه هیچ‌وقت نمی‌رود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+          "from": "/// The clinic's money, sent to FinancePowerApp",
+          "to": "/// </list>"
+        },
+        "send": {
+          "title": {
+            "en": "Only what was not accepted yet",
+            "fa": "فقط چیزی که هنوز قبول نشده"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+          "from": "public async Task<int> SendAsync(ClinicHubDbContext db",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "orders",
+      "group": "integrations",
+      "title": {
+        "en": "Orders: FHIR Bundles through an outbox",
+        "fa": "درخواست‌ها: Bundleهای FHIR از طریق outbox"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+        "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+        "src/ClinicHub.Api/Integrations/FhirOrders.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Orders"
+            ]
+          }
+        },
+        {
+          "id": "outbox",
+          "h": "The order and its message, in one transaction",
+          "p": [
+            "Lab tests go to LabFlow and echo or ECG to ClinicReport, each as a FHIR R4 transaction Bundle. The order rows and the outbox message are saved in the same transaction, the message already holding the Bundle, so what was ordered is exactly what gets sent, and nothing is lost if LabFlow is down."
+          ],
+          "examples": [
+            "tx",
+            "place"
+          ]
+        },
+        {
+          "id": "retry",
+          "h": "Retried with growing pauses",
+          "p": [
+            "A background worker looks at every active clinic's outbox every few seconds. A failed send waits 10 s, 20 s, 40 s… up to 30 minutes; after 12 attempts the order is marked Failed and can be resent."
+          ],
+          "examples": [
+            "due",
+            "backoff"
+          ]
+        },
+        {
+          "id": "cancel",
+          "h": "A refused cancellation is an answer, not an error",
+          "p": [
+            "Cancelling an order that was already delivered asks the application. If it answers 400, 404, 409 or 422 (results already entered, report started) the order goes on with that answer as its note, instead of being retried."
+          ],
+          "examples": [
+            "refused"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "Tokens ClinicHub signs for itself",
+          "p": [
+            "Each request carries a 5-minute token ClinicHub signs with its sign-in server's key, for the receiving application as audience. The application checks it against ClinicHub's published keys like any other ClinicHub token, and the clinic named in it picks the clinic's database on that side."
+          ],
+          "examples": [
+            "token"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Orders"
+            ]
+          }
+        },
+        {
+          "id": "outbox",
+          "h": "درخواست و پیامش در یک تراکنش",
+          "p": [
+            "آزمایش‌ها به LabFlow می‌روند و echo یا ECG به ClinicReport، هر کدام به شکل یک transaction Bundle در FHIR R4. ردیف‌های درخواست و پیام outbox در یک تراکنش ذخیره می‌شوند و پیام از همان لحظه Bundle را دارد؛ پس دقیقاً همان چیزی فرستاده می‌شود که درخواست شده، و اگر LabFlow خاموش باشد چیزی گم نمی‌شود."
+          ],
+          "examples": [
+            "tx",
+            "place"
+          ]
+        },
+        {
+          "id": "retry",
+          "h": "تلاش دوباره با مکث‌های بلندتر",
+          "p": [
+            "یک worker پس‌زمینه هر چند ثانیه outbox همه‌ی کلینیک‌های فعال را نگاه می‌کند. ارسال ناموفق ۱۰ ثانیه، ۲۰ ثانیه، ۴۰ ثانیه… تا ۳۰ دقیقه صبر می‌کند؛ بعد از ۱۲ تلاش درخواست Failed می‌شود و می‌شود دوباره فرستادش."
+          ],
+          "examples": [
+            "due",
+            "backoff"
+          ]
+        },
+        {
+          "id": "cancel",
+          "h": "لغوی که رد شود جواب است، نه خطا",
+          "p": [
+            "لغو درخواستی که قبلاً رسیده، از برنامه پرسیده می‌شود. اگر 400، 404، 409 یا 422 جواب بدهد (جواب ثبت شده، گزارش شروع شده)، درخواست با همان جواب به‌عنوان یادداشت ادامه پیدا می‌کند، نه این‌که دوباره تلاش شود."
+          ],
+          "examples": [
+            "refused"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "tokenهایی که ClinicHub برای خودش امضا می‌کند",
+          "p": [
+            "هر درخواست یک token پنج‌دقیقه‌ای دارد که ClinicHub با کلید سرور ورودش امضا می‌کند و audience آن برنامه‌ی گیرنده است. برنامه آن را مثل هر token دیگر ClinicHub با کلیدهای منتشرشده‌اش چک می‌کند، و کلینیکی که در token آمده دیتابیس کلینیک را در آن طرف انتخاب می‌کند."
+          ],
+          "examples": [
+            "token"
+          ]
+        }
+      ],
+      "examples": {
+        "tx": {
+          "title": {
+            "en": "One unit, retried as a whole",
+            "fa": "یک واحد که کلش دوباره تلاش می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+          "from": "// One transaction, run by the database's retrying strategy",
+          "lines": 5
+        },
+        "place": {
+          "title": {
+            "en": "The message written with the order",
+            "fa": "پیام همراه درخواست نوشته می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var message = new OutboxMessage { Destination = group.Key",
+          "to": "placed.AddRange(orders);"
+        },
+        "due": {
+          "title": {
+            "en": "What is due",
+            "fa": "چیزی که وقتش رسیده"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+          "from": "var due = await db.Outbox.Where(m => m.SentUtc == null",
+          "lines": 2
+        },
+        "backoff": {
+          "title": {
+            "en": "Doubling pauses, up to 30 minutes",
+            "fa": "مکث‌های دوبرابرشونده تا ۳۰ دقیقه"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+          "from": "catch (Exception ex) when (ex is HttpRequestException",
+          "lines": 4
+        },
+        "refused": {
+          "title": {
+            "en": "The application will not cancel",
+            "fa": "برنامه لغو نمی‌کند"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+          "from": "if (cancel && (int)response.StatusCode is 400 or 404 or 409 or 422)",
+          "to": "return true;"
+        },
+        "token": {
+          "title": {
+            "en": "A 5-minute token for one application",
+            "fa": "token پنج‌دقیقه‌ای برای یک برنامه"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Integrations/FhirOrders.cs",
+          "from": "public string Create(string audience, Clinic clinic",
+          "to": "});"
+        }
+      }
+    },
+    {
+      "id": "results",
+      "group": "integrations",
+      "title": {
+        "en": "Results coming back",
+        "fa": "جواب‌هایی که برمی‌گردند"
+      },
+      "files": [
+        "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "endpoints",
+          "h": "Endpoints",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Result",
+              "Results"
+            ]
+          }
+        },
+        {
+          "id": "policy",
+          "h": "Only applications may post to /fhir",
+          "p": [
+            "`/fhir` does not take the cookie. It needs an access token from ClinicHub's own sign-in server with the `results` scope, which only client-credentials tokens of LabFlow, ClinicReport and IntegrationHub get."
+          ],
+          "examples": [
+            "policy"
+          ]
+        },
+        {
+          "id": "basedon",
+          "h": "Each report names its order, and the order its sender",
+          "p": [
+            "A DiagnosticReport says which order it answers in `basedOn` (`urn:clinichub:{clinic}:service-request`). The clinic slug picks the database, and the order must have been sent to that very application: LabFlow cannot post a result for an echo ordered from ClinicReport."
+          ],
+          "examples": [
+            "sender",
+            "basedon"
+          ]
+        },
+        {
+          "id": "withheld",
+          "h": "The inbox respects consent too",
+          "p": [
+            "Results land in the ordering clinician's inbox. A result from a visit the patient withheld from this person shows only that it exists, with no summary or link."
+          ],
+          "examples": [
+            "withheld"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "endpoints",
+          "h": "endpointها",
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Result",
+              "Results"
+            ]
+          }
+        },
+        {
+          "id": "policy",
+          "h": "فقط برنامه‌ها می‌توانند به /fhir بفرستند",
+          "p": [
+            "`/fhir` کوکی قبول نمی‌کند. access tokenی از سرور ورود خود ClinicHub با scope `results` می‌خواهد که فقط tokenهای client credentials در LabFlow و ClinicReport و IntegrationHub دارند."
+          ],
+          "examples": [
+            "policy"
+          ]
+        },
+        {
+          "id": "basedon",
+          "h": "هر گزارش درخواستش را نام می‌برد و هر درخواست فرستنده‌اش را",
+          "p": [
+            "هر DiagnosticReport در `basedOn` می‌گوید جواب کدام درخواست است (`urn:clinichub:{clinic}:service-request`). slug کلینیک دیتابیس را انتخاب می‌کند و درخواست باید دقیقاً به همان برنامه فرستاده شده باشد: LabFlow نمی‌تواند برای echoی که از ClinicReport خواسته شده جواب بفرستد."
+          ],
+          "examples": [
+            "sender",
+            "basedon"
+          ]
+        },
+        {
+          "id": "withheld",
+          "h": "صندوق جواب‌ها هم consent را رعایت می‌کند",
+          "p": [
+            "جواب‌ها به صندوق پزشکی که درخواست داده می‌رسند. جواب ویزیتی که بیمار از این آدم پنهان کرده فقط نشان می‌دهد که وجود دارد، بدون خلاصه یا لینک."
+          ],
+          "examples": [
+            "withheld"
+          ]
+        }
+      ],
+      "examples": {
+        "policy": {
+          "title": {
+            "en": "A token with the results scope",
+            "fa": "token با scope results"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+          "from": "public static void AddResultsPolicy",
+          "lines": 5
+        },
+        "sender": {
+          "title": {
+            "en": "Who is sending",
+            "fa": "چه کسی می‌فرستد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+          "from": "var client = sender.GetClaim(OpenIddictConstants.Claims.ClientId)",
+          "to": "does not send results to ClinicHub"
+        },
+        "basedon": {
+          "title": {
+            "en": "The order, its clinic, its target",
+            "fa": "درخواست، کلینیکش، مقصدش"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+          "from": "var basedOn = report![\"basedOn\"]",
+          "to": "was not sent to {client}"
+        },
+        "withheld": {
+          "title": {
+            "en": "Only that it exists",
+            "fa": "فقط این‌که وجود دارد"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+          "from": "private static async Task<List<ResultRow>> HideWithheld",
+          "to": ": r).ToList();"
+        }
+      }
+    },
+    {
+      "id": "fe-shell",
+      "group": "frontend",
+      "title": {
+        "en": "Routes, the top bar and the API client",
+        "fa": "routeها، نوار بالا و API client"
+      },
+      "files": [
+        "web/src/App.tsx",
+        "web/src/api.ts"
+      ],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Routes",
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "landing",
+          "h": "Everyone starts where their work is",
+          "p": [
+            "`/` redirects by permission: a clinician who signs to their own worklist, a billing clerk to billing, the front desk to the day board, the privacy officer to the logs."
+          ],
+          "examples": [
+            "landing"
+          ]
+        },
+        {
+          "id": "nav",
+          "h": "The menu is the permissions",
+          "p": [
+            "Each link is shown only with the permission its page needs. That is convenience, not security: the API checks the same permission on every call. Other applications the person may open from this clinic come from `/api/apps` and open without a second password."
+          ],
+          "examples": [
+            "nav",
+            "apps"
+          ]
+        },
+        {
+          "id": "switch",
+          "h": "Switching clinic",
+          "p": [
+            "Someone who works at several clinics gets a select in the top bar. Choosing one calls `POST /api/auth/clinic`, which answers with the person as they are in that clinic, and the page goes back to `/`."
+          ],
+          "examples": [
+            "switch"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "routeها",
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "landing",
+          "h": "هر کس از جایی شروع می‌کند که کارش آن‌جاست",
+          "p": [
+            "`/` بر اساس مجوز redirect می‌کند: پزشکی که امضا می‌کند به فهرست کار خودش، منشی billing به billing، پذیرش به تابلوی روز، مسئول حریم خصوصی به لاگ‌ها."
+          ],
+          "examples": [
+            "landing"
+          ]
+        },
+        {
+          "id": "nav",
+          "h": "منو همان مجوزهاست",
+          "p": [
+            "هر لینک فقط وقتی نشان داده می‌شود که آدم مجوز لازم آن صفحه را داشته باشد. این راحتی است، نه امنیت: API همان مجوز را در هر درخواست چک می‌کند. برنامه‌های دیگری که آدم از این کلینیک می‌تواند باز کند از `/api/apps` می‌آیند و بدون رمز دوم باز می‌شوند."
+          ],
+          "examples": [
+            "nav",
+            "apps"
+          ]
+        },
+        {
+          "id": "switch",
+          "h": "عوض کردن کلینیک",
+          "p": [
+            "کسی که در چند کلینیک کار می‌کند یک select در نوار بالا دارد. انتخاب هر کلینیک `POST /api/auth/clinic` را صدا می‌زند که آدم را همان‌طور که در آن کلینیک هست برمی‌گرداند، و صفحه به `/` برمی‌گردد."
+          ],
+          "examples": [
+            "switch"
+          ]
+        }
+      ],
+      "examples": {
+        "landing": {
+          "title": {
+            "en": "The start page by permission",
+            "fa": "صفحه‌ی شروع بر اساس مجوز"
+          },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "<Route path=\"/\" element={<Navigate replace to={",
+          "lines": 6
+        },
+        "nav": {
+          "title": {
+            "en": "One link per permission",
+            "fa": "یک لینک برای هر مجوز"
+          },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "{can(me, 'schedule.view') && <NavLink",
+          "to": "{me.isPlatformAdmin && <NavLink"
+        },
+        "apps": {
+          "title": {
+            "en": "The other applications",
+            "fa": "برنامه‌های دیگر"
+          },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "{/* Other applications sign in through ClinicHub",
+          "lines": 2
+        },
+        "switch": {
+          "title": {
+            "en": "The clinic select",
+            "fa": "select کلینیک"
+          },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "{me.clinics.length > 1 ? (",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "fe-autosave",
+      "group": "frontend",
+      "title": {
+        "en": "The visit page: saving as you type",
+        "fa": "صفحه‌ی ویزیت: ذخیره هم‌زمان با تایپ"
+      },
+      "files": [
+        "web/src/pages/EncounterPage.tsx"
+      ],
+      "en": [
+        {
+          "id": "debounce",
+          "h": "800 ms after the last key",
+          "p": [
+            "Every change updates a ref with the latest note, marks it dirty and restarts an 800 ms timer. The status line says Editing…, Saving… or Saved with the time the server returned."
+          ],
+          "examples": [
+            "change"
+          ]
+        },
+        {
+          "id": "one",
+          "h": "One save at a time",
+          "p": [
+            "A blur and the timer can fire together. Each save is chained after the one before (`inFlight`), so two requests never race and the last text always arrives last. A failed save keeps the note dirty, so the next key press tries again."
+          ],
+          "examples": [
+            "flush"
+          ]
+        },
+        {
+          "id": "leave",
+          "h": "Leaving the page saves",
+          "p": [
+            "The effect's cleanup sends what is still unsaved when the page is left, so moving to the next patient does not lose the last sentence."
+          ],
+          "examples": [
+            "leave"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "debounce",
+          "h": "۸۰۰ میلی‌ثانیه بعد از آخرین کلید",
+          "p": [
+            "هر تغییر یک ref را با آخرین یادداشت به‌روز می‌کند، آن را dirty علامت می‌زند و تایمر ۸۰۰ میلی‌ثانیه‌ای را از نو شروع می‌کند. خط وضعیت می‌گوید Editing… یا Saving… یا Saved با زمانی که سرور برگردانده."
+          ],
+          "examples": [
+            "change"
+          ]
+        },
+        {
+          "id": "one",
+          "h": "هر بار فقط یک save",
+          "p": [
+            "blur و تایمر ممکن است با هم اجرا شوند. هر save بعد از قبلی زنجیر می‌شود (`inFlight`)، پس دو درخواست هیچ‌وقت با هم رقابت نمی‌کنند و آخرین متن همیشه آخر می‌رسد. save ناموفق یادداشت را dirty نگه می‌دارد تا با کلید بعدی دوباره تلاش شود."
+          ],
+          "examples": [
+            "flush"
+          ]
+        },
+        {
+          "id": "leave",
+          "h": "ترک صفحه ذخیره می‌کند",
+          "p": [
+            "cleanup این effect وقتی صفحه ترک می‌شود هر چیزی را که هنوز ذخیره نشده می‌فرستد، پس رفتن سراغ بیمار بعدی آخرین جمله را گم نمی‌کند."
+          ],
+          "examples": [
+            "leave"
+          ]
+        }
+      ],
+      "examples": {
+        "change": {
+          "title": {
+            "en": "Every key restarts the timer",
+            "fa": "هر کلید تایمر را از نو شروع می‌کند"
+          },
+          "lang": "typescript",
+          "file": "web/src/pages/EncounterPage.tsx",
+          "from": "const change = (key: keyof Soap, value: string) =>",
+          "lines": 8
+        },
+        "flush": {
+          "title": {
+            "en": "Chained saves",
+            "fa": "saveهای زنجیری"
+          },
+          "lang": "typescript",
+          "file": "web/src/pages/EncounterPage.tsx",
+          "from": "// One save at a time: a blur and the typing timer",
+          "to": "}, [id])"
+        },
+        "leave": {
+          "title": {
+            "en": "The cleanup",
+            "fa": "cleanup"
+          },
+          "lang": "typescript",
+          "file": "web/src/pages/EncounterPage.tsx",
+          "from": "// Leaving the page saves what was typed.",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "data-catalog",
+      "group": "data",
+      "title": {
+        "en": "The catalog database",
+        "fa": "دیتابیس catalog"
+      },
+      "files": [
+        "src/ClinicHub.Api/Catalog/CatalogDbContext.cs",
+        "src/ClinicHub.Api/Catalog/CatalogEntities.cs",
+        "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs"
+      ],
+      "en": [
+        {
+          "id": "read",
+          "h": "Read from the migrations",
+          "p": [
+            "ClinicHub has no SQL scripts: the tables are EF Core entities and the migrations build them. The tables below are read from each DbContext's model snapshot, the file EF Core keeps in step with the migrations, so they are what the migrations create."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "Clinics, accounts, roles",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Clinic",
+              "Account",
+              "Role",
+              "AccountRole"
+            ]
+          }
+        },
+        {
+          "id": "openiddict",
+          "h": "The sign-in server's tables too",
+          "p": [
+            "OpenIddict keeps its registered applications, authorizations and tokens in the same catalog (`catalog.OpenIddict*`). The security log is on the security page."
+          ]
+        },
+        {
+          "id": "migrate",
+          "h": "A clinic database is migrated, then given its lists",
+          "p": [
+            "Creating or upgrading a clinic database runs its migrations and then the reference seeder: fee and diagnostic codes, provinces, appointment types, which every clinic needs."
+          ],
+          "examples": [
+            "migrate"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "read",
+          "h": "خوانده‌شده از migrationها",
+          "p": [
+            "ClinicHub اسکریپت SQL ندارد: جدول‌ها entityهای EF Core هستند و migrationها آن‌ها را می‌سازند. جدول‌های زیر از model snapshot هر DbContext خوانده شده‌اند، فایلی که EF Core همراه migrationها به‌روز نگه می‌دارد؛ پس همان چیزی هستند که migrationها می‌سازند."
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "کلینیک‌ها، حساب‌ها، نقش‌ها",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Clinic",
+              "Account",
+              "Role",
+              "AccountRole"
+            ]
+          }
+        },
+        {
+          "id": "openiddict",
+          "h": "جدول‌های سرور ورود هم این‌جاست",
+          "p": [
+            "OpenIddict برنامه‌های ثبت‌شده، authorizationها و tokenهایش را در همین catalog نگه می‌دارد (`catalog.OpenIddict*`). لاگ امنیتی در صفحه‌ی امنیت آمده."
+          ]
+        },
+        {
+          "id": "migrate",
+          "h": "دیتابیس کلینیک migrate می‌شود و بعد فهرست‌هایش را می‌گیرد",
+          "p": [
+            "ساختن یا به‌روز کردن دیتابیس یک کلینیک migrationهایش را اجرا می‌کند و بعد seeder مرجع را: کدهای خدمت و تشخیص، استان‌ها، نوع نوبت‌ها، چیزهایی که هر کلینیکی لازم دارد."
+          ],
+          "examples": [
+            "migrate"
+          ]
+        }
+      ],
+      "examples": {
+        "migrate": {
+          "title": {
+            "en": "Migrate, then the reference lists",
+            "fa": "migrate، بعد فهرست‌های مرجع"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+          "from": "public async Task MigrateAsync(Clinic clinic)",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "data-care",
+      "group": "data",
+      "title": {
+        "en": "A clinic's database: people, schedule, care",
+        "fa": "دیتابیس کلینیک: آدم‌ها، برنامه، مراقبت"
+      },
+      "files": [
+        "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+        "docs/schema.md"
+      ],
+      "en": [
+        {
+          "id": "schemas",
+          "h": "Schemas by concern",
+          "p": [
+            "Tables are grouped into SQL schemas: `clinic` (locations, rooms, providers), `people`, `sched`, `care`, `orders`, `billing`, `ref` and `sec`. Every relationship is a foreign key, and CHECK constraints repeat the rules the code validates, so a bad import or a manual UPDATE cannot store an impossible row."
+          ]
+        },
+        {
+          "id": "conventions",
+          "h": "Conventions instead of attributes everywhere",
+          "p": [
+            "Money is `decimal(10,2)` and every UTC instant `datetime2(3)`, set once for the whole model. Nothing cascades on delete except rows that are part of their parent, because clinical history must not vanish with a parent row."
+          ],
+          "examples": [
+            "conventions",
+            "cascade"
+          ]
+        },
+        {
+          "id": "people",
+          "h": "Patients and consent",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Patient",
+              "PatientDuplicateCandidate",
+              "ConsentDirective",
+              "ConsentOverride"
+            ]
+          }
+        },
+        {
+          "id": "sched",
+          "h": "The clinic and its schedule",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Location",
+              "Room",
+              "Provider",
+              "ScheduleTemplate",
+              "ScheduleException",
+              "Appointment",
+              "AppointmentStatusChange"
+            ]
+          }
+        },
+        {
+          "id": "care",
+          "h": "The visit",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "EligibilityCheck",
+              "Encounter",
+              "VitalSigns",
+              "ClinicalNote",
+              "EncounterDiagnosis",
+              "EncounterService",
+              "Referral"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "schemas",
+          "h": "schemaها بر اساس موضوع",
+          "p": [
+            "جدول‌ها در schemaهای SQL دسته‌بندی شده‌اند: `clinic` (مکان‌ها، اتاق‌ها، پزشکان)، `people`، `sched`، `care`، `orders`، `billing`، `ref` و `sec`. هر رابطه یک foreign key است و قیدهای CHECK همان قاعده‌هایی را تکرار می‌کنند که کد validate می‌کند، پس import خراب یا UPDATE دستی نمی‌تواند ردیف ناممکن ذخیره کند."
+          ]
+        },
+        {
+          "id": "conventions",
+          "h": "convention به‌جای attribute در همه‌جا",
+          "p": [
+            "پول `decimal(10,2)` است و هر لحظه‌ی UTC `datetime2(3)`، که یک بار برای کل مدل تنظیم شده. به‌جز ردیف‌هایی که جزئی از والدشان هستند، هیچ حذفی cascade نمی‌شود، چون تاریخچه‌ی بالینی نباید با حذف یک ردیف والد ناپدید شود."
+          ],
+          "examples": [
+            "conventions",
+            "cascade"
+          ]
+        },
+        {
+          "id": "people",
+          "h": "بیماران و consent",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Patient",
+              "PatientDuplicateCandidate",
+              "ConsentDirective",
+              "ConsentOverride"
+            ]
+          }
+        },
+        {
+          "id": "sched",
+          "h": "کلینیک و برنامه‌اش",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Location",
+              "Room",
+              "Provider",
+              "ScheduleTemplate",
+              "ScheduleException",
+              "Appointment",
+              "AppointmentStatusChange"
+            ]
+          }
+        },
+        {
+          "id": "care",
+          "h": "ویزیت",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "EligibilityCheck",
+              "Encounter",
+              "VitalSigns",
+              "ClinicalNote",
+              "EncounterDiagnosis",
+              "EncounterService",
+              "Referral"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "conventions": {
+          "title": {
+            "en": "Money and time, once for the model",
+            "fa": "پول و زمان، یک بار برای کل مدل"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+          "from": "protected override void ConfigureConventions",
+          "to": "b.Properties<DateTime?>().HaveColumnType(\"datetime2(3)\");"
+        },
+        "cascade": {
+          "title": {
+            "en": "Nothing cascades by accident",
+            "fa": "هیچ cascadeی تصادفی نیست"
+          },
+          "lang": "csharp",
+          "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+          "from": "// SQL Server refuses multiple cascade paths",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "data-orders",
+      "group": "data",
+      "title": {
+        "en": "A clinic's database: orders, billing, reference",
+        "fa": "دیتابیس کلینیک: درخواست‌ها، صورت‌حساب، مرجع"
+      },
+      "files": [
+        "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+        "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs"
+      ],
+      "en": [
+        {
+          "id": "orders",
+          "h": "Orders, prescriptions and the outbox",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "ServiceRequest",
+              "DiagnosticResult",
+              "Prescription",
+              "OutboxMessage",
+              "InboundMessage"
+            ]
+          }
+        },
+        {
+          "id": "billing",
+          "h": "Claims, remittances, invoices",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Claim",
+              "ClaimItem",
+              "ClaimBatch",
+              "RemittanceAdvice",
+              "RemittanceItem",
+              "Invoice",
+              "InvoiceLine",
+              "Payment",
+              "FinanceExport"
+            ]
+          }
+        },
+        {
+          "id": "ref",
+          "h": "Reference lists and the staff copy",
+          "p": [
+            "`sec.User` is the clinic's copy of its staff, made from the catalog account with the same id, so \"who signed this visit\" stays a foreign key inside the clinic's own database. It holds no credentials."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "FeeCode",
+              "DiagnosticCode",
+              "UninsuredService",
+              "AppointmentType",
+              "Province",
+              "User"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "orders",
+          "h": "درخواست‌ها، نسخه‌ها و outbox",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "ServiceRequest",
+              "DiagnosticResult",
+              "Prescription",
+              "OutboxMessage",
+              "InboundMessage"
+            ]
+          }
+        },
+        {
+          "id": "billing",
+          "h": "claimها، remittanceها، فاکتورها",
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Claim",
+              "ClaimItem",
+              "ClaimBatch",
+              "RemittanceAdvice",
+              "RemittanceItem",
+              "Invoice",
+              "InvoiceLine",
+              "Payment",
+              "FinanceExport"
+            ]
+          }
+        },
+        {
+          "id": "ref",
+          "h": "فهرست‌های مرجع و نسخه‌ی کارکنان",
+          "p": [
+            "`sec.User` نسخه‌ی کلینیک از کارکنانش است که از حساب catalog با همان شناسه ساخته می‌شود، تا «چه کسی این ویزیت را امضا کرد» یک foreign key داخل دیتابیس خود کلینیک بماند. هیچ اطلاعات ورودی ندارد."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "FeeCode",
+              "DiagnosticCode",
+              "UninsuredService",
+              "AppointmentType",
+              "Province",
+              "User"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
