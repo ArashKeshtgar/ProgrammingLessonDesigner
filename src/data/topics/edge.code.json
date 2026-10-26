@@ -1,0 +1,192 @@
+{
+  "project": "edge",
+  "repo": "ControlPanel",
+  "files": {
+    "deploy/vps/Caddyfile": 101,
+    "deploy/vps/compose.vps.yml": 171,
+    "deploy/vps/README.md": 343,
+    "deploy/vps/bootstrap.sh": 171,
+    "deploy/vps/.env.vps.example": 69,
+    "deploy/vps/watchdog.sh": 70,
+    "deploy/vps/labflow.caddy": 8,
+    "deploy/vps/set-basic-auth.sh": 29,
+    "deploy/clinic/clinic.caddy": 52,
+    "deploy/vps/compose.clinic.yml": 386,
+    "deploy/clinic/labflow.caddy": 6,
+    "deploy/vps/deploy.sh": 94,
+    "deploy/vps/release.ps1": 235
+  },
+  "examples": {
+    "role/service": {
+      "file": "deploy/vps/compose.vps.yml",
+      "start": 20,
+      "end": 24,
+      "code": "image: caddy:2\nports:\n  - \"80:80\"\n  - \"443:443\"\n  - \"443:443/udp\""
+    },
+    "role/mounts": {
+      "file": "deploy/vps/compose.vps.yml",
+      "start": 39,
+      "end": 45,
+      "code": "- ./deploy/vps/Caddyfile:/etc/caddy/Caddyfile:ro\n# compose.clinic.yml mounts its own file at this path (LabFlow's old address sent to the clinic's lab).\n- ./deploy/vps/labflow.caddy:/etc/caddy/sites/labflow.caddy:ro\n- caddy-data:/data\n- caddy-config:/config\n# context.json from push-context.ps1 (a folder, so the swap-in rename shows up)\n- ${CONTEXT_DIR:-/srv/portfolio/context}:/srv/context:ro"
+    },
+    "firewall/ufw": {
+      "file": "deploy/vps/bootstrap.sh",
+      "start": 82,
+      "end": 90,
+      "code": "ufw default deny incoming\nufw default allow outgoing\nufw allow OpenSSH\nufw allow 80/tcp\nufw allow 443/tcp\nufw allow 443/udp\nufw --force enable\n# Docker bypasses ufw for published ports; compose.vps.yml publishes\n# nothing but Caddy's 80/443, so this is still the whole picture."
+    },
+    "firewall/reset": {
+      "file": "deploy/vps/compose.vps.yml",
+      "start": 57,
+      "end": 58,
+      "code": "sqlserver:\n  ports: !reset []"
+    },
+    "certs/global": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 1,
+      "end": 6,
+      "code": "# Caddy gets and renews Let's Encrypt certificates for every site below by\n# itself, once each domain's DNS A record points at this server.\n# Values come from the caddy service's environment (compose.vps.yml).\n{\n\temail {$ACME_EMAIL}\n}"
+    },
+    "certs/dns": {
+      "file": "deploy/vps/README.md",
+      "start": 52,
+      "end": 56,
+      "code": "## 2. Domain and DNS\n\nFive A records, all to the server's IPv4 (and AAAA if it has IPv6):\n`panel`, `rebiomed`, `english`, `labflow`, `ledger`. Caddy can only get certificates once\nthese resolve, so do this early."
+    },
+    "common/common": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 8,
+      "end": 24,
+      "code": "(common) {\n\tencode zstd gzip\n\t# Two blocks on purpose: a deletion (-Server) defers its whole block until the\n\t# final response, and deferred headers are lost on an error response such as\n\t# basic_auth's 401. Set right away, these reach the 401 too.\n\theader {\n\t\tStrict-Transport-Security \"max-age=31536000\"\n\t\tX-Content-Type-Options nosniff\n\t\tReferrer-Policy strict-origin-when-cross-origin\n\t}\n\t# Deferred: also removes the apps' own Server header.\n\theader -Server\n\tlog {\n\t\toutput stdout\n\t\tformat console\n\t}\n}"
+    },
+    "certwatch/certs": {
+      "file": "deploy/vps/watchdog.sh",
+      "start": 46,
+      "end": 57,
+      "code": "mapfile -t domains < <(grep -E '^[A-Z_]+_DOMAIN=' .env | grep -v '^CLINIC_DOMAIN=' | cut -d= -f2- | tr -d \"'\\\"\" | sed '/^$/d')\nclinic=\"$(grep -E '^CLINIC_DOMAIN=' .env | cut -d= -f2- | tr -d \"'\\\"\")\"\nif [[ -n \"$clinic\" ]] && grep -qE '^COMPOSE_FILE=.*compose\\.clinic\\.yml' .env; then\n  for name in hub report lab pharmacy finance analytics integration; do domains+=(\"$name.$clinic\"); done\nfi\nnow=\"$(date +%s)\"\nfor d in \"${domains[@]}\"; do\n  end=\"$(echo | timeout 10 openssl s_client -connect 127.0.0.1:443 -servername \"$d\" 2>/dev/null \\\n    | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)\"\n  if [[ -z \"$end\" ]]; then problems+=(\"no certificate for $d\"); continue; fi\n  days=$(( ($(date -d \"$end\" +%s) - now) / 86400 ))\n  (( days < CERT_DAYS )) && problems+=(\"certificate of $d ends in $days days\")"
+    },
+    "public/panel": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 34,
+      "end": 38,
+      "code": "# Control Panel: public, with its own login (hand out the viewer account).\n{$PANEL_DOMAIN} {\n\timport common\n\treverse_proxy frontend:80\n}"
+    },
+    "public/code": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 60,
+      "end": 64,
+      "code": "# Programming lessons: public, static.\n{$PROGRAMMING_DOMAIN} {\n\timport common\n\treverse_proxy programming-web:80\n}"
+    },
+    "public/report": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 86,
+      "end": 91,
+      "code": "# ClinicReport: public demo (synthetic data, one-click demo users, nightly\n# reset). Caddy proxies the SignalR WebSocket on /hubs as is.\n{$CLINICREPORT_DOMAIN} {\n\timport common\n\treverse_proxy clinicreport:8080\n}"
+    },
+    "lessons/english": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 46,
+      "end": 58,
+      "code": "# English collocation lessons: public (also on GitHub Pages). Its Context tab\n# finds no /api/context here and says it is local-only. /api/sync is the\n# review-progress sync (lessons-sync checks its own X-Sync-Key).\n{$LESSONS_DOMAIN} {\n\timport common\n\trespond /api/context* 404\n\thandle /api/sync* {\n\t\treverse_proxy lessons-sync:8080\n\t}\n\thandle {\n\t\treverse_proxy lessons-web:80\n\t}\n}"
+    },
+    "lessons/ctx": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 66,
+      "end": 84,
+      "code": "# The same lessons app as the owner's private Context reader (the phone's\n# home-screen app). /api/context is the context engine's export, pushed from\n# the PC by push-context.ps1 into CONTEXT_DIR; it is never in the image.\n{$CONTEXT_DOMAIN} {\n\timport common\n\timport private\n\thandle /api/context {\n\t\troot * /srv/context\n\t\trewrite * /context.json\n\t\theader Cache-Control no-store\n\t\tfile_server\n\t}\n\thandle /api/sync* {\n\t\treverse_proxy lessons-sync:8080\n\t}\n\thandle {\n\t\treverse_proxy lessons-web:80\n\t}\n}"
+    },
+    "basicauth/private": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 26,
+      "end": 32,
+      "code": "# Only the owner's eyes: LedgerDashboard holds the job search (companies,\n# contacts), and ctx.<domain> the owner's own reading.\n(private) {\n\tbasic_auth {\n\t\t{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}\n\t}\n}"
+    },
+    "basicauth/ledger": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 93,
+      "end": 97,
+      "code": "{$LEDGER_DOMAIN} {\n\timport common\n\timport private\n\treverse_proxy ledgerdashboard:4310\n}"
+    },
+    "basicauth/labflow": {
+      "file": "deploy/vps/labflow.caddy",
+      "start": 1,
+      "end": 8,
+      "code": "# LabFlow as the owner's demo (Development: its demo sign-in is a role switcher with no password, hence basic\n# auth). Mounted by compose.vps.yml at /etc/caddy/sites/labflow.caddy; with the clinic platform, compose.clinic.yml\n# mounts deploy/clinic/labflow.caddy there instead (LabFlow is the clinic's lab then).\n{$LABFLOW_DOMAIN} {\n\timport common\n\timport private\n\treverse_proxy labflow-web:80\n}"
+    },
+    "password/hash": {
+      "file": "deploy/vps/set-basic-auth.sh",
+      "start": 12,
+      "end": 28,
+      "code": "read -r -s -p \"New basic-auth password (12+ chars): \" P1; echo\nread -r -s -p \"Again: \" P2; echo\n[[ \"$P1\" == \"$P2\" ]] || { echo \"They differ.\" >&2; exit 1; }\n[[ ${#P1} -ge 12 ]] || { echo \"Too short.\" >&2; exit 1; }\n# A password typed with a non-Latin keyboard layout by mistake looks fine\n# on screen (nothing is shown) and then never matches in the browser.\n[[ \"$P1\" == \"$(printf '%s' \"$P1\" | LC_ALL=C tr -cd '\\40-\\176')\" ]] \\\n  || { echo \"Only English letters, digits and symbols, please (check the keyboard layout).\" >&2; exit 1; }\n\nHASH=\"$(printf '%s\\n' \"$P1\" | docker run --rm -i caddy:2 caddy hash-password)\"\nunset P1 P2\n[[ \"$HASH\" == \\$2* ]] || { echo \"Hashing failed.\" >&2; exit 1; }\n\n# bcrypt hashes are [A-Za-z0-9./$] only, so | is a safe sed delimiter.\nsed -i \"s|^BASIC_AUTH_HASH=.*|BASIC_AUTH_HASH='$HASH'|\" \"$ENV\"\ncd \"$CP\"\ndocker compose up -d caddy"
+    },
+    "clinicsites/hub": {
+      "file": "deploy/clinic/clinic.caddy",
+      "start": 16,
+      "end": 20,
+      "code": "# ClinicHub: the sign-in (issuer https://hub.{$CLINIC_DOMAIN}/) and the clinics' own work; pages and API in one container.\nhub.{$CLINIC_DOMAIN} {\n\timport common\n\treverse_proxy clinichub:8080\n}"
+    },
+    "clinicsites/app": {
+      "file": "deploy/clinic/clinic.caddy",
+      "start": 5,
+      "end": 14,
+      "code": "# The applications whose React app is a separate container: the API's own paths go to the API, the rest to the page.\n(app) {\n\t@api path /api/* /signin-oidc /signout-callback-oidc\n\thandle @api {\n\t\treverse_proxy {args[0]}\n\t}\n\thandle {\n\t\treverse_proxy {args[1]}\n\t}\n}"
+    },
+    "clinicsites/lab": {
+      "file": "deploy/clinic/clinic.caddy",
+      "start": 28,
+      "end": 31,
+      "code": "lab.{$CLINIC_DOMAIN} {\n\timport common\n\timport app labflow-api:8080 labflow-web:80\n}"
+    },
+    "layers/import": {
+      "file": "deploy/vps/Caddyfile",
+      "start": 99,
+      "end": 101,
+      "code": "# Sites mounted by the compose layers: LabFlow (compose.vps.yml: the owner's demo, behind basic auth) and the clinic\n# platform (compose.clinic.yml: its sites, and LabFlow's old address sent to the clinic's lab).\nimport /etc/caddy/sites/*.caddy"
+    },
+    "layers/mount": {
+      "file": "deploy/vps/compose.clinic.yml",
+      "start": 61,
+      "end": 67,
+      "code": "caddy:\n  environment:\n    CLINIC_DOMAIN: ${CLINIC_DOMAIN:?set CLINIC_DOMAIN in .env (e.g. clinic.arashkeshtgar.ca)}\n  volumes:\n    - ./deploy/clinic/clinic.caddy:/etc/caddy/sites/clinic.caddy:ro\n    # Same path as compose.vps.yml's LabFlow site, so this one replaces it.\n    - ./deploy/clinic/labflow.caddy:/etc/caddy/sites/labflow.caddy:ro"
+    },
+    "layers/redir": {
+      "file": "deploy/clinic/labflow.caddy",
+      "start": 1,
+      "end": 6,
+      "code": "# With the clinic platform, LabFlow is the clinic's lab at lab.{$CLINIC_DOMAIN}; its old address sends people there.\n# compose.clinic.yml mounts this over deploy/vps/labflow.caddy (same path in the container).\n{$LABFLOW_DOMAIN} {\n\timport common\n\tredir https://lab.{$CLINIC_DOMAIN}{uri} permanent\n}"
+    },
+    "aliases/aliases": {
+      "file": "deploy/vps/compose.clinic.yml",
+      "start": 77,
+      "end": 84,
+      "code": "aliases:\n  - hub.${CLINIC_DOMAIN}\n  - report.${CLINIC_DOMAIN}\n  - lab.${CLINIC_DOMAIN}\n  - pharmacy.${CLINIC_DOMAIN}\n  - finance.${CLINIC_DOMAIN}\n  - analytics.${CLINIC_DOMAIN}\n  - integration.${CLINIC_DOMAIN}"
+    },
+    "aliases/forwarded": {
+      "file": "deploy/vps/compose.clinic.yml",
+      "start": 20,
+      "end": 21,
+      "code": "# Caddy terminates TLS: the scheme and client address come from its X-Forwarded-* headers (sign-in redirects, Secure cookies).\nASPNETCORE_FORWARDEDHEADERS_ENABLED: \"true\""
+    },
+    "reload/sum": {
+      "file": "deploy/vps/deploy.sh",
+      "start": 41,
+      "end": 44,
+      "code": "# Caddy bind-mounts the Caddyfile as a single file: a pull replaces the file,\n# and the running container keeps the old one until it restarts.\ncaddy_sum() { cat \"$CP/deploy/vps/Caddyfile\" \"$CP/deploy/vps/labflow.caddy\" \"$CP\"/deploy/clinic/*.caddy 2>/dev/null | sha1sum; }\ncaddy_before=\"$(caddy_sum)\""
+    },
+    "reload/restart": {
+      "file": "deploy/vps/deploy.sh",
+      "start": 74,
+      "end": 77,
+      "code": "if [[ \"$(caddy_sum)\" != \"$caddy_before\" ]]; then\n  log \"Caddyfile changed: restart caddy\"\n  docker compose restart caddy\nfi"
+    },
+    "smoke/smoke": {
+      "file": "deploy/vps/release.ps1",
+      "start": 216,
+      "end": 224,
+      "code": "# Public sites; labflow, ledger and ctx sit behind basic auth, so 401 is right.\n$expect = [ordered]@{ panel = 200; rebiomed = 200; english = 200; labflow = 401; ledger = 401; ctx = 401 }\n$failed = @()\nforeach ($site in $expect.Keys) {\n    $code = curl.exe -s -o NUL -w '%{http_code}' -m 20 \"https://$site.$Domain/\"\n    $ok = [int]$code -eq $expect[$site]\n    Write-Host (\"  {0,-9} {1}  {2}\" -f $site, $code, $(if ($ok) { 'ok' } else { \"expected $($expect[$site])\" }))\n    if (-not $ok) { $failed += $site }\n}"
+    }
+  },
+  "endpoints": [],
+  "tables": [],
+  "routes": []
+}

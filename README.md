@@ -45,7 +45,7 @@ points at an existing file and line.
   only) and writes it. `npm run check` fails locally when it no longer matches them.
 - `src/data/topics/<project>.json`: the project as topics, W3Schools-style (so far Control
   Panel, 29 topics in 6 groups; ClinicHub, 26 in 8; LabFlow, 21 in 8; ClinicReport, 19 in 7;
-  LedgerDashboard, 19 in 7; ReBiomed, 20 in 8; FinancePowerApp, 18 in 7; this site, 21 in 7). Each topic
+  LedgerDashboard, 19 in 7; ReBiomed, 20 in 8; FinancePowerApp, 18 in 7; this site, 21 in 7; Caddy, 14 in 6, from Control Panel's files). Each topic
   lists its files and quotes the real code, found by text anchors (`from` / `to` or `lines`). `npm run code`
   snapshots those excerpts, plus what its `scan` reads from the code: endpoints (NestJS, Express in
   TypeScript or JavaScript, including routers mounted with `app.use` and their `auth`/`admin`
