@@ -1,0 +1,383 @@
+{
+  "project": "programminglessondesigner",
+  "repo": "ProgrammingLessonDesigner",
+  "files": {
+    "README.md": 110,
+    "package.json": 36,
+    "vite.config.ts": 9,
+    "src/main.ts": 14,
+    "src/App.vue": 19,
+    "src/router/index.ts": 33,
+    "src/types/lesson.ts": 111,
+    "src/lib/lessons.ts": 28,
+    "src/lib/booklets.ts": 11,
+    "src/lib/code.ts": 107,
+    "src/data/lessons/o004-deploy.json": 141,
+    "scripts/check-lessons.mjs": 59,
+    "examples/backend/csharp/Portfolio/PortfolioApp.cs": 101,
+    "examples/backend/python/portfolio/app.py": 83,
+    "examples/backend/typescript/src/app.ts": 91,
+    "examples/backend/java/src/main/java/portfolio/PortfolioController.java": 62,
+    "examples/frontend/web/package.json": 40,
+    "examples/frontend/web/shared/api.ts": 51,
+    "examples/frontend/web/test/api.test.ts": 67,
+    "examples/frontend/web/vue/router.ts": 25,
+    "examples/docker/compose.yml": 65,
+    ".github/workflows/deploy-pages.yml": 141,
+    "examples/ops/Dockerfile": 21,
+    "examples/ops/tests/run.sh": 237,
+    "examples/ops/deploy/deploy.sh": 43,
+    "src/components/LessonBody.vue": 98,
+    "src/components/CodeTabs.vue": 66,
+    "src/components/CompareTable.vue": 29,
+    "src/lib/highlight.ts": 43,
+    "src/views/BookletView.vue": 45,
+    "scripts/pdf.mjs": 39,
+    "src/styles/base/_print.scss": 65,
+    "src/lib/review.ts": 84,
+    "src/views/ReviewView.vue": 85,
+    "public/sw.js": 18,
+    "public/manifest.webmanifest": 13,
+    "index.html": 17,
+    "scripts/project-map.mjs": 292,
+    "src/data/project-map.json": 898,
+    "src/projects/model.ts": 244,
+    "scripts/project-code.mjs": 741,
+    "src/data/topics/programminglessondesigner.json": 1355,
+    "src/components/projects/DataTable.vue": 101,
+    "src/projects/i18n.ts": 214,
+    "scripts/check-projects.mjs": 131,
+    "src/views/projects/ProjectsView.vue": 138,
+    "src/projects/layout.ts": 84,
+    "src/components/projects/SystemMap.vue": 72,
+    "src/styles/abstracts/_tokens.scss": 130,
+    "src/styles/abstracts/_functions.scss": 74,
+    "src/styles/base/_theme.scss": 33,
+    "src/styles/projects/_accents.scss": 47,
+    ".stylelintrc.json": 52
+  },
+  "examples": {
+    "run/scripts": {
+      "file": "package.json",
+      "start": 6,
+      "end": 14,
+      "code": "\"scripts\": {\n  \"dev\": \"vite\",\n  \"build\": \"vue-tsc -b && vite build\",\n  \"preview\": \"vite preview\",\n  \"check\": \"node scripts/check-lessons.mjs && node scripts/check-projects.mjs && node scripts/project-map.mjs --check && node scripts/project-code.mjs --check\",\n  \"pdf\": \"node scripts/pdf.mjs\",\n  \"map\": \"node scripts/project-map.mjs\",\n  \"lint:css\": \"stylelint \\\"src/**/*.scss\\\"\",\n  \"code\": \"node scripts/project-code.mjs\""
+    },
+    "run/vite": {
+      "file": "vite.config.ts",
+      "start": 4,
+      "end": 9,
+      "code": "// For a GitHub Pages build pass --base=/ProgrammingLessonDesigner/ on the CLI.\nexport default defineConfig({\n  plugins: [vue()],\n  // Sass's modern API; the legacy one is deprecated and prints a warning per file.\n  css: { preprocessorOptions: { scss: { api: 'modern' } } },\n})"
+    },
+    "shell/tabs": {
+      "file": "src/App.vue",
+      "start": 10,
+      "end": 17,
+      "code": "<nav class=\"topbar\">\n  <div class=\"topbar-in\">\n    <RouterLink to=\"/\" class=\"brand\">Programming · Lessons</RouterLink>\n    <RouterLink to=\"/\" class=\"tab\" :class=\"{ on: section === 'lessons' }\">درس‌ها</RouterLink>\n    <RouterLink to=\"/review\" class=\"tab\" :class=\"{ on: section === 'review' }\">مرور</RouterLink>\n    <RouterLink to=\"/projects\" class=\"tab\" :class=\"{ on: section === 'projects' }\">پروژه‌ها</RouterLink>\n  </div>\n</nav>"
+    },
+    "shell/router": {
+      "file": "src/router/index.ts",
+      "start": 8,
+      "end": 21,
+      "code": "// Hash history keeps deep links working on GitHub Pages with no rewrite rules.\nconst router = createRouter({\n  history: createWebHashHistory(),\n  routes: [\n    { path: '/', name: 'lessons', component: LessonListView },\n    { path: '/lesson/:id', name: 'lesson', component: LessonView },\n    { path: '/booklet/:tag', name: 'booklet', component: () => import('../views/BookletView.vue') },\n    { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },\n    // The Projects tab: the language is part of the address, so a link keeps it.\n    { path: '/projects', redirect: () => `/projects/${savedLang()}` },\n    { path: '/projects/:lang(fa|en)/:page?/:topic?', name: 'projects', component: () => import('../views/projects/ProjectsView.vue') },\n  ],\n  scrollBehavior: (to, from) => (to.path === from.path ? false : { top: 0 }),\n})"
+    },
+    "shape/lesson": {
+      "file": "src/types/lesson.ts",
+      "start": 81,
+      "end": 103,
+      "code": "export interface Lesson {\n  _id: string\n  n: number\n  // Booklet the lesson belongs to: backend, frontend, docker, ops.\n  tag: string\n  topics: string[]\n  // Columns of the compare table and tabs of the code blocks; defaults to the four backend languages.\n  langs?: Lang[]\n  // The column the reader already knows (highlighted); defaults to csharp.\n  known?: Lang\n  en: string\n  fa: string\n  goal: string[]\n  story: string\n  why: [string, string][]\n  concepts: Concept[]\n  compare: CompareRow[]\n  code: CodeSample[]\n  pitfalls: Pitfall[]\n  refs: CodeRef[]\n  exercises: Exercise[]\n  take: string\n}"
+    },
+    "shape/compare": {
+      "file": "src/types/lesson.ts",
+      "start": 36,
+      "end": 37,
+      "code": "// One concept, several languages. `diff` is the one-line \"what really differs\".\nexport type CompareRow = { concept: string; diff: string } & Partial<Record<Lang, string>>"
+    },
+    "samples/sample": {
+      "file": "src/types/lesson.ts",
+      "start": 39,
+      "end": 53,
+      "code": "// Samples sharing a `group` render as one tabbed block, one tab per language.\n// The code is either inline (`code`, for a quote from a real project) or read at build\n// time from a tested file under examples/ (`file`, optionally cut to one `region`).\nexport interface CodeSample {\n  group: string\n  // 'all' = one sample that is the same for every language (a compose file); shown without tabs.\n  lang: Lang | 'all'\n  title: string\n  // 'real' = shortened from a project file (see refs); 'tested' = a file under examples/\n  // that the CI builds and tests; 'port' = written for the lesson, not run.\n  origin: 'real' | 'tested' | 'port'\n  code?: string\n  file?: string\n  region?: string\n}"
+    },
+    "samples/json": {
+      "file": "src/data/lessons/o004-deploy.json",
+      "start": 78,
+      "end": 80,
+      "code": "{ \"group\": \"lock\", \"lang\": \"bash\", \"title\": \"یک deploy در هر لحظه\", \"origin\": \"tested\", \"file\": \"ops/deploy/deploy.sh\", \"region\": \"lock\" },\n{ \"group\": \"lock\", \"lang\": \"powershell\", \"title\": \"یک deploy در هر لحظه\", \"origin\": \"tested\", \"file\": \"ops/deploy/deploy.ps1\", \"region\": \"lock\" },\n{ \"group\": \"lock\", \"lang\": \"python\", \"title\": \"یک deploy در هر لحظه\", \"origin\": \"tested\", \"file\": \"ops/deploy/deploy.py\", \"region\": \"lock\" },"
+    },
+    "samples/extract": {
+      "file": "src/lib/code.ts",
+      "start": 29,
+      "end": 50,
+      "code": "// The lines between \"#region <name>\" and its \"#endregion\" (any comment syntax),\n// without nested region markers, dedented.\nexport function extractRegion(text: string, name: string): string | undefined {\n  const lines = text.split(/\\r?\\n/)\n  const at = lines.findIndex((l) => START.exec(l)?.[1] === name)\n  if (at < 0) return undefined\n  const out: string[] = []\n  let depth = 0\n  for (const line of lines.slice(at + 1)) {\n    if (START.test(line)) {\n      depth++\n      continue\n    }\n    if (END.test(line)) {\n      if (depth === 0) break\n      depth--\n      continue\n    }\n    out.push(line)\n  }\n  return dedent(out)\n}"
+    },
+    "checks/langs": {
+      "file": "scripts/check-lessons.mjs",
+      "start": 26,
+      "end": 41,
+      "code": "const groups = {}\nfor (const s of l.code ?? []) {\n  ;(groups[s.group] ??= []).push(s.lang)\n  if (s.lang !== 'all' && !langs.includes(s.lang)) at(`code group \"${s.group}\" has a ${s.lang} tab the lesson does not list`)\n  if (!s.code && !s.file) at(`code \"${s.group}/${s.lang}\" has neither code nor file`)\n  if (s.file) {\n    const file = path.join(root, 'examples', s.file)\n    if (!existsSync(file)) at(`example not found: examples/${s.file}`)\n    else if (s.region && !new RegExp(`#region\\\\s+${s.region}\\\\b`).test(readFileSync(file, 'utf-8')))\n      at(`region \"${s.region}\" not found in examples/${s.file}`)\n  }\n}\nfor (const [g, have] of Object.entries(groups))\n  if (!have.includes('all'))\n    for (const lang of langs) if (!have.includes(lang)) at(`code group \"${g}\" has no ${lang}`)\nfor (const r of l.compare ?? []) for (const lang of langs) if (!r[lang]) at(`compare \"${r.concept}\" has no ${lang}`)"
+    },
+    "checks/refs": {
+      "file": "scripts/check-lessons.mjs",
+      "start": 43,
+      "end": 52,
+      "code": "if (existsSync(refsRoot))\n  for (const r of l.refs ?? []) {\n    const file = path.join(refsRoot, r.project, r.file)\n    if (!existsSync(file)) {\n      at(`ref not found: ${r.project}/${r.file}`)\n      continue\n    }\n    const lines = readFileSync(file, 'utf-8').split('\\n').length\n    if (r.line && r.line > lines) at(`ref ${r.project}/${r.file}:${r.line} is past the end (${lines} lines)`)\n  }"
+    },
+    "backend/cs": {
+      "file": "examples/backend/csharp/Portfolio/PortfolioApp.cs",
+      "start": 42,
+      "end": 60,
+      "code": "app.MapGet(\"/status\", async (IStatusQueries q) =>\n{\n    try\n    {\n        var s = await q.StatusAsync();\n        var m = new { sent = s.Sent ?? 0, interviewing = s.Interviewing ?? 0, followupsDue = s.FollowupsDue ?? 0 };\n        return Results.Ok(new { healthy = true, summary = $\"{m.sent} sent, {m.interviewing} interviewing, {m.followupsDue} follow-up(s) due\", metrics = m });\n    }\n    catch (Exception)\n    {\n        // Unhealthy is an answer, not an error: the dashboard shows it.\n        return Results.Ok(new { healthy = false, error = \"Database unreachable.\" });\n    }\n});\n\napp.MapGet(\"/projects/{key}\", async (string key, IProjectRepository repo) =>\n    await repo.FindAsync(key) is { } row\n        ? Results.Ok(row)\n        : Results.NotFound(new { error = $\"Unknown project: {key}\" }));"
+    },
+    "backend/py": {
+      "file": "examples/backend/python/portfolio/app.py",
+      "start": 56,
+      "end": 65,
+      "code": "@app.get(\"/status\")\ndef status():\n    try:\n        s = queries.status()\n    except Exception:\n        # Unhealthy is an answer, not an error: the dashboard shows it.\n        return {\"healthy\": False, \"error\": \"Database unreachable.\"}\n    m = {k: v or 0 for k, v in s.model_dump().items()}\n    summary = f\"{m['sent']} sent, {m['interviewing']} interviewing, {m['followups_due']} follow-up(s) due\"\n    return {\"healthy\": True, \"summary\": summary, \"metrics\": m}"
+    },
+    "frontend/refresh": {
+      "file": "examples/frontend/web/test/api.test.ts",
+      "start": 20,
+      "end": 38,
+      "code": "it('refreshes once for parallel 401s and retries each request', async () => {\n  const { s, tokens } = store('old', 'r1')\n  let refreshes = 0\n  const fake = async (url: string | URL | Request, init?: RequestInit) => {\n    const u = String(url)\n    if (u.endsWith('/auth/refresh')) {\n      refreshes++\n      await new Promise((r) => setTimeout(r, 10)) // still in flight when the second 401 arrives\n      return json(200, { accessToken: 'new', refreshToken: 'r2' })\n    }\n    const auth = (init?.headers as Record<string, string>)?.Authorization\n    return auth === 'Bearer new' ? json(200, { path: u }) : json(401, { error: 'expired' })\n  }\n  const api = createApi('http://api', tokens, () => assert.fail('should stay signed in'), fake as typeof fetch)\n  const [a, b] = await Promise.all([api<{ path: string }>('/projects'), api<{ path: string }>('/status')])\n  assert.equal(refreshes, 1)\n  assert.deepEqual([a.path, b.path], ['http://api/projects', 'http://api/status'])\n  assert.equal(s.refresh, 'r2')\n})"
+    },
+    "frontend/guard": {
+      "file": "examples/frontend/web/vue/router.ts",
+      "start": 12,
+      "end": 24,
+      "code": "export const router = createRouter({\n  history: createWebHistory(),\n  routes: [\n    { path: '/dashboard', component: () => import('./StatusList.vue') },\n    { path: '/projects/new', component: () => import('./ProjectForm.vue'), meta: { role: 'Admin' } },\n    { path: '/:pathMatch(.*)*', redirect: '/dashboard' },\n  ],\n})\n\n// One global guard reads each route's meta; returning a path redirects.\nrouter.beforeEach((to) => {\n  if (to.meta.role && session.role !== to.meta.role) return '/dashboard'\n})"
+    },
+    "docker/secrets": {
+      "file": "examples/docker/compose.yml",
+      "start": 8,
+      "end": 10,
+      "code": "x-secrets: &secrets\n  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET to a random value of 32+ characters}\n  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET to a different random value of 32+ characters}"
+    },
+    "docker/job": {
+      "file": ".github/workflows/deploy-pages.yml",
+      "start": 86,
+      "end": 93,
+      "code": "- name: Build the four images and wait for them to be healthy\n  run: |\n    export JWT_SECRET=$(openssl rand -base64 48) JWT_REFRESH_SECRET=$(openssl rand -base64 48)\n    docker compose -f examples/docker/compose.yml up --build --wait --wait-timeout 300\n    for port in 8081 8082 8083 8084; do curl -fsS \"http://localhost:$port/status\"; echo; done\n- name: Compose refuses to start without the secrets\n  run: |\n    if docker compose -f examples/docker/compose.yml config > /dev/null 2>&1; then echo \"expected a failure\"; exit 1; fi"
+    },
+    "ops/image": {
+      "file": "examples/ops/Dockerfile",
+      "start": 4,
+      "end": 11,
+      "code": "FROM ubuntu:24.04\n\nRUN apt-get update \\\n && apt-get install -y --no-install-recommends ca-certificates curl git openssh-client openssh-server python3 sqlite3 \\\n && curl -fsSL -o /tmp/microsoft.deb https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb \\\n && dpkg -i /tmp/microsoft.deb && rm /tmp/microsoft.deb \\\n && apt-get update && apt-get install -y --no-install-recommends powershell \\\n && rm -rf /var/lib/apt/lists/*"
+    },
+    "ops/check": {
+      "file": "examples/ops/tests/run.sh",
+      "start": 13,
+      "end": 30,
+      "code": "# check <name> <exit: a number, or \"fail\" for any non-zero> <text the output must\n# contain, or \"!text\" it must not> -- <command...>\ncheck() {\n  local name=\"$1\" want=\"$2\" text=\"$3\" out code ok=true\n  shift 4\n  out=\"$(\"$@\" 2>&1)\"\n  code=$?\n  if [[ \"$want\" == fail ]]; then [[ $code -ne 0 ]] || ok=false; else [[ $code -eq $want ]] || ok=false; fi\n  if [[ \"$text\" == !* ]]; then [[ \"$out\" != *\"${text:1}\"* ]] || ok=false; else [[ \"$out\" == *\"$text\"* ]] || ok=false; fi\n  if $ok; then\n    echo \"  ok    $name\"\n    passed=$((passed + 1))\n  else\n    echo \"  FAIL  $name (exit $code, wanted $want)\"\n    printf '%s\\n' \"$out\" | sed 's/^/          /'\n    failed=$((failed + 1))\n  fi\n}"
+    },
+    "page/groups": {
+      "file": "src/components/LessonBody.vue",
+      "start": 13,
+      "end": 18,
+      "code": "// Samples that share a `group` render as one block, in file order.\nconst groups = computed(() => {\n  const map = new Map<string, CodeSample[]>()\n  for (const s of props.lesson.code) map.set(s.group, [...(map.get(s.group) ?? []), s])\n  return [...map.values()]\n})"
+    },
+    "page/origin": {
+      "file": "src/components/CodeTabs.vue",
+      "start": 20,
+      "end": 24,
+      "code": "const ORIGIN: Record<CodeSample['origin'], string> = {\n  real: 'از کد واقعی پروژه (کوتاه‌شده)',\n  tested: 'کد اجراشده و تست‌شده در examples/',\n  port: 'معادل نوشته‌شده، اجرا نشده',\n}"
+    },
+    "booklets/print": {
+      "file": "scripts/pdf.mjs",
+      "start": 17,
+      "end": 22,
+      "code": "for (const tag of BOOKLETS) {\n  // A fresh page per booklet: only the #hash differs, and a same-page hash change is not a load.\n  const page = await browser.newPage()\n  await page.goto(`${site}#/booklet/${tag}`, { waitUntil: 'networkidle' })\n  await page.waitForSelector('.booklet-lesson')\n  await page.evaluate(() => document.fonts.ready)"
+    },
+    "booklets/pdfbase": {
+      "file": "src/lib/booklets.ts",
+      "start": 9,
+      "end": 11,
+      "code": "// Where the booklet PDFs live. CI prints them next to the site (GitHub Pages); a build\n// elsewhere (the VPS) has no PDFs of its own and points at those with VITE_PDF_BASE.\nexport const PDF_BASE: string = import.meta.env.VITE_PDF_BASE || `${import.meta.env.BASE_URL}pdf/`"
+    },
+    "review/grade": {
+      "file": "src/lib/review.ts",
+      "start": 70,
+      "end": 74,
+      "code": "export function grade(state: Record<string, CardState>, id: string, knew: boolean, now = Date.now()) {\n  const box = knew ? Math.min((state[id]?.box ?? 0) + 1, INTERVAL_DAYS.length - 1) : 1\n  state[id] = { box, due: now + INTERVAL_DAYS[box] * DAY }\n  saveState(state)\n}"
+    },
+    "review/due": {
+      "file": "src/lib/review.ts",
+      "start": 76,
+      "end": 80,
+      "code": "export function dueCards(cards: Card[], state: Record<string, CardState>, now = Date.now(), newPerDay = 15): Card[] {\n  const due = cards.filter((c) => state[c.id] && state[c.id].due <= now)\n  const fresh = cards.filter((c) => !state[c.id]).slice(0, newPerDay)\n  return [...due, ...fresh]\n}"
+    },
+    "review/load": {
+      "file": "src/lib/review.ts",
+      "start": 54,
+      "end": 60,
+      "code": "export function loadState(): Record<string, CardState> {\n  try {\n    return JSON.parse(localStorage.getItem(KEY) ?? '{}')\n  } catch {\n    return {} // storage blocked or corrupted: start fresh, the page still works\n  }\n}"
+    },
+    "offline/sw": {
+      "file": "public/sw.js",
+      "start": 1,
+      "end": 18,
+      "code": "// Minimal offline shell: network first, fall back to the last copy of anything fetched.\nconst CACHE = 'pld-v1'\nself.addEventListener('install', () => self.skipWaiting())\nself.addEventListener('activate', (e) => e.waitUntil(\n  caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()),\n))\nself.addEventListener('fetch', (e) => {\n  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return\n  e.respondWith(\n    fetch(e.request)\n      .then((res) => {\n        const copy = res.clone()\n        caches.open(CACHE).then((c) => c.put(e.request, copy))\n        return res\n      })\n      .catch(() => caches.match(e.request)),\n  )\n})"
+    },
+    "offline/register": {
+      "file": "src/main.ts",
+      "start": 11,
+      "end": 14,
+      "code": "// Installable app: the service worker caches what was fetched, so lessons open offline.\nif ('serviceWorker' in navigator && import.meta.env.PROD) {\n  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})\n}"
+    },
+    "map/sources": {
+      "file": "scripts/project-map.mjs",
+      "start": 22,
+      "end": 28,
+      "code": "const SOURCES = {\n  base: 'docker-compose.yml',\n  apps: 'compose.apps.yml',\n  vps: 'deploy/vps/compose.vps.yml',\n  caddy: 'deploy/vps/Caddyfile',\n  env: 'deploy/vps/.env.vps.example',\n}"
+    },
+    "map/owner": {
+      "file": "scripts/project-map.mjs",
+      "start": 242,
+      "end": 244,
+      "code": "// A database named after a project's repo (LedgerDashboard, LabFlow) is that\n// project's data, whichever server it lives on: reading it links the two projects.\nconst dbOwner = (db) => Object.keys(PROJECTS).find((id) => PROJECTS[id].repo === db)"
+    },
+    "map/sites": {
+      "file": "scripts/project-map.mjs",
+      "start": 214,
+      "end": 226,
+      "code": "for (const m of caddyfile.matchAll(/^\\{\\$([A-Z_]+_DOMAIN)\\} \\{\\n([\\s\\S]*?)\\n\\}/gm)) {\n  const [, domainVar, body] = m\n  const sub = envExample[domainVar] ?? /:-([a-z]+)\\./.exec(caddyEnv[domainVar] ?? '')?.[1]\n  const targets = [...body.matchAll(/reverse_proxy ([\\w-]+):\\d+/g)].map((x) => x[1])\n  const files = /root \\* /.test(body)\n  for (const t of new Set(targets)) link('caddy', t, `${sub}.${baseDomain}`)\n  sites.push({\n    domain: `${sub}.${baseDomain}`,\n    services: [...new Set(targets)],\n    private: /import private/.test(body),\n    ...(files ? { files: true } : {}),\n  })\n}"
+    },
+    "map/check": {
+      "file": "scripts/project-map.mjs",
+      "start": 282,
+      "end": 288,
+      "code": "if (check) {\n  const committed = existsSync(out) ? readFileSync(out, 'utf-8') : ''\n  if (committed.replace(/\\r\\n/g, '\\n') !== json) {\n    console.error('project map: src/data/project-map.json is out of date with Control Panel; run npm run map')\n    process.exit(1)\n  }\n  console.log(`project map ok (${projects.length} projects, ${nodes.length} services)`)"
+    },
+    "topics/types": {
+      "file": "src/projects/model.ts",
+      "start": 104,
+      "end": 120,
+      "code": "export interface TopicExample {\n  title: Record<DocLang, string>\n  lang: string\n  file: string\n  from: string\n  to?: string\n  lines?: number\n}\nexport interface Topic {\n  id: string\n  group: string\n  title: Record<DocLang, string>\n  files?: string[]\n  fa: DocSection[]\n  en: DocSection[]\n  examples?: Record<string, TopicExample>\n}"
+    },
+    "topics/find": {
+      "file": "scripts/project-code.mjs",
+      "start": 683,
+      "end": 694,
+      "code": "const start = src.findIndex((l) => l.includes(ex.from))\nif (start < 0) {\n  at(`${page.id}/${id}: \"${ex.from}\" not found in ${ex.file}`)\n  continue\n}\n// `to`: up to the first line after `from` that contains it; `lines`: that many lines.\nconst end = ex.lines ? start + ex.lines - 1 : ex.to ? src.findIndex((l, i) => i >= start && l.includes(ex.to)) : start\nif (end < 0 || end >= src.length) {\n  at(`${page.id}/${id}: \"${ex.to}\" not found after \"${ex.from}\" in ${ex.file}`)\n  continue\n}\nexamples[`${page.id}/${id}`] = { file: ex.file, start: start + 1, end: end + 1, code: dedent(src.slice(start, end + 1)) }"
+    },
+    "scanners/vue": {
+      "file": "scripts/project-code.mjs",
+      "start": 542,
+      "end": 554,
+      "code": "// Vue Router: { path: '...', component: Page }, a page loaded on demand,\n// component: () => import('../views/Page.vue'), or a redirect (a fixed path, or the\n// template string a function returns, shown as written).\nfunction vueRoutes(repo, file) {\n  return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {\n    const p = /\\{ path: '([^']*)'/.exec(l)\n    if (!p) return []\n    const page = /component: (?:\\(\\) => import\\('[^']*\\/(\\w+)\\.vue'\\)|(\\w+))/.exec(l)\n    if (page) return [{ path: p[1], component: page[1] ?? page[2], guards: [] }]\n    const to = /redirect: (?:'([^']*)'|\\(\\) => `([^`]*)`)/.exec(l)\n    return to ? [{ path: p[1], redirect: to[1] ?? to[2], guards: [] }] : []\n  })\n}"
+    },
+    "scanners/aspnet": {
+      "file": "scripts/project-code.mjs",
+      "start": 488,
+      "end": 493,
+      "code": "// The endpoint's own policy is on its last line: the first one, before the next endpoint, that names one.\nconst until = found[k + 1]?.line ?? src.length\nconst auth = src.slice(e.line, until).map((l) => AUTH.exec(l)).find(Boolean)\nconst tag = src.slice(e.line, until).map((l) => TAG.exec(l)?.[1]).find(Boolean)\nconst group = groups[e.on]\nconst access = auth ? (auth[1] ? policy(auth[1]) : 'public') : group?.access ?? fallback"
+    },
+    "bilingual/head": {
+      "file": "src/projects/i18n.ts",
+      "start": 1,
+      "end": 4,
+      "code": "// The Projects tab is bilingual from the start: every interface string exists in\n// both languages, and TypeScript refuses a key that one of them lacks.\nexport type DocLang = 'fa' | 'en'\nexport const DOC_LANGS: DocLang[] = ['fa', 'en']"
+    },
+    "bilingual/same": {
+      "file": "scripts/check-projects.mjs",
+      "start": 101,
+      "end": 106,
+      "code": "if (fa.map((s) => s.id).join() !== en.map((s) => s.id).join()) at(`${where}: fa and en sections differ`)\nconst used = new Set()\nen.forEach((s, i) => {\n  const other = fa[i]\n  if (JSON.stringify(s.examples ?? []) !== JSON.stringify(other?.examples ?? [])) at(`${where}/${s.id}: fa and en show different examples`)\n  if (JSON.stringify(s.data ?? null) !== JSON.stringify(other?.data ?? null)) at(`${where}/${s.id}: fa and en show different data`)"
+    },
+    "bilingual/inline": {
+      "file": "src/projects/i18n.ts",
+      "start": 194,
+      "end": 197,
+      "code": "export function inline(text: string): string {\n  const escaped = text.replace(/[&<>\"']/g, (c) => `&#${c.charCodeAt(0)};`)\n  return escaped.replace(/`([^`]+)`/g, '<code dir=\"ltr\">$1</code>').replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')\n}"
+    },
+    "docs/pages": {
+      "file": "src/projects/model.ts",
+      "start": 222,
+      "end": 235,
+      "code": "export const PAGES: Page[] = [\n  { id: 'overview', group: 'overview' },\n  ...(['server', 'pc', 'external', 'infra'] as PageGroup[]).flatMap((g) =>\n    MAP.projects\n      .filter((p) => groupOf(p) === g)\n      .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))\n      // A project's own page first, then its topics in the order they are written.\n      .flatMap((p) => [\n        { id: p.id, group: g, project: p },\n        ...(TOPICS[p.id]?.pages ?? []).map((topic) => ({ id: `${p.id}/${topic.id}`, group: g, project: p, topic })),\n      ]),\n  ),\n  { id: 'styling', group: 'about' },\n]"
+    },
+    "docs/fold": {
+      "file": "src/views/projects/ProjectsView.vue",
+      "start": 40,
+      "end": 47,
+      "code": "// Clicking the open project again folds its topics away, and the next click opens them;\n// going to another project opens that one.\nconst collapsed = ref<string | null>(null)\nwatch(() => current.value.project?.id, (id) => id !== collapsed.value && (collapsed.value = null))\nconst isOpen = (id: string) => id === current.value.project?.id && id !== collapsed.value\nconst toggle = (id: string) => {\n  if (id === current.value.project?.id) collapsed.value = collapsed.value === id ? null : id\n}"
+    },
+    "docs/layout": {
+      "file": "src/projects/layout.ts",
+      "start": 33,
+      "end": 45,
+      "code": "// Longest path from the sources, skipping edges that would close a cycle.\nconst column = new Map<string, number>()\nconst visiting = new Set<string>()\nconst depth = (id: string): number => {\n  if (column.has(id)) return column.get(id)!\n  visiting.add(id)\n  const preds = inc.get(id)!.filter((p) => !visiting.has(p))\n  const d = preds.length ? Math.max(...preds.map(depth)) + 1 : 0\n  visiting.delete(id)\n  column.set(id, d)\n  return d\n}\nids.forEach(depth)"
+    },
+    "contrast/pairs": {
+      "file": "src/styles/base/_theme.scss",
+      "start": 14,
+      "end": 19,
+      "code": "// Every pair in tokens.$contrast-pairs, in every theme. A failure stops the build.\n@each $theme-name, $theme in $themes {\n  @each $fg, $bg, $min in $contrast-pairs {\n    $ratio: require-contrast(map.get($theme, $fg), map.get($theme, $bg), $min, '#{$theme-name} theme: #{$fg} on #{$bg}');\n  }\n}"
+    },
+    "contrast/require": {
+      "file": "src/styles/abstracts/_functions.scss",
+      "start": 34,
+      "end": 43,
+      "code": "// Stops the build when two colours that carry text are too close.\n@function require-contrast($fg, $bg, $min, $what) {\n  $ratio: contrast($fg, $bg);\n\n  @if $ratio < $min {\n    @error '#{$what}: contrast #{math.div(math.round($ratio * 100), 100)} is below #{$min}.';\n  }\n\n  @return $ratio;\n}"
+    },
+    "ci/deploy": {
+      "file": ".github/workflows/deploy-pages.yml",
+      "start": 118,
+      "end": 134,
+      "code": "needs: [python, typescript, csharp, java, frontend, docker, ops]\n# Pinned: Playwright's --with-deps needs an Ubuntu release it knows.\nruns-on: ubuntu-24.04\nsteps:\n  - uses: actions/checkout@v4\n  - uses: actions/setup-node@v4\n    with: { node-version: 22, cache: npm }\n  - run: npm ci\n  - run: npm run check\n  - run: npm run lint:css\n  - run: npx vue-tsc -b && npx vite build --base=/${{ github.event.repository.name }}/\n  - name: Print the booklets to PDF\n    run: |\n      npx playwright install --with-deps chromium\n      npx vite preview --base=/${{ github.event.repository.name }}/ --port 4173 --strictPort &\n      for i in $(seq 1 30); do curl -fs http://localhost:4173/${{ github.event.repository.name }}/ > /dev/null && break; sleep 1; done\n      SITE_URL=http://localhost:4173/${{ github.event.repository.name }}/ npm run pdf"
+    },
+    "ci/publish": {
+      "file": ".github/workflows/deploy-pages.yml",
+      "start": 135,
+      "end": 141,
+      "code": "- run: touch dist/.nojekyll\n- uses: peaceiris/actions-gh-pages@v4\n  with:\n    github_token: ${{ secrets.GITHUB_TOKEN }}\n    publish_dir: dist\n    publish_branch: gh-pages\n    force_orphan: true"
+    },
+    "vps/pdfbase": {
+      "file": "src/lib/booklets.ts",
+      "start": 9,
+      "end": 11,
+      "code": "// Where the booklet PDFs live. CI prints them next to the site (GitHub Pages); a build\n// elsewhere (the VPS) has no PDFs of its own and points at those with VITE_PDF_BASE.\nexport const PDF_BASE: string = import.meta.env.VITE_PDF_BASE || `${import.meta.env.BASE_URL}pdf/`"
+    },
+    "vps/hash": {
+      "file": "src/router/index.ts",
+      "start": 8,
+      "end": 10,
+      "code": "// Hash history keeps deep links working on GitHub Pages with no rewrite rules.\nconst router = createRouter({\n  history: createWebHashHistory(),"
+    }
+  },
+  "endpoints": [],
+  "tables": [],
+  "routes": [
+    {
+      "path": "/",
+      "component": "LessonListView",
+      "guards": []
+    },
+    {
+      "path": "/lesson/:id",
+      "component": "LessonView",
+      "guards": []
+    },
+    {
+      "path": "/booklet/:tag",
+      "component": "BookletView",
+      "guards": []
+    },
+    {
+      "path": "/review",
+      "component": "ReviewView",
+      "guards": []
+    },
+    {
+      "path": "/projects",
+      "redirect": "/projects/${savedLang()}",
+      "guards": []
+    },
+    {
+      "path": "/projects/:lang(fa|en)/:page?/:topic?",
+      "component": "ProjectsView",
+      "guards": []
+    }
+  ]
+}

@@ -1,0 +1,1355 @@
+{
+  "project": "programminglessondesigner",
+  "repo": "ProgrammingLessonDesigner",
+  "scan": {
+    "vueRoutes": "src/router/index.ts"
+  },
+  "groups": [
+    { "id": "start", "title": { "en": "Getting started", "fa": "شروع" } },
+    { "id": "lessons", "title": { "en": "How a lesson is made", "fa": "یک درس چطور ساخته می‌شود" } },
+    { "id": "examples", "title": { "en": "The tested examples", "fa": "مثال‌های تست‌شده" } },
+    { "id": "reading", "title": { "en": "Reading, printing, reviewing", "fa": "خواندن، چاپ، مرور" } },
+    { "id": "projects", "title": { "en": "The Projects tab", "fa": "تب پروژه‌ها" } },
+    { "id": "styling", "title": { "en": "Colours that stay readable", "fa": "رنگ‌هایی که خوانا می‌مانند" } },
+    { "id": "deploy", "title": { "en": "Build and deploy", "fa": "build و استقرار" } }
+  ],
+  "pages": [
+    {
+      "id": "run",
+      "group": "start",
+      "title": { "en": "Run it: the commands", "fa": "اجرا: دستورها" },
+      "files": ["README.md", "package.json", "vite.config.ts"],
+      "en": [
+        {
+          "id": "commands",
+          "h": "One Vue app, a handful of scripts",
+          "p": [
+            "The site is a Vue 3 app built by Vite, with no server of its own: every lesson, topic and snapshot is a JSON file bundled at build time. `npm run dev` serves it on port 5173, `npm run build` type-checks with `vue-tsc` and writes `dist/`.",
+            "`npm run check` is the one that matters before a push: it validates the lessons, the Projects pages, the system map and the code snapshots against the real repos. `npm run map` and `npm run code` regenerate the last two."
+          ],
+          "examples": ["scripts"]
+        },
+        {
+          "id": "base",
+          "h": "Built for two addresses",
+          "p": [
+            "The same build serves from the root of code.arashkeshtgar.ca and from `/ProgrammingLessonDesigner/` on GitHub Pages. Nothing in the code names either: the CI passes `--base` on the command line, and the HTML uses `%BASE_URL%` for the manifest and icon."
+          ],
+          "examples": ["vite"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "commands",
+          "h": "یک اپ Vue و چند اسکریپت",
+          "p": [
+            "سایت یک اپ Vue 3 است که Vite آن را build می‌کند و سرور مخصوص خودش را ندارد: هر درس، هر تاپیک و هر snapshot یک فایل JSON است که موقع build داخل bundle می‌رود. `npm run dev` آن را روی پورت 5173 بالا می‌آورد و `npm run build` با `vue-tsc` نوع‌ها را چک می‌کند و `dist/` را می‌نویسد.",
+            "دستوری که قبل از هر push مهم است `npm run check` است: درس‌ها، صفحه‌های پروژه‌ها، نقشه‌ی سیستم و snapshotهای کد را با repoهای واقعی می‌سنجد. `npm run map` و `npm run code` دو تای آخر را از نو می‌سازند."
+          ],
+          "examples": ["scripts"]
+        },
+        {
+          "id": "base",
+          "h": "build برای دو آدرس",
+          "p": [
+            "همین build هم از ریشه‌ی code.arashkeshtgar.ca سرو می‌شود و هم از `/ProgrammingLessonDesigner/` روی GitHub Pages. هیچ‌جای کد اسم هیچ‌کدام را نمی‌آورد: CI در خط فرمان `--base` می‌دهد و HTML برای manifest و آیکون از `%BASE_URL%` استفاده می‌کند."
+          ],
+          "examples": ["vite"]
+        }
+      ],
+      "examples": {
+        "scripts": {
+          "title": { "en": "The scripts", "fa": "اسکریپت‌ها" },
+          "lang": "json",
+          "file": "package.json",
+          "from": "\"scripts\": {",
+          "to": "\"code\": \"node scripts/project-code.mjs\""
+        },
+        "vite": {
+          "title": { "en": "No base in the config", "fa": "بدون base در تنظیمات" },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "// For a GitHub Pages build",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "shell",
+      "group": "start",
+      "title": { "en": "Three tabs and the router", "fa": "سه تب و router" },
+      "files": ["src/main.ts", "src/App.vue", "src/router/index.ts"],
+      "en": [
+        {
+          "id": "tabs",
+          "h": "Lessons, review, projects",
+          "p": [
+            "The top bar has three tabs: the lessons (and their booklets), the review cards, and the Projects tab. The page is right-to-left Persian; code blocks and the English Projects pages switch direction on their own element."
+          ],
+          "examples": ["tabs"]
+        },
+        {
+          "id": "routes",
+          "h": "Hash history",
+          "p": [
+            "Addresses are `#/lesson/l002`, `#/projects/fa/labflow/run` and so on. A hash route needs no rewrite rule on the server, so a deep link works on GitHub Pages and behind the VPS's plain nginx alike. The booklet, review and Projects views load on demand, so the lesson list opens without them.",
+            "`/projects` on its own redirects to the language the reader last chose, which is kept in the browser."
+          ],
+          "examples": ["router"],
+          "data": { "kind": "routes" }
+        }
+      ],
+      "fa": [
+        {
+          "id": "tabs",
+          "h": "درس‌ها، مرور، پروژه‌ها",
+          "p": [
+            "نوار بالا سه تب دارد: درس‌ها (و جزوه‌هایشان)، کارت‌های مرور، و تب پروژه‌ها. صفحه فارسی و راست‌به‌چپ است؛ بلوک‌های کد و صفحه‌های انگلیسی تب پروژه‌ها جهت را روی عنصر خودشان عوض می‌کنند."
+          ],
+          "examples": ["tabs"]
+        },
+        {
+          "id": "routes",
+          "h": "hash history",
+          "p": [
+            "آدرس‌ها مثل `#/lesson/l002` و `#/projects/fa/labflow/run` هستند. route با hash روی سرور هیچ قاعده‌ی rewrite نمی‌خواهد، پس لینک مستقیم هم روی GitHub Pages کار می‌کند و هم پشت nginx ساده‌ی VPS. صفحه‌های جزوه، مرور و پروژه‌ها فقط وقتی لازم شوند بار می‌شوند، پس فهرست درس‌ها بدون آن‌ها باز می‌شود.",
+            "`/projects` به‌تنهایی به زبانی می‌رود که خواننده آخرین بار انتخاب کرده و در مرورگر نگه داشته شده."
+          ],
+          "examples": ["router"],
+          "data": { "kind": "routes" }
+        }
+      ],
+      "examples": {
+        "tabs": {
+          "title": { "en": "The top bar", "fa": "نوار بالا" },
+          "lang": "xml",
+          "file": "src/App.vue",
+          "from": "<nav class=\"topbar\">",
+          "to": "</nav>"
+        },
+        "router": {
+          "title": { "en": "The routes", "fa": "routeها" },
+          "lang": "typescript",
+          "file": "src/router/index.ts",
+          "from": "// Hash history keeps deep links working",
+          "lines": 14
+        }
+      }
+    },
+    {
+      "id": "shape",
+      "group": "lessons",
+      "title": { "en": "The shape of a lesson", "fa": "شکل یک درس" },
+      "files": ["src/types/lesson.ts", "src/lib/lessons.ts", "src/lib/booklets.ts"],
+      "en": [
+        {
+          "id": "order",
+          "h": "One JSON file, always in the same order",
+          "p": [
+            "Every lesson is one file in `src/data/lessons/` and reads the same way: what you will be able to do, the real scenario it comes from, the concepts, a comparison table, the code, the common mistakes, where the code lives in the real projects, exercises, and one sentence to say in an interview.",
+            "The file name's letter is its booklet (`l` backend, `f` frontend, `d` Docker, `o` ops); there are 27 lessons in four booklets. Lessons are sorted by booklet, then by their number."
+          ],
+          "examples": ["lesson"]
+        },
+        {
+          "id": "compare",
+          "h": "One concept, several languages",
+          "p": [
+            "A comparison row names a concept, how each language does it, and one line on what really differs. C# is the language the reader already knows and its column is highlighted; a lesson can name another (`known`) and its own columns (`langs`), as the frontend and ops lessons do."
+          ],
+          "examples": ["compare"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "order",
+          "h": "یک فایل JSON، همیشه به یک ترتیب",
+          "p": [
+            "هر درس یک فایل در `src/data/lessons/` است و همیشه به یک شکل خوانده می‌شود: بعد از درس چه کاری از تو برمی‌آید، سناریوی واقعی‌ای که درس از آن آمده، مفهوم‌ها، جدول مقایسه، کد، اشتباه‌های رایج، جای این کد در پروژه‌های واقعی، تمرین‌ها، و یک جمله برای مصاحبه.",
+            "حرف اول اسم فایل جزوه‌اش است (`l` بک‌اند، `f` فرانت‌اند، `d` Docker، `o` عملیات)؛ ۲۷ درس در چهار جزوه. درس‌ها اول بر اساس جزوه و بعد بر اساس شماره‌شان مرتب می‌شوند."
+          ],
+          "examples": ["lesson"]
+        },
+        {
+          "id": "compare",
+          "h": "یک مفهوم، چند زبان",
+          "p": [
+            "هر ردیف مقایسه یک مفهوم را نام می‌برد، این‌که هر زبان چطور انجامش می‌دهد، و یک خط درباره‌ی تفاوت واقعی. C# زبانی است که خواننده از قبل بلد است و ستونش برجسته می‌شود؛ هر درس می‌تواند زبان دیگری (`known`) و ستون‌های خودش (`langs`) را بگوید، همان‌طور که درس‌های فرانت‌اند و عملیات می‌گویند."
+          ],
+          "examples": ["compare"]
+        }
+      ],
+      "examples": {
+        "lesson": {
+          "title": { "en": "A lesson", "fa": "یک درس" },
+          "lang": "typescript",
+          "file": "src/types/lesson.ts",
+          "from": "export interface Lesson {",
+          "lines": 23
+        },
+        "compare": {
+          "title": { "en": "A comparison row", "fa": "یک ردیف مقایسه" },
+          "lang": "typescript",
+          "file": "src/types/lesson.ts",
+          "from": "// One concept, several languages.",
+          "lines": 2
+        }
+      }
+    },
+    {
+      "id": "samples",
+      "group": "lessons",
+      "title": { "en": "Code samples: tested, real, port", "fa": "نمونه‌کدها: تست‌شده، واقعی، ترجمه" },
+      "files": ["src/types/lesson.ts", "src/lib/code.ts", "src/data/lessons/o004-deploy.json"],
+      "en": [
+        {
+          "id": "origin",
+          "h": "Where a sample comes from",
+          "p": [
+            "A sample is one of three kinds, and the page says which. `tested` points at a file under `examples/` that CI compiles and tests; `real` is code shortened from one of the portfolio's projects; `port` was written for the lesson and never run, and is avoided (only the Azure Pipelines column uses it, since there is no runner for it here).",
+            "Samples with the same `group` become one block with a tab per language."
+          ],
+          "examples": ["sample", "json"]
+        },
+        {
+          "id": "region",
+          "h": "Regions, not line numbers",
+          "p": [
+            "A tested sample names a region: the lines between `#region <name>` and `#endregion`, in whatever comment syntax the language has (`//`, `#`, `<!-- -->`). The page reads the file itself, bundled raw by Vite, so what the reader sees is exactly what CI ran, and an edit above the region does not move it."
+          ],
+          "examples": ["extract"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "origin",
+          "h": "نمونه از کجا آمده",
+          "p": [
+            "هر نمونه یکی از سه نوع است و صفحه می‌گوید کدام. `tested` به فایلی زیر `examples/` اشاره می‌کند که CI آن را کامپایل و تست می‌کند؛ `real` کدی است که از یکی از پروژه‌های پورتفولیو کوتاه شده؛ `port` برای درس نوشته شده و هیچ‌وقت اجرا نشده، و از آن پرهیز می‌شود (فقط ستون Azure Pipelines از آن استفاده می‌کند، چون این‌جا runnerی برایش نیست).",
+            "نمونه‌هایی که `group` یکسان دارند یک بلوک می‌شوند با یک تب برای هر زبان."
+          ],
+          "examples": ["sample", "json"]
+        },
+        {
+          "id": "region",
+          "h": "region، نه شماره‌ی خط",
+          "p": [
+            "نمونه‌ی تست‌شده یک region را نام می‌برد: خط‌های بین `#region <name>` و `#endregion`، با هر نحو توضیحی که آن زبان دارد (`//`، `#`، `<!-- -->`). صفحه خود فایل را می‌خواند که Vite خام داخل bundle گذاشته، پس خواننده دقیقاً همان چیزی را می‌بیند که CI اجرا کرده، و ویرایش بالای region آن را جابه‌جا نمی‌کند."
+          ],
+          "examples": ["extract"]
+        }
+      ],
+      "examples": {
+        "sample": {
+          "title": { "en": "A code sample", "fa": "یک نمونه‌کد" },
+          "lang": "typescript",
+          "file": "src/types/lesson.ts",
+          "from": "// Samples sharing a `group`",
+          "lines": 15
+        },
+        "json": {
+          "title": { "en": "One block, three languages", "fa": "یک بلوک، سه زبان" },
+          "lang": "json",
+          "file": "src/data/lessons/o004-deploy.json",
+          "from": "{ \"group\": \"lock\", \"lang\": \"bash\"",
+          "lines": 3
+        },
+        "extract": {
+          "title": { "en": "Cutting a region out", "fa": "بریدن یک region" },
+          "lang": "typescript",
+          "file": "src/lib/code.ts",
+          "from": "// The lines between \"#region <name>\"",
+          "lines": 22
+        }
+      }
+    },
+    {
+      "id": "checks",
+      "group": "lessons",
+      "title": { "en": "The lesson check", "fa": "چک درس‌ها" },
+      "files": ["scripts/check-lessons.mjs"],
+      "en": [
+        {
+          "id": "langs",
+          "h": "Every language, every region",
+          "p": [
+            "`npm run check` starts with the lessons: every required field is there, ids are unique, every code group and every comparison row covers each of the lesson's languages, and every `examples/` file and region a sample names exists. A lesson with a missing Java tab does not build."
+          ],
+          "examples": ["langs"]
+        },
+        {
+          "id": "refs",
+          "h": "References into the real projects",
+          "p": [
+            "Each lesson ends with where its code lives in the portfolio, as `project/file:line`. Locally, where `D:/E/Projects` exists, the check opens each file and fails when it is gone or shorter than the line named. CI has no copy of the projects and skips this part."
+          ],
+          "examples": ["refs"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "langs",
+          "h": "همه‌ی زبان‌ها، همه‌ی regionها",
+          "p": [
+            "`npm run check` با درس‌ها شروع می‌کند: همه‌ی فیلدهای لازم هستند، idها تکراری نیستند، هر گروه کد و هر ردیف مقایسه همه‌ی زبان‌های درس را دارد، و هر فایل و region زیر `examples/` که نمونه‌ای نام برده وجود دارد. درسی که تب Java ندارد build نمی‌شود."
+          ],
+          "examples": ["langs"]
+        },
+        {
+          "id": "refs",
+          "h": "ارجاع به پروژه‌های واقعی",
+          "p": [
+            "هر درس با جای کدش در پورتفولیو تمام می‌شود، به شکل `project/file:line`. روی PC، جایی که `D:/E/Projects` هست، چک هر فایل را باز می‌کند و اگر نباشد یا از خط گفته‌شده کوتاه‌تر باشد خطا می‌دهد. CI کپی پروژه‌ها را ندارد و از این بخش رد می‌شود."
+          ],
+          "examples": ["refs"]
+        }
+      ],
+      "examples": {
+        "langs": {
+          "title": { "en": "Groups and rows against the lesson's languages", "fa": "گروه‌ها و ردیف‌ها در برابر زبان‌های درس" },
+          "lang": "javascript",
+          "file": "scripts/check-lessons.mjs",
+          "from": "const groups = {}",
+          "to": "for (const r of l.compare ?? [])"
+        },
+        "refs": {
+          "title": { "en": "A ref past the end of its file", "fa": "ارجاعی بعد از انتهای فایل" },
+          "lang": "javascript",
+          "file": "scripts/check-lessons.mjs",
+          "from": "if (existsSync(refsRoot))",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "backend",
+      "group": "examples",
+      "title": { "en": "Four backends, one API", "fa": "چهار بک‌اند، یک API" },
+      "files": [
+        "examples/backend/csharp/Portfolio/PortfolioApp.cs",
+        "examples/backend/python/portfolio/app.py",
+        "examples/backend/typescript/src/app.ts",
+        "examples/backend/java/src/main/java/portfolio/PortfolioController.java"
+      ],
+      "en": [
+        {
+          "id": "same",
+          "h": "The same service, written four times",
+          "p": [
+            "The backend lessons compare C#, TypeScript, Python and Java on one small service: `/status`, projects, sign-in with refresh tokens, roles, a webhook, an outbox, an LLM tool loop. ASP.NET Core Minimal API, Express, FastAPI and Spring Boot each implement the same endpoints with the same answers, so a comparison is between equals.",
+            "Each one builds its app in a factory that takes its dependencies as arguments, so the tests pass fakes and a real database alike."
+          ],
+          "examples": ["cs", "py"]
+        },
+        {
+          "id": "tests",
+          "h": "Tested in their own language",
+          "p": [
+            "`dotnet test`, `node --test`, `pytest` and `mvn test` run in CI, each with a real MongoDB for the lesson that needs one, around twenty tests per language. Only after all of them pass is the site published, which is what the “tested” label on a sample means."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "same",
+          "h": "یک سرویس، چهار بار نوشته‌شده",
+          "p": [
+            "درس‌های بک‌اند C#، TypeScript، Python و Java را روی یک سرویس کوچک مقایسه می‌کنند: `/status`، پروژه‌ها، ورود با refresh token، نقش‌ها، یک webhook، یک outbox، یک حلقه‌ی ابزار LLM. ASP.NET Core Minimal API، Express، FastAPI و Spring Boot هر کدام همان endpointها را با همان جواب‌ها پیاده می‌کنند، پس مقایسه بین هم‌ارزهاست.",
+            "هر کدام اپ را در یک factory می‌سازد که وابستگی‌هایش را به‌صورت آرگومان می‌گیرد، پس تست‌ها هم fake می‌دهند و هم دیتابیس واقعی."
+          ],
+          "examples": ["cs", "py"]
+        },
+        {
+          "id": "tests",
+          "h": "تست‌شده در زبان خودشان",
+          "p": [
+            "`dotnet test`، `node --test`، `pytest` و `mvn test` در CI اجرا می‌شوند، هر کدام با یک MongoDB واقعی برای درسی که لازمش دارد، حدود بیست تست برای هر زبان. سایت فقط وقتی منتشر می‌شود که همه‌شان پاس شوند؛ برچسب «تست‌شده» روی نمونه یعنی همین."
+          ]
+        }
+      ],
+      "examples": {
+        "cs": {
+          "title": { "en": "C#: /status and a project by key", "fa": "C#: ‏/status و یک پروژه با کلید" },
+          "lang": "csharp",
+          "file": "examples/backend/csharp/Portfolio/PortfolioApp.cs",
+          "from": "app.MapGet(\"/status\"",
+          "to": "Results.NotFound(new { error = $\"Unknown project: {key}\" }));"
+        },
+        "py": {
+          "title": { "en": "Python: the same /status", "fa": "Python: همان /status" },
+          "lang": "python",
+          "file": "examples/backend/python/portfolio/app.py",
+          "from": "@app.get(\"/status\")",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "frontend",
+      "group": "examples",
+      "title": { "en": "Frontend: Angular, React, Vue, Blazor", "fa": "فرانت‌اند: Angular، React، Vue، Blazor" },
+      "files": ["examples/frontend/web/package.json", "examples/frontend/web/shared/api.ts", "examples/frontend/web/test/api.test.ts", "examples/frontend/web/vue/router.ts"],
+      "en": [
+        {
+          "id": "shared",
+          "h": "One fetch wrapper under three frameworks",
+          "p": [
+            "The frontend lessons compare components, HTTP with token refresh, route guards and forms. Angular, React and Vue share one `shared/api.ts`: a fetch wrapper that refreshes an expired token once, however many requests got a 401 at the same time, then retries each of them. Its tests run with `node --test`, no browser needed.",
+            "The three frameworks are type-checked with `tsc` and `vue-tsc`; Blazor's components are tested with bUnit under `dotnet test`. Angular's templates are not compiled, and the README says so."
+          ],
+          "examples": ["refresh"]
+        },
+        {
+          "id": "guard",
+          "h": "A guard as data",
+          "p": [
+            "Vue's version of a route guard puts the role on the route as `meta` and checks it in one global `beforeEach`; returning a path redirects."
+          ],
+          "examples": ["guard"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "shared",
+          "h": "یک wrapper برای fetch زیر سه فریم‌ورک",
+          "p": [
+            "درس‌های فرانت‌اند کامپوننت‌ها، HTTP با تازه‌کردن token، guardهای route و فرم‌ها را مقایسه می‌کنند. Angular، React و Vue یک `shared/api.ts` مشترک دارند: wrapperی دور fetch که token منقضی را فقط یک بار تازه می‌کند، هر چند درخواست هم که هم‌زمان 401 گرفته باشند، و بعد هر کدام را دوباره می‌فرستد. تست‌هایش با `node --test` اجرا می‌شوند و مرورگر لازم ندارند.",
+            "نوع‌های سه فریم‌ورک با `tsc` و `vue-tsc` چک می‌شوند؛ کامپوننت‌های Blazor با bUnit زیر `dotnet test` تست می‌شوند. templateهای Angular کامپایل نمی‌شوند و README هم همین را می‌گوید."
+          ],
+          "examples": ["refresh"]
+        },
+        {
+          "id": "guard",
+          "h": "guard به شکل داده",
+          "p": [
+            "نسخه‌ی Vue از guard، نقش را به‌صورت `meta` روی route می‌گذارد و در یک `beforeEach` سراسری چکش می‌کند؛ برگرداندن یک مسیر یعنی redirect."
+          ],
+          "examples": ["guard"]
+        }
+      ],
+      "examples": {
+        "refresh": {
+          "title": { "en": "Two 401s, one refresh", "fa": "دو 401، یک refresh" },
+          "lang": "typescript",
+          "file": "examples/frontend/web/test/api.test.ts",
+          "from": "it('refreshes once for parallel 401s",
+          "lines": 19
+        },
+        "guard": {
+          "title": { "en": "The role on the route", "fa": "نقش روی route" },
+          "lang": "typescript",
+          "file": "examples/frontend/web/vue/router.ts",
+          "from": "export const router = createRouter({",
+          "lines": 13
+        }
+      }
+    },
+    {
+      "id": "docker",
+      "group": "examples",
+      "title": { "en": "Docker: the four services together", "fa": "Docker: چهار سرویس با هم" },
+      "files": ["examples/docker/compose.yml", ".github/workflows/deploy-pages.yml"],
+      "en": [
+        {
+          "id": "compose",
+          "h": "No default secrets",
+          "p": [
+            "The Docker lessons package the same four backends. One compose file builds them with a MongoDB that publishes no port and sits on an `internal` network only the Python service joins. The secrets come from the environment, and `${VAR:?message}` stops `docker compose` with that message when one is missing: there is no default to forget to change."
+          ],
+          "examples": ["secrets"]
+        },
+        {
+          "id": "ci",
+          "h": "Proved in CI",
+          "p": [
+            "CI builds the four images, waits until all of them are healthy, calls `/status` on each, and then checks the opposite: without the secrets, `docker compose config` must fail."
+          ],
+          "examples": ["job"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "compose",
+          "h": "بدون secret پیش‌فرض",
+          "p": [
+            "درس‌های Docker همان چهار بک‌اند را بسته‌بندی می‌کنند. یک فایل compose آن‌ها را با یک MongoDB می‌سازد که هیچ پورتی باز نمی‌کند و روی شبکه‌ی `internal` است که فقط سرویس Python به آن وصل است. secretها از environment می‌آیند و `${VAR:?message}` اگر یکی نباشد `docker compose` را با همان پیام متوقف می‌کند: مقدار پیش‌فرضی نیست که یادت برود عوضش کنی."
+          ],
+          "examples": ["secrets"]
+        },
+        {
+          "id": "ci",
+          "h": "اثبات‌شده در CI",
+          "p": [
+            "CI چهار image را می‌سازد، صبر می‌کند تا همه healthy شوند، `/status` هر کدام را صدا می‌زند، و بعد برعکسش را چک می‌کند: بدون secretها `docker compose config` باید شکست بخورد."
+          ],
+          "examples": ["job"]
+        }
+      ],
+      "examples": {
+        "secrets": {
+          "title": { "en": "Required, with a message", "fa": "اجباری، با یک پیام" },
+          "lang": "yaml",
+          "file": "examples/docker/compose.yml",
+          "from": "x-secrets: &secrets",
+          "lines": 3
+        },
+        "job": {
+          "title": { "en": "Healthy, then refused", "fa": "healthy، بعد رد" },
+          "lang": "yaml",
+          "file": ".github/workflows/deploy-pages.yml",
+          "from": "- name: Build the four images",
+          "lines": 8
+        }
+      }
+    },
+    {
+      "id": "ops",
+      "group": "examples",
+      "title": { "en": "Ops scripts in three languages", "fa": "اسکریپت‌های عملیات در سه زبان" },
+      "files": ["examples/ops/Dockerfile", "examples/ops/tests/run.sh", "examples/ops/deploy/deploy.sh"],
+      "en": [
+        {
+          "id": "image",
+          "h": "An Ubuntu like the VPS",
+          "p": [
+            "The ops lessons (safe scripts, server setup, release, deploy, backup, restore test, CI/CD, reverse proxy) write each script in Bash, PowerShell and Python. They are not just linted: an Ubuntu 24.04 container with all three shells, a real `sshd`, git and sqlite runs every one of them."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "check",
+          "h": "One check for every language",
+          "p": [
+            "`tests/run.sh` runs the same scenario in each language and checks the exit code and the output: the deploy refuses a second run while one holds the lock, the release stops when the repo is behind, the SSH hardening leaves a config that `sshd -t` accepts. A failing check is counted and the next one still runs. Before that, CI runs shellcheck, PSScriptAnalyzer and actionlint; Caddy and nginx are tested with curl in front of an app."
+          ],
+          "examples": ["check"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "image",
+          "h": "یک Ubuntu مثل VPS",
+          "p": [
+            "درس‌های عملیات (اسکریپت امن، راه‌اندازی سرور، انتشار، استقرار، بکاپ، تست بازگردانی، CI/CD، reverse proxy) هر اسکریپت را در Bash، PowerShell و Python می‌نویسند. فقط lint نمی‌شوند: یک کانتینر Ubuntu 24.04 با هر سه shell، یک `sshd` واقعی، git و sqlite تک‌تکشان را اجرا می‌کند."
+          ],
+          "examples": ["image"]
+        },
+        {
+          "id": "check",
+          "h": "یک چک برای همه‌ی زبان‌ها",
+          "p": [
+            "`tests/run.sh` همان سناریو را در هر زبان اجرا می‌کند و کد خروج و خروجی را چک می‌کند: deploy اجرای دوم را تا وقتی قفل دست اولی است رد می‌کند، release وقتی repo عقب است متوقف می‌شود، سخت‌کردن SSH تنظیمی باقی می‌گذارد که `sshd -t` قبولش دارد. چکی که شکست بخورد شمرده می‌شود و چک بعدی باز هم اجرا می‌شود. قبل از آن CI ابزارهای shellcheck، PSScriptAnalyzer و actionlint را اجرا می‌کند؛ Caddy و nginx با curl جلوی یک اپ تست می‌شوند."
+          ],
+          "examples": ["check"]
+        }
+      ],
+      "examples": {
+        "image": {
+          "title": { "en": "Three shells in one image", "fa": "سه shell در یک image" },
+          "lang": "dockerfile",
+          "file": "examples/ops/Dockerfile",
+          "from": "FROM ubuntu:24.04",
+          "to": "rm -rf /var/lib/apt/lists/*"
+        },
+        "check": {
+          "title": { "en": "check: exit code and output", "fa": "check: کد خروج و خروجی" },
+          "lang": "bash",
+          "file": "examples/ops/tests/run.sh",
+          "from": "# check <name> <exit",
+          "lines": 18
+        }
+      }
+    },
+    {
+      "id": "page",
+      "group": "reading",
+      "title": { "en": "The lesson page", "fa": "صفحه‌ی درس" },
+      "files": ["src/components/LessonBody.vue", "src/components/CodeTabs.vue", "src/components/CompareTable.vue", "src/lib/highlight.ts"],
+      "en": [
+        {
+          "id": "body",
+          "h": "One component for the screen and for paper",
+          "p": [
+            "`LessonBody` lays a lesson out in its fixed order. Given `booklet`, it shows every language one under the other and opens every exercise answer, which is how it is printed. Samples are grouped by `group` in the order they are written."
+          ],
+          "examples": ["groups"]
+        },
+        {
+          "id": "tabs",
+          "h": "Tabs that say where the code is from",
+          "p": [
+            "Each block shows its origin under the tab: tested code, shortened real code, or a port. highlight.js colours it, with only the languages the lessons use registered, so the bundle stays small; it escapes the source, which is why `v-html` is safe here."
+          ],
+          "examples": ["origin"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "body",
+          "h": "یک کامپوننت برای صفحه و برای کاغذ",
+          "p": [
+            "`LessonBody` درس را به همان ترتیب ثابتش می‌چیند. با `booklet` همه‌ی زبان‌ها را زیر هم نشان می‌دهد و پاسخ همه‌ی تمرین‌ها را باز می‌کند؛ نسخه‌ی چاپی همین است. نمونه‌ها بر اساس `group` و به ترتیبی که نوشته شده‌اند گروه می‌شوند."
+          ],
+          "examples": ["groups"]
+        },
+        {
+          "id": "tabs",
+          "h": "تب‌هایی که می‌گویند کد از کجاست",
+          "p": [
+            "هر بلوک زیر تب، منشأ کد را نشان می‌دهد: کد تست‌شده، کد واقعیِ کوتاه‌شده، یا ترجمه. highlight.js رنگش می‌کند و فقط زبان‌هایی که درس‌ها لازم دارند در آن ثبت شده‌اند تا bundle کوچک بماند؛ متن منبع را escape می‌کند و به همین دلیل `v-html` این‌جا امن است."
+          ],
+          "examples": ["origin"]
+        }
+      ],
+      "examples": {
+        "groups": {
+          "title": { "en": "Samples into blocks", "fa": "نمونه‌ها در بلوک‌ها" },
+          "lang": "typescript",
+          "file": "src/components/LessonBody.vue",
+          "from": "// Samples that share a `group`",
+          "lines": 6
+        },
+        "origin": {
+          "title": { "en": "The three origins", "fa": "سه منشأ" },
+          "lang": "typescript",
+          "file": "src/components/CodeTabs.vue",
+          "from": "const ORIGIN",
+          "lines": 5
+        }
+      }
+    },
+    {
+      "id": "booklets",
+      "group": "reading",
+      "title": { "en": "Booklets and PDFs", "fa": "جزوه‌ها و PDFها" },
+      "files": ["src/views/BookletView.vue", "src/lib/booklets.ts", "scripts/pdf.mjs", "src/styles/base/_print.scss"],
+      "en": [
+        {
+          "id": "page",
+          "h": "A booklet is a page",
+          "p": [
+            "`#/booklet/<tag>` puts every lesson of one booklet on a single page, fully expanded, with a table of contents. The router owns the URL's hash, so the contents scroll by script rather than with `#anchors`. Print styles hide the navigation and turn the code dark-on-light for paper."
+          ]
+        },
+        {
+          "id": "pdf",
+          "h": "Printed by CI",
+          "p": [
+            "After the build, CI serves the site with `vite preview` and Playwright prints each booklet page to A4, waiting for the fonts first so the Persian text is not set in a fallback. Each booklet gets a fresh page: only the hash differs between them, and a hash change on the same page is not a load."
+          ],
+          "examples": ["print"]
+        },
+        {
+          "id": "base",
+          "h": "Where the PDFs are",
+          "p": [
+            "The PDFs exist only on GitHub Pages, next to the site CI built. The VPS build has none of its own and links to those, through `VITE_PDF_BASE`."
+          ],
+          "examples": ["pdfbase"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "page",
+          "h": "جزوه یک صفحه است",
+          "p": [
+            "`#/booklet/<tag>` همه‌ی درس‌های یک جزوه را کامل و باز روی یک صفحه با فهرست مطالب می‌گذارد. hash آدرس مال router است، پس فهرست با اسکریپت scroll می‌کند نه با `#anchor`. استایل چاپ ناوبری را پنهان می‌کند و کد را برای کاغذ تیره روی روشن می‌کند."
+          ]
+        },
+        {
+          "id": "pdf",
+          "h": "چاپ‌شده در CI",
+          "p": [
+            "بعد از build، CI سایت را با `vite preview` سرو می‌کند و Playwright صفحه‌ی هر جزوه را در A4 چاپ می‌کند، و اول صبر می‌کند فونت‌ها بار شوند تا متن فارسی با فونت جایگزین چیده نشود. هر جزوه صفحه‌ی تازه‌ی خودش را می‌گیرد: بین آن‌ها فقط hash فرق دارد، و عوض شدن hash در همان صفحه بار شدن حساب نمی‌شود."
+          ],
+          "examples": ["print"]
+        },
+        {
+          "id": "base",
+          "h": "PDFها کجا هستند",
+          "p": [
+            "PDFها فقط روی GitHub Pages هستند، کنار سایتی که CI ساخته. build روی VPS هیچ PDFی از خودش ندارد و از طریق `VITE_PDF_BASE` به همان‌ها لینک می‌دهد."
+          ],
+          "examples": ["pdfbase"]
+        }
+      ],
+      "examples": {
+        "print": {
+          "title": { "en": "One booklet, one page, one PDF", "fa": "یک جزوه، یک صفحه، یک PDF" },
+          "lang": "javascript",
+          "file": "scripts/pdf.mjs",
+          "from": "for (const tag of BOOKLETS) {",
+          "to": "await page.evaluate(() => document.fonts.ready)"
+        },
+        "pdfbase": {
+          "title": { "en": "PDF_BASE", "fa": "PDF_BASE" },
+          "lang": "typescript",
+          "file": "src/lib/booklets.ts",
+          "from": "// Where the booklet PDFs live.",
+          "lines": 3
+        }
+      }
+    },
+    {
+      "id": "review",
+      "group": "reading",
+      "title": { "en": "Review cards", "fa": "کارت‌های مرور" },
+      "files": ["src/lib/review.ts", "src/views/ReviewView.vue"],
+      "en": [
+        {
+          "id": "cards",
+          "h": "Cards made from the lessons",
+          "p": [
+            "Nobody writes review cards by hand. Each comparison row becomes a card (the C# answer as the hint, the other languages on the back), and so does each common mistake and each exercise."
+          ]
+        },
+        {
+          "id": "leitner",
+          "h": "Leitner boxes",
+          "p": [
+            "A right answer moves a card up a box and pushes it further away: tomorrow, then 3, 7, 16 and 35 days. A wrong answer puts it back in box 1 and at the end of today's queue, so it comes back before the session ends. A day brings every card that is due plus at most 15 new ones."
+          ],
+          "examples": ["grade", "due"]
+        },
+        {
+          "id": "storage",
+          "h": "Kept in this browser",
+          "p": [
+            "Progress lives in `localStorage` and nowhere else. When storage is blocked or the saved value is broken, the page starts from nothing instead of failing."
+          ],
+          "examples": ["load"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "cards",
+          "h": "کارت‌هایی که از درس‌ها ساخته می‌شوند",
+          "p": [
+            "هیچ‌کس کارت مرور را دستی نمی‌نویسد. هر ردیف مقایسه یک کارت می‌شود (جواب C# به‌عنوان راهنما، بقیه‌ی زبان‌ها پشت کارت)، و هر اشتباه رایج و هر تمرین هم همین‌طور."
+          ]
+        },
+        {
+          "id": "leitner",
+          "h": "جعبه‌های لایتنر",
+          "p": [
+            "جواب درست کارت را یک جعبه بالا می‌برد و دورترش می‌کند: فردا، بعد ۳، ۷، ۱۶ و ۳۵ روز. جواب غلط آن را به جعبه‌ی ۱ و ته صف امروز برمی‌گرداند، پس قبل از تمام شدن جلسه دوباره می‌آید. هر روز همه‌ی کارت‌های سررسیده می‌آیند و حداکثر ۱۵ کارت تازه."
+          ],
+          "examples": ["grade", "due"]
+        },
+        {
+          "id": "storage",
+          "h": "نگه‌داشته در همین مرورگر",
+          "p": [
+            "پیشرفت فقط در `localStorage` است و هیچ‌جای دیگر. اگر storage بسته باشد یا مقدار ذخیره‌شده خراب باشد، صفحه به‌جای خطا از صفر شروع می‌کند."
+          ],
+          "examples": ["load"]
+        }
+      ],
+      "examples": {
+        "grade": {
+          "title": { "en": "Up a box, or back to one", "fa": "یک جعبه بالا، یا برگشت به یک" },
+          "lang": "typescript",
+          "file": "src/lib/review.ts",
+          "from": "export function grade(",
+          "lines": 5
+        },
+        "due": {
+          "title": { "en": "Today's cards", "fa": "کارت‌های امروز" },
+          "lang": "typescript",
+          "file": "src/lib/review.ts",
+          "from": "export function dueCards(",
+          "lines": 5
+        },
+        "load": {
+          "title": { "en": "Storage that may not be there", "fa": "storageی که شاید نباشد" },
+          "lang": "typescript",
+          "file": "src/lib/review.ts",
+          "from": "export function loadState()",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "offline",
+      "group": "reading",
+      "title": { "en": "Installable and offline", "fa": "نصب‌شدنی و آفلاین" },
+      "files": ["public/sw.js", "public/manifest.webmanifest", "src/main.ts", "index.html"],
+      "en": [
+        {
+          "id": "sw",
+          "h": "Network first, then the last copy",
+          "p": [
+            "A manifest makes the site installable as an app. The service worker is eighteen lines: it asks the network first and stores each answer, and when the network fails it serves the last copy. A lesson read once therefore opens on a train. It only handles GET requests to its own origin.",
+            "It is registered only in a production build, so the dev server is never served from a stale cache."
+          ],
+          "examples": ["sw", "register"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "sw",
+          "h": "اول شبکه، بعد آخرین کپی",
+          "p": [
+            "یک manifest سایت را به شکل اپ نصب‌شدنی می‌کند. service worker هجده خط است: اول از شبکه می‌پرسد و هر جواب را نگه می‌دارد، و وقتی شبکه نباشد آخرین کپی را می‌دهد. پس درسی که یک بار خوانده شده در قطار هم باز می‌شود. فقط درخواست‌های GET به origin خودش را جواب می‌دهد.",
+            "فقط در build production ثبت می‌شود، پس dev server هیچ‌وقت از cache کهنه سرو نمی‌شود."
+          ],
+          "examples": ["sw", "register"]
+        }
+      ],
+      "examples": {
+        "sw": {
+          "title": { "en": "The whole service worker", "fa": "کل service worker" },
+          "lang": "javascript",
+          "file": "public/sw.js",
+          "from": "// Minimal offline shell",
+          "lines": 18
+        },
+        "register": {
+          "title": { "en": "Registered in production only", "fa": "ثبت فقط در production" },
+          "lang": "typescript",
+          "file": "src/main.ts",
+          "from": "// Installable app",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "map",
+      "group": "projects",
+      "title": { "en": "The system map, read from compose", "fa": "نقشه‌ی سیستم، خوانده از compose" },
+      "files": ["scripts/project-map.mjs", "src/data/project-map.json"],
+      "en": [
+        {
+          "id": "sources",
+          "h": "Read from the files that run the portfolio",
+          "p": [
+            "Nothing on the system map is drawn by hand. `npm run map` reads Control Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template, only reading them, and writes `src/data/project-map.json`: which project each service belongs to, what it talks to, and which domain Caddy sends to it."
+          ],
+          "examples": ["sources"]
+        },
+        {
+          "id": "links",
+          "h": "Who talks to whom",
+          "p": [
+            "A service talks to another when its environment names it (a host in a URL or a connection string) or it `depends_on` it. A database named after a project's repo is that project's data, so reading it links the two projects even when it lives on the shared SQL Server. Caddy's site blocks give the public face: each domain, its service, and whether it is behind basic auth."
+          ],
+          "examples": ["owner", "sites"]
+        },
+        {
+          "id": "check",
+          "h": "Out of date is a failure",
+          "p": [
+            "With `--check` the script compares its result with the committed map and fails when they differ, so a compose change in Control Panel that is not mapped here stops `npm run check`. CI has no copy of Control Panel and uses the committed map as it is."
+          ],
+          "examples": ["check"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "sources",
+          "h": "خوانده از فایل‌هایی که پورتفولیو را اجرا می‌کنند",
+          "p": [
+            "هیچ‌چیز روی نقشه‌ی سیستم دستی کشیده نشده. `npm run map` فایل‌های compose کنترل پنل، overlay مخصوص VPS، Caddyfile و الگوی env روی VPS را فقط می‌خواند و `src/data/project-map.json` را می‌نویسد: هر سرویس مال کدام پروژه است، با چه چیزی حرف می‌زند، و Caddy کدام دامنه را به آن می‌فرستد."
+          ],
+          "examples": ["sources"]
+        },
+        {
+          "id": "links",
+          "h": "چه کسی با چه کسی حرف می‌زند",
+          "p": [
+            "یک سرویس با سرویس دیگر حرف می‌زند وقتی environmentاش اسم آن را می‌آورد (host در یک URL یا connection string) یا `depends_on` آن است. دیتابیسی که هم‌نام repo یک پروژه است داده‌ی همان پروژه است، پس خواندنش دو پروژه را به هم وصل می‌کند، حتی وقتی روی SQL Server مشترک است. بلوک‌های سایت در Caddyfile چهره‌ی عمومی را می‌دهند: هر دامنه، سرویسش، و این‌که پشت basic auth هست یا نه."
+          ],
+          "examples": ["owner", "sites"]
+        },
+        {
+          "id": "check",
+          "h": "کهنه بودن یعنی خطا",
+          "p": [
+            "با `--check` اسکریپت نتیجه‌اش را با نقشه‌ی commit‌شده مقایسه می‌کند و اگر فرق داشته باشند خطا می‌دهد، پس تغییری در compose کنترل پنل که این‌جا روی نقشه نیامده `npm run check` را متوقف می‌کند. CI کپی کنترل پنل را ندارد و از همان نقشه‌ی commit‌شده استفاده می‌کند."
+          ],
+          "examples": ["check"]
+        }
+      ],
+      "examples": {
+        "sources": {
+          "title": { "en": "The five files it reads", "fa": "پنج فایلی که می‌خواند" },
+          "lang": "javascript",
+          "file": "scripts/project-map.mjs",
+          "from": "const SOURCES = {",
+          "lines": 7
+        },
+        "owner": {
+          "title": { "en": "A database that belongs to a project", "fa": "دیتابیسی که مال یک پروژه است" },
+          "lang": "javascript",
+          "file": "scripts/project-map.mjs",
+          "from": "// A database named after a project's repo",
+          "lines": 3
+        },
+        "sites": {
+          "title": { "en": "Caddy's sites", "fa": "سایت‌های Caddy" },
+          "lang": "javascript",
+          "file": "scripts/project-map.mjs",
+          "from": "for (const m of caddyfile.matchAll(",
+          "lines": 13
+        },
+        "check": {
+          "title": { "en": "Compared with the committed map", "fa": "مقایسه با نقشه‌ی commit‌شده" },
+          "lang": "javascript",
+          "file": "scripts/project-map.mjs",
+          "from": "if (check) {",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "topics",
+      "group": "projects",
+      "title": { "en": "Topics and code snapshots", "fa": "تاپیک‌ها و snapshotهای کد" },
+      "files": ["src/projects/model.ts", "scripts/project-code.mjs", "src/data/topics/programminglessondesigner.json"],
+      "en": [
+        {
+          "id": "file",
+          "h": "A project as topics",
+          "p": [
+            "Each project with topics has a file `src/data/topics/<project>.json` (this page comes from one): groups, and topics in them, each with its files, its sections in both languages, and the excerpts of real code it quotes. An excerpt names a file and a line of text to start from, and either a line to end at or a number of lines."
+          ],
+          "examples": ["types"]
+        },
+        {
+          "id": "anchor",
+          "h": "Found by text, then snapshotted",
+          "p": [
+            "`npm run code` opens each project's repo, finds every excerpt by its text and writes `<project>.code.json` with the code, its line numbers, and the length of every file a topic lists. The site is built from these snapshots, so CI does not need the other repos. Locally, `--check` fails when a snapshot no longer matches its repo, or when an anchor is gone: an edit that moves the code elsewhere in the file does not."
+          ],
+          "examples": ["find"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "file",
+          "h": "یک پروژه به شکل تاپیک‌ها",
+          "p": [
+            "هر پروژه‌ای که تاپیک دارد یک فایل `src/data/topics/<project>.json` دارد (همین صفحه از یکی از آن‌ها آمده): گروه‌ها و تاپیک‌های داخلشان، هر کدام با فایل‌هایش، بخش‌هایش به هر دو زبان، و تکه‌های کد واقعی‌ای که نقل می‌کند. هر تکه یک فایل و یک خط متن برای شروع را نام می‌برد، و یا یک خط برای پایان یا تعداد خط‌ها را."
+          ],
+          "examples": ["types"]
+        },
+        {
+          "id": "anchor",
+          "h": "پیدا شده با متن، بعد snapshot",
+          "p": [
+            "`npm run code` repo هر پروژه را باز می‌کند، هر تکه را با متنش پیدا می‌کند و `<project>.code.json` را با کد، شماره‌ی خط‌هایش و طول هر فایلی که تاپیکی فهرست کرده می‌نویسد. سایت از همین snapshotها build می‌شود، پس CI به repoهای دیگر نیازی ندارد. روی PC، `--check` وقتی snapshot دیگر با repoاش نخواند، یا متن شروعی دیگر نباشد، خطا می‌دهد؛ ویرایشی که کد را جای دیگری از فایل ببرد خطا نمی‌دهد."
+          ],
+          "examples": ["find"]
+        }
+      ],
+      "examples": {
+        "types": {
+          "title": { "en": "A topic and its excerpts", "fa": "یک تاپیک و تکه‌هایش" },
+          "lang": "typescript",
+          "file": "src/projects/model.ts",
+          "from": "export interface TopicExample {",
+          "lines": 17
+        },
+        "find": {
+          "title": { "en": "From the anchor to the end", "fa": "از متن شروع تا پایان" },
+          "lang": "javascript",
+          "file": "scripts/project-code.mjs",
+          "from": "const start = src.findIndex((l) => l.includes(ex.from))",
+          "lines": 12
+        }
+      }
+    },
+    {
+      "id": "scanners",
+      "group": "projects",
+      "title": { "en": "Tables read from the code", "fa": "جدول‌هایی که از کد خوانده می‌شوند" },
+      "files": ["scripts/project-code.mjs", "src/components/projects/DataTable.vue"],
+      "en": [
+        {
+          "id": "what",
+          "h": "Endpoints, tables, routes",
+          "p": [
+            "A topic can show a table instead of prose: a project's HTTP endpoints, its database tables, or its routes. The snapshot reads them from the code itself, each with a small reader per framework: NestJS controllers, Express apps and routers, ASP.NET Core Minimal APIs; SQL scripts, EF Core model snapshots and Mongoose schemas; Angular, React and Vue routes. They are regular expressions, not parsers, written against how these repos actually write their code."
+          ]
+        },
+        {
+          "id": "vue",
+          "h": "This site's own routes",
+          "p": [
+            "The routes table in “Three tabs and the router” comes from the Vue reader: a route's page, a page loaded on demand, or a redirect. The ASP.NET reader shows how far one goes: groups and their prefixes, then each endpoint's policy, from its own line or else its group's."
+          ],
+          "examples": ["vue", "aspnet"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "endpointها، جدول‌ها، routeها",
+          "p": [
+            "یک تاپیک می‌تواند به‌جای متن یک جدول نشان دهد: endpointهای HTTP یک پروژه، جدول‌های دیتابیسش، یا routeهایش. snapshot این‌ها را از خود کد می‌خواند، برای هر فریم‌ورک با یک خواننده‌ی کوچک: کنترلرهای NestJS، اپ‌ها و routerهای Express، Minimal APIهای ASP.NET Core؛ اسکریپت‌های SQL، model snapshotهای EF Core و schemaهای Mongoose؛ routeهای Angular، React و Vue. این‌ها عبارت‌های منظم‌اند نه parser، و برای همان شکلی نوشته شده‌اند که این repoها واقعاً کدشان را می‌نویسند."
+          ]
+        },
+        {
+          "id": "vue",
+          "h": "routeهای خود همین سایت",
+          "p": [
+            "جدول routeها در «سه تب و router» از خواننده‌ی Vue می‌آید: صفحه‌ی یک route، صفحه‌ای که وقتی لازم شود بار می‌شود، یا یک redirect. خواننده‌ی ASP.NET نشان می‌دهد یکی از این‌ها تا کجا می‌رود: گروه‌ها و پیشوندهایشان، بعد policy هر endpoint، از خط خودش یا در غیر این صورت از گروهش."
+          ],
+          "examples": ["vue", "aspnet"]
+        }
+      ],
+      "examples": {
+        "vue": {
+          "title": { "en": "The Vue Router reader", "fa": "خواننده‌ی Vue Router" },
+          "lang": "javascript",
+          "file": "scripts/project-code.mjs",
+          "from": "// Vue Router: { path: '...', component: Page }",
+          "lines": 13
+        },
+        "aspnet": {
+          "title": { "en": "An endpoint's policy", "fa": "policy یک endpoint" },
+          "lang": "javascript",
+          "file": "scripts/project-code.mjs",
+          "from": "// The endpoint's own policy is on its last line",
+          "lines": 6
+        }
+      }
+    },
+    {
+      "id": "bilingual",
+      "group": "projects",
+      "title": { "en": "Two languages, kept in step", "fa": "دو زبان، هم‌گام" },
+      "files": ["src/projects/i18n.ts", "scripts/check-projects.mjs"],
+      "en": [
+        {
+          "id": "strings",
+          "h": "The compiler refuses a missing string",
+          "p": [
+            "The Projects tab is Persian and English from the start. Every interface string is written in both, and the Persian object is typed as the English one, so a key that one language lacks is a type error, not an empty label. The language is part of the address (`#/projects/fa/...`), so a link keeps it; the page's direction follows it."
+          ],
+          "examples": ["head"]
+        },
+        {
+          "id": "sections",
+          "h": "The same sections in both",
+          "p": [
+            "`check-projects.mjs` holds every page to the same rule: the Persian and English sections have the same ids in the same order, and show the same examples and the same tables. Prose may differ; what a reader sees beside it may not."
+          ],
+          "examples": ["same"]
+        },
+        {
+          "id": "inline",
+          "h": "Code and bold, nothing else",
+          "p": [
+            "Paragraphs are plain text with two marks: backticks for code (always left-to-right, even inside Persian) and double asterisks for bold. Everything else is escaped before the two are turned into HTML."
+          ],
+          "examples": ["inline"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "strings",
+          "h": "کامپایلر رشته‌ی جاافتاده را رد می‌کند",
+          "p": [
+            "تب پروژه‌ها از اول فارسی و انگلیسی است. هر رشته‌ی رابط کاربری به هر دو زبان نوشته شده و شیء فارسی با نوع شیء انگلیسی تعریف شده، پس کلیدی که یکی از دو زبان ندارد خطای نوع است، نه یک برچسب خالی. زبان بخشی از آدرس است (`#/projects/fa/...`)، پس لینک آن را نگه می‌دارد؛ جهت صفحه هم دنبال آن می‌رود."
+          ],
+          "examples": ["head"]
+        },
+        {
+          "id": "sections",
+          "h": "همان بخش‌ها در هر دو",
+          "p": [
+            "`check-projects.mjs` همه‌ی صفحه‌ها را به یک قاعده نگه می‌دارد: بخش‌های فارسی و انگلیسی idهای یکسان به ترتیب یکسان دارند و همان مثال‌ها و همان جدول‌ها را نشان می‌دهند. متن می‌تواند فرق کند؛ چیزی که خواننده کنارش می‌بیند نه."
+          ],
+          "examples": ["same"]
+        },
+        {
+          "id": "inline",
+          "h": "کد و پررنگ، و نه چیز دیگر",
+          "p": [
+            "پاراگراف‌ها متن ساده با دو علامت‌اند: backtick برای کد (همیشه چپ‌به‌راست، حتی وسط فارسی) و دو ستاره برای پررنگ. هر چیز دیگری قبل از این‌که این دو به HTML تبدیل شوند escape می‌شود."
+          ],
+          "examples": ["inline"]
+        }
+      ],
+      "examples": {
+        "head": {
+          "title": { "en": "Both languages, one type", "fa": "هر دو زبان، یک نوع" },
+          "lang": "typescript",
+          "file": "src/projects/i18n.ts",
+          "from": "// The Projects tab is bilingual from the start",
+          "lines": 4
+        },
+        "same": {
+          "title": { "en": "Same ids, same examples, same tables", "fa": "همان idها، همان مثال‌ها، همان جدول‌ها" },
+          "lang": "javascript",
+          "file": "scripts/check-projects.mjs",
+          "from": "if (fa.map((s) => s.id).join() !== en.map((s) => s.id).join()) at(`${where}: fa and en sections differ`)",
+          "lines": 6
+        },
+        "inline": {
+          "title": { "en": "Escape first, then two marks", "fa": "اول escape، بعد دو علامت" },
+          "lang": "typescript",
+          "file": "src/projects/i18n.ts",
+          "from": "export function inline(",
+          "lines": 4
+        }
+      }
+    },
+    {
+      "id": "docs",
+      "group": "projects",
+      "title": { "en": "The docs shell and the map drawing", "fa": "قاب مستندات و رسم نقشه" },
+      "files": ["src/views/projects/ProjectsView.vue", "src/projects/model.ts", "src/projects/layout.ts", "src/components/projects/SystemMap.vue"],
+      "en": [
+        {
+          "id": "order",
+          "h": "Pages in the order a visitor meets them",
+          "p": [
+            "Every page sits in one list: the system map, then projects grouped by where they run (on the server, on the PC only, outside compose, infrastructure), each followed by its topics, then the styling page. The sidebar, previous and next all come from that one list."
+          ],
+          "examples": ["pages"]
+        },
+        {
+          "id": "fold",
+          "h": "A sidebar that folds",
+          "p": [
+            "The project you are in opens in the sidebar to show its topics. Clicking it again folds them, the next click opens them, and going to another project opens that one. On a phone the whole list folds into a menu that closes after a page is picked."
+          ],
+          "examples": ["fold"]
+        },
+        {
+          "id": "layout",
+          "h": "A layout without a library",
+          "p": [
+            "The diagrams are SVG laid out by fifty lines of TypeScript: a node's column is the longest path to it, and within a column nodes follow the average row of what points at them, which keeps most arrows short and uncrossed. Arrows always run left to right, whatever the page's direction."
+          ],
+          "examples": ["layout"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "order",
+          "h": "صفحه‌ها به ترتیبی که بازدیدکننده می‌بیند",
+          "p": [
+            "همه‌ی صفحه‌ها در یک فهرست‌اند: نقشه‌ی سیستم، بعد پروژه‌ها بر اساس جای اجرایشان (روی سرور، فقط روی PC، بیرون از compose، زیرساخت)، هر کدام با تاپیک‌هایش پشت سرش، و بعد صفحه‌ی استایل. نوار کناری، قبلی و بعدی همه از همین یک فهرست می‌آیند."
+          ],
+          "examples": ["pages"]
+        },
+        {
+          "id": "fold",
+          "h": "نوار کناری‌ای که جمع می‌شود",
+          "p": [
+            "پروژه‌ای که در آن هستی در نوار کناری باز می‌شود و تاپیک‌هایش را نشان می‌دهد. کلیک دوباره رویش آن‌ها را جمع می‌کند، کلیک بعدی بازشان می‌کند، و رفتن به پروژه‌ی دیگر همان را باز می‌کند. روی گوشی کل فهرست در یک منو جمع می‌شود که بعد از انتخاب صفحه بسته می‌شود."
+          ],
+          "examples": ["fold"]
+        },
+        {
+          "id": "layout",
+          "h": "چیدمان بدون کتابخانه",
+          "p": [
+            "نمودارها SVG هستند و پنجاه خط TypeScript آن‌ها را می‌چیند: ستون هر گره بلندترین مسیر تا آن است، و داخل هر ستون گره‌ها دنبال میانگین ردیف گره‌هایی می‌روند که به آن‌ها اشاره می‌کنند، که بیشتر فلش‌ها را کوتاه و بدون تقاطع نگه می‌دارد. فلش‌ها همیشه چپ به راست‌اند، جهت صفحه هر چه باشد."
+          ],
+          "examples": ["layout"]
+        }
+      ],
+      "examples": {
+        "pages": {
+          "title": { "en": "One list of pages", "fa": "یک فهرست صفحه" },
+          "lang": "typescript",
+          "file": "src/projects/model.ts",
+          "from": "export const PAGES: Page[] = [",
+          "lines": 14
+        },
+        "fold": {
+          "title": { "en": "Open, fold, open", "fa": "باز، جمع، باز" },
+          "lang": "typescript",
+          "file": "src/views/projects/ProjectsView.vue",
+          "from": "// Clicking the open project again",
+          "lines": 8
+        },
+        "layout": {
+          "title": { "en": "Columns by longest path", "fa": "ستون‌ها بر اساس بلندترین مسیر" },
+          "lang": "typescript",
+          "file": "src/projects/layout.ts",
+          "from": "// Longest path from the sources",
+          "lines": 13
+        }
+      }
+    },
+    {
+      "id": "contrast",
+      "group": "styling",
+      "title": { "en": "A build that refuses unreadable colours", "fa": "buildی که رنگ ناخوانا را رد می‌کند" },
+      "files": ["src/styles/abstracts/_tokens.scss", "src/styles/abstracts/_functions.scss", "src/styles/base/_theme.scss", "src/styles/projects/_accents.scss", ".stylelintrc.json"],
+      "en": [
+        {
+          "id": "tokens",
+          "h": "Every colour has a name",
+          "p": [
+            "Raw colours live in one file, `_tokens.scss`; stylelint refuses a hex value anywhere else. The light theme is written in full and the dark one says only what differs. Sass turns both into CSS variables and the browser switches them, since the theme changes after Sass is gone."
+          ]
+        },
+        {
+          "id": "pairs",
+          "h": "Contrast checked at build time",
+          "p": [
+            "Every pair of text and background colour is listed with its minimum, WCAG AA's 4.5:1 for body text, and Sass computes the ratio in both themes. One pair below its minimum stops the build with the pair's name. Each project's accent is checked the same way, as an outline at 3:1 and under text at 4.5:1. The page “How this site is styled” goes through the rest of the Sass."
+          ],
+          "examples": ["pairs", "require"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "tokens",
+          "h": "هر رنگ یک اسم دارد",
+          "p": [
+            "رنگ‌های خام در یک فایل‌اند، `_tokens.scss`؛ stylelint مقدار hex را هر جای دیگری رد می‌کند. تم روشن کامل نوشته شده و تم تیره فقط تفاوت‌ها را می‌گوید. Sass هر دو را به متغیرهای CSS تبدیل می‌کند و مرورگر بینشان جابه‌جا می‌شود، چون تم بعد از رفتن Sass عوض می‌شود."
+          ]
+        },
+        {
+          "id": "pairs",
+          "h": "contrast موقع build چک می‌شود",
+          "p": [
+            "هر جفت رنگ متن و پس‌زمینه با حداقلش فهرست شده، 4.5:1 در WCAG AA برای متن، و Sass نسبت را در هر دو تم حساب می‌کند. یک جفت زیر حداقلش build را با اسم همان جفت متوقف می‌کند. رنگ هر پروژه هم همین‌طور چک می‌شود، به‌عنوان خط دور با 3:1 و زیر متن با 4.5:1. صفحه‌ی «استایل این سایت» بقیه‌ی Sass را توضیح می‌دهد."
+          ],
+          "examples": ["pairs", "require"]
+        }
+      ],
+      "examples": {
+        "pairs": {
+          "title": { "en": "Checked in every theme", "fa": "چک‌شده در هر تم" },
+          "lang": "scss",
+          "file": "src/styles/base/_theme.scss",
+          "from": "// Every pair in tokens.$contrast-pairs",
+          "lines": 6
+        },
+        "require": {
+          "title": { "en": "Too close stops the build", "fa": "نزدیک بودن build را متوقف می‌کند" },
+          "lang": "scss",
+          "file": "src/styles/abstracts/_functions.scss",
+          "from": "// Stops the build when two colours",
+          "lines": 10
+        }
+      }
+    },
+    {
+      "id": "ci",
+      "group": "deploy",
+      "title": { "en": "Verify, then deploy", "fa": "اول تأیید، بعد استقرار" },
+      "files": [".github/workflows/deploy-pages.yml"],
+      "en": [
+        {
+          "id": "jobs",
+          "h": "Nothing is published if a test fails",
+          "p": [
+            "Every push to `main` runs seven jobs side by side: Python, TypeScript, C#, Java, the frontends, the Docker stack, the ops scripts. The deploy job needs all seven. It then runs `npm run check` and stylelint, builds the site with the repository's name as its base, and prints the booklets."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "pages",
+          "h": "Published to gh-pages",
+          "p": [
+            "`dist` goes to the `gh-pages` branch as a single fresh commit, with `.nojekyll` so GitHub serves files as they are, and GitHub Pages serves that branch. A newer push cancels a run still in progress."
+          ],
+          "examples": ["publish"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "jobs",
+          "h": "اگر تستی شکست بخورد چیزی منتشر نمی‌شود",
+          "p": [
+            "هر push به `main` هفت job را کنار هم اجرا می‌کند: Python، TypeScript، C#، Java، فرانت‌اندها، استک Docker، اسکریپت‌های عملیات. job استقرار به هر هفت تا وابسته است. بعد `npm run check` و stylelint را اجرا می‌کند، سایت را با اسم repo به‌عنوان base می‌سازد و جزوه‌ها را چاپ می‌کند."
+          ],
+          "examples": ["deploy"]
+        },
+        {
+          "id": "pages",
+          "h": "منتشر در gh-pages",
+          "p": [
+            "`dist` به‌صورت یک commit تازه‌ی تنها به branch `gh-pages` می‌رود، با `.nojekyll` تا GitHub فایل‌ها را همان‌طور که هستند سرو کند، و GitHub Pages همان branch را سرو می‌کند. push جدیدتر اجرایی را که هنوز تمام نشده لغو می‌کند."
+          ],
+          "examples": ["publish"]
+        }
+      ],
+      "examples": {
+        "deploy": {
+          "title": { "en": "The deploy job", "fa": "job استقرار" },
+          "lang": "yaml",
+          "file": ".github/workflows/deploy-pages.yml",
+          "from": "needs: [python, typescript, csharp, java, frontend, docker, ops]",
+          "to": "SITE_URL=http://localhost:4173/"
+        },
+        "publish": {
+          "title": { "en": "dist to gh-pages", "fa": "dist به gh-pages" },
+          "lang": "yaml",
+          "file": ".github/workflows/deploy-pages.yml",
+          "from": "- run: touch dist/.nojekyll",
+          "lines": 7
+        }
+      }
+    },
+    {
+      "id": "vps",
+      "group": "deploy",
+      "title": { "en": "On the VPS: code.arashkeshtgar.ca", "fa": "روی VPS: ‏code.arashkeshtgar.ca" },
+      "files": ["src/lib/booklets.ts", "vite.config.ts", "src/router/index.ts"],
+      "en": [
+        {
+          "id": "build",
+          "h": "Built by Control Panel",
+          "p": [
+            "This repo has no Dockerfile of its own. On the VPS, Control Panel's compose builds the `programming-web` service from this folder with `deploy/programming/web.Dockerfile`: `npm ci` without Playwright's browser, `npm run build` with `VITE_PDF_BASE` pointing at the PDFs on GitHub Pages, then nginx serving `dist`. Caddy puts code.arashkeshtgar.ca in front of it, public.",
+            "Control Panel's `deploy.sh` pulls this repo with the others and rebuilds what changed, so a push here reaches the VPS at the next deploy, not on its own."
+          ],
+          "examples": ["pdfbase"]
+        },
+        {
+          "id": "plain",
+          "h": "Why plain nginx is enough",
+          "p": [
+            "The site is static and its routes live in the hash, so the server never sees `/lesson/l002`: it only ever serves `index.html` and the assets. There is no fallback rule to write, and none to get wrong."
+          ],
+          "examples": ["hash"]
+        }
+      ],
+      "fa": [
+        {
+          "id": "build",
+          "h": "build شده به دست کنترل پنل",
+          "p": [
+            "این repo هیچ Dockerfile مخصوص خودش ندارد. روی VPS، compose کنترل پنل سرویس `programming-web` را از همین پوشه با `deploy/programming/web.Dockerfile` می‌سازد: `npm ci` بدون مرورگر Playwright، `npm run build` با `VITE_PDF_BASE` که به PDFهای GitHub Pages اشاره می‌کند، و بعد nginx که `dist` را سرو می‌کند. Caddy دامنه‌ی code.arashkeshtgar.ca را به‌صورت عمومی جلوی آن می‌گذارد.",
+            "`deploy.sh` کنترل پنل این repo را همراه بقیه pull می‌کند و هر چه عوض شده را دوباره می‌سازد، پس push این‌جا در deploy بعدی به VPS می‌رسد، نه خودبه‌خود."
+          ],
+          "examples": ["pdfbase"]
+        },
+        {
+          "id": "plain",
+          "h": "چرا nginx ساده کافی است",
+          "p": [
+            "سایت ایستاست و routeهایش در hash هستند، پس سرور هیچ‌وقت `/lesson/l002` را نمی‌بیند: فقط `index.html` و فایل‌های assets را سرو می‌کند. قاعده‌ی fallbackی نیست که نوشته شود، و نه که اشتباه نوشته شود."
+          ],
+          "examples": ["hash"]
+        }
+      ],
+      "examples": {
+        "pdfbase": {
+          "title": { "en": "Links to the PDFs on Pages", "fa": "لینک به PDFهای روی Pages" },
+          "lang": "typescript",
+          "file": "src/lib/booklets.ts",
+          "from": "// Where the booklet PDFs live.",
+          "lines": 3
+        },
+        "hash": {
+          "title": { "en": "Hash history", "fa": "hash history" },
+          "lang": "typescript",
+          "file": "src/router/index.ts",
+          "from": "// Hash history keeps deep links working",
+          "lines": 3
+        }
+      }
+    }
+  ]
+}

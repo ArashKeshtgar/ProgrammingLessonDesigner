@@ -2,7 +2,7 @@
 // builds (and CI checks) without that repo: the code excerpts the pages quote, the
 // length of every file they list, and tables read from the code itself: HTTP
 // endpoints (NestJS controllers, Express apps and routers, ASP.NET Core Minimal APIs), tables
-// (SQL scripts, EF Core model snapshots, Mongoose schemas), Angular and React routes.
+// (SQL scripts, EF Core model snapshots, Mongoose schemas), Angular, React and Vue routes.
 //
 //   npm run code            regenerate src/data/topics/<project>.code.json
 //   npm run code -- --check fail if a snapshot no longer matches its repo
@@ -539,6 +539,20 @@ function reactRoutes(repo, file) {
   })
 }
 
+// Vue Router: { path: '...', component: Page }, a page loaded on demand,
+// component: () => import('../views/Page.vue'), or a redirect (a fixed path, or the
+// template string a function returns, shown as written).
+function vueRoutes(repo, file) {
+  return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {
+    const p = /\{ path: '([^']*)'/.exec(l)
+    if (!p) return []
+    const page = /component: (?:\(\) => import\('[^']*\/(\w+)\.vue'\)|(\w+))/.exec(l)
+    if (page) return [{ path: p[1], component: page[1] ?? page[2], guards: [] }]
+    const to = /redirect: (?:'([^']*)'|\(\) => `([^`]*)`)/.exec(l)
+    return to ? [{ path: p[1], redirect: to[1] ?? to[2], guards: [] }] : []
+  })
+}
+
 // EF Core: the model snapshot of each DbContext (Migrations/*ModelSnapshot.cs), which is what
 // the migrations build. One modelBuilder.Entity block per table with its properties, keys,
 // unique indexes and checks; later blocks of the same entity add its foreign keys.
@@ -701,6 +715,7 @@ function snapshot(topics) {
     routes: [
       ...(s.angularRoutes ? angularRoutes(repo, s.angularRoutes) : []),
       ...(s.reactRoutes ? reactRoutes(repo, s.reactRoutes) : []),
+      ...(s.vueRoutes ? vueRoutes(repo, s.vueRoutes) : []),
     ],
   }
 }
