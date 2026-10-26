@@ -1,0 +1,13 @@
+{
+  "name": "Programming Lessons · درس‌های برنامه‌نویسی",
+  "short_name": "Code Lessons",
+  "description": "درس‌های بک‌اند با کد واقعی: C#، TypeScript، Python، Java",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#1f4d3a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
