@@ -27,22 +27,25 @@
           "id": "db",
           "h": "The database first, from numbered scripts",
           "p": [
-            "LabFlow's database is plain SQL, not EF Core migrations: `database/deploy.ps1` runs every `NNN_*.sql` script in order with `sqlcmd`. `-Recreate` drops and rebuilds; `-NoDemo` leaves out the synthetic patients. Only `001_database.sql` needs the database's name, through a sqlcmd variable."
+            "LabFlow's database is plain SQL, not EF Core migrations: `database/deploy.ps1` runs every `NNN_*.sql` script in order with `sqlcmd`. `-Recreate` drops and rebuilds; `-NoDemo` leaves out the synthetic patients. Only `001_database.sql` needs the database's name, through a sqlcmd variable.",
+            "The script first runs `001_database.sql` against `master`, which creates the database, then asks whether a `lab` schema is already there. If it is, the script stops with a message: running it twice changes nothing, and only `-Recreate` (single-user, then `DROP DATABASE`) builds again. Every call goes through `sqlcmd -b`, so the first script that fails throws and the later ones never run on a half-built database."
           ],
-          "examples": ["deploy"]
+          "examples": ["deploy", "guard"]
         },
         {
           "id": "app",
           "h": "API and page",
           "p": [
-            "`dotnet run --project src/LabFlow.Api` serves the API on http://localhost:5180 and `npm run dev` in `web/` the page on http://localhost:5174. On its own, sign-in is a development-only menu of seeded users."
+            "`dotnet run --project src/LabFlow.Api` serves the API on http://localhost:5180 and `npm run dev` in `web/` the page on http://localhost:5174. On its own, sign-in is a development-only menu of seeded users.",
+            "The page learns which sign-in to show from `/api/auth/settings`: not connected it answers `demo`, and the top bar fills its menu from `/api/dev/users`. `dotnet test` runs the tests; to look at the demo patient's results the README queries the view `lab.vw_ResultDetail`."
           ]
         },
         {
           "id": "profiles",
           "h": "Launch profiles for the connected modes",
           "p": [
-            "`connected` signs staff in through ClinicHub with one lab database; `connected-per-clinic` gives each clinic its own LabFlow database, from a connection string with `{clinic}` in it; `via-hub` sends results and money through IntegrationHub. Each is just a set of environment variables."
+            "`connected` signs staff in through ClinicHub with one lab database; `connected-per-clinic` gives each clinic its own LabFlow database, from a connection string with `{clinic}` in it; `via-hub` sends results and money through IntegrationHub. Each is just a set of environment variables.",
+            "The profile points at a ClinicHub on `http://localhost:5301/` with a secret meant only for development, and turns `RequireHttpsMetadata` off because the local ClinicHub runs on plain http. Nothing in the code checks the profile's name: what changes behaviour is whether `ClinicHub__Authority` is set and whether `ClinicHub__DatabasePattern` contains `{clinic}`."
           ],
           "examples": ["profile"]
         }
@@ -52,22 +55,25 @@
           "id": "db",
           "h": "اول دیتابیس، از اسکریپت‌های شماره‌دار",
           "p": [
-            "دیتابیس LabFlow با SQL خالص ساخته می‌شود، نه migrationهای EF Core: `database/deploy.ps1` همه‌ی اسکریپت‌های `NNN_*.sql` را به ترتیب با `sqlcmd` اجرا می‌کند. `-Recreate` حذف می‌کند و از نو می‌سازد؛ `-NoDemo` بیماران ساختگی را نمی‌گذارد. فقط `001_database.sql` اسم دیتابیس را لازم دارد، که با یک متغیر sqlcmd می‌رسد."
+            "دیتابیس LabFlow با SQL خالص ساخته می‌شود، نه migrationهای EF Core: `database/deploy.ps1` همه‌ی اسکریپت‌های `NNN_*.sql` را به ترتیب با `sqlcmd` اجرا می‌کند. `-Recreate` حذف می‌کند و از نو می‌سازد؛ `-NoDemo` بیماران ساختگی را نمی‌گذارد. فقط `001_database.sql` اسم دیتابیس را لازم دارد، که با یک متغیر sqlcmd می‌رسد.",
+            "اسکریپت اول `001_database.sql` را روی `master` اجرا می‌کند که خود دیتابیس را می‌سازد، بعد می‌پرسد آیا schema‌ی `lab` از قبل هست. اگر باشد با یک پیام متوقف می‌شود: دو بار اجرا کردنش چیزی را عوض نمی‌کند و فقط `-Recreate` (اول single-user، بعد `DROP DATABASE`) دوباره می‌سازد. هر فراخوانی با `sqlcmd -b` انجام می‌شود، پس اولین اسکریپتی که خطا بدهد throw می‌کند و اسکریپت‌های بعدی روی دیتابیسِ نیمه‌ساخته اجرا نمی‌شوند."
           ],
-          "examples": ["deploy"]
+          "examples": ["deploy", "guard"]
         },
         {
           "id": "app",
           "h": "API و صفحه",
           "p": [
-            "`dotnet run --project src/LabFlow.Api` API را روی http://localhost:5180 بالا می‌آورد و `npm run dev` در `web/` صفحه را روی http://localhost:5174. وقتی تنها اجرا شود، ورود یک منوی مخصوص Development از کاربران seed‌شده است."
+            "`dotnet run --project src/LabFlow.Api` API را روی http://localhost:5180 بالا می‌آورد و `npm run dev` در `web/` صفحه را روی http://localhost:5174. وقتی تنها اجرا شود، ورود یک منوی مخصوص Development از کاربران seed‌شده است.",
+            "صفحه از `/api/auth/settings` می‌فهمد کدام ورود را نشان دهد: در حالت غیرمتصل جواب `demo` است و نوار بالا منویش را از `/api/dev/users` پر می‌کند. `dotnet test` تست‌ها را اجرا می‌کند؛ برای دیدن جواب‌های بیمار دمو، README از view‌ی `lab.vw_ResultDetail` کوئری می‌گیرد."
           ]
         },
         {
           "id": "profiles",
           "h": "launch profileها برای حالت‌های متصل",
           "p": [
-            "`connected` کارکنان را از طریق ClinicHub وارد می‌کند و یک دیتابیس آزمایشگاه دارد؛ `connected-per-clinic` به هر کلینیک دیتابیس LabFlow خودش را می‌دهد، با connection stringی که `{clinic}` دارد؛ `via-hub` جواب‌ها و پول را از IntegrationHub رد می‌کند. هر کدام فقط مجموعه‌ای از متغیرهای محیطی است."
+            "`connected` کارکنان را از طریق ClinicHub وارد می‌کند و یک دیتابیس آزمایشگاه دارد؛ `connected-per-clinic` به هر کلینیک دیتابیس LabFlow خودش را می‌دهد، با connection stringی که `{clinic}` دارد؛ `via-hub` جواب‌ها و پول را از IntegrationHub رد می‌کند. هر کدام فقط مجموعه‌ای از متغیرهای محیطی است.",
+            "این profile به ClinicHubی روی `http://localhost:5301/` اشاره می‌کند، با secretی که فقط برای Development است، و `RequireHttpsMetadata` را خاموش می‌کند چون ClinicHub محلی روی http ساده اجرا می‌شود. هیچ جای کد اسم profile را چک نمی‌کند: چیزی که رفتار را عوض می‌کند این است که `ClinicHub__Authority` مقدار دارد یا نه و `ClinicHub__DatabasePattern` شامل `{clinic}` هست یا نه."
           ],
           "examples": ["profile"]
         }
@@ -86,8 +92,44 @@
           "file": "src/LabFlow.Api/Properties/launchSettings.json",
           "from": "\"connected-per-clinic\": {",
           "lines": 14
+        },
+        "guard": {
+          "title": { "en": "Already built: stop", "fa": "از قبل ساخته شده: توقف" },
+          "lang": "powershell",
+          "file": "database/deploy.ps1",
+          "from": "$schemaExists = & sqlcmd",
+          "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "You run `deploy.ps1` a second time without `-Recreate`. What happens?", "fa": "`deploy.ps1` را بدون `-Recreate` دوباره اجرا می‌کنید. چه اتفاقی می‌افتد؟" },
+          "options": {
+            "en": ["Every script runs again and the seed rows are inserted twice", "It stops after `001_database.sql`, because the `lab` schema already exists", "It runs only the scripts numbered 050 and above"],
+            "fa": ["همه‌ی اسکریپت‌ها دوباره اجرا می‌شوند و ردیف‌های seed دو بار درج می‌شوند", "بعد از `001_database.sql` متوقف می‌شود، چون schema‌ی `lab` از قبل هست", "فقط اسکریپت‌های ۰۵۰ به بعد را اجرا می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "The script checks `sys.schemas` for `lab` and returns with a message; only `-Recreate` drops and rebuilds.", "fa": "اسکریپت در `sys.schemas` دنبال `lab` می‌گردد و با یک پیام برمی‌گردد؛ فقط `-Recreate` حذف می‌کند و از نو می‌سازد." }
+        },
+        {
+          "q": { "en": "What makes `connected-per-clinic` give each clinic its own database?", "fa": "چه چیزی باعث می‌شود `connected-per-clinic` به هر کلینیک دیتابیس خودش را بدهد؟" },
+          "options": {
+            "en": ["A different port for the API", "The profile's name, which the code checks", "`ClinicHub__DatabasePattern`, a connection string containing `{clinic}`"],
+            "fa": ["یک پورت دیگر برای API", "اسم profile، که کد آن را چک می‌کند", "`ClinicHub__DatabasePattern`، یک connection string که `{clinic}` دارد"]
+          },
+          "answer": 2,
+          "why": { "en": "A profile is only environment variables; the pattern with `{clinic}` is what switches LabFlow to a database per clinic.", "fa": "profile فقط متغیرهای محیطی است؛ الگویی که `{clinic}` دارد LabFlow را به حالت یک دیتابیس برای هر کلینیک می‌برد." }
+        },
+        {
+          "q": { "en": "Why does only `001_database.sql` need the database's name?", "fa": "چرا فقط `001_database.sql` اسم دیتابیس را لازم دارد؟" },
+          "options": {
+            "en": ["The other scripts run inside the database (`-d`), so they never name it", "sqlcmd can pass a variable to one script only", "The other scripts read the name from `appsettings.json`"],
+            "fa": ["بقیه‌ی اسکریپت‌ها داخل خود دیتابیس اجرا می‌شوند (`-d`)، پس اسمش را نمی‌آورند", "sqlcmd فقط به یک اسکریپت می‌تواند متغیر بدهد", "بقیه‌ی اسکریپت‌ها اسم را از `appsettings.json` می‌خوانند"]
+          },
+          "answer": 0,
+          "why": { "en": "`001` runs against `master` and creates the database; every later script is run with `-d $Database`, so it works in whatever database it is given.", "fa": "`001` روی `master` اجرا می‌شود و دیتابیس را می‌سازد؛ هر اسکریپت بعدی با `-d $Database` اجرا می‌شود، پس در هر دیتابیسی که به آن بدهند کار می‌کند." }
+        }
+      ]
     },
     {
       "id": "tests",
@@ -99,17 +141,27 @@
           "id": "skip",
           "h": "Database tests only where there is a database",
           "p": [
-            "Pure logic (slots, health cards, flags) is tested without anything around it. Tests that need SQL Server use `[SqlFact]`, which tries to connect once (3 seconds) and marks them skipped when nothing answers, so CI without SQL Server stays green and says what it did not run."
+            "Pure logic (slots, health cards, flags) is tested without anything around it. Tests that need SQL Server use `[SqlFact]`, which tries to connect once (3 seconds) and marks them skipped when nothing answers, so CI without SQL Server stays green and says what it did not run.",
+            "The slot tests use the demo seed's hours (Monday to Friday 07:00 to 16:00, 10-minute slots, two people each) and a fixed \"now\" in 2020, so nothing is in the past and the answer never depends on the day the test runs: a weekday has exactly 54 slots, the last at 15:50."
           ],
-          "examples": ["sqlfact"]
+          "examples": ["sqlfact", "weekday"]
         },
         {
           "id": "hub",
           "h": "ClinicHub as a stand-in",
           "p": [
-            "The connected tests build throw-away databases under a fresh prefix and replace ClinicHub with stand-ins: a fixed discovery document, a token endpoint that answers as the test decides, and a signing key of the test's own for ClinicHub's service tokens. Re-checks happen at once (`RecheckMinutes` 0)."
+            "The connected tests build throw-away databases under a fresh prefix and replace ClinicHub with stand-ins: a fixed discovery document, a token endpoint that answers as the test decides, and a signing key of the test's own for ClinicHub's service tokens. Re-checks happen at once (`RecheckMinutes` 0).",
+            "Every factory names its databases `LabFlow_Test_{guid}_…`, so two runs, or two test classes, never share one."
           ],
           "examples": ["settings"]
+        },
+        {
+          "id": "decides",
+          "h": "ClinicHub decides at each check",
+          "p": [
+            "The test signs in through `/test/hub-signin`, a route only the tests add, which plays ClinicHub's callback with the claims an id token would carry and stores a refresh token in the cookie. Then it changes what the stand-in token endpoint answers. Granting `frontdesk`, reception answers 200; granting only `results.view`, the same cookie gets 403; answering `invalid_grant`, 401. With `RecheckMinutes` at 0 every request asks again, so one test sees all three without waiting five minutes."
+          ],
+          "examples": ["decides"]
         }
       ],
       "fa": [
@@ -117,17 +169,27 @@
           "id": "skip",
           "h": "تست دیتابیس فقط جایی که دیتابیس هست",
           "p": [
-            "منطق خالص (نوبت‌ها، کارت سلامت، flagها) بدون هیچ چیز اطرافش تست می‌شود. تست‌هایی که SQL Server لازم دارند `[SqlFact]` دارند: یک بار (۳ ثانیه) سعی می‌کند وصل شود و اگر کسی جواب ندهد آن‌ها را skip می‌کند؛ پس CI بدون SQL Server سبز می‌ماند و می‌گوید چه چیزی را اجرا نکرده."
+            "منطق خالص (نوبت‌ها، کارت سلامت، flagها) بدون هیچ چیز اطرافش تست می‌شود. تست‌هایی که SQL Server لازم دارند `[SqlFact]` دارند: یک بار (۳ ثانیه) سعی می‌کند وصل شود و اگر کسی جواب ندهد آن‌ها را skip می‌کند؛ پس CI بدون SQL Server سبز می‌ماند و می‌گوید چه چیزی را اجرا نکرده.",
+            "تست‌های نوبت از ساعت‌های seed دمو استفاده می‌کنند (دوشنبه تا جمعه ۰۷:۰۰ تا ۱۶:۰۰، نوبت‌های ۱۰ دقیقه‌ای، هر کدام دو نفر) و یک «الان» ثابت در ۲۰۲۰، پس هیچ نوبتی گذشته نیست و جواب هیچ‌وقت به روزی که تست اجرا می‌شود بستگی ندارد: یک روز کاری دقیقاً ۵۴ نوبت دارد و آخرینش ۱۵:۵۰ است."
           ],
-          "examples": ["sqlfact"]
+          "examples": ["sqlfact", "weekday"]
         },
         {
           "id": "hub",
           "h": "بدل ClinicHub",
           "p": [
-            "تست‌های حالت متصل دیتابیس‌های یک‌بارمصرف زیر یک پیشوند تازه می‌سازند و ClinicHub را با بدل‌ها عوض می‌کنند: یک discovery document ثابت، یک token endpoint که هر طور تست بخواهد جواب می‌دهد، و یک کلید امضای مال خود تست برای tokenهای سرویس ClinicHub. چک دوباره فوراً انجام می‌شود (`RecheckMinutes` صفر)."
+            "تست‌های حالت متصل دیتابیس‌های یک‌بارمصرف زیر یک پیشوند تازه می‌سازند و ClinicHub را با بدل‌ها عوض می‌کنند: یک discovery document ثابت، یک token endpoint که هر طور تست بخواهد جواب می‌دهد، و یک کلید امضای مال خود تست برای tokenهای سرویس ClinicHub. چک دوباره فوراً انجام می‌شود (`RecheckMinutes` صفر).",
+            "هر factory دیتابیس‌هایش را `LabFlow_Test_{guid}_…` نام‌گذاری می‌کند، پس دو اجرا، یا دو کلاس تست، هیچ‌وقت یک دیتابیس مشترک ندارند."
           ],
           "examples": ["settings"]
+        },
+        {
+          "id": "decides",
+          "h": "ClinicHub در هر چک تصمیم می‌گیرد",
+          "p": [
+            "تست از `/test/hub-signin` وارد می‌شود، routeی که فقط تست‌ها اضافه می‌کنند و callback ورود ClinicHub را با claimهایی که id token می‌داشت بازی می‌کند و یک refresh token در کوکی می‌گذارد. بعد جواب token endpoint بدل را عوض می‌کند. با دادن `frontdesk` پذیرش 200 می‌دهد؛ با دادن فقط `results.view` همان کوکی 403 می‌گیرد؛ با جواب `invalid_grant` نتیجه 401 است. چون `RecheckMinutes` صفر است، هر درخواست دوباره می‌پرسد، پس یک تست هر سه حالت را بدون پنج دقیقه صبر می‌بیند."
+          ],
+          "examples": ["decides"]
         }
       ],
       "examples": {
@@ -144,8 +206,51 @@
           "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
           "from": "builder.UseSetting(\"ClinicHub:Authority\"",
           "lines": 4
+        },
+        "weekday": {
+          "title": { "en": "A weekday, from open to the last full slot", "fa": "یک روز کاری، از باز شدن تا آخرین نوبت کامل" },
+          "lang": "csharp",
+          "file": "tests/LabFlow.Api.Tests/SlotCalculatorTests.cs",
+          "from": "public void Weekday_has_slots_from_open_to_last_full_slot_before_close()",
+          "lines": 8
+        },
+        "decides": {
+          "title": { "en": "Granted, narrowed, refused", "fa": "داده‌شده، کم‌شده، ردشده" },
+          "lang": "csharp",
+          "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+          "from": "public async Task ClinicHub_decides_at_each_check()",
+          "lines": 12
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "CI has no SQL Server. What happens to the `[SqlFact]` tests?", "fa": "CI هیچ SQL Serverی ندارد. تست‌های `[SqlFact]` چه می‌شوند؟" },
+          "options": {
+            "en": ["They fail after a 30-second timeout", "They are skipped, with a reason, after one 3-second connection attempt", "They run against an in-memory database instead"],
+            "fa": ["بعد از timeout سی‌ثانیه‌ای fail می‌شوند", "بعد از یک تلاش سه‌ثانیه‌ای برای اتصال، با دلیل skip می‌شوند", "به‌جایش روی یک دیتابیس in-memory اجرا می‌شوند"]
+          },
+          "answer": 1,
+          "why": { "en": "The attribute tries once (cached in a `Lazy<bool>`) and sets `Skip`, so the run stays green and says what it did not run.", "fa": "attribute یک بار امتحان می‌کند (در یک `Lazy<bool>` نگه داشته می‌شود) و `Skip` را می‌گذارد، پس اجرا سبز می‌ماند و می‌گوید چه چیزی اجرا نشد." }
+        },
+        {
+          "q": { "en": "In the re-check test, the stand-in token endpoint answers `invalid_grant`. What does the next request get?", "fa": "در تست چک دوباره، token endpoint بدل جواب `invalid_grant` می‌دهد. درخواست بعدی چه می‌گیرد؟" },
+          "options": {
+            "en": ["403, the permissions are emptied", "200, the old permissions are kept for a grace period", "401, the session is ended"],
+            "fa": ["403، مجوزها خالی می‌شوند", "200، مجوزهای قبلی تا یک مهلت می‌مانند", "401، نشست تمام می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "A 4xx from ClinicHub is a refusal, which signs the cookie out; the grace period is only for an unreachable ClinicHub.", "fa": "جواب 4xx از ClinicHub یعنی رد، که کوکی را خارج می‌کند؛ مهلت فقط برای وقتی است که ClinicHub در دسترس نیست." }
+        },
+        {
+          "q": { "en": "Why do the slot tests pass a fixed \"now\" in 2020 instead of using the clock?", "fa": "چرا تست‌های نوبت به‌جای ساعت سیستم یک «الان» ثابت در ۲۰۲۰ می‌دهند؟" },
+          "options": {
+            "en": ["So no slot is in the past and the result is the same on any day", "Because `SlotCalculator` cannot read the clock", "So the tests run in UTC instead of Toronto time"],
+            "fa": ["تا هیچ نوبتی گذشته نباشد و نتیجه در هر روزی یکی باشد", "چون `SlotCalculator` نمی‌تواند ساعت را بخواند", "تا تست‌ها به‌جای وقت تورنتو به UTC اجرا شوند"]
+          },
+          "answer": 0,
+          "why": { "en": "The calculator drops slots before `nowUtc`; a fixed date long ago makes every test date in the future and the counts stable.", "fa": "محاسبه‌گر نوبت‌های قبل از `nowUtc` را حذف می‌کند؛ یک تاریخ ثابت در گذشته‌ی دور هر تاریخ تست را آینده می‌کند و شمارش‌ها ثابت می‌مانند." }
+        }
+      ]
     },
     {
       "id": "sign-in",
@@ -165,7 +270,8 @@
           "id": "demo",
           "h": "A demo sign-in that cannot reach production",
           "p": [
-            "Not connected, the caller names a seeded `sec.AppUser` in the `X-Demo-User` header and is signed in with that user's role. The handler is registered only in Development; anywhere else the scheme has no handler and every protected endpoint answers 401."
+            "Not connected, the caller names a seeded `sec.AppUser` in the `X-Demo-User` header and is signed in with that user's role. The handler is registered only in Development; anywhere else the scheme has no handler and every protected endpoint answers 401.",
+            "No header at all is not an error: the handler returns `NoResult` and the request is simply anonymous, which is what the booking pages are. A header naming an unknown or inactive user fails. A demo user linked to a patient also gets a `labflow:patient_id` claim."
           ],
           "examples": ["register", "demo"]
         },
@@ -173,9 +279,18 @@
           "id": "policies",
           "h": "Permissions, the same either way",
           "p": [
-            "Endpoints use two policies, `FrontDesk` and `ResultsEntry`, which check permissions, not roles. A demo user gets them from the role; someone from ClinicHub gets them from ClinicHub (`labflow:frontdesk` there arrives as `frontdesk` here). There is no fallback policy: an endpoint without one is public, which is what the booking pages need."
+            "Endpoints use two policies, `FrontDesk` and `ResultsEntry`, which check permissions, not roles. A demo user gets them from the role; someone from ClinicHub gets them from ClinicHub (`labflow:frontdesk` there arrives as `frontdesk` here). There is no fallback policy: an endpoint without one is public, which is what the booking pages need.",
+            "`admin` satisfies both policies. For someone from ClinicHub, the `Role` stored in `sec.AppUser` is only a label made from the permissions (`RoleFor`); nothing checks it."
           ],
           "examples": ["policies", "roles"]
+        },
+        {
+          "id": "me",
+          "h": "What the page asks first",
+          "p": [
+            "`/api/auth/settings` tells the React app how people sign in (`clinichub` or `demo`) and whether each clinic has its own database. `/api/me` always answers 200: the user's id, name, role, permissions and clinic, or nulls for an anonymous caller, so the page can ask without handling an error."
+          ],
+          "examples": ["settings"]
         }
       ],
       "fa": [
@@ -191,7 +306,8 @@
           "id": "demo",
           "h": "ورود دمو که به production نمی‌رسد",
           "p": [
-            "در حالت غیرمتصل، درخواست‌دهنده اسم یک `sec.AppUser` seed‌شده را در هدر `X-Demo-User` می‌فرستد و با نقش همان کاربر وارد می‌شود. این handler فقط در Development ثبت می‌شود؛ هر جای دیگر scheme هیچ handlerی ندارد و هر endpoint محافظت‌شده 401 می‌دهد."
+            "در حالت غیرمتصل، درخواست‌دهنده اسم یک `sec.AppUser` seed‌شده را در هدر `X-Demo-User` می‌فرستد و با نقش همان کاربر وارد می‌شود. این handler فقط در Development ثبت می‌شود؛ هر جای دیگر scheme هیچ handlerی ندارد و هر endpoint محافظت‌شده 401 می‌دهد.",
+            "نبودن هدر خطا نیست: handler جواب `NoResult` می‌دهد و درخواست فقط ناشناس است، که صفحه‌های نوبت‌گیری همین‌اند. هدری که اسم کاربری ناشناخته یا غیرفعال را بدهد fail می‌شود. کاربر دمویی که به یک بیمار وصل است claim‌ی `labflow:patient_id` هم می‌گیرد."
           ],
           "examples": ["register", "demo"]
         },
@@ -199,9 +315,18 @@
           "id": "policies",
           "h": "مجوزها، در هر دو حالت یکی",
           "p": [
-            "endpointها دو policy دارند، `FrontDesk` و `ResultsEntry`، که مجوز را چک می‌کنند نه نقش را. کاربر دمو آن‌ها را از نقشش می‌گیرد؛ کسی که از ClinicHub می‌آید از ClinicHub (`labflow:frontdesk` آن‌جا این‌جا `frontdesk` می‌شود). fallback policy وجود ندارد: endpoint بدون policy عمومی است، و صفحه‌های نوبت‌گیری همین را لازم دارند."
+            "endpointها دو policy دارند، `FrontDesk` و `ResultsEntry`، که مجوز را چک می‌کنند نه نقش را. کاربر دمو آن‌ها را از نقشش می‌گیرد؛ کسی که از ClinicHub می‌آید از ClinicHub (`labflow:frontdesk` آن‌جا این‌جا `frontdesk` می‌شود). fallback policy وجود ندارد: endpoint بدون policy عمومی است، و صفحه‌های نوبت‌گیری همین را لازم دارند.",
+            "`admin` هر دو policy را برآورده می‌کند. برای کسی که از ClinicHub می‌آید، `Role` ذخیره‌شده در `sec.AppUser` فقط برچسبی است که از مجوزها ساخته می‌شود (`RoleFor`)؛ هیچ چیزی آن را چک نمی‌کند."
           ],
           "examples": ["policies", "roles"]
+        },
+        {
+          "id": "me",
+          "h": "اولین چیزی که صفحه می‌پرسد",
+          "p": [
+            "`/api/auth/settings` به اپ React می‌گوید افراد چطور وارد می‌شوند (`clinichub` یا `demo`) و آیا هر کلینیک دیتابیس خودش را دارد. `/api/me` همیشه 200 می‌دهد: شناسه، اسم، نقش، مجوزها و کلینیک کاربر، یا null برای درخواست‌دهنده‌ی ناشناس، تا صفحه بتواند بدون رسیدگی به خطا بپرسد."
+          ],
+          "examples": ["settings"]
         }
       ],
       "examples": {
@@ -232,8 +357,44 @@
           "file": "src/LabFlow.Api/Auth/DemoAuthHandler.cs",
           "from": "public static string[] ForRole(string role) => role switch",
           "lines": 8
+        },
+        "settings": {
+          "title": { "en": "How people sign in, for the React app", "fa": "افراد چطور وارد می‌شوند، برای اپ React" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Program.cs",
+          "from": "app.MapGet(\"/api/auth/settings\"",
+          "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "LabFlow runs in Production, not connected to ClinicHub, and a request sends `X-Demo-User`. What happens on a protected endpoint?", "fa": "LabFlow در Production و بدون اتصال به ClinicHub اجرا می‌شود و درخواستی `X-Demo-User` می‌فرستد. روی یک endpoint محافظت‌شده چه می‌شود؟" },
+          "options": {
+            "en": ["401: the Demo scheme has no handler outside Development", "The user is signed in with that role", "403: the user exists but has no permission"],
+            "fa": ["401: scheme‌ی Demo بیرون از Development هیچ handlerی ندارد", "کاربر با همان نقش وارد می‌شود", "403: کاربر هست ولی مجوز ندارد"]
+          },
+          "answer": 0,
+          "why": { "en": "`AddScheme` for the demo handler runs only when `IsDevelopment()`; elsewhere the default scheme cannot authenticate anyone.", "fa": "`AddScheme` برای handler دمو فقط وقتی `IsDevelopment()` است اجرا می‌شود؛ جای دیگر scheme پیش‌فرض نمی‌تواند هیچ‌کس را احراز هویت کند." }
+        },
+        {
+          "q": { "en": "Why do the policies require permissions rather than roles?", "fa": "چرا policyها به‌جای نقش، مجوز می‌خواهند؟" },
+          "options": {
+            "en": ["Roles are slower to check", "The same policies then work for demo users and for people whose permissions come from ClinicHub", "ASP.NET Core cannot check roles in a cookie"],
+            "fa": ["چک کردن نقش کندتر است", "این‌طوری همان policyها هم برای کاربر دمو کار می‌کنند و هم برای کسی که مجوزهایش از ClinicHub می‌آید", "ASP.NET Core نمی‌تواند نقش را در کوکی چک کند"]
+          },
+          "answer": 1,
+          "why": { "en": "A demo user's role is turned into permissions by `ForRole`; ClinicHub sends permissions directly. Checking permissions covers both.", "fa": "نقش کاربر دمو با `ForRole` به مجوز تبدیل می‌شود؛ ClinicHub مستقیماً مجوز می‌فرستد. چک کردن مجوز هر دو را پوشش می‌دهد." }
+        },
+        {
+          "q": { "en": "What would a fallback policy that requires a signed-in user break?", "fa": "یک fallback policy که کاربر واردشده بخواهد چه چیزی را خراب می‌کرد؟" },
+          "options": {
+            "en": ["The results worklist", "The ClinicHub re-check", "Public booking: locations, tests, slots and appointments"],
+            "fa": ["worklist جواب‌ها", "چک دوباره‌ی ClinicHub", "نوبت‌گیری عمومی: مکان‌ها، تست‌ها، نوبت‌ها و ثبت نوبت"]
+          },
+          "answer": 2,
+          "why": { "en": "The booking endpoints carry no policy on purpose; with a fallback they would demand a sign-in from patients.", "fa": "endpointهای نوبت‌گیری عمداً policy ندارند؛ با fallback از بیمارها ورود می‌خواستند." }
+        }
+      ]
     },
     {
       "id": "clinichub",
@@ -245,15 +406,17 @@
           "id": "oidc",
           "h": "OpenID Connect, code flow with PKCE",
           "p": [
-            "Staff press \"Staff sign-in with ClinicHub\", sign in there, choose a clinic and come back with a code. LabFlow asks for `openid profile clinic offline_access`, keeps only the refresh and id tokens in its cookie, and makes each ClinicHub person a `sec.AppUser` (`ExternalId = clinichub:{id}`) so the access log names them."
+            "Staff press \"Staff sign-in with ClinicHub\", sign in there, choose a clinic and come back with a code. LabFlow asks for `openid profile clinic offline_access`, keeps only the refresh and id tokens in its cookie, and makes each ClinicHub person a `sec.AppUser` (`ExternalId = clinichub:{id}`) so the access log names them.",
+            "On the way back `ToLocalPrincipal` prepares the clinic's database if needed, finds or adds the `sec.AppUser`, sets its name and role from what ClinicHub says, and stamps `LastLoginAt`. ClinicHub keeps no e-mail address, so a new user gets the placeholder `clinichub-{sub}@users.invalid`, which can never receive mail. If ClinicHub answers `access_denied`, the page is told the person has no role allowing LabFlow at the clinic they chose."
           ],
-          "examples": ["oidc"]
+          "examples": ["oidc", "local"]
         },
         {
           "id": "recheck",
           "h": "The session re-checked every few minutes",
           "p": [
-            "Every `RecheckMinutes` (5 by default) the cookie's refresh token goes to ClinicHub. Refused (role taken away, \"sign out everywhere\") and the session ends; ClinicHub unreachable, and the session carries on for a grace period, then ends too. The permissions in the cookie are replaced by what ClinicHub says now."
+            "Every `RecheckMinutes` (5 by default) the cookie's refresh token goes to ClinicHub. Refused (role taken away, \"sign out everywhere\") and the session ends; ClinicHub unreachable, and the session carries on for a grace period, then ends too. The permissions in the cookie are replaced by what ClinicHub says now.",
+            "Between checks, every request still makes sure the `sec.AppUser` exists and is active. A 4xx from the token endpoint counts as a refusal; a 5xx, a timeout or a network error counts as unreachable. Signing out (`/api/auth/sso/signout`) leaves both the cookie and the ClinicHub scheme, so it signs out of ClinicHub too."
           ],
           "examples": ["recheck"]
         },
@@ -271,15 +434,17 @@
           "id": "oidc",
           "h": "OpenID Connect، code flow با PKCE",
           "p": [
-            "کارکنان «Staff sign-in with ClinicHub» را می‌زنند، آن‌جا وارد می‌شوند، کلینیک را انتخاب می‌کنند و با یک code برمی‌گردند. LabFlow scopeهای `openid profile clinic offline_access` را می‌خواهد، فقط refresh token و id token را در کوکی‌اش نگه می‌دارد، و از هر آدم ClinicHub یک `sec.AppUser` می‌سازد (`ExternalId = clinichub:{id}`) تا لاگ دسترسی اسمش را داشته باشد."
+            "کارکنان «Staff sign-in with ClinicHub» را می‌زنند، آن‌جا وارد می‌شوند، کلینیک را انتخاب می‌کنند و با یک code برمی‌گردند. LabFlow scopeهای `openid profile clinic offline_access` را می‌خواهد، فقط refresh token و id token را در کوکی‌اش نگه می‌دارد، و از هر آدم ClinicHub یک `sec.AppUser` می‌سازد (`ExternalId = clinichub:{id}`) تا لاگ دسترسی اسمش را داشته باشد.",
+            "در برگشت، `ToLocalPrincipal` اگر لازم باشد دیتابیس کلینیک را آماده می‌کند، `sec.AppUser` را پیدا یا اضافه می‌کند، اسم و نقشش را از حرف ClinicHub می‌گذارد و `LastLoginAt` را ثبت می‌کند. ClinicHub آدرس ایمیل نگه نمی‌دارد، پس کاربر تازه آدرس جانگه‌دار `clinichub-{sub}@users.invalid` را می‌گیرد که هیچ‌وقت ایمیلی دریافت نمی‌کند. اگر ClinicHub جواب `access_denied` بدهد، به صفحه گفته می‌شود که این شخص در کلینیکی که انتخاب کرده نقشی برای LabFlow ندارد."
           ],
-          "examples": ["oidc"]
+          "examples": ["oidc", "local"]
         },
         {
           "id": "recheck",
           "h": "نشست هر چند دقیقه دوباره چک می‌شود",
           "p": [
-            "هر `RecheckMinutes` (پیش‌فرض ۵) refresh token کوکی به ClinicHub فرستاده می‌شود. اگر رد شود (نقش گرفته شده، «خروج از همه‌جا») نشست تمام می‌شود؛ اگر ClinicHub در دسترس نباشد، نشست تا یک مهلت ادامه پیدا می‌کند و بعد آن هم تمام می‌شود. مجوزهای کوکی با چیزی که ClinicHub الان می‌گوید عوض می‌شوند."
+            "هر `RecheckMinutes` (پیش‌فرض ۵) refresh token کوکی به ClinicHub فرستاده می‌شود. اگر رد شود (نقش گرفته شده، «خروج از همه‌جا») نشست تمام می‌شود؛ اگر ClinicHub در دسترس نباشد، نشست تا یک مهلت ادامه پیدا می‌کند و بعد آن هم تمام می‌شود. مجوزهای کوکی با چیزی که ClinicHub الان می‌گوید عوض می‌شوند.",
+            "بین دو چک هم هر درخواست مطمئن می‌شود که `sec.AppUser` هست و فعال است. جواب 4xx از token endpoint رد حساب می‌شود؛ 5xx، timeout یا خطای شبکه یعنی در دسترس نبودن. خروج (`/api/auth/sso/signout`) هم از کوکی خارج می‌شود هم از scheme‌ی ClinicHub، پس از ClinicHub هم خارج می‌کند."
           ],
           "examples": ["recheck"]
         },
@@ -320,8 +485,44 @@
           "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
           "from": "public static IApplicationBuilder UseCsrfHeaderCheck",
           "to": "await next();"
+        },
+        "local": {
+          "title": { "en": "ClinicHub's person, as a LabFlow user", "fa": "شخصِ ClinicHub، به‌عنوان کاربر LabFlow" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+          "from": "var externalId = $\"clinichub:{sub}\";",
+          "lines": 6
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "ClinicHub is down for ten minutes (the grace period is 30). What happens to a signed-in session at its re-check?", "fa": "ClinicHub ده دقیقه از دسترس خارج است (مهلت ۳۰ دقیقه است). نشست واردشده در چک دوباره‌اش چه می‌شود؟" },
+          "options": {
+            "en": ["It ends at once", "It carries on with the permissions already in the cookie", "It switches to the demo sign-in"],
+            "fa": ["فوراً تمام می‌شود", "با مجوزهایی که در کوکی هست ادامه می‌دهد", "به ورود دمو تغییر می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Unreachable only ends the session once the last good check is older than `OfflineGraceMinutes`.", "fa": "در دسترس نبودن فقط وقتی نشست را تمام می‌کند که آخرین چک موفق قدیمی‌تر از `OfflineGraceMinutes` باشد." }
+        },
+        {
+          "q": { "en": "Why does LabFlow keep only the refresh token and the id token in its cookie?", "fa": "چرا LabFlow فقط refresh token و id token را در کوکی نگه می‌دارد؟" },
+          "options": {
+            "en": ["The access token is not used here and would only make the cookie bigger", "The access token expires too quickly to store", "Cookies may hold at most two tokens"],
+            "fa": ["access token این‌جا استفاده نمی‌شود و فقط کوکی را بزرگ‌تر می‌کرد", "access token برای ذخیره کردن زود منقضی می‌شود", "کوکی حداکثر دو token می‌تواند داشته باشد"]
+          },
+          "answer": 0,
+          "why": { "en": "The refresh token serves the re-checks and the id token the sign-out hint; `OnTicketReceived` drops the rest.", "fa": "refresh token برای چک‌های دوباره است و id token برای راهنمای خروج؛ `OnTicketReceived` بقیه را دور می‌ریزد." }
+        },
+        {
+          "q": { "en": "The cookie is `SameSite=Lax`. Why must unsafe `/api` calls also carry `X-LabFlow`?", "fa": "کوکی `SameSite=Lax` است. چرا درخواست‌های ناامن به `/api` باید `X-LabFlow` هم داشته باشند؟" },
+          "options": {
+            "en": ["The header carries the user's permissions", "ClinicHub needs it to find the clinic", "A form on another site cannot add a custom header, so a forged request is refused"],
+            "fa": ["هدر مجوزهای کاربر را می‌برد", "ClinicHub برای پیدا کردن کلینیک لازمش دارد", "فرمِ یک سایت دیگر نمی‌تواند هدر سفارشی اضافه کند، پس درخواست جعلی رد می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "Lax is needed because the browser arrives from ClinicHub; the header check closes the gap Lax leaves, since a browser cannot add it cross-site without CORS.", "fa": "Lax لازم است چون مرورگر از ClinicHub می‌آید؛ چک هدر شکافی را که Lax باز می‌گذارد می‌بندد، چون مرورگر بدون CORS نمی‌تواند آن را بین سایت‌ها اضافه کند." }
+        }
+      ]
     },
     {
       "id": "databases",
@@ -333,9 +534,10 @@
           "id": "two",
           "h": "A setting, not a fork",
           "p": [
-            "Usually an Ontario lab is its own business receiving orders from many clinics: one database. With `ClinicHub:DatabasePattern` containing `{clinic}`, each clinic gets its own instead. The same code serves both; only the connection string differs."
+            "Usually an Ontario lab is its own business receiving orders from many clinics: one database. With `ClinicHub:DatabasePattern` containing `{clinic}`, each clinic gets its own instead. The same code serves both; only the connection string differs.",
+            "Before a slug goes into a connection string, `IsValidSlug` allows only 2 to 40 lower-case letters, digits and dashes, so a header cannot slip anything into the database name. With a database per clinic and no clinic named, `NoClinicException` is thrown, and a middleware in `Program.cs` turns it into a 400 that asks \"Which clinic?\" instead of a 500."
           ],
-          "examples": ["connection"]
+          "examples": ["connection", "noclinic"]
         },
         {
           "id": "request",
@@ -349,7 +551,8 @@
           "id": "build",
           "h": "Built from the same scripts at first sign-in",
           "p": [
-            "A clinic's database is created the first time one of its staff signs in (or its first order arrives), from `database/*.sql` without the demo patients, the warehouse or the legacy mapping. A database built before only gets the upgrade scripts, which are safe to run again."
+            "A clinic's database is created the first time one of its staff signs in (or its first order arrives), from `database/*.sql` without the demo patients, the warehouse or the legacy mapping. A database built before only gets the upgrade scripts, which are safe to run again.",
+            "`PrepareAsync` keeps one `Lazy<Task>` per slug in a `ConcurrentDictionary`, so two people of a new clinic signing in at the same moment build its database once. With one lab database there is nothing to build: at start-up `Program.cs` simply runs the upgrade scripts on it."
           ],
           "examples": ["prepare", "buildscripts"]
         }
@@ -359,9 +562,10 @@
           "id": "two",
           "h": "یک تنظیم، نه یک نسخه‌ی جدا",
           "p": [
-            "معمولاً آزمایشگاه در انتاریو کسب‌وکار مستقلی است که از کلینیک‌های زیادی درخواست می‌گیرد: یک دیتابیس. اگر `ClinicHub:DatabasePattern` شامل `{clinic}` باشد، هر کلینیک دیتابیس خودش را می‌گیرد. همان کد هر دو را سرویس می‌دهد؛ فقط connection string فرق دارد."
+            "معمولاً آزمایشگاه در انتاریو کسب‌وکار مستقلی است که از کلینیک‌های زیادی درخواست می‌گیرد: یک دیتابیس. اگر `ClinicHub:DatabasePattern` شامل `{clinic}` باشد، هر کلینیک دیتابیس خودش را می‌گیرد. همان کد هر دو را سرویس می‌دهد؛ فقط connection string فرق دارد.",
+            "قبل از این‌که slug وارد connection string شود، `IsValidSlug` فقط ۲ تا ۴۰ حرف کوچک، رقم و خط تیره را قبول می‌کند، پس یک هدر نمی‌تواند چیزی را در اسم دیتابیس جا بدهد. در حالت یک دیتابیس برای هر کلینیک، اگر کلینیکی گفته نشود `NoClinicException` پرتاب می‌شود و یک middleware در `Program.cs` آن را به‌جای 500 به یک 400 تبدیل می‌کند که می‌پرسد «کدام کلینیک؟»."
           ],
-          "examples": ["connection"]
+          "examples": ["connection", "noclinic"]
         },
         {
           "id": "request",
@@ -375,7 +579,8 @@
           "id": "build",
           "h": "با همان اسکریپت‌ها در اولین ورود ساخته می‌شود",
           "p": [
-            "دیتابیس هر کلینیک اولین باری ساخته می‌شود که یکی از کارکنانش وارد شود (یا اولین درخواستش برسد)، از `database/*.sql` بدون بیماران دمو، انبار داده و نگاشت سیستم قدیمی. دیتابیسی که قبلاً ساخته شده فقط اسکریپت‌های ارتقا را می‌گیرد، که اجرای دوباره‌شان امن است."
+            "دیتابیس هر کلینیک اولین باری ساخته می‌شود که یکی از کارکنانش وارد شود (یا اولین درخواستش برسد)، از `database/*.sql` بدون بیماران دمو، انبار داده و نگاشت سیستم قدیمی. دیتابیسی که قبلاً ساخته شده فقط اسکریپت‌های ارتقا را می‌گیرد، که اجرای دوباره‌شان امن است.",
+            "`PrepareAsync` برای هر slug یک `Lazy<Task>` در یک `ConcurrentDictionary` نگه می‌دارد، پس اگر دو نفر از یک کلینیک تازه هم‌زمان وارد شوند دیتابیسش یک بار ساخته می‌شود. با یک دیتابیس آزمایشگاه چیزی برای ساختن نیست: `Program.cs` موقع شروع فقط اسکریپت‌های ارتقا را رویش اجرا می‌کند."
           ],
           "examples": ["prepare", "buildscripts"]
         }
@@ -415,8 +620,44 @@
           "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
           "from": "await using (var check = new SqlCommand(\"SELECT COUNT(*) FROM sys.schemas WHERE name = 'lab'\", db))",
           "to": "await RunScriptsAsync(db, name, Scripts(f => !f.StartsWith"
+        },
+        "noclinic": {
+          "title": { "en": "No clinic named: a clear 400", "fa": "کلینیکی گفته نشده: یک 400 روشن" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Program.cs",
+          "from": "catch (NoClinicException ex) when",
+          "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "With a database per clinic, an anonymous booking names a clinic whose database was never built. What happens?", "fa": "در حالت یک دیتابیس برای هر کلینیک، یک نوبت‌گیری ناشناس اسم کلینیکی را می‌دهد که دیتابیسش هرگز ساخته نشده. چه می‌شود؟" },
+          "options": {
+            "en": ["The database is built from the scripts and the booking goes on", "A 400: no database is made for a stranger", "The booking goes to the lab's shared database"],
+            "fa": ["دیتابیس از روی اسکریپت‌ها ساخته می‌شود و نوبت‌گیری ادامه پیدا می‌کند", "400: برای غریبه دیتابیسی ساخته نمی‌شود", "نوبت به دیتابیس مشترک آزمایشگاه می‌رود"]
+          },
+          "answer": 1,
+          "why": { "en": "For an unauthenticated request the scoped DbContext checks `ExistsAsync` and throws `NoClinicException`, which becomes 400.", "fa": "برای درخواست احراز‌نشده، DbContext‌ی scoped `ExistsAsync` را چک می‌کند و `NoClinicException` پرتاب می‌کند، که 400 می‌شود." }
+        },
+        {
+          "q": { "en": "Why does `PrepareAsync` store a `Lazy<Task>` per clinic?", "fa": "چرا `PrepareAsync` برای هر کلینیک یک `Lazy<Task>` نگه می‌دارد؟" },
+          "options": {
+            "en": ["So two simultaneous first sign-ins build the database only once", "So the database is dropped when the app stops", "Because SQL Server allows one connection per database"],
+            "fa": ["تا دو ورودِ اولِ هم‌زمان دیتابیس را فقط یک بار بسازند", "تا دیتابیس وقتی اپ متوقف می‌شود حذف شود", "چون SQL Server برای هر دیتابیس یک اتصال اجازه می‌دهد"]
+          },
+          "answer": 0,
+          "why": { "en": "`GetOrAdd` with a `Lazy` makes every caller await the same build task instead of starting their own.", "fa": "`GetOrAdd` با یک `Lazy` باعث می‌شود همه منتظر همان task ساخت بمانند به‌جای این‌که هر کدام یکی شروع کنند." }
+        },
+        {
+          "q": { "en": "Which scripts does a new clinic database not get?", "fa": "دیتابیس یک کلینیک تازه کدام اسکریپت‌ها را نمی‌گیرد؟" },
+          "options": {
+            "en": ["The test catalogue and the sequences", "Every script numbered 050 or above", "The demo patients, the warehouse and the legacy-test mapping"],
+            "fa": ["کاتالوگ تست‌ها و sequenceها", "همه‌ی اسکریپت‌های ۰۵۰ به بعد", "بیماران دمو، انبار داده و نگاشت تست‌های سیستم قدیمی"]
+          },
+          "answer": 2,
+          "why": { "en": "Those belong to migrating the original lab's data, not to a new clinic; the schema, sequences and reference data are run.", "fa": "این‌ها مال انتقال داده‌ی آزمایشگاه اصلی‌اند، نه یک کلینیک تازه؛ schema، sequenceها و داده‌ی مرجع اجرا می‌شوند." }
+        }
+      ]
     },
     {
       "id": "restricted",
@@ -428,15 +669,17 @@
           "id": "label",
           "h": "A label from ClinicHub",
           "p": [
-            "When the patient has a consent directive at the clinic, ClinicHub labels the order `R` (restricted) or `V` (very restricted). In LabFlow that order, and the requisition made from it, is closed to everyone: it answers `403` with `code: restricted`, and the lists show it as \"Restricted\" with no tests or values, so it is not lost."
+            "When the patient has a consent directive at the clinic, ClinicHub labels the order `R` (restricted) or `V` (very restricted). In LabFlow that order, and the requisition made from it, is closed to everyone: it answers `403` with `code: restricted`, and the lists show it as \"Restricted\" with no tests or values, so it is not lost.",
+            "The label is read from the order's `meta.security` in HL7's v3 confidentiality system: `U`, `L`, `M` and `N` mean nothing is restricted, `V` wins when present, and any other code is treated as `R`, so an unexpected code fails closed."
           ],
-          "examples": ["filter"]
+          "examples": ["filter", "code"]
         },
         {
           "id": "open",
           "h": "Opened by one person, with a reason, for an hour",
           "p": [
-            "Opening it takes a reason of at least 10 characters, written to the audit log as `RestrictedOverride` with the label and the reason. The access is for that user and that item only, and lasts one hour. It is kept in memory, so a restart closes everything again, which is the safe way to fail."
+            "Opening it takes a reason of at least 10 characters, written to the audit log as `RestrictedOverride` with the label and the reason. The access is for that user and that item only, and lasts one hour. It is kept in memory, so a restart closes everything again, which is the safe way to fail.",
+            "The key holds the clinic, the user id and the item (`requisition:{id}`), so one person's override never opens the item for a colleague, nor the same number in another clinic's database. The check is an endpoint filter on the whole results group, for every route with an `id`: a new endpoint there is closed too, without anyone having to remember."
           ],
           "examples": ["override", "gate"]
         },
@@ -454,15 +697,17 @@
           "id": "label",
           "h": "یک برچسب از ClinicHub",
           "p": [
-            "وقتی بیمار در کلینیک consent directive دارد، ClinicHub درخواست را با `R` (محدود) یا `V` (خیلی محدود) برچسب می‌زند. در LabFlow آن درخواست و requisitionی که از آن ساخته شده به روی همه بسته است: `403` با `code: restricted` جواب می‌دهد و فهرست‌ها آن را با عنوان «Restricted» و بدون تست یا مقدار نشان می‌دهند، تا گم نشود."
+            "وقتی بیمار در کلینیک consent directive دارد، ClinicHub درخواست را با `R` (محدود) یا `V` (خیلی محدود) برچسب می‌زند. در LabFlow آن درخواست و requisitionی که از آن ساخته شده به روی همه بسته است: `403` با `code: restricted` جواب می‌دهد و فهرست‌ها آن را با عنوان «Restricted» و بدون تست یا مقدار نشان می‌دهند، تا گم نشود.",
+            "برچسب از `meta.security` درخواست، در سیستم confidentiality نسخه‌ی ۳ HL7، خوانده می‌شود: `U`، `L`، `M` و `N` یعنی چیزی محدود نیست، اگر `V` باشد همان برنده است، و هر کد دیگری `R` حساب می‌شود، پس یک کد غیرمنتظره به سمت بسته شکست می‌خورد."
           ],
-          "examples": ["filter"]
+          "examples": ["filter", "code"]
         },
         {
           "id": "open",
           "h": "باز شدن برای یک نفر، با دلیل، برای یک ساعت",
           "p": [
-            "باز کردنش دلیلی دست‌کم ۱۰ کاراکتری می‌خواهد که با برچسب و دلیل به‌عنوان `RestrictedOverride` در لاگ audit نوشته می‌شود. دسترسی فقط برای همان کاربر و همان مورد است و یک ساعت طول می‌کشد. در حافظه نگه داشته می‌شود، پس restart همه‌چیز را دوباره می‌بندد؛ شکستن از سمت امن."
+            "باز کردنش دلیلی دست‌کم ۱۰ کاراکتری می‌خواهد که با برچسب و دلیل به‌عنوان `RestrictedOverride` در لاگ audit نوشته می‌شود. دسترسی فقط برای همان کاربر و همان مورد است و یک ساعت طول می‌کشد. در حافظه نگه داشته می‌شود، پس restart همه‌چیز را دوباره می‌بندد؛ شکستن از سمت امن.",
+            "کلید شامل کلینیک، شناسه‌ی کاربر و مورد (`requisition:{id}`) است، پس باز کردنِ یک نفر هیچ‌وقت آن را برای همکارش باز نمی‌کند، و نه همان شماره را در دیتابیس کلینیک دیگر. چک یک endpoint filter روی کل گروه جواب‌هاست، برای هر routeی که `id` دارد: endpoint تازه‌ای که آن‌جا اضافه شود هم بسته است، بی‌آن‌که کسی لازم باشد یادش بماند."
           ],
           "examples": ["override", "gate"]
         },
@@ -503,8 +748,44 @@
           "file": "web/src/components/RestrictedGate.tsx",
           "from": "<label>Why do you need to open it?",
           "to": "<p className=\"muted\">At least 10 characters."
+        },
+        "code": {
+          "title": { "en": "R, V, or nothing", "fa": "R، V، یا هیچ" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "public static string? Confidentiality(JsonNode? resource)",
+          "to": "return codes.Contains(\"V\") ? \"V\" : \"R\";"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "You opened a restricted requisition, then LabFlow restarts. What happens when you open it again?", "fa": "یک requisition محدود را باز کرده‌اید و بعد LabFlow restart می‌شود. دوباره که بازش کنید چه می‌شود؟" },
+          "options": {
+            "en": ["It is closed again and needs a new reason", "It stays open until the hour is up", "It stays open for the rest of the day"],
+            "fa": ["دوباره بسته است و دلیل تازه می‌خواهد", "تا تمام شدن آن یک ساعت باز می‌ماند", "تا آخر روز باز می‌ماند"]
+          },
+          "answer": 0,
+          "why": { "en": "Overrides live in `IMemoryCache`; a restart empties it, which fails towards closed.", "fa": "بازکردن‌ها در `IMemoryCache` هستند؛ restart آن را خالی می‌کند، که شکست به سمت بسته است." }
+        },
+        {
+          "q": { "en": "A colleague opens the same requisition five minutes after your override. What do they get?", "fa": "همکاری پنج دقیقه بعد از باز کردنِ شما همان requisition را باز می‌کند. چه می‌گیرد؟" },
+          "options": {
+            "en": ["The results, since the item is open", "403 `restricted`: the override was for your user only", "The results without values"],
+            "fa": ["جواب‌ها را، چون مورد باز است", "403 `restricted`: باز کردن فقط برای کاربر شما بود", "جواب‌ها را بدون مقدار"]
+          },
+          "answer": 1,
+          "why": { "en": "The gate's key contains the user id, so each person has to give their own reason, and each reason is logged.", "fa": "کلید gate شناسه‌ی کاربر را دارد، پس هر نفر باید دلیل خودش را بدهد و هر دلیل ثبت می‌شود." }
+        },
+        {
+          "q": { "en": "Why is the check an endpoint filter on the group instead of code in each handler?", "fa": "چرا چک یک endpoint filter روی گروه است و نه کدی در هر handler؟" },
+          "options": {
+            "en": ["Filters run faster than handlers", "Handlers cannot return 403", "Every endpoint with an `id`, including ones added later, is covered without remembering"],
+            "fa": ["filterها سریع‌تر از handlerها اجرا می‌شوند", "handlerها نمی‌توانند 403 برگردانند", "هر endpointی که `id` دارد، حتی آن‌هایی که بعداً اضافه می‌شوند، بدون نیاز به یادآوری پوشش داده می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "Putting the rule in one place means no route can forget it; only the list endpoints mask rows themselves.", "fa": "گذاشتن قاعده در یک جا یعنی هیچ routeی نمی‌تواند فراموشش کند؛ فقط endpointهای فهرست، ردیف‌ها را خودشان پنهان می‌کنند." }
+        }
+      ]
     },
     {
       "id": "audit",
@@ -516,7 +797,8 @@
           "id": "same",
           "h": "Logged in the same transaction",
           "p": [
-            "Every read or write of patient data adds a row to `audit.AccessLog` through `AuditLogger`, which only adds it to the current DbContext: the row is saved by the caller's own `SaveChanges`, so the change and its log line commit together or not at all. The row carries the trace id, so a log line leads to the request's other logs."
+            "Every read or write of patient data adds a row to `audit.AccessLog` through `AuditLogger`, which only adds it to the current DbContext: the row is saved by the caller's own `SaveChanges`, so the change and its log line commit together or not at all. The row carries the trace id, so a log line leads to the request's other logs.",
+            "Reads are logged too, and then saved for the log alone: the reception day sheet logs a `View` with how many rows it showed, and a patient search logs the number of results and names the patient only when exactly one was found."
           ],
           "examples": ["log", "use"]
         },
@@ -524,9 +806,18 @@
           "id": "append",
           "h": "Append-only, enforced by the database",
           "p": [
-            "An `INSTEAD OF UPDATE, DELETE` trigger refuses every change to the log, whoever runs it. The table has no foreign keys on purpose: it must accept any entity and outlive it."
+            "An `INSTEAD OF UPDATE, DELETE` trigger refuses every change to the log, whoever runs it. The table has no foreign keys on purpose: it must accept any entity and outlive it.",
+            "The allowed actions are a CHECK constraint, so a new kind of entry means changing it, as `056_audit_restricted_override.sql` does to add `RestrictedOverride`, guarded so it runs only once."
           ],
           "examples": ["trigger"]
+        },
+        {
+          "id": "row",
+          "h": "What a row says",
+          "p": [
+            "Who (`UserId`), what (`Action`, `EntityType`, `EntityId`), whose record (`PatientId`), details as JSON (checked with `ISJSON`), the IP address and the trace id. `PatientId` has its own index, so \"who looked at my record?\" is one quick query."
+          ],
+          "examples": ["daysheet", "action"]
         },
         {
           "id": "table",
@@ -539,7 +830,8 @@
           "id": "same",
           "h": "در همان تراکنش ثبت می‌شود",
           "p": [
-            "هر خواندن یا نوشتن داده‌ی بیمار با `AuditLogger` یک ردیف به `audit.AccessLog` اضافه می‌کند، که فقط آن را به DbContext فعلی اضافه می‌کند: ردیف با همان `SaveChanges` خود کد ذخیره می‌شود، پس تغییر و خط لاگش با هم commit می‌شوند یا هیچ‌کدام. ردیف trace id را هم دارد، پس از یک خط لاگ می‌شود به بقیه‌ی لاگ‌های همان درخواست رسید."
+            "هر خواندن یا نوشتن داده‌ی بیمار با `AuditLogger` یک ردیف به `audit.AccessLog` اضافه می‌کند، که فقط آن را به DbContext فعلی اضافه می‌کند: ردیف با همان `SaveChanges` خود کد ذخیره می‌شود، پس تغییر و خط لاگش با هم commit می‌شوند یا هیچ‌کدام. ردیف trace id را هم دارد، پس از یک خط لاگ می‌شود به بقیه‌ی لاگ‌های همان درخواست رسید.",
+            "خواندن‌ها هم ثبت می‌شوند و بعد فقط برای همان لاگ ذخیره می‌شوند: برگه‌ی روزانه‌ی پذیرش یک `View` با تعداد ردیف‌هایی که نشان داده ثبت می‌کند، و جستجوی بیمار تعداد نتیجه‌ها را ثبت می‌کند و فقط وقتی دقیقاً یک نفر پیدا شده اسم آن بیمار را می‌آورد."
           ],
           "examples": ["log", "use"]
         },
@@ -547,9 +839,18 @@
           "id": "append",
           "h": "فقط اضافه کردن، که دیتابیس اجبارش می‌کند",
           "p": [
-            "یک trigger از نوع `INSTEAD OF UPDATE, DELETE` هر تغییری در لاگ را رد می‌کند، هر کسی اجرایش کند. جدول عمداً foreign key ندارد: باید هر موجودیتی را قبول کند و بعد از آن هم بماند."
+            "یک trigger از نوع `INSTEAD OF UPDATE, DELETE` هر تغییری در لاگ را رد می‌کند، هر کسی اجرایش کند. جدول عمداً foreign key ندارد: باید هر موجودیتی را قبول کند و بعد از آن هم بماند.",
+            "کارهای مجاز یک CHECK constraint هستند، پس نوع تازه‌ای از ورودی یعنی عوض کردن آن، همان کاری که `056_audit_restricted_override.sql` برای اضافه کردن `RestrictedOverride` می‌کند، با یک شرط که فقط یک بار اجرا شود."
           ],
           "examples": ["trigger"]
+        },
+        {
+          "id": "row",
+          "h": "یک ردیف چه می‌گوید",
+          "p": [
+            "چه کسی (`UserId`)، چه کاری (`Action`، `EntityType`، `EntityId`)، پرونده‌ی چه کسی (`PatientId`)، جزئیات به شکل JSON (با `ISJSON` چک می‌شود)، آدرس IP و trace id. `PatientId` ایندکس خودش را دارد، پس «چه کسی پرونده‌ی من را دیده؟» یک کوئری سریع است."
+          ],
+          "examples": ["daysheet", "action"]
         },
         {
           "id": "table",
@@ -578,8 +879,51 @@
           "file": "database/010_schema.sql",
           "from": "CREATE TRIGGER audit.TR_AccessLog_AppendOnly",
           "lines": 4
+        },
+        "daysheet": {
+          "title": { "en": "A read, logged and saved", "fa": "یک خواندن، ثبت و ذخیره‌شده" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "audit.Log(\"View\", \"AppointmentDaySheet\"",
+          "lines": 2
+        },
+        "action": {
+          "title": { "en": "One more action, added once", "fa": "یک کار دیگر، یک بار اضافه‌شده" },
+          "lang": "sql",
+          "file": "database/056_audit_restricted_override.sql",
+          "from": "IF NOT EXISTS (SELECT 1 FROM sys.check_constraints",
+          "lines": 6
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "An endpoint calls `audit.Log`, then its `SaveChanges` fails. What is left in the database?", "fa": "یک endpoint `audit.Log` را صدا می‌زند و بعد `SaveChanges`ش شکست می‌خورد. چه چیزی در دیتابیس می‌ماند؟" },
+          "options": {
+            "en": ["The log row, without the change", "The change, without the log row", "Neither: they are saved together"],
+            "fa": ["ردیف لاگ، بدون تغییر", "تغییر، بدون ردیف لاگ", "هیچ‌کدام: با هم ذخیره می‌شوند"]
+          },
+          "answer": 2,
+          "why": { "en": "`AuditLogger` only adds the row to the same DbContext, so it commits or rolls back with the change it describes.", "fa": "`AuditLogger` فقط ردیف را به همان DbContext اضافه می‌کند، پس با تغییری که توصیف می‌کند commit یا rollback می‌شود." }
+        },
+        {
+          "q": { "en": "Why does `audit.AccessLog` have no foreign keys?", "fa": "چرا `audit.AccessLog` هیچ foreign keyی ندارد؟" },
+          "options": {
+            "en": ["It must accept any entity and outlive the rows it names", "Foreign keys slow down the trigger", "The log lives in another database"],
+            "fa": ["باید هر موجودیتی را قبول کند و بعد از ردیف‌هایی که نام می‌برد هم بماند", "foreign keyها trigger را کند می‌کنند", "لاگ در دیتابیس دیگری است"]
+          },
+          "answer": 0,
+          "why": { "en": "A foreign key would refuse a log line for an entity type it does not point at, and block deleting what was logged.", "fa": "یک foreign key خط لاگ را برای نوع موجودیتی که به آن اشاره نمی‌کند رد می‌کرد و جلوی حذف چیزی را که ثبت شده می‌گرفت." }
+        },
+        {
+          "q": { "en": "A database administrator runs `DELETE FROM audit.AccessLog`. What happens?", "fa": "یک مدیر دیتابیس `DELETE FROM audit.AccessLog` اجرا می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["The rows are deleted, since the trigger only guards the app's login", "The trigger throws error 50001 and nothing is deleted", "Only rows older than a year are deleted"],
+            "fa": ["ردیف‌ها حذف می‌شوند، چون trigger فقط از login اپ محافظت می‌کند", "trigger خطای 50001 پرتاب می‌کند و چیزی حذف نمی‌شود", "فقط ردیف‌های قدیمی‌تر از یک سال حذف می‌شوند"]
+          },
+          "answer": 1,
+          "why": { "en": "`INSTEAD OF UPDATE, DELETE` runs in place of the statement for whoever runs it and throws.", "fa": "`INSTEAD OF UPDATE, DELETE` برای هر کسی که دستور را اجرا کند به‌جای آن اجرا می‌شود و خطا پرتاب می‌کند." }
+        }
+      ]
     },
     {
       "id": "slots",
@@ -591,7 +935,8 @@
           "id": "toronto",
           "h": "Hours in Toronto time, appointments in UTC",
           "p": [
-            "A collection centre's hours are stored as local times per weekday, with a slot length and a capacity per slot. The calculator walks each day's hours, turns every local start into UTC, drops the past and full slots, and leaves out a closure day entirely. It takes \"now\" and the bookings as arguments, so tests need no clock or database."
+            "A collection centre's hours are stored as local times per weekday, with a slot length and a capacity per slot. The calculator walks each day's hours, turns every local start into UTC, drops the past and full slots, and leaves out a closure day entirely. It takes \"now\" and the bookings as arguments, so tests need no clock or database.",
+            "A slot is offered only if it ends by closing time: with a 16:00 close and 10-minute slots the last starts at 15:50, and a slot with two places and one booking shows one remaining."
           ],
           "examples": ["slots"]
         },
@@ -604,6 +949,14 @@
           "examples": ["day"]
         },
         {
+          "id": "inputs",
+          "h": "Where the inputs come from",
+          "p": [
+            "`LoadSlotsAsync` reads the location with its hours, whether the date is a closure, and that local day's appointments (the UTC range from `DayRangeUtc`), counted per start time and leaving out cancelled ones, which free their place. Then it calls the calculator with `DateTime.UtcNow`. Booking calls the same function again inside its lock, so what the page offered and what booking accepts follow one rule."
+          ],
+          "examples": ["booked"]
+        },
+        {
           "id": "tables",
           "h": "The tables",
           "data": { "kind": "tables", "only": ["LocationHours", "LocationClosure", "Appointment"] }
@@ -614,7 +967,8 @@
           "id": "toronto",
           "h": "ساعت کاری به وقت تورنتو، نوبت‌ها به UTC",
           "p": [
-            "ساعت کاری هر مرکز نمونه‌گیری به وقت محلی و برای هر روز هفته ذخیره می‌شود، با طول هر نوبت و ظرفیت هر نوبت. محاسبه‌گر ساعت‌های هر روز را می‌پیماید، شروع محلی هر نوبت را به UTC تبدیل می‌کند، نوبت‌های گذشته و پر را کنار می‌گذارد و روز تعطیل را کلاً حذف می‌کند. «الان» و نوبت‌های گرفته‌شده را به‌عنوان ورودی می‌گیرد، پس تست‌ها ساعت و دیتابیس لازم ندارند."
+            "ساعت کاری هر مرکز نمونه‌گیری به وقت محلی و برای هر روز هفته ذخیره می‌شود، با طول هر نوبت و ظرفیت هر نوبت. محاسبه‌گر ساعت‌های هر روز را می‌پیماید، شروع محلی هر نوبت را به UTC تبدیل می‌کند، نوبت‌های گذشته و پر را کنار می‌گذارد و روز تعطیل را کلاً حذف می‌کند. «الان» و نوبت‌های گرفته‌شده را به‌عنوان ورودی می‌گیرد، پس تست‌ها ساعت و دیتابیس لازم ندارند.",
+            "نوبتی پیشنهاد می‌شود که تا ساعت بسته شدن تمام شود: با بسته شدن ساعت ۱۶:۰۰ و نوبت‌های ۱۰ دقیقه‌ای آخرین نوبت ۱۵:۵۰ شروع می‌شود، و نوبتی با دو جا و یک رزرو، یک جای باقی‌مانده نشان می‌دهد."
           ],
           "examples": ["slots"]
         },
@@ -625,6 +979,14 @@
             "شبی که ساعت‌ها جلو کشیده می‌شوند، ۲:۰۰ تا ۲:۵۹ وجود ندارد؛ `IsInvalidTime` آن را رد می‌کند به‌جای این‌که نوبتی از خودش بسازد. بازه‌ی یک روز محلی در هر دو سرش تبدیل می‌شود، پس روز ۲۳ یا ۲۵ ساعته هم یک روز است."
           ],
           "examples": ["day"]
+        },
+        {
+          "id": "inputs",
+          "h": "ورودی‌ها از کجا می‌آیند",
+          "p": [
+            "`LoadSlotsAsync` مکان را با ساعت‌های کاری‌اش می‌خواند، این‌که آن تاریخ تعطیل است یا نه، و نوبت‌های آن روز محلی (بازه‌ی UTC از `DayRangeUtc`) را، شمرده‌شده برای هر زمان شروع و بدون نوبت‌های لغوشده، که جایشان آزاد می‌شود. بعد محاسبه‌گر را با `DateTime.UtcNow` صدا می‌زند. نوبت‌گیری همین تابع را داخل lock خودش دوباره صدا می‌زند، پس چیزی که صفحه پیشنهاد داده و چیزی که نوبت‌گیری قبول می‌کند از یک قاعده پیروی می‌کنند."
+          ],
+          "examples": ["booked"]
         },
         {
           "id": "tables",
@@ -646,8 +1008,44 @@
           "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
           "from": "/// <summary>UTC range covering one local calendar day.</summary>",
           "lines": 4
+        },
+        "booked": {
+          "title": { "en": "Bookings of the local day, per start time", "fa": "نوبت‌های روز محلی، برای هر زمان شروع" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+          "from": "var booked = await db.Appointments",
+          "lines": 6
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why does `GetSlots` take \"now\" and the bookings as arguments?", "fa": "چرا `GetSlots` «الان» و نوبت‌های گرفته‌شده را به‌عنوان ورودی می‌گیرد؟" },
+          "options": {
+            "en": ["So it can be tested with no clock and no database", "Because static methods cannot read the clock", "So the browser can send its own time"],
+            "fa": ["تا بشود بدون ساعت و بدون دیتابیس تستش کرد", "چون متدهای static نمی‌توانند ساعت را بخوانند", "تا مرورگر بتواند زمان خودش را بفرستد"]
+          },
+          "answer": 0,
+          "why": { "en": "The calculator is pure: the endpoint supplies `DateTime.UtcNow` and the counts, and the tests supply fixed ones.", "fa": "محاسبه‌گر خالص است: endpoint `DateTime.UtcNow` و شمارش‌ها را می‌دهد و تست‌ها مقدارهای ثابت." }
+        },
+        {
+          "q": { "en": "On the night clocks go forward, a location opens at 02:00 (a made-up case). What happens to a 02:30 slot?", "fa": "شبی که ساعت‌ها جلو کشیده می‌شوند، مکانی ساعت ۰۲:۰۰ باز می‌شود (یک حالت فرضی). نوبت ۰۲:۳۰ چه می‌شود؟" },
+          "options": {
+            "en": ["It is moved to 03:30", "It is skipped, because that local time does not exist", "It is offered at 01:30"],
+            "fa": ["به ۰۳:۳۰ منتقل می‌شود", "رد می‌شود، چون آن ساعت محلی وجود ندارد", "ساعت ۰۱:۳۰ پیشنهاد می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "`IsInvalidTime` is true for the skipped hour and the loop continues instead of inventing a slot.", "fa": "`IsInvalidTime` برای ساعت جاافتاده true است و حلقه به‌جای ساختن نوبت ادامه می‌دهد." }
+        },
+        {
+          "q": { "en": "Why are cancelled appointments left out when the bookings are counted?", "fa": "چرا موقع شمردن نوبت‌ها، نوبت‌های لغوشده حساب نمی‌شوند؟" },
+          "options": {
+            "en": ["Cancelled rows are deleted anyway", "They are counted by another query", "A cancelled appointment frees its place for someone else"],
+            "fa": ["ردیف‌های لغوشده به هر حال حذف می‌شوند", "با یک کوئری دیگر شمرده می‌شوند", "نوبت لغوشده جایش را برای کس دیگری آزاد می‌کند"]
+          },
+          "answer": 2,
+          "why": { "en": "The query filters `Status != Cancelled`, so the remaining capacity grows again when someone cancels.", "fa": "کوئری `Status != Cancelled` را فیلتر می‌کند، پس وقتی کسی لغو می‌کند ظرفیت باقی‌مانده دوباره زیاد می‌شود." }
+        }
+      ]
     },
     {
       "id": "booking",
@@ -664,7 +1062,8 @@
           "id": "lock",
           "h": "Two people, one last place",
           "p": [
-            "Booking takes a SQL Server application lock named after the location and the slot, inside the transaction, then reads the slots again. Of two people pressing at the same moment, the second waits, finds the slot full and is told to pick another. Bookings are also limited to 10 a minute per IP address."
+            "Booking takes a SQL Server application lock named after the location and the slot, inside the transaction, then reads the slots again. Of two people pressing at the same moment, the second waits, finds the slot full and is told to pick another. Bookings are also limited to 10 a minute per IP address.",
+            "The lock belongs to the transaction (`@LockOwner = 'Transaction'`), so it is released at commit or rollback whatever happens, and a caller waits at most five seconds for it. Inside it two more rules are checked: the patient must not already have a booking that day (409), and the slot must still be among the ones the calculator offers."
           ],
           "examples": ["lock", "rate"]
         },
@@ -672,7 +1071,8 @@
           "id": "match",
           "h": "A health card must match the patient on file",
           "p": [
-            "An anonymous caller with an existing health card must also give that patient's date of birth and last name; otherwise the answer is \"call the location\". An existing patient's contact details are never changed from this endpoint."
+            "An anonymous caller with an existing health card must also give that patient's date of birth and last name; otherwise the answer is \"call the location\". An existing patient's contact details are never changed from this endpoint.",
+            "A new health card, or none, creates a patient with the next MRN from a SQL sequence (`LF` and seven digits); the card itself is checked first with its Luhn check digit."
           ],
           "examples": ["match"]
         },
@@ -695,7 +1095,8 @@
           "id": "lock",
           "h": "دو نفر، یک جای آخر",
           "p": [
-            "نوبت‌گیری داخل تراکنش یک application lock در SQL Server با اسم مکان و نوبت می‌گیرد و بعد نوبت‌ها را دوباره می‌خواند. از دو نفری که هم‌زمان دکمه را می‌زنند، دومی صبر می‌کند، می‌بیند نوبت پر شده و به او گفته می‌شود نوبت دیگری انتخاب کند. نوبت‌گیری برای هر IP هم دقیقه‌ای ۱۰ بار محدود است."
+            "نوبت‌گیری داخل تراکنش یک application lock در SQL Server با اسم مکان و نوبت می‌گیرد و بعد نوبت‌ها را دوباره می‌خواند. از دو نفری که هم‌زمان دکمه را می‌زنند، دومی صبر می‌کند، می‌بیند نوبت پر شده و به او گفته می‌شود نوبت دیگری انتخاب کند. نوبت‌گیری برای هر IP هم دقیقه‌ای ۱۰ بار محدود است.",
+            "lock مال تراکنش است (`@LockOwner = 'Transaction'`)، پس هر اتفاقی بیفتد با commit یا rollback آزاد می‌شود، و هر درخواست حداکثر پنج ثانیه منتظرش می‌ماند. داخل آن دو قاعده‌ی دیگر هم چک می‌شود: بیمار نباید همان روز نوبت دیگری داشته باشد (409)، و نوبت باید هنوز جزو نوبت‌هایی باشد که محاسبه‌گر پیشنهاد می‌دهد."
           ],
           "examples": ["lock", "rate"]
         },
@@ -703,7 +1104,8 @@
           "id": "match",
           "h": "کارت سلامت باید با بیمار ثبت‌شده جور باشد",
           "p": [
-            "درخواست‌دهنده‌ی ناشناس با کارت سلامتی که از قبل ثبت شده، باید تاریخ تولد و نام خانوادگی همان بیمار را هم بدهد؛ وگرنه جواب «با مرکز تماس بگیرید» است. اطلاعات تماس بیمار موجود هیچ‌وقت از این endpoint عوض نمی‌شود."
+            "درخواست‌دهنده‌ی ناشناس با کارت سلامتی که از قبل ثبت شده، باید تاریخ تولد و نام خانوادگی همان بیمار را هم بدهد؛ وگرنه جواب «با مرکز تماس بگیرید» است. اطلاعات تماس بیمار موجود هیچ‌وقت از این endpoint عوض نمی‌شود.",
+            "کارت سلامت تازه، یا نبودن کارت، بیماری با MRN بعدی از یک sequence در SQL می‌سازد (`LF` و هفت رقم)؛ خود کارت قبلش با رقم کنترلی Luhn چک می‌شود."
           ],
           "examples": ["match"]
         },
@@ -745,7 +1147,36 @@
           "from": "// Confirmation goes to the address on file",
           "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Two people press \"Book\" on the last place of a slot at the same moment. What does the second one get?", "fa": "دو نفر هم‌زمان روی آخرین جای یک نوبت «رزرو» را می‌زنند. نفر دوم چه می‌گیرد؟" },
+          "options": {
+            "en": ["A 409 telling them to pick another slot, after waiting for the first", "A second booking, over capacity", "A deadlock error"],
+            "fa": ["بعد از صبر برای نفر اول، یک 409 که می‌گوید نوبت دیگری انتخاب کند", "رزرو دوم، بیش از ظرفیت", "خطای deadlock"]
+          },
+          "answer": 0,
+          "why": { "en": "The second waits on the application lock, then reads the slots again and finds the slot gone.", "fa": "نفر دوم پشت application lock صبر می‌کند، بعد نوبت‌ها را دوباره می‌خواند و می‌بیند نوبت دیگر نیست." }
+        },
+        {
+          "q": { "en": "An anonymous caller gives an existing health card with the wrong last name. What happens?", "fa": "درخواست‌دهنده‌ی ناشناسی کارت سلامت موجودی را با نام خانوادگی اشتباه می‌دهد. چه می‌شود؟" },
+          "options": {
+            "en": ["The patient's name on file is updated", "A 422 asks them to call the location; nothing changes", "A new patient is created with the same card"],
+            "fa": ["اسم بیمار در پرونده به‌روز می‌شود", "یک 422 می‌گوید با مرکز تماس بگیرد؛ چیزی عوض نمی‌شود", "بیمار تازه‌ای با همان کارت ساخته می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "An existing card must match date of birth and last name; contact details are never changed from this endpoint.", "fa": "کارت موجود باید با تاریخ تولد و نام خانوادگی جور باشد؛ اطلاعات تماس هیچ‌وقت از این endpoint عوض نمی‌شود." }
+        },
+        {
+          "q": { "en": "Why is the confirmation never sent to an address the caller typed?", "fa": "چرا تأییدیه هیچ‌وقت به آدرسی که درخواست‌دهنده تایپ کرده فرستاده نمی‌شود؟" },
+          "options": {
+            "en": ["Typed addresses are often misspelled", "The email provider rejects new addresses", "Anyone with someone's health card number could redirect that person's notifications"],
+            "fa": ["آدرس‌های تایپی معمولاً غلط املایی دارند", "سرویس ایمیل آدرس‌های تازه را رد می‌کند", "هر کسی با شماره‌ی کارت سلامت دیگری می‌توانست اعلان‌های او را به جای دیگری بفرستد"]
+          },
+          "answer": 2,
+          "why": { "en": "The endpoint is anonymous, so only the address already on file is trusted, and the reply shows it masked.", "fa": "endpoint ناشناس است، پس فقط به آدرسی که از قبل ثبت شده اعتماد می‌شود و جواب آن را نیمه‌پنهان نشان می‌دهد." }
+        }
+      ]
     },
     {
       "id": "reception",
@@ -762,9 +1193,18 @@
           "id": "rules",
           "h": "What a requisition may not contain",
           "p": [
-            "Reception types in the doctor's paper requisition. The API refuses a panel together with one of its own members (a duplicate order), a sex-specific test for a patient of the other sex, and, for a patient without an Ontario health card, any test with no self-pay price: everything is self-pay for them."
+            "Reception types in the doctor's paper requisition. The API refuses a panel together with one of its own members (a duplicate order), a sex-specific test for a patient of the other sex, and, for a patient without an Ontario health card, any test with no self-pay price: everything is self-pay for them.",
+            "Every problem is collected by one `Validator` and returned together as a 400 with field errors, so reception sees all of them at once, not one per try. An appointment can lead to one requisition only, which a filtered unique index on `AppointmentId` also enforces."
           ],
           "examples": ["duplicate", "sex", "selfpay"]
+        },
+        {
+          "id": "lookup",
+          "h": "Finding the patient",
+          "p": [
+            "One search box takes three things: a health card (10 digits once spaces and dashes are gone), an MRN starting with `LF`, or a name as \"Last, First\". It returns at most 20 rows and is logged. A walk-in patient whose health card is already on file is refused with 409, so reception finds the existing record instead of making a second one. Check-in and no-show only move an appointment that is still `Booked`."
+          ],
+          "examples": ["search"]
         },
         {
           "id": "invoice",
@@ -793,9 +1233,18 @@
           "id": "rules",
           "h": "چیزهایی که requisition نمی‌تواند داشته باشد",
           "p": [
-            "پذیرش requisition کاغذی پزشک را وارد می‌کند. API این‌ها را رد می‌کند: یک پنل همراه یکی از اعضای خودش (درخواست تکراری)، تست مخصوص یک جنس برای بیمارِ جنس دیگر، و برای بیمار بدون کارت سلامت انتاریو هر تستی که قیمت پرداخت شخصی ندارد، چون برای او همه‌چیز پرداخت شخصی است."
+            "پذیرش requisition کاغذی پزشک را وارد می‌کند. API این‌ها را رد می‌کند: یک پنل همراه یکی از اعضای خودش (درخواست تکراری)، تست مخصوص یک جنس برای بیمارِ جنس دیگر، و برای بیمار بدون کارت سلامت انتاریو هر تستی که قیمت پرداخت شخصی ندارد، چون برای او همه‌چیز پرداخت شخصی است.",
+            "همه‌ی مشکل‌ها با یک `Validator` جمع می‌شوند و با هم به شکل یک 400 با خطای هر فیلد برمی‌گردند، پس پذیرش همه را یک‌جا می‌بیند، نه هر بار یکی. هر نوبت فقط به یک requisition می‌رسد، که یک filtered unique index روی `AppointmentId` هم اجبارش می‌کند."
           ],
           "examples": ["duplicate", "sex", "selfpay"]
+        },
+        {
+          "id": "lookup",
+          "h": "پیدا کردن بیمار",
+          "p": [
+            "یک کادر جستجو سه چیز را قبول می‌کند: کارت سلامت (۱۰ رقم بعد از حذف فاصله‌ها و خط تیره‌ها)، MRNی که با `LF` شروع شود، یا اسم به شکل «نام خانوادگی، نام». حداکثر ۲۰ ردیف برمی‌گرداند و ثبت می‌شود. بیمار حضوری‌ای که کارت سلامتش از قبل ثبت شده با 409 رد می‌شود، تا پذیرش پرونده‌ی موجود را پیدا کند به‌جای ساختن پرونده‌ی دوم. check-in و no-show فقط نوبتی را جابه‌جا می‌کنند که هنوز `Booked` باشد."
+          ],
+          "examples": ["search"]
         },
         {
           "id": "invoice",
@@ -849,8 +1298,44 @@
           "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
           "from": "// Tubes to draw:",
           "lines": 3
+        },
+        "search": {
+          "title": { "en": "Health card, MRN or name", "fa": "کارت سلامت، MRN یا اسم" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+          "from": "query = hcn.Length == 10 && hcn.All(char.IsAsciiDigit)",
+          "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Reception orders the lipid panel and cholesterol, one of its members, together. What does the API do?", "fa": "پذیرش پنل چربی و کلسترول را، که یکی از اعضای آن است، با هم درخواست می‌کند. API چه می‌کند؟" },
+          "options": {
+            "en": ["Accepts it and drops the duplicate", "Refuses it as a duplicate order", "Accepts it and charges cholesterol twice"],
+            "fa": ["قبول می‌کند و تکراری را حذف می‌کند", "آن را به‌عنوان درخواست تکراری رد می‌کند", "قبول می‌کند و کلسترول را دو بار حساب می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Ordering a panel and one of its own members is reported as an error in `testIds`; reception has to choose.", "fa": "درخواست یک پنل همراه یکی از اعضای خودش به شکل خطا در `testIds` گزارش می‌شود؛ پذیرش باید انتخاب کند." }
+        },
+        {
+          "q": { "en": "Why does each requisition item store whether it was insured and its price?", "fa": "چرا هر آیتم requisition ذخیره می‌کند بیمه‌شده بوده یا نه و قیمتش چه بوده؟" },
+          "options": {
+            "en": ["So a later change to the catalogue does not rewrite an old requisition", "So the invoice can be computed by the browser", "Because the catalogue has no prices"],
+            "fa": ["تا تغییر بعدی در کاتالوگ requisition قدیمی را بازنویسی نکند", "تا مرورگر بتواند فاکتور را حساب کند", "چون کاتالوگ قیمت ندارد"]
+          },
+          "answer": 0,
+          "why": { "en": "The item is a record of what applied on that day; `ref.Test` may change afterwards.", "fa": "آیتم سابقه‌ی چیزی است که آن روز صدق می‌کرد؛ `ref.Test` ممکن است بعداً عوض شود." }
+        },
+        {
+          "q": { "en": "A patient without an Ontario health card is ordered a test that has no self-pay price. What happens?", "fa": "برای بیماری بدون کارت سلامت انتاریو تستی درخواست می‌شود که قیمت پرداخت شخصی ندارد. چه می‌شود؟" },
+          "options": {
+            "en": ["It is billed to OHIP anyway", "It is accepted at a price of zero", "It is refused: everything is self-pay for this patient"],
+            "fa": ["به هر حال به OHIP صورت‌حساب می‌شود", "با قیمت صفر قبول می‌شود", "رد می‌شود: برای این بیمار همه‌چیز پرداخت شخصی است"]
+          },
+          "answer": 2,
+          "why": { "en": "Without OHIP every test needs `UninsuredPrice`; the message says the patient needs an Ontario card for it.", "fa": "بدون OHIP هر تست `UninsuredPrice` لازم دارد؛ پیام می‌گوید بیمار برای آن کارت انتاریو لازم دارد." }
+        }
+      ]
     },
     {
       "id": "results",
@@ -971,7 +1456,33 @@
           "from": "var version = (short)((await db.Reports",
           "to": "db.Reports.Add(new LabReport"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is the reference range copied onto each result instead of joined from the catalogue when a report is printed?", "fa": "چرا محدوده‌ی مرجع روی هر جواب کپی می‌شود به‌جای این‌که موقع چاپ گزارش از کاتالوگ join شود؟" },
+          "options": {
+            "en": ["Joining would be too slow", "So a report printed later shows the range that applied when the test was done", "Because the catalogue deletes old ranges"],
+            "fa": ["join خیلی کند می‌شد", "تا گزارشی که بعداً چاپ شود محدوده‌ای را نشان دهد که موقع انجام تست معتبر بود", "چون کاتالوگ محدوده‌های قدیمی را حذف می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Ranges change over time; the copy keeps the result and its interpretation together.", "fa": "محدوده‌ها با زمان عوض می‌شوند؛ کپی، جواب و تفسیرش را کنار هم نگه می‌دارد." }
+        },
+        {
+          "q": { "en": "A value is below the critical low. Which flag does it get?", "fa": "مقداری کمتر از حد بحرانی پایین است. چه flagی می‌گیرد؟" },
+          "options": { "en": ["`LL`", "`L`", "`A`"], "fa": ["`LL`", "`L`", "`A`"] },
+          "answer": 0,
+          "why": { "en": "Critical limits are checked before the normal ones, so `LL` wins over `L`.", "fa": "حدهای بحرانی قبل از حدهای معمولی چک می‌شوند، پس `LL` بر `L` مقدم است." }
+        },
+        {
+          "q": { "en": "A released result is corrected. What does the next release produce?", "fa": "یک جواب منتشرشده اصلاح می‌شود. انتشار بعدی چه چیزی می‌سازد؟" },
+          "options": {
+            "en": ["Version 1 again, overwritten", "Nothing, released results cannot change", "Version 2, `Amended`, with the corrected results marked `Corrected`"],
+            "fa": ["دوباره نسخه‌ی ۱، بازنویسی‌شده", "هیچ، جواب منتشرشده عوض نمی‌شود", "نسخه‌ی ۲، `Amended`، با جواب‌های اصلاح‌شده که `Corrected` علامت خورده‌اند"]
+          },
+          "answer": 2,
+          "why": { "en": "Each release adds a `lab.Report` version; the old value stays in `history.Result`.", "fa": "هر انتشار یک نسخه‌ی `lab.Report` اضافه می‌کند؛ مقدار قدیمی در `history.Result` می‌ماند." }
+        }
+      ]
     },
     {
       "id": "orders-in",
@@ -1091,7 +1602,36 @@
           "from": "var existing = await db.ElectronicOrders.AsNoTracking().SingleOrDefaultAsync(o => o.SourceClinic == slug && o.ExternalId == requisition",
           "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "ClinicHub sends the same order twice because the first answer was lost. What does LabFlow do?", "fa": "ClinicHub یک درخواست را دو بار می‌فرستد چون جواب اول گم شده. LabFlow چه می‌کند؟" },
+          "options": {
+            "en": ["Answers with the order it already made", "Creates a second order", "Refuses the second one with 409"],
+            "fa": ["با درخواستی که قبلاً ساخته جواب می‌دهد", "درخواست دومی می‌سازد", "دومی را با 409 رد می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "The same requisition number from the same clinic is recognised, so a retry is safe.", "fa": "همان شماره‌ی requisition از همان کلینیک شناخته می‌شود، پس تلاش دوباره امن است." }
+        },
+        {
+          "q": { "en": "An order contains one test LabFlow does not do. What happens?", "fa": "یک درخواست شامل تستی است که LabFlow انجامش نمی‌دهد. چه می‌شود؟" },
+          "options": {
+            "en": ["The other tests are accepted and that one is dropped", "The whole order is refused, naming the codes LabFlow understands", "The test is sent to another lab"],
+            "fa": ["بقیه‌ی تست‌ها قبول می‌شوند و آن یکی حذف می‌شود", "کل درخواست رد می‌شود، با کدهایی که LabFlow می‌فهمد", "تست به آزمایشگاه دیگری فرستاده می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "Accepting part of an order silently would leave the clinic thinking every test is coming.", "fa": "قبول کردن بی‌صدای بخشی از درخواست کلینیک را به این فکر می‌انداخت که همه‌ی تست‌ها انجام می‌شوند." }
+        },
+        {
+          "q": { "en": "A Bundle carries a revoked ServiceRequest and a new one. What is the answer?", "fa": "یک Bundle هم ServiceRequest‌ی revoked دارد و هم یک تازه. جواب چیست؟" },
+          "options": {
+            "en": ["The withdrawal is applied, then the new order", "Only the new order is applied", "It is refused: a withdrawal Bundle carries only revoked ServiceRequests"],
+            "fa": ["اول پس گرفتن انجام می‌شود، بعد درخواست تازه", "فقط درخواست تازه انجام می‌شود", "رد می‌شود: Bundle پس گرفتن فقط ServiceRequestهای revoked دارد"]
+          },
+          "answer": 2,
+          "why": { "en": "Each Bundle is one kind of message; mixing them is answered with an OperationOutcome.", "fa": "هر Bundle یک نوع پیام است؛ قاطی کردن آن‌ها با یک OperationOutcome جواب داده می‌شود." }
+        }
+      ]
     },
     {
       "id": "cancel",
@@ -1103,17 +1643,27 @@
           "id": "revoked",
           "h": "The ServiceRequest again, as revoked",
           "p": [
-            "ClinicHub withdraws a test by sending its ServiceRequest again with status `revoked`. A test already withdrawn is skipped, so a repeat changes nothing."
+            "ClinicHub withdraws a test by sending its ServiceRequest again with status `revoked`. A test already withdrawn is skipped, so a repeat changes nothing.",
+            "`052_order_cancellation.sql` adds `CancelledAt` and `CancelReason` to the order's items instead of deleting them, so what was ordered and later withdrawn stays on record. Like every script from 050 on, it checks first (`COL_LENGTH`) and is safe to run again."
           ],
-          "examples": ["again"]
+          "examples": ["again", "column"]
         },
         {
           "id": "rule",
           "h": "Not once results are entered",
           "p": [
-            "A waiting order just loses the test, which stays marked cancelled with its reason. On a requisition the line is cancelled only while nothing has been resulted; otherwise the answer is `409` and the clinic is told to call the lab. ClinicHub treats that as the lab's answer, not as an error to retry."
+            "A waiting order just loses the test, which stays marked cancelled with its reason. On a requisition the line is cancelled only while nothing has been resulted; otherwise the answer is `409` and the clinic is told to call the lab. ClinicHub treats that as the lab's answer, not as an error to retry.",
+            "A line counts as resulted once its status has moved past `Ordered` or `Collected`, or a result row exists for it. The reason comes from the ServiceRequest's note (cut to 200 characters), or else \"Cancelled by the ordering clinic\", and every withdrawal is written to the audit log."
           ],
           "examples": ["rule"]
+        },
+        {
+          "id": "all",
+          "h": "All or nothing",
+          "p": [
+            "The endpoint first checks every revoked ServiceRequest: one it does not know answers 404 `not-found`, one with results 409. Only when all pass does it change anything, and then in one `SaveChanges`. So a Bundle withdrawing two tests, one of them already resulted, cancels neither. When every line is cancelled the requisition becomes `Cancelled`; when every test of a waiting order is withdrawn, the order does."
+          ],
+          "examples": ["apply"]
         }
       ],
       "fa": [
@@ -1121,17 +1671,27 @@
           "id": "revoked",
           "h": "همان ServiceRequest، این بار revoked",
           "p": [
-            "ClinicHub یک تست را با فرستادن دوباره‌ی ServiceRequest آن با وضعیت `revoked` پس می‌گیرد. تستی که قبلاً پس گرفته شده نادیده گرفته می‌شود، پس تکرار چیزی را عوض نمی‌کند."
+            "ClinicHub یک تست را با فرستادن دوباره‌ی ServiceRequest آن با وضعیت `revoked` پس می‌گیرد. تستی که قبلاً پس گرفته شده نادیده گرفته می‌شود، پس تکرار چیزی را عوض نمی‌کند.",
+            "`052_order_cancellation.sql` به‌جای حذف آیتم‌های درخواست، `CancelledAt` و `CancelReason` را به آن‌ها اضافه می‌کند، پس چیزی که درخواست شده و بعد پس گرفته شده در سابقه می‌ماند. مثل همه‌ی اسکریپت‌های ۰۵۰ به بعد، اول چک می‌کند (`COL_LENGTH`) و اجرای دوباره‌اش امن است."
           ],
-          "examples": ["again"]
+          "examples": ["again", "column"]
         },
         {
           "id": "rule",
           "h": "نه بعد از ثبت جواب",
           "p": [
-            "درخواستی که هنوز منتظر است فقط تست را از دست می‌دهد، که با دلیلش لغوشده علامت می‌خورد و می‌ماند. روی requisition، خط فقط تا وقتی لغو می‌شود که هیچ جوابی ثبت نشده؛ وگرنه جواب `409` است و به کلینیک گفته می‌شود با آزمایشگاه تماس بگیرد. ClinicHub این را جواب آزمایشگاه حساب می‌کند، نه خطایی که باید دوباره امتحان شود."
+            "درخواستی که هنوز منتظر است فقط تست را از دست می‌دهد، که با دلیلش لغوشده علامت می‌خورد و می‌ماند. روی requisition، خط فقط تا وقتی لغو می‌شود که هیچ جوابی ثبت نشده؛ وگرنه جواب `409` است و به کلینیک گفته می‌شود با آزمایشگاه تماس بگیرد. ClinicHub این را جواب آزمایشگاه حساب می‌کند، نه خطایی که باید دوباره امتحان شود.",
+            "یک خط وقتی جواب‌دار حساب می‌شود که وضعیتش از `Ordered` یا `Collected` جلوتر رفته باشد، یا ردیف جوابی برایش وجود داشته باشد. دلیل از note‌ی ServiceRequest می‌آید (تا ۲۰۰ کاراکتر)، وگرنه «Cancelled by the ordering clinic»، و هر پس گرفتن در لاگ audit نوشته می‌شود."
           ],
           "examples": ["rule"]
+        },
+        {
+          "id": "all",
+          "h": "همه یا هیچ",
+          "p": [
+            "endpoint اول هر ServiceRequest‌ی revoked را چک می‌کند: موردی که نمی‌شناسد 404 `not-found` می‌دهد و موردی که جواب دارد 409. فقط وقتی همه رد شوند چیزی را عوض می‌کند، آن هم در یک `SaveChanges`. پس Bundleی که دو تست را پس می‌گیرد و یکی‌شان جواب دارد، هیچ‌کدام را لغو نمی‌کند. وقتی همه‌ی خط‌ها لغو شوند requisition `Cancelled` می‌شود؛ وقتی همه‌ی تست‌های درخواستِ منتظر پس گرفته شوند، خود درخواست."
+          ],
+          "examples": ["apply"]
         }
       ],
       "examples": {
@@ -1148,8 +1708,51 @@
           "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
           "from": "var line = await db.RequisitionItems.SingleOrDefaultAsync(i => i.RequisitionId == requisitionId && i.TestId == item.TestId",
           "to": "\"business-rule\");"
+        },
+        "column": {
+          "title": { "en": "Kept, marked cancelled", "fa": "نگه داشته، با علامت لغو" },
+          "lang": "sql",
+          "file": "database/052_order_cancellation.sql",
+          "from": "IF COL_LENGTH(N'lab.ElectronicOrderItem', N'CancelledAt') IS NULL",
+          "lines": 4
+        },
+        "apply": {
+          "title": { "en": "Only after every check passed", "fa": "فقط بعد از رد شدن همه‌ی چک‌ها" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+          "from": "foreach (var (order, item, reason) in done)",
+          "to": "order.Status = \"Cancelled\";"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "ClinicHub sends the same withdrawal twice. What does the second one change?", "fa": "ClinicHub یک پس گرفتن را دو بار می‌فرستد. دومی چه چیزی را عوض می‌کند؟" },
+          "options": {
+            "en": ["Nothing: a test already withdrawn is skipped", "It answers 409", "It writes a second cancellation date"],
+            "fa": ["هیچ: تستی که قبلاً پس گرفته شده رد می‌شود", "409 جواب می‌دهد", "تاریخ لغو دومی می‌نویسد"]
+          },
+          "answer": 0,
+          "why": { "en": "`CancelledAt` is already set, so the loop continues; the answer is still 200.", "fa": "`CancelledAt` از قبل پر است، پس حلقه ادامه می‌دهد؛ جواب باز هم 200 است." }
+        },
+        {
+          "q": { "en": "A Bundle withdraws two tests of one requisition; one already has a result. What happens?", "fa": "یک Bundle دو تست از یک requisition را پس می‌گیرد؛ یکی از آن‌ها جواب دارد. چه می‌شود؟" },
+          "options": {
+            "en": ["The one without a result is cancelled, the other kept", "409, and neither is cancelled", "Both are cancelled and the result is deleted"],
+            "fa": ["آن که جواب ندارد لغو می‌شود و دیگری می‌ماند", "409، و هیچ‌کدام لغو نمی‌شود", "هر دو لغو می‌شوند و جواب حذف می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "Every withdrawal is checked before any is applied, so the Bundle is all or nothing.", "fa": "هر پس گرفتن قبل از اعمال هر کدام چک می‌شود، پس Bundle همه یا هیچ است." }
+        },
+        {
+          "q": { "en": "Why does a withdrawn test keep its row instead of being deleted?", "fa": "چرا تستِ پس‌گرفته‌شده ردیفش را نگه می‌دارد و حذف نمی‌شود؟" },
+          "options": {
+            "en": ["Deleting rows is not allowed in SQL Server", "The row is needed to send results", "What was ordered and withdrawn stays on record, with the reason"],
+            "fa": ["حذف ردیف در SQL Server مجاز نیست", "ردیف برای فرستادن جواب‌ها لازم است", "چیزی که درخواست و بعد پس گرفته شده، با دلیلش، در سابقه می‌ماند"]
+          },
+          "answer": 2,
+          "why": { "en": "`CancelledAt` and `CancelReason` mark it instead, as the script's comment says.", "fa": "به‌جایش `CancelledAt` و `CancelReason` آن را علامت می‌زنند، همان‌طور که توضیح اسکریپت می‌گوید." }
+        }
+      ]
     },
     {
       "id": "results-out",
@@ -1267,7 +1870,36 @@
           "from": "/// The lab's money to FinancePowerApp",
           "to": "/// </list>"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "ClinicHub is down when a technologist releases results. What happens?", "fa": "وقتی تکنولوژیست جواب‌ها را منتشر می‌کند، ClinicHub از دسترس خارج است. چه می‌شود؟" },
+          "options": {
+            "en": ["The release fails and must be repeated", "The release succeeds; the message waits and is retried with growing pauses", "The results are dropped"],
+            "fa": ["انتشار شکست می‌خورد و باید تکرار شود", "انتشار موفق است؛ پیام منتظر می‌ماند و با فاصله‌های بزرگ‌شونده دوباره تلاش می‌شود", "جواب‌ها دور ریخته می‌شوند"]
+          },
+          "answer": 1,
+          "why": { "en": "The message is saved with the release and a background sender delivers it, so release never waits on ClinicHub.", "fa": "پیام همراه انتشار ذخیره می‌شود و یک فرستنده‌ی پس‌زمینه تحویلش می‌دهد، پس انتشار هیچ‌وقت منتظر ClinicHub نمی‌ماند." }
+        },
+        {
+          "q": { "en": "How does ClinicHub know which clinic and order a DiagnosticReport belongs to?", "fa": "ClinicHub از کجا می‌فهمد یک DiagnosticReport مال کدام کلینیک و درخواست است؟" },
+          "options": {
+            "en": ["`basedOn` names ClinicHub's own order", "The token's audience", "The patient's health card"],
+            "fa": ["`basedOn` درخواست خود ClinicHub را نام می‌برد", "audience‌ی token", "کارت سلامت بیمار"]
+          },
+          "answer": 0,
+          "why": { "en": "Each report points back at the ServiceRequest ClinicHub sent.", "fa": "هر گزارش به ServiceRequestی که ClinicHub فرستاده اشاره می‌کند." }
+        },
+        {
+          "q": { "en": "ClinicHub answers a delivery with 401. What does the sender do?", "fa": "ClinicHub به یک تحویل جواب 401 می‌دهد. فرستنده چه می‌کند؟" },
+          "options": {
+            "en": ["Deletes the message", "Stops sending until restart", "Drops its cached token, so the next try gets a new one"],
+            "fa": ["پیام را حذف می‌کند", "تا restart فرستادن را متوقف می‌کند", "token کش‌شده‌اش را دور می‌ریزد، تا تلاش بعدی یکی تازه بگیرد"]
+          },
+          "answer": 2,
+          "why": { "en": "A 401 means the cached client-credentials token is no longer good; the message stays due.", "fa": "401 یعنی token client-credentials کش‌شده دیگر معتبر نیست؛ پیام همچنان در صف می‌ماند." }
+        }
+      ]
     },
     {
       "id": "fe-app",
@@ -1275,11 +1907,7 @@
       "title": { "en": "The pages and the API client", "fa": "صفحه‌ها و API client" },
       "files": ["web/src/App.tsx", "web/src/api.ts"],
       "en": [
-        {
-          "id": "routes",
-          "h": "Routes",
-          "data": { "kind": "routes" }
-        },
+        { "id": "routes", "h": "Routes", "data": { "kind": "routes" } },
         {
           "id": "who",
           "h": "Who may use a page, in either mode",
@@ -1303,14 +1931,26 @@
             "`request` always sends `X-LabFlow` (needed on changes once signed in with a cookie, harmless otherwise), the demo user if one is chosen, and the clinic for public booking with a database per clinic."
           ],
           "examples": ["headers"]
+        },
+        {
+          "id": "clinic",
+          "h": "The clinic for public booking",
+          "p": [
+            "With a database per clinic, a booking link names the clinic: `/?clinic=harbourview`. `bookingClinic()` reads it and keeps it in `sessionStorage` for the rest of the visit, so moving between pages does not lose it; if storage is blocked (a private window) it falls back to the link alone. Staff need none of this: their clinic comes from the ClinicHub session."
+          ],
+          "examples": ["clinic"]
+        },
+        {
+          "id": "errors",
+          "h": "One error type",
+          "p": [
+            "Every answer that is not 2xx becomes an `ApiError`: the status, a message taken from `error` or `title`, the field errors of a 400, and the whole body. `isRestricted` recognises the 403 with `code: restricted`, so a page can show the reason form instead of an error message."
+          ],
+          "examples": ["restricted"]
         }
       ],
       "fa": [
-        {
-          "id": "routes",
-          "h": "routeها",
-          "data": { "kind": "routes" }
-        },
+        { "id": "routes", "h": "routeها", "data": { "kind": "routes" } },
         {
           "id": "who",
           "h": "چه کسی می‌تواند از صفحه استفاده کند، در هر دو حالت",
@@ -1334,6 +1974,22 @@
             "`request` همیشه `X-LabFlow` را می‌فرستد (بعد از ورود با کوکی برای تغییرها لازم است، وگرنه بی‌ضرر)، کاربر دمو را اگر انتخاب شده باشد، و کلینیک را برای نوبت‌گیری عمومی وقتی هر کلینیک دیتابیس خودش را دارد."
           ],
           "examples": ["headers"]
+        },
+        {
+          "id": "clinic",
+          "h": "کلینیک برای نوبت‌گیری عمومی",
+          "p": [
+            "در حالت یک دیتابیس برای هر کلینیک، لینک نوبت‌گیری کلینیک را نام می‌برد: `/?clinic=harbourview`. `bookingClinic()` آن را می‌خواند و برای بقیه‌ی بازدید در `sessionStorage` نگه می‌دارد، تا رفتن بین صفحه‌ها گمش نکند؛ اگر storage بسته باشد (پنجره‌ی خصوصی) فقط به خود لینک تکیه می‌کند. کارکنان هیچ‌کدام از این‌ها را لازم ندارند: کلینیکشان از نشست ClinicHub می‌آید."
+          ],
+          "examples": ["clinic"]
+        },
+        {
+          "id": "errors",
+          "h": "یک نوع خطا",
+          "p": [
+            "هر جوابی که 2xx نباشد یک `ApiError` می‌شود: وضعیت، پیامی که از `error` یا `title` گرفته می‌شود، خطاهای فیلدِ یک 400، و کل بدنه. `isRestricted` آن 403ی را که `code: restricted` دارد تشخیص می‌دهد، تا صفحه به‌جای پیام خطا فرم دلیل را نشان دهد."
+          ],
+          "examples": ["restricted"]
         }
       ],
       "examples": {
@@ -1357,8 +2013,51 @@
           "file": "web/src/api.ts",
           "from": "// X-LabFlow: required on changes",
           "lines": 7
+        },
+        "clinic": {
+          "title": { "en": "From the link, kept for the visit", "fa": "از لینک، نگه‌داشته برای بازدید" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "export function bookingClinic(): string {",
+          "lines": 9
+        },
+        "restricted": {
+          "title": { "en": "The restricted answer, recognised", "fa": "تشخیص جواب محدود" },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "export const isRestricted",
+          "lines": 1
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is each staff page given `key` set to the current user?", "fa": "چرا به هر صفحه‌ی کارکنان `key`ی برابر کاربر فعلی داده می‌شود؟" },
+          "options": {
+            "en": ["So React renders it faster", "So switching user starts the page fresh instead of showing the last person's patient", "So the server knows who is signed in"],
+            "fa": ["تا React سریع‌تر رسمش کند", "تا عوض کردن کاربر صفحه را از نو شروع کند به‌جای نشان دادن بیمارِ نفر قبلی", "تا سرور بداند چه کسی وارد شده"]
+          },
+          "answer": 1,
+          "why": { "en": "A new key makes React throw away the component and its state.", "fa": "key تازه باعث می‌شود React کامپوننت و state آن را دور بریزد." }
+        },
+        {
+          "q": { "en": "Why does `request` send `X-LabFlow` on every call, even GETs and in demo mode?", "fa": "چرا `request` در هر فراخوانی، حتی GET و در حالت دمو، `X-LabFlow` می‌فرستد؟" },
+          "options": {
+            "en": ["It is required on changes with a cookie session and harmless everywhere else", "The server refuses any request without it", "It carries the demo user"],
+            "fa": ["در تغییرها با نشست کوکی لازم است و هر جای دیگر بی‌ضرر", "سرور هر درخواستی بدون آن را رد می‌کند", "کاربر دمو را می‌برد"]
+          },
+          "answer": 0,
+          "why": { "en": "Sending it always is simpler than deciding per call, and the CSRF check only looks at unsafe `/api` methods.", "fa": "همیشه فرستادنش ساده‌تر از تصمیم گرفتن برای هر فراخوانی است، و چک CSRF فقط به متدهای ناامن `/api` نگاه می‌کند." }
+        },
+        {
+          "q": { "en": "A booking link `/?clinic=harbourview` is opened in a private window where storage throws. What does `bookingClinic()` return on that page?", "fa": "لینک نوبت‌گیری `/?clinic=harbourview` در پنجره‌ی خصوصی‌ای باز می‌شود که storage در آن خطا می‌دهد. `bookingClinic()` در همان صفحه چه برمی‌گرداند؟" },
+          "options": {
+            "en": ["An empty string", "It throws, and the page shows an error", "`harbourview`, from the link"],
+            "fa": ["رشته‌ی خالی", "خطا پرتاب می‌کند و صفحه خطا نشان می‌دهد", "`harbourview`، از لینک"]
+          },
+          "answer": 2,
+          "why": { "en": "The `catch` falls back to the value in the link.", "fa": "`catch` به مقدار داخل لینک برمی‌گردد." }
+        }
+      ]
     },
     {
       "id": "scripts",
@@ -1378,16 +2077,18 @@
           "id": "schemas",
           "h": "A schema per concern",
           "p": [
-            "`ref` (the test catalog), `core` (patients, practitioners, locations), `sec`, `sched`, `lab` (requisition → specimen → result → report), `notify` (the email outbox), `billing`, `audit`, `etl`, `dw` and `history` for the temporal tables."
+            "`ref` (the test catalog), `core` (patients, practitioners, locations), `sec`, `sched`, `lab` (requisition → specimen → result → report), `notify` (the email outbox), `billing`, `audit`, `etl`, `dw` and `history` for the temporal tables.",
+            "`notify` is a transactional outbox: rows are written in the same transaction as the change that causes them and sent later, and they never contain results, only a link."
           ]
         },
         {
           "id": "upgrade",
           "h": "From 050 on: safe to run again",
           "p": [
-            "Scripts before 050 build a new database. Scripts from 050 on change existing ones and check before they act (`IF OBJECT_ID … IS NULL`), so LabFlow can run them at every start-up on a database built earlier."
+            "Scripts before 050 build a new database. Scripts from 050 on change existing ones and check before they act (`IF OBJECT_ID … IS NULL`), so LabFlow can run them at every start-up on a database built earlier.",
+            "Each guard tests exactly what its script adds: a column with `COL_LENGTH`, a table with `OBJECT_ID`, an index by its name in `sys.indexes`, a CHECK by its definition. `054` turns it around: it acts only when the warehouse exists, so a clinic's own database, which has none, is left alone."
           ],
-          "examples": ["upgrades", "guard"]
+          "examples": ["upgrades", "guard", "index"]
         },
         {
           "id": "temporal",
@@ -1411,16 +2112,18 @@
           "id": "schemas",
           "h": "یک schema برای هر موضوع",
           "p": [
-            "`ref` (کاتالوگ تست‌ها)، `core` (بیماران، پزشکان، مکان‌ها)، `sec`، `sched`، `lab` (requisition → نمونه → جواب → گزارش)، `notify` (صف ایمیل)، `billing`، `audit`، `etl`، `dw` و `history` برای جدول‌های temporal."
+            "`ref` (کاتالوگ تست‌ها)، `core` (بیماران، پزشکان، مکان‌ها)، `sec`، `sched`، `lab` (requisition → نمونه → جواب → گزارش)، `notify` (صف ایمیل)، `billing`، `audit`، `etl`، `dw` و `history` برای جدول‌های temporal.",
+            "`notify` یک outbox تراکنشی است: ردیف‌ها در همان تراکنشِ تغییری که باعثشان شده نوشته می‌شوند و بعداً فرستاده می‌شوند، و هیچ‌وقت جواب آزمایش ندارند، فقط یک لینک."
           ]
         },
         {
           "id": "upgrade",
           "h": "از 050 به بعد: اجرای دوباره امن است",
           "p": [
-            "اسکریپت‌های قبل از 050 دیتابیس تازه می‌سازند. اسکریپت‌های 050 به بعد دیتابیس موجود را عوض می‌کنند و قبل از هر کاری چک می‌کنند (`IF OBJECT_ID … IS NULL`)، پس LabFlow می‌تواند در هر بار شروع آن‌ها را روی دیتابیسی که قبلاً ساخته شده اجرا کند."
+            "اسکریپت‌های قبل از 050 دیتابیس تازه می‌سازند. اسکریپت‌های 050 به بعد دیتابیس موجود را عوض می‌کنند و قبل از هر کاری چک می‌کنند (`IF OBJECT_ID … IS NULL`)، پس LabFlow می‌تواند در هر بار شروع آن‌ها را روی دیتابیسی که قبلاً ساخته شده اجرا کند.",
+            "هر شرط دقیقاً همان چیزی را می‌سنجد که اسکریپتش اضافه می‌کند: ستون با `COL_LENGTH`، جدول با `OBJECT_ID`، ایندکس با اسمش در `sys.indexes`، و CHECK با تعریفش. `054` برعکس عمل می‌کند: فقط وقتی انبار داده هست کاری می‌کند، پس دیتابیس خود یک کلینیک، که انبار ندارد، دست‌نخورده می‌ماند."
           ],
-          "examples": ["upgrades", "guard"]
+          "examples": ["upgrades", "guard", "index"]
         },
         {
           "id": "temporal",
@@ -1459,8 +2162,44 @@
           "file": "database/010_schema.sql",
           "from": "ValidFrom                 datetime2(0)",
           "lines": 4
+        },
+        "index": {
+          "title": { "en": "An index, by its name", "fa": "یک ایندکس، با اسمش" },
+          "lang": "sql",
+          "file": "database/051_outbound_messages.sql",
+          "from": "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OutboundMessage_Pending')",
+          "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why must every script from 050 on check before it acts?", "fa": "چرا هر اسکریپت از ۰۵۰ به بعد باید قبل از عمل چک کند؟" },
+          "options": {
+            "en": ["LabFlow runs them at every start-up on databases built earlier", "sqlcmd requires it", "They run in parallel"],
+            "fa": ["LabFlow آن‌ها را در هر شروع روی دیتابیس‌هایی که قبلاً ساخته شده‌اند اجرا می‌کند", "sqlcmd این را لازم دارد", "به‌صورت موازی اجرا می‌شوند"]
+          },
+          "answer": 0,
+          "why": { "en": "Run twice without a guard, an `ALTER TABLE … ADD` would fail on the second start.", "fa": "اگر بدون شرط دو بار اجرا شود، `ALTER TABLE … ADD` در شروع دوم شکست می‌خورد." }
+        },
+        {
+          "q": { "en": "A result is corrected. Who keeps the earlier row?", "fa": "یک جواب اصلاح می‌شود. چه کسی ردیف قبلی را نگه می‌دارد؟" },
+          "options": {
+            "en": ["The API copies it into `history.Result`", "SQL Server, because the table is system-versioned", "Nobody: the earlier value is lost"],
+            "fa": ["API آن را در `history.Result` کپی می‌کند", "SQL Server، چون جدول system-versioned است", "هیچ‌کس: مقدار قبلی از دست می‌رود"]
+          },
+          "answer": 1,
+          "why": { "en": "Temporal tables keep every earlier version with its validity period; no application code has to remember.", "fa": "جدول‌های temporal هر نسخه‌ی قبلی را با بازه‌ی اعتبارش نگه می‌دارند؛ هیچ کد اپ لازم نیست یادش بماند." }
+        },
+        {
+          "q": { "en": "`054_analytics_dw_view.sql` runs on a clinic's own database. What does it do?", "fa": "`054_analytics_dw_view.sql` روی دیتابیس خود یک کلینیک اجرا می‌شود. چه می‌کند؟" },
+          "options": {
+            "en": ["Creates an empty warehouse first", "Fails, so the start-up stops", "Nothing: it acts only when `dw.FactLabResult` exists"],
+            "fa": ["اول یک انبار داده‌ی خالی می‌سازد", "شکست می‌خورد و شروع متوقف می‌شود", "هیچ: فقط وقتی `dw.FactLabResult` هست کاری می‌کند"]
+          },
+          "answer": 2,
+          "why": { "en": "The guard is `IS NOT NULL`, the reverse of the usual one.", "fa": "شرط `IS NOT NULL` است، برعکس شرط معمول." }
+        }
+      ]
     },
     {
       "id": "data-catalog",
@@ -1472,8 +2211,11 @@
           "id": "about",
           "h": "Tests, panels and reference ranges",
           "p": [
-            "A test has a LabFlow code and, where it exists, a LOINC code (checked for its shape by a CHECK constraint); a numeric test must have a unit; an uninsured one must have a price. A panel is a test whose members are other tests, never itself. Reference ranges depend on sex, age in days and pregnancy week, with optional critical limits."
-          ]
+            "A test has a LabFlow code and, where it exists, a LOINC code (checked for its shape by a CHECK constraint); a numeric test must have a unit; an uninsured one must have a price. A panel is a test whose members are other tests, never itself. Reference ranges depend on sex, age in days and pregnancy week, with optional critical limits.",
+            "These are rules in the database itself, so a script or a tool that writes to the catalogue is held to them as much as the API: `CK_Test_Loinc` allows digits and one dash ending in a check digit, `CK_Test_NumericUnit` refuses a numeric test without a unit, `CK_Test_UninsuredPrice` an uninsured one without a price, and `CK_PanelMember_NotSelf` a panel that contains itself.",
+            "Sex `U` in a range means any sex. Age is counted in days, from 0 up to 54750 (150 years), so a newborn's range fits the same table as an adult's, and the pregnancy weeks are both empty or in order. The seed defines three panels: the lipid profile (cholesterol, triglycerides, HDL, LDL), electrolytes (sodium, potassium) and the complete blood count (white cells, haemoglobin, platelets). Reception's duplicate check and its list of tubes both read these members."
+          ],
+          "examples": ["checks", "panels"]
         },
         {
           "id": "tables",
@@ -1486,13 +2228,61 @@
           "id": "about",
           "h": "تست‌ها، پنل‌ها و محدوده‌های مرجع",
           "p": [
-            "هر تست یک کد LabFlow دارد و اگر وجود داشته باشد یک کد LOINC (که یک قید CHECK شکلش را چک می‌کند)؛ تست عددی باید واحد داشته باشد و تست بدون بیمه باید قیمت داشته باشد. پنل تستی است که اعضایش تست‌های دیگرند، هیچ‌وقت خودش. محدوده‌های مرجع به جنس، سن به روز و هفته‌ی بارداری بستگی دارند، با حدهای بحرانی اختیاری."
-          ]
+            "هر تست یک کد LabFlow دارد و اگر وجود داشته باشد یک کد LOINC (که یک قید CHECK شکلش را چک می‌کند)؛ تست عددی باید واحد داشته باشد و تست بدون بیمه باید قیمت داشته باشد. پنل تستی است که اعضایش تست‌های دیگرند، هیچ‌وقت خودش. محدوده‌های مرجع به جنس، سن به روز و هفته‌ی بارداری بستگی دارند، با حدهای بحرانی اختیاری.",
+            "این‌ها قاعده‌هایی در خود دیتابیس‌اند، پس اسکریپت یا ابزاری که در کاتالوگ می‌نویسد به اندازه‌ی API به آن‌ها مقید است: `CK_Test_Loinc` فقط رقم و یک خط تیره با رقم کنترلی در آخر را قبول می‌کند، `CK_Test_NumericUnit` تست عددی بدون واحد را رد می‌کند، `CK_Test_UninsuredPrice` تست بدون بیمه‌ی بی‌قیمت را، و `CK_PanelMember_NotSelf` پنلی را که خودش را شامل شود.",
+            "جنس `U` در یک محدوده یعنی هر جنسی. سن به روز شمرده می‌شود، از ۰ تا ۵۴۷۵۰ (۱۵۰ سال)، پس محدوده‌ی یک نوزاد در همان جدولِ محدوده‌ی یک بزرگسال جا می‌شود، و هفته‌های بارداری یا هر دو خالی‌اند یا به ترتیب. seed سه پنل تعریف می‌کند: پروفایل چربی (کلسترول، تری‌گلیسرید، HDL، LDL)، الکترولیت‌ها (سدیم، پتاسیم) و شمارش کامل خون (گلبول سفید، هموگلوبین، پلاکت). چک تکراری پذیرش و فهرست لوله‌هایش هر دو همین اعضا را می‌خوانند."
+          ],
+          "examples": ["checks", "panels"]
         },
         {
           "id": "tables",
           "h": "جدول‌ها",
           "data": { "kind": "tables", "only": ["Department", "Unit", "SpecimenType", "Test", "PanelMember", "ReferenceRange"] }
+        }
+      ],
+      "examples": {
+        "checks": {
+          "title": { "en": "A test's rules, in the table", "fa": "قاعده‌های یک تست، در جدول" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CONSTRAINT CK_Test_Loinc CHECK",
+          "lines": 3
+        },
+        "panels": {
+          "title": { "en": "Panels and their members, in order", "fa": "پنل‌ها و اعضایشان، به ترتیب" },
+          "lang": "sql",
+          "file": "database/020_seed_reference.sql",
+          "from": "INSERT ref.PanelMember (PanelTestId, MemberTestId, SortOrder)",
+          "lines": 7
+        }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A script inserts an uninsured test with no price. What happens?", "fa": "یک اسکریپت تستی بدون بیمه و بدون قیمت درج می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["It is inserted; the API checks prices later", "`CK_Test_UninsuredPrice` refuses the row", "The price defaults to zero"],
+            "fa": ["درج می‌شود؛ API بعداً قیمت را چک می‌کند", "`CK_Test_UninsuredPrice` ردیف را رد می‌کند", "قیمت به‌طور پیش‌فرض صفر می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "The CHECK holds whoever writes the row, not only the API.", "fa": "CHECK برای هر کسی که ردیف را بنویسد برقرار است، نه فقط API." }
+        },
+        {
+          "q": { "en": "Why is age in a reference range counted in days?", "fa": "چرا سن در محدوده‌ی مرجع به روز شمرده می‌شود؟" },
+          "options": {
+            "en": ["So newborns' ranges fit the same table", "Because SQL Server has no year type", "So ranges expire after a number of days"],
+            "fa": ["تا محدوده‌های نوزادان در همان جدول جا شوند", "چون SQL Server نوع سال ندارد", "تا محدوده‌ها بعد از چند روز منقضی شوند"]
+          },
+          "answer": 0,
+          "why": { "en": "Neonatal ranges change within weeks; years would be too coarse.", "fa": "محدوده‌های نوزادی در عرض چند هفته عوض می‌شوند؛ سال خیلی درشت بود." }
+        },
+        {
+          "q": { "en": "Someone adds the lipid profile as a member of itself. What stops it?", "fa": "کسی پروفایل چربی را عضو خودش می‌کند. چه چیزی جلویش را می‌گیرد؟" },
+          "options": {
+            "en": ["Nothing; reception refuses it later", "The primary key", "`CK_PanelMember_NotSelf`"],
+            "fa": ["هیچ؛ پذیرش بعداً ردش می‌کند", "کلید اصلی", "`CK_PanelMember_NotSelf`"]
+          },
+          "answer": 2,
+          "why": { "en": "The CHECK refuses `PanelTestId = MemberTestId`.", "fa": "CHECK حالت `PanelTestId = MemberTestId` را رد می‌کند." }
         }
       ]
     },
@@ -1500,14 +2290,25 @@
       "id": "data-people",
       "group": "data",
       "title": { "en": "Patients, practitioners, users", "fa": "بیماران، پزشکان، کاربران" },
-      "files": ["database/010_schema.sql"],
+      "files": ["database/010_schema.sql", "src/LabFlow.Api/Domain/HealthCard.cs"],
       "en": [
         {
           "id": "about",
           "h": "One live record per health card",
           "p": [
-            "A filtered unique index allows one patient per health card while leaving patients without a card free. Postal codes and the language are checked by the database. A practitioner is known by licence body and number (CPSO or CNO)."
-          ]
+            "A filtered unique index allows one patient per health card while leaving patients without a card free. Postal codes and the language are checked by the database. A practitioner is known by licence body and number (CPSO or CNO).",
+            "Why a filtered index and not a UNIQUE constraint: SQL Server treats NULLs as equal in a UNIQUE constraint, so only one patient could be without a card. `UX_Patient_HealthCard … WHERE HealthCardNumber IS NOT NULL` is unique only among the cards that exist.",
+            "The database checks that a card number is digits only; the Luhn check digit, which is how Ontario numbers are built, is checked in C# by `HealthCard.IsValidNumber`, and the same check runs in the page. `core.Patient` is system-versioned, so every change to someone's details is kept, which a PHIPA correction request needs. In `sec.AppUser` the role is a CHECK list, and a `Patient` or `Practitioner` user must point at the record it belongs to."
+          ],
+          "examples": ["hcn", "applink"]
+        },
+        {
+          "id": "luhn",
+          "h": "The check digit, in C#",
+          "p": [
+            "From the right, every second digit is doubled (minus 9 when above 9) and the sum must end in 0. A typo in one digit always fails it, so most mistyped cards are caught before a search or a booking."
+          ],
+          "examples": ["luhn"]
         },
         {
           "id": "tables",
@@ -1520,13 +2321,76 @@
           "id": "about",
           "h": "یک پرونده‌ی زنده برای هر کارت سلامت",
           "p": [
-            "یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک بیمار اجازه می‌دهد و بیماران بدون کارت را آزاد می‌گذارد. کد پستی و زبان را دیتابیس چک می‌کند. هر پزشک با نهاد صادرکننده و شماره‌ی مجوز شناخته می‌شود (CPSO یا CNO)."
-          ]
+            "یک ایندکس unique فیلترشده برای هر کارت سلامت فقط یک بیمار اجازه می‌دهد و بیماران بدون کارت را آزاد می‌گذارد. کد پستی و زبان را دیتابیس چک می‌کند. هر پزشک با نهاد صادرکننده و شماره‌ی مجوز شناخته می‌شود (CPSO یا CNO).",
+            "چرا filtered index و نه UNIQUE constraint: SQL Server در UNIQUE constraint مقدارهای NULL را برابر حساب می‌کند، پس فقط یک بیمار می‌توانست بدون کارت باشد. `UX_Patient_HealthCard … WHERE HealthCardNumber IS NOT NULL` فقط بین کارت‌هایی که وجود دارند یکتاست.",
+            "دیتابیس چک می‌کند که شماره‌ی کارت فقط رقم باشد؛ رقم کنترلی Luhn، که شماره‌های انتاریو با آن ساخته می‌شوند، در C# با `HealthCard.IsValidNumber` چک می‌شود و همان چک در صفحه هم اجرا می‌شود. `core.Patient` system-versioned است، پس هر تغییری در اطلاعات یک نفر نگه داشته می‌شود، که درخواست اصلاح طبق PHIPA لازمش دارد. در `sec.AppUser` نقش یک فهرست CHECK است، و کاربر `Patient` یا `Practitioner` باید به پرونده‌ای که مال آن است اشاره کند."
+          ],
+          "examples": ["hcn", "applink"]
+        },
+        {
+          "id": "luhn",
+          "h": "رقم کنترلی، در C#",
+          "p": [
+            "از سمت راست، هر رقم دوم دو برابر می‌شود (اگر بیشتر از ۹ شد منهای ۹) و جمع باید به ۰ ختم شود. اشتباه تایپی در یک رقم همیشه آن را خراب می‌کند، پس بیشتر کارت‌های اشتباه‌تایپ‌شده قبل از جستجو یا نوبت‌گیری گرفته می‌شوند."
+          ],
+          "examples": ["luhn"]
         },
         {
           "id": "tables",
           "h": "جدول‌ها",
           "data": { "kind": "tables", "only": ["Location", "Patient", "Practitioner", "AppUser"] }
+        }
+      ],
+      "examples": {
+        "hcn": {
+          "title": { "en": "Unique among the cards that exist", "fa": "یکتا بین کارت‌هایی که وجود دارند" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE UNIQUE INDEX UX_Patient_HealthCard",
+          "lines": 1
+        },
+        "applink": {
+          "title": { "en": "A patient or practitioner user points at its record", "fa": "کاربر بیمار یا پزشک به پرونده‌اش اشاره می‌کند" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CONSTRAINT CK_AppUser_PatientLink",
+          "lines": 2
+        },
+        "luhn": {
+          "title": { "en": "Luhn, mod 10", "fa": "Luhn، پیمانه‌ی ۱۰" },
+          "lang": "csharp",
+          "file": "src/LabFlow.Api/Domain/HealthCard.cs",
+          "from": "public static bool IsValidNumber(string? number)",
+          "to": "return sum % 10 == 0;"
+        }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is the health card made unique with a filtered index rather than a UNIQUE constraint?", "fa": "چرا یکتایی کارت سلامت با filtered index است و نه UNIQUE constraint؟" },
+          "options": {
+            "en": ["A UNIQUE constraint treats NULLs as equal, so only one patient could be without a card", "Filtered indexes are faster to write", "A UNIQUE constraint cannot be on a char column"],
+            "fa": ["UNIQUE constraint مقدارهای NULL را برابر می‌داند، پس فقط یک بیمار می‌توانست بدون کارت باشد", "نوشتن در filtered index سریع‌تر است", "UNIQUE constraint نمی‌تواند روی ستون char باشد"]
+          },
+          "answer": 0,
+          "why": { "en": "The `WHERE HealthCardNumber IS NOT NULL` leaves patients without a card out of the index.", "fa": "`WHERE HealthCardNumber IS NOT NULL` بیمارهای بدون کارت را از ایندکس بیرون می‌گذارد." }
+        },
+        {
+          "q": { "en": "A `sec.AppUser` with role `Patient` and no `PatientId` is inserted. What happens?", "fa": "یک `sec.AppUser` با نقش `Patient` و بدون `PatientId` درج می‌شود. چه می‌شود؟" },
+          "options": {
+            "en": ["It is accepted and linked on first sign-in", "`CK_AppUser_PatientLink` refuses it", "The role is changed to `Reception`"],
+            "fa": ["قبول می‌شود و در اولین ورود وصل می‌شود", "`CK_AppUser_PatientLink` آن را رد می‌کند", "نقش به `Reception` عوض می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "A patient user without a patient record would have nothing to see; the CHECK makes that impossible.", "fa": "کاربر بیماری بدون پرونده‌ی بیمار چیزی برای دیدن نداشت؛ CHECK این را غیرممکن می‌کند." }
+        },
+        {
+          "q": { "en": "Where is the Luhn check digit of a health card checked?", "fa": "رقم کنترلی Luhn کارت سلامت کجا چک می‌شود؟" },
+          "options": {
+            "en": ["In a CHECK constraint", "Only by OHIP", "In C# (`HealthCard.IsValidNumber`) and in the page; the database checks digits only"],
+            "fa": ["در یک CHECK constraint", "فقط توسط OHIP", "در C# (`HealthCard.IsValidNumber`) و در صفحه؛ دیتابیس فقط رقم بودن را چک می‌کند"]
+          },
+          "answer": 2,
+          "why": { "en": "The column comment says the check digit is validated in the app; `CK_Patient_HealthCard` refuses non-digits.", "fa": "توضیح ستون می‌گوید رقم کنترلی در اپ چک می‌شود؛ `CK_Patient_HealthCard` غیررقم را رد می‌کند." }
         }
       ]
     },
@@ -1539,24 +2403,87 @@
         {
           "id": "lab",
           "h": "The lab's work",
-          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] }
+          "p": [
+            "A requisition is one paper form: patient, ordering practitioner, location, perhaps the appointment it came from (at most one requisition per appointment, by a filtered unique index), Routine or Stat, and who pays: OHIP, the patient or a third party. Each ordered test or panel is a `RequisitionItem`, once per requisition, and an item that is not insured must carry its price.",
+            "A `Specimen` is one labelled tube with a unique barcode, and a rejected one must say why. `RequisitionCopyTo` is the \"cc\" box of the Ontario form. `ResultInterpretation` holds AI-written interpretations, which are decision support only: they reach the patient only after a clinician approves, and an approved or rejected one must name the reviewer and the time. `OutboundMessage` is the outbox of results to ClinicHub."
+          ],
+          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] },
+          "examples": ["review"]
         },
         {
           "id": "money",
           "h": "Money and notifications",
-          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] }
+          "p": [
+            "An invoice's `Total` is a persisted computed column (`Subtotal + Tax`), so it can never disagree with its parts. An OHIP claim keeps a snapshot of the health card at claim time, since the card may be renewed later. `FinanceExport` records each document FinancePowerApp accepted, so each is sent once. `Notification` is the e-mail and SMS outbox, which never carries results."
+          ],
+          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] },
+          "examples": ["total"]
         }
       ],
       "fa": [
         {
           "id": "lab",
           "h": "کار آزمایشگاه",
-          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] }
+          "p": [
+            "requisition یک فرم کاغذی است: بیمار، پزشک درخواست‌دهنده، مکان، شاید نوبتی که از آن آمده (حداکثر یک requisition برای هر نوبت، با یک filtered unique index)، Routine یا Stat، و این‌که چه کسی پول می‌دهد: OHIP، خود بیمار یا شخص ثالث. هر تست یا پنل درخواست‌شده یک `RequisitionItem` است، برای هر requisition یک بار، و آیتمی که بیمه نیست باید قیمتش را داشته باشد.",
+            "`Specimen` یک لوله‌ی برچسب‌خورده با barcode یکتاست، و نمونه‌ی ردشده باید دلیلش را بگوید. `RequisitionCopyTo` همان کادر «رونوشت» فرم انتاریوست. `ResultInterpretation` تفسیرهایی را که AI نوشته نگه می‌دارد، که فقط کمک به تصمیم‌اند: فقط بعد از تأیید یک پزشک به بیمار می‌رسند، و تفسیر تأییدشده یا ردشده باید بازبین و زمان را داشته باشد. `OutboundMessage` صف خروجی جواب‌ها به ClinicHub است."
+          ],
+          "data": { "kind": "tables", "only": ["Requisition", "RequisitionCopyTo", "RequisitionItem", "Specimen", "ResultInterpretation", "OutboundMessage"] },
+          "examples": ["review"]
         },
         {
           "id": "money",
           "h": "پول و اعلان‌ها",
-          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] }
+          "p": [
+            "`Total` فاکتور یک ستون محاسبه‌شده‌ی persisted است (`Subtotal + Tax`)، پس هیچ‌وقت با اجزایش ناسازگار نمی‌شود. claim‌ی OHIP یک عکس از کارت سلامت در لحظه‌ی claim نگه می‌دارد، چون کارت ممکن است بعداً تمدید شود. `FinanceExport` هر سندی را که FinancePowerApp قبول کرده ثبت می‌کند، تا هر کدام یک بار فرستاده شود. `Notification` صف ایمیل و پیامک است که هیچ‌وقت جواب آزمایش ندارد."
+          ],
+          "data": { "kind": "tables", "only": ["OhipClaim", "OhipClaimItem", "Invoice", "FinanceExport", "Notification"] },
+          "examples": ["total"]
+        }
+      ],
+      "examples": {
+        "review": {
+          "title": { "en": "Reviewed means someone, at some time", "fa": "بازبینی‌شده یعنی یک نفر، در یک زمان" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CONSTRAINT CK_ResultInterpretation_Review CHECK",
+          "lines": 2
+        },
+        "total": {
+          "title": { "en": "The total, computed by the database", "fa": "جمع کل، محاسبه‌شده توسط دیتابیس" },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "Total            AS (Subtotal + Tax) PERSISTED,",
+          "lines": 1
+        }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is `Invoice.Total` a computed column?", "fa": "چرا `Invoice.Total` یک ستون محاسبه‌شده است؟" },
+          "options": {
+            "en": ["So it can never disagree with `Subtotal` and `Tax`", "Because computed columns are faster to read", "So the API does not need to send it"],
+            "fa": ["تا هیچ‌وقت با `Subtotal` و `Tax` ناسازگار نشود", "چون خواندن ستون محاسبه‌شده سریع‌تر است", "تا API لازم نباشد آن را بفرستد"]
+          },
+          "answer": 0,
+          "why": { "en": "The database computes it from its parts; nobody can store a different total.", "fa": "دیتابیس آن را از اجزایش حساب می‌کند؛ هیچ‌کس نمی‌تواند جمع دیگری ذخیره کند." }
+        },
+        {
+          "q": { "en": "An AI interpretation is marked `Approved` without a reviewer. What happens?", "fa": "یک تفسیر AI بدون بازبین `Approved` علامت می‌خورد. چه می‌شود؟" },
+          "options": {
+            "en": ["It reaches the patient", "`CK_ResultInterpretation_Review` refuses the row", "It goes back to `Draft`"],
+            "fa": ["به بیمار می‌رسد", "`CK_ResultInterpretation_Review` ردیف را رد می‌کند", "به `Draft` برمی‌گردد"]
+          },
+          "answer": 1,
+          "why": { "en": "Approved or rejected requires `ReviewedByUserId` and `ReviewedAt`.", "fa": "تأییدشده یا ردشده `ReviewedByUserId` و `ReviewedAt` لازم دارد." }
+        },
+        {
+          "q": { "en": "Why does an OHIP claim keep its own copy of the health card number?", "fa": "چرا claim‌ی OHIP نسخه‌ی خودش از شماره‌ی کارت سلامت را نگه می‌دارد؟" },
+          "options": {
+            "en": ["Because the patient table has no card", "To avoid a join", "The card may change later; the claim must show what was billed"],
+            "fa": ["چون جدول بیمار کارت ندارد", "برای این‌که join لازم نباشد", "کارت ممکن است بعداً عوض شود؛ claim باید نشان دهد به چه چیزی صورت‌حساب شده"]
+          },
+          "answer": 2,
+          "why": { "en": "The column is a snapshot at claim time.", "fa": "این ستون عکسی از لحظه‌ی claim است." }
         }
       ]
     },
@@ -1656,7 +2583,36 @@
           "from": "CREATE FUNCTION etl.fn_JalaliToGregorian",
           "lines": 6
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why are all dates shifted by one secret offset instead of a random amount per row?", "fa": "چرا همه‌ی تاریخ‌ها با یک فاصله‌ی مخفی جابه‌جا می‌شوند و نه با مقدار تصادفی برای هر ردیف؟" },
+          "options": {
+            "en": ["The time between two dates stays true, so turnaround can still be measured", "One offset is faster to compute", "SQL Server allows one random number per run"],
+            "fa": ["فاصله‌ی بین دو تاریخ درست می‌ماند، پس زمان پاسخ‌دهی هنوز قابل اندازه‌گیری است", "حساب کردن یک فاصله سریع‌تر است", "SQL Server در هر اجرا یک عدد تصادفی اجازه می‌دهد"]
+          },
+          "answer": 0,
+          "why": { "en": "A shared offset hides the real dates while keeping every interval.", "fa": "فاصله‌ی مشترک تاریخ‌های واقعی را پنهان می‌کند و همه‌ی فاصله‌ها را نگه می‌دارد." }
+        },
+        {
+          "q": { "en": "A legacy row has a Jalali date that is not a real date. What happens to it?", "fa": "یک ردیف قدیمی تاریخ شمسی‌ای دارد که تاریخ واقعی نیست. چه می‌شود؟" },
+          "options": {
+            "en": ["The load stops", "It goes to `etl.RejectRow` with a reason", "It is loaded with today's date"],
+            "fa": ["بارگذاری متوقف می‌شود", "با یک دلیل به `etl.RejectRow` می‌رود", "با تاریخ امروز بارگذاری می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "The function returns NULL for an invalid date, and such rows are rejected with a reason.", "fa": "تابع برای تاریخ نامعتبر NULL برمی‌گرداند و چنین ردیف‌هایی با دلیل رد می‌شوند." }
+        },
+        {
+          "q": { "en": "Why is the `.dtsx` package generated from C# instead of drawn in the designer?", "fa": "چرا بسته‌ی `.dtsx` به‌جای کشیدن در designer از C# ساخته می‌شود؟" },
+          "options": {
+            "en": ["The designer cannot read code page 1256", "SSIS packages cannot be saved otherwise", "So it is reviewable and can be rebuilt the same way"],
+            "fa": ["designer نمی‌تواند code page 1256 را بخواند", "بسته‌های SSIS جور دیگری ذخیره نمی‌شوند", "تا قابل بازبینی باشد و بشود همان‌طور دوباره ساختش"]
+          },
+          "answer": 2,
+          "why": { "en": "The builder uses the SSIS object model; the source is the review, the output is reproducible.", "fa": "سازنده از object model‌ی SSIS استفاده می‌کند؛ کد منبع بازبینی می‌شود و خروجی تکرارپذیر است." }
+        }
+      ]
     },
     {
       "id": "dw",
@@ -1668,15 +2624,18 @@
           "id": "star",
           "h": "The star schema",
           "p": [
-            "One fact row per legacy result, with dimensions for date, test, payer and the hashed patient. The Power BI report in `bi/` (overview, turnaround, abnormal results, data quality) reads these tables."
+            "One fact row per legacy result, with dimensions for date, test, payer and the hashed patient. The Power BI report in `bi/` (overview, turnaround, abnormal results, data quality) reads these tables.",
+            "The fact's grain is one legacy result row, unique on its legacy identifiers. The load is a `MERGE`: a row seen before is updated (and marks the run in `UpdatedRunId`) instead of being inserted again, so a load can run twice. Besides the value as entered, a mapped test also has `ValueSi`, the value in SI units, plus abnormal, critical and turnaround in days."
           ],
-          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] }
+          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] },
+          "examples": ["merge"]
         },
         {
           "id": "analytics",
           "h": "Only totals leave, for Analytics",
           "p": [
-            "The group's Analytics reads one view: monthly totals per test and kind of payer. No row, value, patient key or legacy visit number leaves. Its login may read that view and the test catalogue's names and codes, nothing else; the view reaches the tables through ownership chaining."
+            "The group's Analytics reads one view: monthly totals per test and kind of payer. No row, value, patient key or legacy visit number leaves. Its login may read that view and the test catalogue's names and codes, nothing else; the view reaches the tables through ownership chaining.",
+            "The view gives the turnaround as a sum and a count rather than an average, so Analytics can add months or tests together and still divide correctly. The grant on `dw.DimTest` names its columns, so even there only names and codes can be read. The login's script is not numbered on purpose: it needs a password, and numbered scripts run at start-up."
           ],
           "examples": ["view", "grant"]
         }
@@ -1686,15 +2645,18 @@
           "id": "star",
           "h": "star schema",
           "p": [
-            "برای هر جواب قدیمی یک ردیف fact، با dimensionهای تاریخ، تست، پرداخت‌کننده و بیمارِ hash‌شده. گزارش Power BI در `bi/` (نمای کلی، زمان پاسخ‌دهی، جواب‌های غیرطبیعی، کیفیت داده) همین جدول‌ها را می‌خواند."
+            "برای هر جواب قدیمی یک ردیف fact، با dimensionهای تاریخ، تست، پرداخت‌کننده و بیمارِ hash‌شده. گزارش Power BI در `bi/` (نمای کلی، زمان پاسخ‌دهی، جواب‌های غیرطبیعی، کیفیت داده) همین جدول‌ها را می‌خواند.",
+            "دانه‌ی جدول fact یک ردیف جواب قدیمی است، یکتا روی شناسه‌های قدیمی‌اش. بارگذاری یک `MERGE` است: ردیفی که قبلاً دیده شده به‌جای درج دوباره به‌روز می‌شود (و اجرا را در `UpdatedRunId` ثبت می‌کند)، پس یک بارگذاری را می‌شود دو بار اجرا کرد. علاوه بر مقدار همان‌طور که وارد شده، تستی که نگاشت شده `ValueSi` هم دارد، مقدار به واحد SI، به‌علاوه‌ی غیرطبیعی، بحرانی و زمان پاسخ به روز."
           ],
-          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] }
+          "data": { "kind": "tables", "only": ["FactLabResult", "DimTest", "DimPayer", "DimPatient", "DimDate"] },
+          "examples": ["merge"]
         },
         {
           "id": "analytics",
           "h": "فقط جمع‌ها بیرون می‌روند، برای Analytics",
           "p": [
-            "Analytics گروه فقط یک view را می‌خواند: جمع ماهانه برای هر تست و نوع پرداخت‌کننده. هیچ ردیف، مقدار، کلید بیمار یا شماره‌ی ویزیت قدیمی بیرون نمی‌رود. login آن فقط می‌تواند همان view و اسم و کد تست‌های کاتالوگ را بخواند؛ view از طریق ownership chaining به جدول‌ها می‌رسد."
+            "Analytics گروه فقط یک view را می‌خواند: جمع ماهانه برای هر تست و نوع پرداخت‌کننده. هیچ ردیف، مقدار، کلید بیمار یا شماره‌ی ویزیت قدیمی بیرون نمی‌رود. login آن فقط می‌تواند همان view و اسم و کد تست‌های کاتالوگ را بخواند؛ view از طریق ownership chaining به جدول‌ها می‌رسد.",
+            "view زمان پاسخ را به شکل جمع و تعداد می‌دهد نه میانگین، تا Analytics بتواند ماه‌ها یا تست‌ها را با هم جمع کند و باز هم درست تقسیم کند. GRANT روی `dw.DimTest` ستون‌ها را نام می‌برد، پس حتی آن‌جا فقط اسم‌ها و کدها خواندنی‌اند. اسکریپت login عمداً شماره ندارد: رمز عبور لازم دارد، و اسکریپت‌های شماره‌دار موقع شروع اجرا می‌شوند."
           ],
           "examples": ["view", "grant"]
         }
@@ -1713,8 +2675,44 @@
           "file": "database/tools/analytics_dw_reader.sql",
           "from": "GRANT SELECT ON dw.vw_AnalyticsMonthly",
           "lines": 2
+        },
+        "merge": {
+          "title": { "en": "Loaded again: updated, not duplicated", "fa": "بارگذاری دوباره: به‌روز، نه تکراری" },
+          "lang": "sql",
+          "file": "database/040_etl_dw.sql",
+          "from": "OR ISNULL(f.ValueSi, -1) <> ISNULL(s.ValueSi, -1)",
+          "lines": 7
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why does the Analytics view give turnaround as a sum and a count instead of an average?", "fa": "چرا view‌ی Analytics زمان پاسخ را به شکل جمع و تعداد می‌دهد و نه میانگین؟" },
+          "options": {
+            "en": ["Averages cannot be stored in a view", "Sums and counts can be added across months and still give a correct average", "To hide the real turnaround"],
+            "fa": ["میانگین را نمی‌شود در view ذخیره کرد", "جمع‌ها و تعدادها را می‌شود بین ماه‌ها جمع زد و باز میانگین درست گرفت", "برای پنهان کردن زمان پاسخ واقعی"]
+          },
+          "answer": 1,
+          "why": { "en": "An average of averages is wrong when the groups differ in size; sum over count is not.", "fa": "میانگینِ میانگین‌ها وقتی اندازه‌ی گروه‌ها فرق دارد غلط است؛ جمع تقسیم بر تعداد نه." }
+        },
+        {
+          "q": { "en": "Analytics' login runs `SELECT * FROM dw.FactLabResult`. What happens?", "fa": "login‌ی Analytics دستور `SELECT * FROM dw.FactLabResult` را اجرا می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["It is denied; the login may read the view, which reaches the table through ownership chaining", "It sees every row", "It sees the rows without values"],
+            "fa": ["رد می‌شود؛ login فقط view را می‌تواند بخواند، که از طریق ownership chaining به جدول می‌رسد", "همه‌ی ردیف‌ها را می‌بیند", "ردیف‌ها را بدون مقدار می‌بیند"]
+          },
+          "answer": 0,
+          "why": { "en": "Only the view and named `DimTest` columns are granted.", "fa": "فقط view و ستون‌های نام‌برده‌ی `DimTest` اجازه داده شده‌اند." }
+        },
+        {
+          "q": { "en": "The same legacy result is loaded in two runs. What is in `dw.FactLabResult`?", "fa": "یک جواب قدیمی در دو اجرا بارگذاری می‌شود. در `dw.FactLabResult` چه هست؟" },
+          "options": {
+            "en": ["Two rows", "An error stops the second run", "One row, updated if anything changed"],
+            "fa": ["دو ردیف", "یک خطا اجرای دوم را متوقف می‌کند", "یک ردیف، که اگر چیزی عوض شده باشد به‌روز می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "The `MERGE` matches on the legacy identifiers, which are also a unique key.", "fa": "`MERGE` روی شناسه‌های قدیمی جور می‌کند، که یک کلید یکتا هم هستند." }
+        }
+      ]
     }
   ]
 }

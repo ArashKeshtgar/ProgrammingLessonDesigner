@@ -43,9 +43,12 @@ points at an existing file and line.
 - `src/data/project-map.json` is generated, never edited: `npm run map` reads Control
   Panel's compose files, the VPS overlay, the Caddyfile and the VPS env template (read
   only) and writes it. `npm run check` fails locally when it no longer matches them.
-- `src/data/topics/<project>.json`: the project as topics, W3Schools-style (so far Control
-  Panel, 29 topics in 6 groups; ClinicHub, 26 in 8; LabFlow, 21 in 8; ClinicReport, 19 in 7;
-  LedgerDashboard, 19 in 7; ReBiomed, 20 in 8; FinancePowerApp, 18 in 7; this site, 21 in 7; Caddy, 14 in 6, from Control Panel's files). Each topic
+- `src/data/topics/<project>.json`: the project as topics, W3Schools-style (every project:
+  Control Panel, 29 topics in 6 groups; ClinicHub, 26 in 8; PharmaFlow, 21 in 8; LabFlow, 21 in 8;
+  this site, 21 in 7; Analytics, 20 in 8; ReBiomed, 20 in 8; IntegrationHub, 19 in 7;
+  ClinicReport, 19 in 7; LedgerDashboard, 19 in 7; LanguageLessonDesigner, 19 in 6;
+  FinancePowerApp, 18 in 7; wUtility, 16 in 6; Caddy, 14 in 6, and SQL Server, 13 in 5, both
+  from Control Panel's files). Each topic
   lists its files and quotes the real code, found by text anchors (`from` / `to` or `lines`). `npm run code`
   snapshots those excerpts, plus what its `scan` reads from the code: endpoints (NestJS, Express in
   TypeScript or JavaScript, including routers mounted with `app.use` and their `auth`/`admin`
@@ -56,6 +59,16 @@ points at an existing file and line.
   component, and Vue Router), into `<project>.code.json`. A repo outside `D:/E/Projects` is named
   by `path` (relative to it); `npm run check` fails locally when a
   snapshot no longer matches the repo, and when a topic's Persian and English differ.
+- Every topic ends with a `quiz` (2-3 questions, the same in `fa` and `en`, each with the
+  index of the right option and why); `npm run check` fails on a topic without one. A visitor
+  who answers it, or presses the button under the topic, has finished it: a tick in the
+  contents and a count per project, kept in the browser (`src/projects/progress.ts`).
+- The tab loads a project's topics and snapshot only when one of its topics is opened.
+  What the contents list, previous / next and the search need up front (ids, titles,
+  headings) comes from `virtual:topic-index`, built from the topic files by `vite.config.ts`.
+  The search box (or `/`) finds projects, topics and sections in the current language.
+- `npm run code -- --only <project>` and `node scripts/check-projects.mjs --only <project>`
+  work on one project's topics.
 - `src/data/projects/<id>.json`: the hand-written page of a project, a summary and
   optionally sections in both `fa` and `en` (same section ids), with code examples shared
   by the two languages and `refs` into the real projects. `npm run check` validates them.

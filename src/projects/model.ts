@@ -1,3 +1,5 @@
+import { shallowReactive } from 'vue'
+import topicIndex from 'virtual:topic-index'
 import mapJson from '../data/project-map.json'
 import type { DocLang } from './i18n'
 
@@ -109,6 +111,14 @@ export interface TopicExample {
   to?: string
   lines?: number
 }
+// The quiz at the end of a topic: the same questions in both languages.
+export interface QuizQuestion {
+  q: Record<DocLang, string>
+  options: Record<DocLang, string[]>
+  // index of the right option
+  answer: number
+  why: Record<DocLang, string>
+}
 export interface Topic {
   id: string
   group: string
@@ -117,12 +127,26 @@ export interface Topic {
   fa: DocSection[]
   en: DocSection[]
   examples?: Record<string, TopicExample>
+  quiz?: QuizQuestion[]
 }
 export interface ProjectTopics {
   project: string
   repo: string
   groups: { id: string; title: Record<DocLang, string> }[]
   pages: Topic[]
+}
+// What is known of a topic before its project is loaded (virtual:topic-index, built
+// by vite.config.ts): enough for the contents list, previous / next and search.
+export interface TopicMeta {
+  id: string
+  group: string
+  title: Record<DocLang, string>
+  heads: Record<DocLang, string[]>
+}
+export interface TopicIndex {
+  project: string
+  groups: ProjectTopics['groups']
+  pages: TopicMeta[]
 }
 
 export interface Endpoint {
@@ -161,25 +185,37 @@ export interface CodeSnapshot {
   routes: { path: string; component?: string; redirect?: string; guards: string[] }[]
 }
 
-const topicModules = import.meta.glob<{ default: ProjectTopics }>(['../data/topics/*.json', '!../data/topics/*.code.json'], {
-  eager: true,
-})
-const codeModules = import.meta.glob<{ default: CodeSnapshot & { project: string } }>('../data/topics/*.code.json', {
-  eager: true,
-})
-const TOPICS: Record<string, ProjectTopics> = Object.fromEntries(
-  Object.values(topicModules).map((m) => [m.default.project, m.default]),
-)
-const CODE: Record<string, CodeSnapshot> = Object.fromEntries(
-  Object.values(codeModules).map((m) => [m.default.project, m.default]),
-)
-export const topicsOf = (project: string): ProjectTopics | undefined => TOPICS[project]
-export const codeOf = (project: string): CodeSnapshot | undefined => CODE[project]
+const INDEX: Record<string, TopicIndex> = Object.fromEntries(topicIndex.map((t) => [t.project, t]))
+export const topicsOf = (project: string): TopicIndex | undefined => INDEX[project]
+
+// The topics and code snapshot of a project are loaded the first time one of its
+// topics is opened: a file per project, so the tab does not carry them all.
+// File names are the project ids (scripts/check-projects.mjs checks it).
+const topicFiles = import.meta.glob<ProjectTopics>(['../data/topics/*.json', '!../data/topics/*.code.json'], { import: 'default' })
+const codeFiles = import.meta.glob<CodeSnapshot>('../data/topics/*.code.json', { import: 'default' })
+export interface LoadedProject {
+  topics: ProjectTopics
+  code?: CodeSnapshot
+}
+const LOADED = shallowReactive<Record<string, LoadedProject>>({})
+const loading: Record<string, Promise<LoadedProject>> = {}
+export const loadedProject = (project: string): LoadedProject | undefined => LOADED[project]
+export function loadProject(project: string): Promise<LoadedProject> {
+  return (loading[project] ??= (async () => {
+    const [topics, code] = await Promise.all([
+      topicFiles[`../data/topics/${project}.json`](),
+      codeFiles[`../data/topics/${project}.code.json`]?.(),
+    ])
+    return (LOADED[project] = { topics, code })
+  })().catch((e) => {
+    delete loading[project] // a failed download (offline) can be tried again
+    throw e
+  }))
+}
 
 // A topic's examples as the example box shows them: the snapshot's code, and where
 // in the repo it comes from.
-export function topicExamples(project: string, topic: Topic): Record<string, DocExample> {
-  const code = CODE[project]
+export function topicExamples(topic: Topic, code: CodeSnapshot | undefined): Record<string, DocExample> {
   return Object.fromEntries(
     Object.entries(topic.examples ?? {}).map(([id, ex]) => {
       const snap = code?.examples[`${topic.id}/${id}`]
@@ -204,7 +240,7 @@ export interface Page {
   id: string
   group: PageGroup
   project?: MapProject
-  topic?: Topic
+  topic?: TopicMeta
 }
 
 // The order a visitor meets them: the entry point first, then the rest by size.
@@ -228,7 +264,7 @@ export const PAGES: Page[] = [
       // A project's own page first, then its topics in the order they are written.
       .flatMap((p) => [
         { id: p.id, group: g, project: p },
-        ...(TOPICS[p.id]?.pages ?? []).map((topic) => ({ id: `${p.id}/${topic.id}`, group: g, project: p, topic })),
+        ...(INDEX[p.id]?.pages ?? []).map((topic) => ({ id: `${p.id}/${topic.id}`, group: g, project: p, topic })),
       ]),
   ),
   { id: 'styling', group: 'about' },

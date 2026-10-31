@@ -6,6 +6,7 @@
 //
 //   npm run code            regenerate src/data/topics/<project>.code.json
 //   npm run code -- --check fail if a snapshot no longer matches its repo
+//   npm run code -- --only <project>   just that project (several can run side by side)
 //
 // Excerpts are found by text (`from` / `to`: the first line containing each), not by
 // line number, so an edit elsewhere in the file does not move them. The repos are
@@ -18,6 +19,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const projectsRoot = process.env.LESSON_REFS_ROOT || 'D:/E/Projects'
 const topicsDir = path.join(root, 'src', 'data', 'topics')
 const check = process.argv.includes('--check')
+const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : null
 const problems = []
 
 if (!existsSync(projectsRoot)) {
@@ -723,6 +725,7 @@ function snapshot(topics) {
 let written = 0
 for (const f of readdirSync(topicsDir).filter((x) => x.endsWith('.json') && !x.endsWith('.code.json'))) {
   const topics = JSON.parse(readFileSync(path.join(topicsDir, f), 'utf-8'))
+  if (only && topics.project !== only) continue
   const json = JSON.stringify(snapshot(topics), null, 2) + '\n'
   const out = path.join(topicsDir, f.replace(/\.json$/, '.code.json'))
   if (check) {

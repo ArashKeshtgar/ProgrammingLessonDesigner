@@ -99,11 +99,23 @@
       "end": 183,
       "code": "npm install                                   # once, from the repo root (npm workspaces)\ncd services/core-api && npm run build && node --env-file=.env dist/scripts/seed-users.js\n\n# each in its own terminal (the adapters need DB_PASSWORD / WUTILITY_API_KEY set;\n# ledgerdash-adapter's DB_PASSWORD is LedgerDashboard's ledger_reader password)\ncd services/core-api && npm run start:dev                     # :4000\ncd services/adapters/wutility-adapter && npm run start:dev    # :4001\ncd services/adapters/hisplus-adapter && npm run start:dev     # :4002\ncd services/adapters/ledgerdash-adapter && npm run start:dev  # :4006\ncd frontend && npx ng serve --port 4100                     # :4100"
     },
+    "run/sql": {
+      "file": "docker-compose.yml",
+      "start": 27,
+      "end": 43,
+      "code": "sqlserver:\n  image: mcr.microsoft.com/mssql/server:2022-latest\n  environment:\n    ACCEPT_EULA: \"Y\"\n    MSSQL_SA_PASSWORD: ${SA_PASSWORD:?set SA_PASSWORD in .env}\n  # Published on 14333 so it doesn't collide with a local SQL Server on 1433.\n  ports:\n    - \"14333:1433\"\n  restart: unless-stopped\n  volumes:\n    - sqldata:/var/opt/mssql\n  healthcheck:\n    test: [\"CMD-SHELL\", \"/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \\\"$$MSSQL_SA_PASSWORD\\\" -Q 'SELECT 1' -b -o /dev/null\"]\n    interval: 5s\n    timeout: 5s\n    retries: 30\n    start_period: 20s"
+    },
     "tests/spec": {
       "file": "services/core-api/src/projects/adapter-url.spec.ts",
       "start": 3,
       "end": 20,
       "code": "describe('checkAdapterBaseUrl (SSRF allowlist)', () => {\n  const allowed = ['localhost', 'hisplus-adapter'];\n\n  it.each(['http://localhost:4003', 'https://localhost', 'http://hisplus-adapter:4002/'])('accepts %s', (url) => {\n    expect(checkAdapterBaseUrl(url, allowed)).toBeNull();\n  });\n\n  it.each([\n    ['a host outside the allowlist', 'http://169.254.169.254'],\n    ['an internal host not on the list', 'http://sqlserver:1433'],\n    ['a non-http scheme', 'file:///etc/passwd'],\n    ['embedded credentials', 'http://user:pass@localhost:4003'],\n    ['a path', 'http://localhost:4003/admin'],\n    ['a query string', 'http://localhost:4003?x=1'],\n    ['a relative value', 'not a url'],\n  ])('rejects %s', (_label, url) => {\n    expect(checkAdapterBaseUrl(url, allowed)).not.toBeNull();\n  });"
+    },
+    "tests/http": {
+      "file": "services/adapters/hisplus-adapter/src/app.spec.ts",
+      "start": 7,
+      "end": 19,
+      "code": "async function getStatus(loadStats: () => Promise<OrReportStats>) {\n  const app = createApp(loadStats);\n  const server: Server = await new Promise((resolve) => {\n    const s = app.listen(0, () => resolve(s));\n  });\n  try {\n    const { port } = server.address() as AddressInfo;\n    const response = await fetch(`http://127.0.0.1:${port}/status`);\n    return (await response.json()) as Record<string, unknown>;\n  } finally {\n    server.close();\n  }\n}"
     },
     "bootstrap/main": {
       "file": "services/core-api/src/main.ts",
@@ -129,6 +141,12 @@
       "end": 18,
       "code": "async findByUsername(username: string): Promise<User | null> {\n  const result = await this.db\n    .request()\n    .input('username', username)\n    .query(`SELECT ${USER_COLUMNS} FROM dbo.Users WHERE Username = @username`);\n\n  return this.toUser(result.recordset[0]);\n}"
     },
+    "database/map": {
+      "file": "services/core-api/src/users/users.service.ts",
+      "start": 36,
+      "end": 45,
+      "code": "private toUser(row: any): User | null {\n  if (!row) return null;\n  return {\n    id: row.Id,\n    username: row.Username,\n    passwordHash: row.PasswordHash,\n    role: row.Role,\n    tokenVersion: row.TokenVersion,\n  };\n}"
+    },
     "auth-tokens/issue": {
       "file": "services/core-api/src/auth/auth.service.ts",
       "start": 71,
@@ -146,6 +164,12 @@
       "start": 13,
       "end": 22,
       "code": "export function requireSecret(config: ConfigService, name: 'JWT_SECRET' | 'JWT_REFRESH_SECRET'): string {\n  const value = config.get<string>(name);\n  if (!value || value.length < MIN_SECRET_LENGTH) {\n    throw new Error(\n      `${name} must be set to a random value of at least ${MIN_SECRET_LENGTH} characters ` +\n        `(e.g. node -e \"console.log(require('crypto').randomBytes(48).toString('base64'))\").`,\n    );\n  }\n  return value;\n}"
+    },
+    "auth-tokens/logout": {
+      "file": "services/core-api/src/auth/auth.service.ts",
+      "start": 67,
+      "end": 69,
+      "code": "async logout(userId: number): Promise<void> {\n  await this.users.incrementTokenVersion(userId);\n}"
     },
     "auth-guards/validate": {
       "file": "services/core-api/src/auth/jwt.strategy.ts",
@@ -171,6 +195,12 @@
       "end": 12,
       "code": "@ApiTags('projects')\n@ApiBearerAuth()\n@UseGuards(JwtAuthGuard, RolesGuard)\n@Controller('projects')"
     },
+    "auth-guards/admin": {
+      "file": "services/core-api/src/projects/projects.controller.ts",
+      "start": 26,
+      "end": 30,
+      "code": "@Post()\n@Roles('Admin')\ncreate(@Body() dto: CreateProjectDto) {\n  return this.projects.create(dto);\n}"
+    },
     "projects-status/contract": {
       "file": "services/core-api/src/projects/project.model.ts",
       "start": 10,
@@ -195,6 +225,12 @@
       "end": 78,
       "code": "async update(id: number, dto: UpdateProjectDto): Promise<ProjectRegistryEntry> {\n  const existing = await this.findById(id);\n  if (!existing) throw new NotFoundException(`Project ${id} not found.`);\n\n  const merged = { ...existing, ...dto };"
     },
+    "projects-status/registry": {
+      "file": "services/core-api/src/projects/projects.controller.ts",
+      "start": 16,
+      "end": 23,
+      "code": "@Get()\nlist() {\n  return this.projects.listWithStatus();\n}\n\n@Get('registry')\nregistry() {\n  return this.projects.listRegistry();"
+    },
     "projects-allowlist/check": {
       "file": "services/core-api/src/projects/adapter-url.ts",
       "start": 25,
@@ -206,6 +242,12 @@
       "start": 153,
       "end": 167,
       "code": "private async requestAdapter(project: ProjectRegistryEntry, path: string): Promise<Response> {\n  const problem = checkAdapterBaseUrl(project.adapterBaseUrl, this.allowedHosts);\n  if (problem) throw new Error(`Adapter URL rejected: ${problem}`);\n\n  const controller = new AbortController();\n  const timeout = setTimeout(() => controller.abort(), 3000);\n  try {\n    return await fetch(`${new URL(project.adapterBaseUrl).origin}${path}`, {\n      signal: controller.signal,\n      redirect: 'error',\n    });\n  } finally {\n    clearTimeout(timeout);\n  }\n}"
+    },
+    "projects-allowlist/hosts": {
+      "file": "services/core-api/src/projects/adapter-url.ts",
+      "start": 7,
+      "end": 14,
+      "code": "export const DEFAULT_ALLOWED_ADAPTER_HOSTS = [\n  'localhost',\n  '127.0.0.1',\n  'host.docker.internal',\n  'wutility-adapter',\n  'hisplus-adapter',\n  'ledgerdash-adapter',\n];"
     },
     "services-api/confirm": {
       "file": "services/core-api/src/services/services.controller.ts",
@@ -224,6 +266,12 @@
       "start": 18,
       "end": 22,
       "code": "provide: ORCHESTRATOR,\ninject: [ConfigService],\nuseFactory: (config: ConfigService) => {\n  const url = config.get<string>('DOCKER_PROXY_URL');\n  return url ? new DockerOrchestrator(url.replace(/\\/+$/, '')) : null;"
+    },
+    "services-api/recent": {
+      "file": "services/core-api/src/services/audit.service.ts",
+      "start": 45,
+      "end": 50,
+      "code": "async recent(limit = 50): Promise<AuditEntry[]> {\n  const result = await this.db\n    .request()\n    .input('limit', Math.max(1, Math.min(200, limit)))\n    .query(`SELECT TOP (@limit) Id, At, Username, Action, Target, Outcome, Detail\n            FROM dbo.AuditLog ORDER BY Id DESC`);"
     },
     "services-docker/interface": {
       "file": "services/core-api/src/services/orchestrator.ts",
@@ -255,6 +303,12 @@
       "end": 29,
       "code": "const REDACTIONS: Array<[RegExp, string]> = [\n  [/(authorization\\s*[:=]\\s*)(bearer\\s+)?[^\\s,;\"']+/gi, '$1$2[redacted]'],\n  [/\\bbearer\\s+[A-Za-z0-9._~+/=-]{8,}/gi, 'Bearer [redacted]'],\n  [/\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}/g, '[redacted-jwt]'],\n  [/\\bsk-ant-[A-Za-z0-9_-]{10,}/g, '[redacted-key]'],\n  [/((?:password|passwd|pwd|secret|token|api[_-]?key)[\"']?\\s*[:=]\\s*[\"']?)[^\\s,;\"'&}]+/gi, '$1[redacted]'],\n];"
     },
+    "services-logs/tail": {
+      "file": "services/core-api/src/services/docker-orchestrator.ts",
+      "start": 62,
+      "end": 68,
+      "code": "async logs(name: string, tail: number): Promise<string> {\n  const id = await this.resolve(name);\n  const n = Math.max(1, Math.min(500, Math.floor(tail) || 200));\n  const res = await this.call('GET', `/containers/${id}/logs?stdout=1&stderr=1&timestamps=1&tail=${n}`, 5000);\n  const text = demuxDockerLogs(Buffer.from(await res.arrayBuffer()));\n  return redactSecrets(text);\n}"
+    },
     "assistant-loop/loop": {
       "file": "services/core-api/src/assistant/assistant.service.ts",
       "start": 68,
@@ -272,6 +326,12 @@
       "start": 139,
       "end": 147,
       "code": "private checkRate(userId: number, now: number) {\n  const hourAgo = now - 60 * 60 * 1000;\n  const recent = (this.questionsByUser.get(userId) ?? []).filter((t) => t > hourAgo);\n  if (recent.length >= QUESTIONS_PER_HOUR) {\n    throw new HttpException(`Limit of ${QUESTIONS_PER_HOUR} questions per hour reached.`, HttpStatus.TOO_MANY_REQUESTS);\n  }\n  recent.push(now);\n  this.questionsByUser.set(userId, recent);\n}"
+    },
+    "assistant-loop/errors": {
+      "file": "services/core-api/src/assistant/assistant.service.ts",
+      "start": 127,
+      "end": 134,
+      "code": "if (err instanceof Anthropic.RateLimitError) {\n  throw new ServiceUnavailableException('The AI service is busy. Try again in a minute.');\n}\nif (err instanceof Anthropic.APIError) {\n  this.logger.error(`Claude API error ${err.status}: ${err.message}`);\n  throw new BadGatewayException('The AI service returned an error.');\n}\nthrow err;"
     },
     "assistant-tools/tool": {
       "file": "services/core-api/src/assistant/assistant.tools.ts",
@@ -303,6 +363,12 @@
       "end": 53,
       "code": "IF EXISTS (SELECT 1 FROM dbo.Users WHERE Username = @username)\n  UPDATE dbo.Users\n  SET PasswordHash = @hash, Role = @role, TokenVersion = TokenVersion + 1\n  WHERE Username = @username;\nELSE\n  INSERT INTO dbo.Users (Username, PasswordHash, Role) VALUES (@username, @hash, @role);"
     },
+    "health-seed/check": {
+      "file": "services/core-api/src/scripts/seed-users.ts",
+      "start": 23,
+      "end": 29,
+      "code": "async function main() {\n  for (const account of accounts) {\n    const password = requireEnv(account.envVar);\n    if (password.length < MIN_PASSWORD_LENGTH) {\n      throw new Error(`${account.envVar} must be at least ${MIN_PASSWORD_LENGTH} characters.`);\n    }\n  }"
+    },
     "wutility-adapter/status": {
       "file": "services/adapters/wutility-adapter/src/app.ts",
       "start": 17,
@@ -314,6 +380,12 @@
       "start": 3,
       "end": 7,
       "code": "const apiKey = process.env.WUTILITY_API_KEY;\nif (!apiKey) {\n  console.error('WUTILITY_API_KEY must be set (the same value wUtility Web API is started with).');\n  process.exit(1);\n}"
+    },
+    "wutility-adapter/options": {
+      "file": "services/adapters/wutility-adapter/src/app.ts",
+      "start": 6,
+      "end": 14,
+      "code": "export interface WutilityAdapterOptions {\n  apiBase: string;\n  // Sent as X-Api-Key; wUtility's API rejects /api/* requests without it.\n  apiKey: string;\n  timeoutMs?: number;\n  fetchImpl?: typeof fetch;\n}\n\nexport function createApp({ apiBase, apiKey, timeoutMs = 3000, fetchImpl = fetch }: WutilityAdapterOptions) {"
     },
     "hisplus-adapter/sql": {
       "file": "services/adapters/hisplus-adapter/src/app.ts",
@@ -327,6 +399,12 @@
       "end": 49,
       "code": "app.get('/status', async (_req, res) => {\n  try {\n    const row = await loadStats();\n    // SUM over an empty table is NULL, not 0.\n    const reportsToday = row.ReportsToday ?? 0;\n    const pendingReports = row.PendingReports ?? 0;\n\n    res.json({\n      healthy: true,\n      summary: `${reportsToday} OR report(s) today, ${pendingReports} pending finalization`,\n      metrics: {\n        totalReports: row.TotalReports,\n        reportsToday,\n        pendingReports,\n        lastReportAt: row.LastReportAt ? new Date(row.LastReportAt).toISOString() : 'none',\n      },\n    });\n  } catch {\n    res.json({ healthy: false, error: 'HIS+ database unreachable.' });\n  }\n});"
     },
+    "hisplus-adapter/main": {
+      "file": "services/adapters/hisplus-adapter/src/main.ts",
+      "start": 21,
+      "end": 32,
+      "code": ".connect(config)\n.then((pool) => {\n  const app = createApp(async () => {\n    const result = await pool.request().query<OrReportStats>(OR_REPORT_STATS_SQL);\n    return result.recordset[0];\n  });\n  app.listen(4002, () => console.log('hisplus-adapter listening on http://localhost:4002'));\n})\n.catch((err) => {\n  console.error('Failed to connect to HIS+ database:', err.message);\n  process.exit(1);\n});"
+    },
     "ledgerdash-adapter/sql": {
       "file": "services/adapters/ledgerdash-adapter/src/app.ts",
       "start": 29,
@@ -338,6 +416,12 @@
       "start": 77,
       "end": 87,
       "code": "const insight = (load: () => Promise<Array<Record<string, unknown>>>) =>\n  async (_req: express.Request, res: express.Response) => {\n    try {\n      res.json({ rows: await load() });\n    } catch {\n      res.status(503).json({ error: 'LedgerDashboard database unreachable.' });\n    }\n  };\napp.get('/insights/followups', insight(() => queries.followupsDue()));\napp.get('/insights/funnel', insight(() => queries.funnelBySource()));\napp.get('/insights/gaps', insight(() => queries.gapTags()));"
+    },
+    "ledgerdash-adapter/followups": {
+      "file": "services/adapters/ledgerdash-adapter/src/app.ts",
+      "start": 39,
+      "end": 41,
+      "code": "followupsDue: `\n  SELECT Company, Role, CurrentStage, HasContactEmail, CONVERT(varchar(10), LastActionDate, 23) AS LastActionDate, DaysSinceAction\n  FROM dbo.vFollowupsDue ORDER BY DaysSinceAction DESC`,"
     },
     "fe-routes/admin": {
       "file": "frontend/src/app/auth/admin.guard.ts",
@@ -351,6 +435,18 @@
       "end": 12,
       "code": "location /api/ {\n  proxy_pass http://core-api:4000/;\n  proxy_set_header Host $host;\n  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n}"
     },
+    "fe-routes/base": {
+      "file": "frontend/src/app/auth/auth.service.ts",
+      "start": 16,
+      "end": 18,
+      "code": "// ng serve talks to core-api directly; the built app (docker compose, the\n// VPS) calls /api on its own origin and the frontend's nginx forwards it.\nexport const API_BASE = isDevMode() ? 'http://localhost:4000' : '/api';"
+    },
+    "fe-routes/fallback": {
+      "file": "frontend/nginx.conf",
+      "start": 14,
+      "end": 16,
+      "code": "location / {\n  try_files $uri $uri/ /index.html;\n}"
+    },
     "fe-auth/interceptor": {
       "file": "frontend/src/app/auth/auth.interceptor.ts",
       "start": 18,
@@ -362,6 +458,12 @@
       "start": 43,
       "end": 60,
       "code": "refreshAccessToken(): Observable<string> {\n  const refreshToken = localStorage.getItem(REFRESH_KEY);\n  if (!refreshToken) throw new Error('No refresh token stored.');\n\n  if (!this.refreshInFlight) {\n    this.refreshInFlight = this.http.post<TokenPair>(`${API_BASE}/auth/refresh`, { refreshToken }).pipe(\n      tap((pair) => this.storeTokens(pair)),\n      map((pair) => pair.accessToken),\n      catchError((err) => {\n        this.clearSession();\n        throw err;\n      }),\n      finalize(() => (this.refreshInFlight = null)),\n      shareReplay(1)\n    );\n  }\n  return this.refreshInFlight;\n}"
+    },
+    "fe-auth/logout": {
+      "file": "frontend/src/app/auth/auth.service.ts",
+      "start": 65,
+      "end": 75,
+      "code": "logout(): Observable<void> {\n  if (!this.token) {\n    this.clearSession();\n    return of(undefined);\n  }\n  return this.http.post<void>(`${API_BASE}/auth/logout`, {}).pipe(\n    catchError(() => of(undefined)),\n    map(() => undefined),\n    finalize(() => this.clearSession())\n  );\n}"
     },
     "fe-dashboard/group": {
       "file": "frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
@@ -375,11 +477,29 @@
       "end": 38,
       "code": "<div class=\"project-card\" *ngFor=\"let p of byCategory(category)\">\n  <div class=\"card-head\">\n    <h3>{{ p.displayName }}</h3>\n    <span class=\"badge\" [class.good]=\"p.status.healthy\" [class.error]=\"!p.status.healthy\">\n      {{ p.status.healthy ? 'Online' : 'Offline' }}\n    </span>\n  </div>\n\n  <p class=\"summary\" *ngIf=\"p.status.summary\">{{ p.status.summary }}</p>\n  <p class=\"summary muted\" *ngIf=\"!p.status.healthy\">{{ p.status.error }}</p>"
     },
+    "fe-dashboard/load": {
+      "file": "frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
+      "start": 30,
+      "end": 42,
+      "code": "load(): void {\n  this.loading = true;\n  this.api.list().subscribe({\n    next: (rows) => {\n      this.projects = rows;\n      this.loading = false;\n    },\n    error: () => {\n      this.error = 'Failed to load project status.';\n      this.loading = false;\n    }\n  });\n}"
+    },
+    "fe-dashboard/buttons": {
+      "file": "frontend/src/app/pages/dashboard-page/dashboard-page.component.html",
+      "start": 13,
+      "end": 15,
+      "code": "<a routerLink=\"/manage-ports\" *ngIf=\"auth.currentUser?.role === 'Admin'\">\n  <button class=\"secondary\">Manage ports</button>\n</a>"
+    },
     "fe-login/messages": {
       "file": "frontend/src/app/pages/login-page/login-page.component.ts",
       "start": 11,
       "end": 16,
       "code": "export function loginErrorMessage(err: HttpErrorResponse): string {\n  if (err.status === 401) return 'Invalid username or password.';\n  if (err.status === 0) return \"Can't reach the server — is core-api running on port 4000?\";\n  if (err.status === 400) return 'Enter a username and a password (6+ characters).';\n  return `Login failed (server error ${err.status}). Check the core-api log.`;\n}"
+    },
+    "fe-login/submit": {
+      "file": "frontend/src/app/pages/login-page/login-page.component.ts",
+      "start": 33,
+      "end": 46,
+      "code": "submit(): void {\n  this.loading = true;\n  this.error = null;\n  this.auth.login(this.username, this.password).subscribe({\n    next: () => {\n      this.loading = false;\n      this.router.navigate(['/dashboard']);\n    },\n    error: (err: HttpErrorResponse) => {\n      this.loading = false;\n      this.error = loginErrorMessage(err);\n    }\n  });\n}"
     },
     "fe-manage-ports/save": {
       "file": "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.ts",
@@ -392,6 +512,12 @@
       "start": 106,
       "end": 110,
       "code": "function serverMessage(err: { status?: number; error?: { message?: string | string[] } }): string | null {\n  if (err?.status !== 400) return null;\n  const message = err.error?.message;\n  return Array.isArray(message) ? message.join(' ') : message ?? null;\n}"
+    },
+    "fe-manage-ports/toggle": {
+      "file": "frontend/src/app/pages/manage-ports-page/manage-ports-page.component.ts",
+      "start": 69,
+      "end": 74,
+      "code": "toggleActive(p: ProjectRegistryEntry): void {\n  this.api.update(p.id, { isActive: !p.isActive }).subscribe({\n    next: () => this.load(),\n    error: () => (this.error = 'Update failed.')\n  });\n}"
     },
     "fe-services/poll": {
       "file": "frontend/src/app/pages/services-page/services-page.component.ts",
@@ -411,6 +537,12 @@
       "end": 39,
       "code": "act(name: string, action: ServiceAction): Observable<unknown> {\n  const body = action === 'start' ? {} : { confirm: name };\n  return this.http.post(`${API_BASE}/services/${encodeURIComponent(name)}/${action}`, body);\n}"
     },
+    "fe-services/errors": {
+      "file": "frontend/src/app/pages/services-page/services-page.component.ts",
+      "start": 11,
+      "end": 18,
+      "code": "export function serviceErrorMessage(err: HttpErrorResponse): string {\n  if (err.status === 0) return \"Can't reach core-api.\";\n  if (err.status === 403) return 'Only an Admin can do that.';\n  const message = err.error?.message;\n  if (typeof message === 'string') return message;\n  if (Array.isArray(message)) return message.join(' ');\n  return `Request failed (HTTP ${err.status}).`;\n}"
+    },
     "fe-assistant/keys": {
       "file": "frontend/src/app/components/assistant-panel/assistant-panel.component.ts",
       "start": 48,
@@ -422,6 +554,12 @@
       "start": 29,
       "end": 31,
       "code": "<p class=\"answer-text\" dir=\"auto\">{{ result.answer }}</p>\n<div class=\"meta\" *ngIf=\"result.toolsUsed.length\">\n  Looked at: <span class=\"tool\" *ngFor=\"let t of result.toolsUsed\">{{ t }}</span>"
+    },
+    "fe-assistant/ask": {
+      "file": "frontend/src/app/components/assistant-panel/assistant-panel.component.ts",
+      "start": 30,
+      "end": 46,
+      "code": "ask(question = this.question): void {\n  const q = question.trim();\n  if (q.length < 3 || this.asking) return;\n  this.question = q;\n  this.asking = true;\n  this.error = null;\n  this.assistant.ask(q).subscribe({\n    next: (res) => {\n      this.result = res;\n      this.asking = false;\n    },\n    error: (err: HttpErrorResponse) => {\n      this.error = err.error?.message ?? 'The assistant could not answer. Try again.';\n      this.asking = false;\n    },\n  });\n}"
     },
     "data-setup/login": {
       "file": "db/02-service-login.sql",
@@ -435,6 +573,12 @@
       "end": 24,
       "code": "for script in /db/*.sql; do\n  echo \"Running $(basename \"$script\")\"\n  \"$SQLCMD\" -C -b -S sqlserver -U sa -P \"$SA_PASSWORD\" -i \"$script\" \\\n    -v DB_PASSWORD=\"$DB_PASSWORD\" \\\n    -v ADAPTER_HOST=\"$ADAPTER_HOST\" \\\n    -v WUTILITY_ADAPTER=\"$WUTILITY_ADAPTER\" \\\n    -v HISPLUS_ADAPTER=\"$HISPLUS_ADAPTER\" \\\n    -v LEDGERDASH_ADAPTER=\"$LEDGERDASH_ADAPTER\"\ndone"
     },
+    "data-setup/create": {
+      "file": "db/02-service-login.sql",
+      "start": 9,
+      "end": 12,
+      "code": "IF SUSER_ID(N'controlpanel_svc') IS NULL\n    CREATE LOGIN controlpanel_svc WITH PASSWORD = N'$(DB_PASSWORD)', CHECK_POLICY = ON;\nELSE\n    ALTER LOGIN controlpanel_svc WITH PASSWORD = N'$(DB_PASSWORD)';"
+    },
     "data-tables/migration": {
       "file": "db/03-controlpanel-schema.sql",
       "start": 21,
@@ -447,11 +591,23 @@
       "end": 57,
       "code": "IF USER_ID(N'controlpanel_svc') IS NOT NULL\n    DENY UPDATE, DELETE ON dbo.AuditLog TO controlpanel_svc;"
     },
+    "data-tables/audit": {
+      "file": "db/03-controlpanel-schema.sql",
+      "start": 42,
+      "end": 51,
+      "code": "CREATE TABLE dbo.AuditLog (\n    Id        BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AuditLog PRIMARY KEY,\n    At        DATETIME2     NOT NULL CONSTRAINT DF_AuditLog_At DEFAULT (SYSUTCDATETIME()),\n    UserId    INT           NOT NULL,\n    Username  NVARCHAR(50)  NOT NULL,\n    Action    NVARCHAR(20)  NOT NULL,\n    Target    NVARCHAR(100) NOT NULL,\n    Outcome   NVARCHAR(10)  NOT NULL CONSTRAINT CK_AuditLog_Outcome CHECK (Outcome IN (N'ok', N'failed')),\n    Detail    NVARCHAR(400) NULL\n);"
+    },
     "data-seed/merge": {
       "file": "db/04-controlpanel-seed.sql",
       "start": 16,
       "end": 31,
       "code": "MERGE dbo.Projects AS target\nUSING (VALUES\n    (N'his-plus',       N'HIS+',                  N'Clinical', N'http://$(HISPLUS_ADAPTER)'),\n    (N'wutility',       N'wUtility',              N'Clinical', N'http://$(WUTILITY_ADAPTER)'),\n    (N'droffice',       N'DrOffice',              N'Clinical', N'http://$(ADAPTER_HOST):4003'),\n    (N'smartledger',    N'SmartLedgerAI',         N'Career',   N'http://$(ADAPTER_HOST):4004'),\n    (N'jobsearch',      N'JobSearch/engine',      N'Career',   N'http://$(ADAPTER_HOST):4005'),\n    (N'ledgerdash',     N'LedgerDashboard',       N'Career',   N'http://$(LEDGERDASH_ADAPTER)'),\n    (N'english-engine', N'English Engine',        N'Career',   N'http://$(ADAPTER_HOST):4007'),\n    (N'dbaops',         N'DbaOpsConsole',         N'Other',    N'http://$(ADAPTER_HOST):4008'),\n    (N'mern',           N'mern-animation-project', N'Other',   N'http://$(ADAPTER_HOST):4009')\n) AS source ([Key], DisplayName, Category, AdapterBaseUrl)\nON target.[Key] = source.[Key]\nWHEN NOT MATCHED THEN\n    INSERT ([Key], DisplayName, Category, AdapterBaseUrl)\n    VALUES (source.[Key], source.DisplayName, source.Category, source.AdapterBaseUrl);"
+    },
+    "data-seed/rows": {
+      "file": "db/05-hisplus-demo.sql",
+      "start": 18,
+      "end": 25,
+      "code": "IF NOT EXISTS (SELECT 1 FROM dbo.ORReports)\nBEGIN\n    INSERT INTO dbo.ORReports (PatientCode, SurgeonName, CreatedAt, IsFinalized) VALUES\n        (N'P-DEMO-01', N'Demo Surgeon A', DATEADD(HOUR, -1,  SYSUTCDATETIME()), 1),\n        (N'P-DEMO-02', N'Demo Surgeon B', DATEADD(HOUR, -4,  SYSUTCDATETIME()), 1),\n        (N'P-DEMO-03', N'Demo Surgeon A', DATEADD(HOUR, -20, SYSUTCDATETIME()), 1),\n        (N'P-DEMO-04', N'Demo Surgeon C', DATEADD(HOUR, -2,  SYSUTCDATETIME()), 0);\nEND"
     },
     "deploy-compose/proxy": {
       "file": "docker-compose.yml",
@@ -465,6 +621,12 @@
       "end": 200,
       "code": "docker-control:\n  internal: true"
     },
+    "deploy-compose/labels": {
+      "file": "docker-compose.yml",
+      "start": 124,
+      "end": 135,
+      "code": "wutility-adapter:\n  build: ./services/adapters/wutility-adapter\n  ports:\n    - \"4001:4001\"\n  restart: unless-stopped\n  healthcheck:\n    <<: *node-health\n    test: [\"CMD\", \"node\", \"-e\", \"fetch('http://127.0.0.1:4001/status').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))\"]\n  labels:\n    controlpanel.managed: \"true\"\n    controlpanel.service: wutility-adapter\n    controlpanel.display: \"wUtility adapter\""
+    },
     "deploy-vps/overlay": {
       "file": "deploy/vps/compose.vps.yml",
       "start": 67,
@@ -476,6 +638,12 @@
       "start": 35,
       "end": 37,
       "code": "{$PANEL_DOMAIN} {\n\timport common\n\treverse_proxy frontend:80"
+    },
+    "deploy-vps/wait": {
+      "file": "deploy/vps/deploy.sh",
+      "start": 81,
+      "end": 91,
+      "code": "log \"Wait for health checks\"\nfor _ in $(seq 60); do\n  states=\"$(docker compose ps --format '{{.Health}}')\"\n  grep -q starting <<<\"$states\" || break\n  sleep 5\ndone\ndocker compose ps --format 'table {{.Service}}\\t{{.Status}}'\nif grep -qE 'starting|unhealthy' <<<\"$(docker compose ps --format '{{.Health}}')\"; then\n  echo \"Some services aren't healthy; see: docker compose logs <service>\" >&2\n  exit 1\nfi"
     }
   },
   "endpoints": [

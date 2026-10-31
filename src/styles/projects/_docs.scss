@@ -455,3 +455,166 @@ $-http-tones: (
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+// #region search
+.docs-search input {
+  @include surface(sm);
+
+  width: 100%;
+  padding: 0.35rem 0.7rem;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.docs-hits {
+  margin-top: 0.5rem;
+
+  small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+  }
+
+  p {
+    padding-inline-start: 0.8rem;
+  }
+}
+
+// #endregion
+
+// #region progress
+// Finished topics: a tick in the contents, a count beside the project.
+.read-mark {
+  margin-inline-start: 0.3rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.side-progress {
+  margin-inline-start: 0.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.doc-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--muted);
+
+  progress {
+    accent-color: var(--accent);
+    width: 10rem;
+  }
+}
+
+.topic-done button,
+.quiz-again {
+  @include surface(sm);
+
+  cursor: pointer;
+  padding: 0.3rem 1rem;
+  color: var(--ink);
+  font: inherit;
+
+  &.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+}
+
+.topic-done {
+  margin: 1.5rem 0;
+}
+
+// #endregion
+
+// #region quiz
+// The exercise under a topic, like a reference site's "Test yourself".
+.quiz {
+  @include surface;
+
+  margin: 2rem 0 1rem;
+  padding: 0.5rem 1.2rem 1rem;
+  border-inline-start: 4px solid var(--project, var(--accent));
+
+  ol {
+    padding-inline-start: 1.2rem;
+  }
+}
+
+.quiz-q {
+  margin-bottom: 1.2rem;
+}
+
+.quiz-text {
+  font-weight: 600;
+}
+
+.quiz-options {
+  display: grid;
+  gap: 0.4rem;
+
+  button {
+    @include surface(sm);
+
+    cursor: pointer;
+    padding: 0.4rem 0.8rem;
+    color: var(--ink);
+    font: inherit;
+    text-align: start;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-soft);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    &.right {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    &.wrong {
+      background: var(--warn-soft);
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+  }
+}
+
+.quiz-why {
+  margin: 0.5rem 0 0;
+  border-radius: radius(sm);
+  padding: 0.4rem 0.8rem;
+
+  &.right {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  &.wrong {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+}
+
+.quiz-score {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  font-weight: 600;
+}
+
+// #endregion

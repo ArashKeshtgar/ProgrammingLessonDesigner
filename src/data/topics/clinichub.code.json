@@ -9,22 +9,22 @@
     "tests/ClinicHub.Tests/FrontDeskTests.cs": 259,
     "src/ClinicHub.Api/Catalog/ClinicDatabases.cs": 95,
     "docs/architecture.md": 441,
+    "src/ClinicHub.Api/Auth/AuthSetup.cs": 163,
     "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs": 76,
     "src/ClinicHub.Api/Endpoints/UserEndpoints.cs": 404,
+    "src/ClinicHub.Api/Catalog/SecurityLog.cs": 44,
     "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs": 258,
-    "src/ClinicHub.Api/Auth/AuthSetup.cs": 163,
     "web/src/api.ts": 412,
     "src/ClinicHub.Api/Auth/Totp.cs": 92,
     "src/ClinicHub.Api/Auth/Permissions.cs": 184,
-    "src/ClinicHub.Api/Catalog/SecurityLog.cs": 44,
     "src/ClinicHub.Api/Data/Security.cs": 45,
     "src/ClinicHub.Api/Sso/SsoEndpoints.cs": 201,
     "src/ClinicHub.Api/Sso/SsoSetup.cs": 194,
     "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs": 223,
     "src/ClinicHub.Api/Domain/HealthCard.cs": 38,
     "src/ClinicHub.Api/Domain/HcvSimulator.cs": 40,
-    "src/ClinicHub.Api/Domain/PatientMatching.cs": 171,
     "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs": 643,
+    "src/ClinicHub.Api/Domain/PatientMatching.cs": 171,
     "src/ClinicHub.Api/Domain/ConsentGuard.cs": 81,
     "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs": 181,
     "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs": 399,
@@ -34,8 +34,8 @@
     "docs/ohip-billing.md": 87,
     "src/ClinicHub.Api/Domain/OhipSimulator.cs": 63,
     "src/ClinicHub.Api/Integrations/FinanceFeed.cs": 189,
-    "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs": 218,
     "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs": 262,
+    "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs": 218,
     "src/ClinicHub.Api/Integrations/FhirOrders.cs": 250,
     "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs": 205,
     "web/src/App.tsx": 215,
@@ -43,6 +43,7 @@
     "src/ClinicHub.Api/Catalog/CatalogDbContext.cs": 60,
     "src/ClinicHub.Api/Catalog/CatalogEntities.cs": 150,
     "src/ClinicHub.Api/Catalog/Migrations/CatalogDbContextModelSnapshot.cs": 560,
+    "src/ClinicHub.Api/Data/ReferenceSeeder.cs": 69,
     "src/ClinicHub.Api/Data/ClinicHubDbContext.cs": 424,
     "docs/schema.md": 194,
     "src/ClinicHub.Api/Data/Migrations/ClinicHubDbContextModelSnapshot.cs": 2893
@@ -138,6 +139,24 @@
       "end": 31,
       "code": "public string ConnectionStringFor(Clinic clinic) => clinic.ConnectionString is { } protectedValue\n    ? protection.CreateProtector(ConnectionPurpose).Unprotect(protectedValue)\n    : new SqlConnectionStringBuilder(Server) { InitialCatalog = clinic.DatabaseName }.ConnectionString;"
     },
+    "clinic-db/sync": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 50,
+      "end": 52,
+      "code": "/// <summary>For dependency injection, which cannot await. Cookie validation has already cached the clinic by then.</summary>\npublic ClinicHubDbContext Open(int clinicId) =>\n    _connections.TryGetValue(clinicId, out var cs) ? Create(cs) : OpenAsync(clinicId).GetAwaiter().GetResult();"
+    },
+    "clinic-db/retry": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 56,
+      "end": 57,
+      "code": "public static ClinicHubDbContext Create(string connectionString) =>\n    new(new DbContextOptionsBuilder<ClinicHubDbContext>().UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()).Options);"
+    },
+    "clinic-db/dropped": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 102,
+      "end": 110,
+      "code": "// A clinic the person no longer belongs to (or that was closed) is dropped; they choose again.\nvar clinicId = ctx.Principal!.ClinicId();\nif (clinicId is not null && !Access.Clinics(account).Any(c => c.Id == clinicId))\n    clinicId = null;\nint? providerId = null;\nif (clinicId is not null)\n{\n    await using var clinicDb = await ctx.HttpContext.RequestServices.GetRequiredService<ClinicDatabases>().OpenAsync(clinicId.Value);\n    providerId = await clinicDb.Providers.Where(p => p.UserId == account.Id).Select(p => (int?)p.Id).FirstOrDefaultAsync();"
+    },
     "provisioning/create": {
       "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
       "start": 14,
@@ -149,6 +168,24 @@
       "start": 46,
       "end": 63,
       "code": "public async Task EnsureRolesAsync(Clinic clinic)\n{\n    var tracked = await catalog.Clinics.SingleAsync(c => c.Id == clinic.Id);\n    // Clinics opened before this was tracked knew ClinicHub's own permissions, none of the other applications'.\n    var known = (tracked.KnownPermissions is null ? Permissions.All.Where(p => !p.Contains(':')) : Permissions.Parse(tracked.KnownPermissions)).ToHashSet();\n    var fresh = Permissions.All.Where(p => !known.Contains(p)).ToHashSet();\n    var existing = await catalog.Roles.Where(r => r.ClinicId == clinic.Id).ToDictionaryAsync(r => r.Name);\n    foreach (var (name, description, permissions) in SystemRoles.Defaults)\n    {\n        if (!existing.TryGetValue(name, out var role))\n            catalog.Roles.Add(new Role { ClinicId = clinic.Id, Name = name, Description = description, Permissions = Permissions.Format(permissions), IsSystem = true });\n        else if (role.IsSystem && permissions.Any(fresh.Contains))\n            role.Permissions = Permissions.Format(Permissions.Parse(role.Permissions).Union(permissions.Where(fresh.Contains)));\n    }\n    if (existing.TryGetValue(SystemRoles.Administrator, out var admin))\n        admin.Permissions = Permissions.Format(Permissions.All);\n    tracked.KnownPermissions = Permissions.Format(Permissions.All);\n    await catalog.SaveChangesAsync();"
+    },
+    "provisioning/validate": {
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "start": 303,
+      "end": 307,
+      "code": "var slug = (req.Slug ?? \"\").Trim().ToLowerInvariant();\nif (slug.Length is < 2 or > 40 || !slug.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-'))\n    errors[\"slug\"] = [\"2–40 lower-case letters, digits or dashes.\"];\nelse if (await catalog.Clinics.AnyAsync(c => c.Slug == slug))\n    errors[\"slug\"] = [\"Another clinic uses this name.\"];"
+    },
+    "provisioning/all": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicProvisioning.cs",
+      "start": 67,
+      "end": 73,
+      "code": "public async Task UpgradeAllAsync()\n{\n    await catalog.Database.MigrateAsync();\n    foreach (var clinic in await catalog.Clinics.Where(c => c.IsActive).ToListAsync())\n    {\n        await EnsureRolesAsync(clinic);\n        await databases.MigrateAsync(clinic);"
+    },
+    "provisioning/staff": {
+      "file": "src/ClinicHub.Api/Catalog/SecurityLog.cs",
+      "start": 28,
+      "end": 41,
+      "code": "public static async Task EnsureAsync(ClinicHubDbContext clinicDb, Account account, bool member, DateTime now)\n{\n    var copy = await clinicDb.Users.SingleOrDefaultAsync(u => u.Id == account.Id);\n    if (copy is null)\n    {\n        if (!member)\n            return;\n        clinicDb.Users.Add(copy = new User { Id = account.Id });\n    }\n    copy.UserName = account.UserName;\n    copy.DisplayName = account.DisplayName;\n    copy.Credentials = account.Credentials;\n    copy.IsActive = member && account.IsActive;\n    copy.SyncedUtc = now;"
     },
     "sign-in/lockout": {
       "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
@@ -179,6 +216,30 @@
       "start": 202,
       "end": 215,
       "code": "/// <summary>Signs in, straight into the clinic when the person belongs to only one.</summary>\nprivate static async Task<IResult> SignIn(CatalogDbContext catalog, ClinicDatabases clinics, SecurityLog log, Account account,\n    DateTime now, HttpContext http, string how)\n{\n    account.FailedLoginCount = 0;\n    account.LockoutEndUtc = null;\n    account.LastLoginUtc = now;\n    log.Add(SecurityEventTypes.LoginSucceeded, account.Id, detail: how);\n    await catalog.SaveChangesAsync();\n    var memberOf = Access.Clinics(account).ToList();\n    if (memberOf.Count == 1)\n        return Results.Ok(await EnterClinic(clinics, log, account, memberOf[0].Id, now, http));\n    await AuthSetup.SignInAsync(http, account, null);\n    return Results.Ok(ToMe(account, AuthSetup.CreatePrincipal(account, null)));"
+    },
+    "sign-in/code": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 63,
+      "end": 71,
+      "code": "if (account.TwoFactorEnabled)\n{\n    if (string.IsNullOrWhiteSpace(req.Code))\n        return Results.Problem(\"Enter the 6-digit code from your authenticator app.\", statusCode: StatusCodes.Status401Unauthorized,\n            extensions: new Dictionary<string, object?> { [\"twoFactorRequired\"] = true });\n    var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(account.TwoFactorSecret!);\n    if (Totp.Verify(secret, req.Code, now, account.TwoFactorLastStep) is not { } step)\n        return await Failed(account, \"Wrong two-factor code\", \"That code is wrong or already used.\", twoFactor: true);\n    account.TwoFactorLastStep = step;"
+    },
+    "sign-in/rehash": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 60,
+      "end": 61,
+      "code": "if (result == PasswordVerificationResult.SuccessRehashNeeded)\n    account.PasswordHash = hasher.HashPassword(account, req.Password!);"
+    },
+    "sign-in/unlock": {
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "start": 163,
+      "end": 169,
+      "code": "// Unlocking only ends a lockout early; any administrator of a clinic the person works at may do it.\nvar account = await Members(catalog, me.RequiredClinicId()).SingleOrDefaultAsync(a => a.Id == id);\nif (account is null)\n    return Results.NotFound();\naccount.FailedLoginCount = 0;\naccount.LockoutEndUtc = null;\nlog.Add(SecurityEventTypes.UserUnlocked, me.RequiredUserId(), id, clinicId: me.RequiredClinicId());"
+    },
+    "sign-in/enter": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 218,
+      "end": 226,
+      "code": "private static async Task<MeDto> EnterClinic(ClinicDatabases clinics, SecurityLog log, Account account, int clinicId, DateTime now, HttpContext http)\n{\n    int? providerId;\n    await using (var clinicDb = await clinics.OpenAsync(clinicId))\n    {\n        await StaffSync.EnsureAsync(clinicDb, account, member: true, now);\n        providerId = await clinicDb.Providers.Where(p => p.UserId == account.Id).Select(p => (int?)p.Id).FirstOrDefaultAsync();\n    }\n    await log.WriteAsync(SecurityEventTypes.ClinicSelected, account.Id, clinicId: clinicId);"
     },
     "session/cookie": {
       "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
@@ -240,6 +301,24 @@
       "end": 42,
       "code": "var pending = account.MustChangePassword ? PendingActions.ChangePassword\n    : twoFactorRequired && !account.TwoFactorEnabled ? PendingActions.SetupTwoFactor\n    : null;"
     },
+    "two-factor/uri": {
+      "file": "src/ClinicHub.Api/Auth/Totp.cs",
+      "start": 15,
+      "end": 19,
+      "code": "public static string NewSecret() => Base32Encode(RandomNumberGenerator.GetBytes(20));\n\npublic static string OtpAuthUri(string issuer, string account, string secret) =>\n    $\"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(account)}\" +\n    $\"?secret={secret}&issuer={Uri.EscapeDataString(issuer)}&algorithm=SHA1&digits=6&period={StepSeconds}\";"
+    },
+    "two-factor/enable": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 162,
+      "end": 171,
+      "code": "if (a.TwoFactorEnabled || a.TwoFactorSecret is null)\n    return Results.Problem(\"Start the setup first.\", statusCode: StatusCodes.Status409Conflict);\nvar secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(a.TwoFactorSecret);\nif (Totp.Verify(secret, body.Code, clock.GetUtcNow(), a.TwoFactorLastStep) is not { } step)\n    return Results.ValidationProblem(new Dictionary<string, string[]> { [\"code\"] = [\"That code doesn't match. Check the phone's clock and try the newest code.\"] });\na.TwoFactorEnabled = true;\na.TwoFactorLastStep = step;\nlog.Add(SecurityEventTypes.TwoFactorEnabled, a.Id);\nawait catalog.SaveChangesAsync();\nawait AuthSetup.SignInAsync(http, a, principal.ClinicId());"
+    },
+    "two-factor/disable": {
+      "file": "src/ClinicHub.Api/Endpoints/AuthEndpoints.cs",
+      "start": 179,
+      "end": 184,
+      "code": "if (Access.For(a, null).TwoFactorRequired)\n    return Results.Problem(\"One of your roles requires two-factor sign-in.\", statusCode: StatusCodes.Status409Conflict);\nif (hasher.VerifyHashedPassword(a, a.PasswordHash, body.Password ?? \"\") == PasswordVerificationResult.Failed)\n    return Results.ValidationProblem(new Dictionary<string, string[]> { [\"password\"] = [\"Password is wrong.\"] });\na.TwoFactorEnabled = false;\na.TwoFactorSecret = null;"
+    },
     "permissions/keys": {
       "file": "src/ClinicHub.Api/Auth/Permissions.cs",
       "start": 11,
@@ -264,6 +343,24 @@
       "end": 164,
       "code": "(FrontDesk, \"Registration, booking and check-in; lab bookings.\",\n    [Permissions.PatientsView, Permissions.PatientsEdit, Permissions.ScheduleView, Permissions.ScheduleManage, Permissions.BillingView,\n     Permissions.LabFrontDesk]),"
     },
+    "permissions/policy": {
+      "file": "src/ClinicHub.Api/Auth/AuthSetup.cs",
+      "start": 80,
+      "end": 81,
+      "code": "foreach (var p in Permissions.All)\n    auth.AddPolicy(p, policy => policy.RequireClaim(AppClaims.Permission, p));"
+    },
+    "permissions/parse": {
+      "file": "src/ClinicHub.Api/Auth/Permissions.cs",
+      "start": 137,
+      "end": 138,
+      "code": "public static string[] Parse(string? stored) =>\n    (stored ?? \"\").Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(All.Contains).Distinct().ToArray();"
+    },
+    "permissions/lastadmin": {
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "start": 395,
+      "end": 397,
+      "code": "return candidates.Any(a => Access.For(new Account { Roles = a.Roles }, clinicId).Permissions.Contains(Permissions.UsersManage))\n    ? null\n    : \"At least one person must keep the \\\"Manage users and roles\\\" permission in this clinic.\";"
+    },
     "logs/security": {
       "file": "src/ClinicHub.Api/Catalog/SecurityLog.cs",
       "start": 7,
@@ -281,6 +378,18 @@
       "start": 67,
       "end": 68,
       "code": "db.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = userId, PatientId = appt.PatientId, Action = AccessActions.Edit,\n    Context = $\"Check-in, appointment {appt.Id}\", IpAddress = AuthEndpoints.Ip(http) });"
+    },
+    "logs/auditq": {
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "start": 261,
+      "end": 262,
+      "code": "var q = catalog.SecurityEvents.AsNoTracking().Where(e => e.ClinicId == clinicId\n    || (e.ClinicId == null && ((e.ActorAccountId != null && members.Contains(e.ActorAccountId.Value)) || (e.TargetAccountId != null && members.Contains(e.TargetAccountId.Value)))));"
+    },
+    "logs/merged": {
+      "file": "src/ClinicHub.Api/Endpoints/UserEndpoints.cs",
+      "start": 277,
+      "end": 278,
+      "code": "// A patient's log includes the records merged into theirs: same person, opened under an older MRN.\nif (patientId is not null) q = q.Where(l => l.PatientId == patientId || db.Patients.Any(p => p.Id == l.PatientId && p.MergedIntoPatientId == patientId));"
     },
     "sso/authorize": {
       "file": "src/ClinicHub.Api/Sso/SsoEndpoints.cs",
@@ -347,6 +456,24 @@
       "start": 142,
       "end": 142,
       "code": "t.HasCheckConstraint(\"CK_Patient_HealthCard\", \"HealthCardNumber IS NULL OR (LEN(HealthCardNumber) = 10 AND HealthCardNumber NOT LIKE '%[^0-9]%')\");"
+    },
+    "health-card/normalize": {
+      "file": "src/ClinicHub.Api/Domain/HealthCard.cs",
+      "start": 9,
+      "end": 10,
+      "code": "public static string Normalize(string input) =>\n    new(input.Where(char.IsAsciiLetterOrDigit).ToArray());"
+    },
+    "health-card/form": {
+      "file": "src/ClinicHub.Api/Endpoints/PatientEndpoints.cs",
+      "start": 549,
+      "end": 552,
+      "code": "var card = Clean(f.HealthCardNumber) is { } c ? HealthCard.Normalize(c) : null;\nCheck(card is not null && !HealthCard.IsValidNumber(card), \"healthCardNumber\", \"Not a valid Ontario health card number (10 digits, check digit).\");\nCheck(!HealthCard.IsValidVersion(Clean(f.HealthCardVersion)?.ToUpperInvariant()), \"healthCardVersion\", \"One or two letters.\");\nCheck(card is null && Clean(f.HealthCardVersion) is not null, \"healthCardVersion\", \"A version code needs a card number.\");"
+    },
+    "health-card/record": {
+      "file": "src/ClinicHub.Api/Endpoints/FrontDeskEndpoints.cs",
+      "start": 53,
+      "end": 62,
+      "code": "var check = new EligibilityCheck\n{\n    PatientId = appt.PatientId, CheckedUtc = now, HealthCardNumber = appt.Patient.HealthCardNumber ?? \"\",\n    HealthCardVersion = req.PresentedVersion ?? appt.Patient.HealthCardVersion, ResponseCode = result.Code,\n    IsEligible = result.Eligible, Message = result.Message, CheckedByUserId = userId,\n};\ndb.Encounters.Add(new Encounter\n{\n    PatientId = appt.PatientId, ProviderId = appt.ProviderId, LocationId = appt.LocationId, Appointment = appt,\n    EligibilityCheck = check, PaymentProgram = result.PaymentProgram, ReasonForVisit = appt.Reason, CheckInUtc = now,"
     },
     "patients/score": {
       "file": "src/ClinicHub.Api/Domain/PatientMatching.cs",
@@ -420,6 +547,24 @@
       "end": 117,
       "code": "var overrides = directives.Select(d => new ConsentOverride\n{\n    ConsentDirectiveId = d.Id, UserId = userId, Reason = reason, AtUtc = now, ExpiresUtc = now + ConsentView.OverrideLength,\n}).ToList();\ndb.ConsentOverrides.AddRange(overrides);\nawait db.SaveChangesAsync();\ndb.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = userId, PatientId = id, Action = AccessActions.View,\n    Context = \"Emergency override of consent directive\", ConsentOverrideId = overrides[0].Id, IpAddress = AuthEndpoints.Ip(http) });"
     },
+    "consent/withheld": {
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "start": 154,
+      "end": 159,
+      "code": "public static IResult Withheld(ClaimsPrincipal user, int patientId, string patient, string mrn) =>\n    Results.Problem(\"Withheld at the patient's request (PHIPA consent directive).\", statusCode: StatusCodes.Status403Forbidden,\n        extensions: new Dictionary<string, object?>\n        {\n            [\"consentWithheld\"] = true, [\"canOverride\"] = user.Can(Permissions.ConsentOverride),\n            [\"patientId\"] = patientId, [\"patient\"] = patient, [\"mrn\"] = mrn,"
+    },
+    "consent/load": {
+      "file": "src/ClinicHub.Api/Domain/ConsentGuard.cs",
+      "start": 50,
+      "end": 51,
+      "code": "Overrides = await db.ConsentOverrides.AsNoTracking()\n    .Where(o => ids.Contains(o.ConsentDirectiveId) && o.UserId == userId && o.ExpiresUtc > now).ToListAsync(),"
+    },
+    "consent/revoke": {
+      "file": "src/ClinicHub.Api/Endpoints/ConsentEndpoints.cs",
+      "start": 91,
+      "end": 93,
+      "code": "d.RevokedUtc = now;\ndb.PatientAccessLog.Add(new PatientAccessLog { AtUtc = now, UserId = user.RequiredUserId(), PatientId = d.PatientId, Action = AccessActions.Edit,\n    Context = $\"Consent directive {id} withdrawn\", IpAddress = AuthEndpoints.Ip(http) });"
+    },
     "visits/note": {
       "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
       "start": 103,
@@ -474,6 +619,30 @@
       "end": 140,
       "code": "foreach (var group in claims.GroupBy(c => c.Provider))\n{\n    var p = group.Key;\n    var number = (await db.ClaimBatches.Where(b => b.ProviderId == p.Id).MaxAsync(b => (int?)b.BatchNumber) ?? 0) + 1;\n    var file = new ClaimFile.Batch(today, number, location.OhipGroupNumber, p.OhipBillingNumber!, p.SpecialtyCode ?? \"00\",\n        group.Select(c => new ClaimFile.ClaimEntry(c.AccountingNumber, c.PaymentProgram, c.HealthCardNumber, c.HealthCardVersion,\n            c.Patient.DateOfBirth, c.ReferringProviderNumber,\n            c.Items.OrderBy(i => i.Id).Select(i => new ClaimFile.Item(i.ServiceCode, i.FeeSubmitted, i.Units, i.ServiceDate, i.DiagnosticCode)).ToArray(),\n            c.PaymentProgram == PaymentPrograms.Rmb ? (c.Patient.LastName, c.Patient.FirstName, c.Patient.Sex, c.Province ?? \"\") : null)).ToArray());\n    var batch = new ClaimBatch\n    {\n        ProviderId = p.Id, GroupNumber = location.OhipGroupNumber, BatchNumber = number, FileName = ClaimFile.FileName(file),\n        FileContent = ClaimFile.Build(file), ClaimCount = group.Count(), Total = group.Sum(c => c.AmountSubmitted), CreatedUtc = now,\n        Claims = group.ToList(),\n    };\n    db.ClaimBatches.Add(batch);\n    created.Add(batch);"
     },
+    "claims/alpha": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 48,
+      "end": 52,
+      "code": "/// <summary>Left-justified, space-filled, upper case, plain ASCII.</summary>\nprivate static string Alpha(string? value, int length)\n{\n    var ascii = new string((value ?? \"\").Normalize(NormalizationForm.FormD).Where(c => c is >= ' ' and <= '~').ToArray()).ToUpperInvariant();\n    return (ascii.Length > length ? ascii[..length] : ascii).PadRight(length);"
+    },
+    "claims/read": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 35,
+      "end": 45,
+      "code": "public static Dictionary<string, string> Read(string line, Field[] layout)\n{\n    var padded = line.PadRight(RecordLength);\n    var result = new Dictionary<string, string>();\n    var at = 3;\n    foreach (var f in layout)\n    {\n        result[f.Name] = padded.Substring(at, f.Length).Trim();\n        at += f.Length;\n    }\n    return result;"
+    },
+    "claims/rmb": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 142,
+      "end": 149,
+      "code": "if (c.Reciprocal is { } r)\n{\n    lines.Add(FixedWidth.Write(\"HER\", Her, new Dictionary<string, object?>\n    {\n        [\"RegistrationNumber\"] = c.HealthNumber, [\"LastName\"] = r.LastName, [\"FirstName\"] = r.FirstName,\n        [\"Sex\"] = r.Sex == \"M\" ? \"1\" : \"2\", [\"Province\"] = r.Province,\n    }));\n    her++;"
+    },
+    "claims/trailer": {
+      "file": "src/ClinicHub.Api/Domain/OhipFiles.cs",
+      "start": 161,
+      "end": 161,
+      "code": "lines.Add(FixedWidth.Write(\"HEE\", Hee, new Dictionary<string, object?> { [\"ClaimHeaderCount\"] = heh, [\"RegistrationCount\"] = her, [\"ItemCount\"] = het }));"
+    },
     "remittance/match": {
       "file": "src/ClinicHub.Api/Endpoints/BillingEndpoints.cs",
       "start": 239,
@@ -509,6 +678,30 @@
       "start": 35,
       "end": 40,
       "code": "public async Task<int> SendAsync(ClinicHubDbContext db, Clinic clinic, ServiceTokens tokens, CancellationToken ct = default)\n{\n    if (!Connected)\n        return 0;\n    var sent = (await db.FinanceExports.AsNoTracking().Select(x => x.ExternalId).ToListAsync(ct)).ToHashSet();\n    var pending = (await BuildAsync(db, clinic, ct)).Where(d => !sent.Contains((string)d[\"externalId\"]!)).ToList();"
+    },
+    "finance/share": {
+      "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+      "start": 111,
+      "end": 115,
+      "code": "// Each physician's share of what this remittance paid for their claims, net of the clinic's overhead.\nforeach (var p in r.Items.Where(i => i.OhipBillingNumber != null).GroupBy(i => (i.ProviderId, i.OhipBillingNumber, i.Provider, i.OverheadPercent)))\n{\n    var total = p.Sum(i => i.AmountPaid);\n    var net = total - Math.Round(total * p.Key.OverheadPercent / 100m, 2, MidpointRounding.AwayFromZero);"
+    },
+    "finance/chunk": {
+      "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+      "start": 42,
+      "end": 48,
+      "code": "foreach (var chunk in pending.Chunk(100))\n{\n    using var request = new HttpRequestMessage(HttpMethod.Post, options.CurrentValue.Finance.BaseUrl!.TrimEnd('/') + \"/api/integration/documents\")\n    {\n        Content = JsonContent.Create(new JsonArray(chunk.Select(d => (JsonNode)d.DeepClone()).ToArray())),\n    };\n    request.Headers.Authorization = new AuthenticationHeaderValue(\"Bearer\", tokens.Create(Audience, clinic, Scope));"
+    },
+    "finance/mark": {
+      "file": "src/ClinicHub.Api/Integrations/FinanceFeed.cs",
+      "start": 65,
+      "end": 69,
+      "code": "var marks = chunk.Select(d => new FinanceExport { ExternalId = (string)d[\"externalId\"]!, SentUtc = now }).ToList();\ndb.FinanceExports.AddRange(marks);\nawait db.SaveChangesAsync(ct);\nforeach (var m in marks) db.Entry(m).State = EntityState.Detached;   // the set is re-read on every pass\naccepted += chunk.Length;"
+    },
+    "finance/pass": {
+      "file": "src/ClinicHub.Api/Integrations/OutboxDispatcher.cs",
+      "start": 41,
+      "end": 42,
+      "code": "// The clinic's money to the group's accounting, on the same pass.\nawait finance.SendAsync(db, clinic, tokens, ct);"
     },
     "orders/tx": {
       "file": "src/ClinicHub.Api/Endpoints/OrderEndpoints.cs",
@@ -570,6 +763,24 @@
       "end": 85,
       "code": "private static async Task<List<ResultRow>> HideWithheld(ClinicHubDbContext db, List<ResultRow> rows, ClaimsPrincipal user, DateTime now)\n{\n    var patients = rows.Select(r => r.PatientId).Distinct().ToList();\n    var guarded = await db.ConsentDirectives.Where(d => patients.Contains(d.PatientId) && d.RevokedUtc == null).Select(d => d.PatientId).Distinct().ToListAsync();\n    if (guarded.Count == 0)\n        return rows;\n    var encounterIds = rows.Where(r => guarded.Contains(r.PatientId)).Select(r => r.EncounterId).Distinct().ToList();\n    var visits = await db.Encounters.AsNoTracking().Where(e => encounterIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => new { e.ProviderId, e.Status });\n    var views = new Dictionary<int, ConsentView>();\n    foreach (var p in guarded)\n        views[p] = await ConsentView.LoadAsync(db, p, user, now);\n    return rows.Select(r => views.TryGetValue(r.PatientId, out var v) && v.Decide(r.EncounterId, visits[r.EncounterId].ProviderId, visits[r.EncounterId].Status).Withheld\n        ? r with { Summary = null, ExternalUrl = null, IsAbnormal = false, Withheld = true }\n        : r).ToList();"
     },
+    "results/status": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 143,
+      "end": 148,
+      "code": "var status = ((string?)report[\"status\"] ?? \"final\") switch\n{\n    \"preliminary\" or \"partial\" or \"registered\" => \"Preliminary\",\n    \"amended\" or \"corrected\" or \"appended\" => \"Amended\",\n    \"cancelled\" or \"entered-in-error\" => \"Cancelled\",\n    _ => \"Final\","
+    },
+    "results/version": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 157,
+      "end": 165,
+      "code": "var result = await db.DiagnosticResults.SingleOrDefaultAsync(r => r.ServiceRequestId == orderId && r.ExternalReportId == externalId);\nif (result is null)\n    db.DiagnosticResults.Add(result = new DiagnosticResult { ServiceRequestId = orderId, ExternalReportId = externalId });\nelse if (result.Summary != summary || result.Status != status)\n{\n    // A new version: whoever acknowledged the old one has not seen this one.\n    result.ReviewedByUserId = null;\n    result.ReviewedUtc = null;\n}"
+    },
+    "results/inbox": {
+      "file": "src/ClinicHub.Api/Endpoints/ResultEndpoints.cs",
+      "start": 45,
+      "end": 48,
+      "code": "if (all != true && providerId is not null)\n    q = q.Where(r => r.ServiceRequest.RequesterProviderId == providerId);\nq = reviewed == true ? q.Where(r => r.ReviewedUtc != null) : q.Where(r => r.ReviewedUtc == null);\nvar rows = await q.OrderByDescending(r => r.IsAbnormal).ThenByDescending(r => r.ReceivedUtc).Take(200).Select(Row(db)).ToListAsync();"
+    },
     "fe-shell/landing": {
       "file": "web/src/App.tsx",
       "start": 109,
@@ -594,6 +805,30 @@
       "end": 85,
       "code": "{me.clinics.length > 1 ? (\n  <select className=\"clinic-switch\" value={clinic.id} aria-label=\"Clinic\" title=\"Switch clinic\"\n    onChange={async e => { setMe(await api.selectClinic(Number(e.target.value))); navigate('/') }}>\n    {me.clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}\n  </select>\n) : <span className=\"clinic-name\">{clinic.name}</span>}"
     },
+    "fe-shell/gates": {
+      "file": "web/src/App.tsx",
+      "start": 47,
+      "end": 56,
+      "code": "if (!settings || me === undefined) return <p className=\"muted page\">Loading…</p>\nif (ready && returnUrl) return <p className=\"muted page\">Returning to {appName(returnUrl)}…</p>\nif (!me) return <Login settings={settings} onSignedIn={setMe} returnTo={returnUrl ? appName(returnUrl) : null} />\nif (me.pendingAction) return <PendingAction me={me} onDone={setMe} onSignOut={signOut} />\nif (!me.clinic) return <ClinicPicker me={me} onChosen={setMe} onSignOut={signOut} />\n\nreturn (\n  <SessionContext.Provider value={{ me, settings, setMe }}>\n    {/* A new key per clinic: every page reloads its data from the newly chosen clinic's database. */}\n    <Shell key={me.clinic.id} me={me} settings={settings} setMe={setMe} signOut={signOut} />"
+    },
+    "fe-shell/can": {
+      "file": "web/src/api.ts",
+      "start": 80,
+      "end": 80,
+      "code": "export const can = (me: Me, p: string) => me.permissions.includes(p)"
+    },
+    "fe-shell/signedout": {
+      "file": "web/src/api.ts",
+      "start": 50,
+      "end": 50,
+      "code": "if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('clinichub:signed-out'))"
+    },
+    "fe-shell/returnurl": {
+      "file": "web/src/App.tsx",
+      "start": 142,
+      "end": 145,
+      "code": "/** Only ClinicHub's own sign-in endpoint: anything else in returnUrl would make this page an open redirect. */\nfunction safeReturnUrl() {\n  const url = new URLSearchParams(window.location.search).get('returnUrl')\n  return url && url.startsWith('/connect/authorize?') ? url : null"
+    },
     "fe-autosave/change": {
       "file": "web/src/pages/EncounterPage.tsx",
       "start": 202,
@@ -612,11 +847,59 @@
       "end": 212,
       "code": "// Leaving the page saves what was typed.\nuseEffect(() => () => { if (dirty.current) encounters.saveNote(id, latest.current) }, [id])"
     },
+    "fe-autosave/blur": {
+      "file": "web/src/pages/EncounterPage.tsx",
+      "start": 102,
+      "end": 102,
+      "code": "onChange={e => note.change(key, e.target.value)} onBlur={note.flush} />"
+    },
+    "fe-autosave/signbtn": {
+      "file": "web/src/pages/EncounterPage.tsx",
+      "start": 128,
+      "end": 128,
+      "code": "onClick={async () => { await note.flush(); await run(() => encounters.sign(id)) }}>Sign visit</button>"
+    },
+    "fe-autosave/locked": {
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "start": 262,
+      "end": 267,
+      "code": "private static IResult? Locked(Encounter? e) => e switch\n{\n    null => Results.NotFound(),\n    { Status: EncounterStatus.Signed } => Results.Problem(\"This visit is signed and locked. Add an addendum instead.\", statusCode: StatusCodes.Status409Conflict),\n    { Status: EncounterStatus.Voided } => Results.Problem(\"This visit was voided.\", statusCode: StatusCodes.Status409Conflict),\n    _ => null,"
+    },
+    "fe-autosave/server": {
+      "file": "src/ClinicHub.Api/Endpoints/EncounterEndpoints.cs",
+      "start": 119,
+      "end": 134,
+      "code": "var creating = e!.Note is null;\ne.Note ??= new ClinicalNote();\nApply(e.Note);\ntry\n{\n    await db.SaveChangesAsync();\n}\ncatch (DbUpdateException) when (creating)\n{\n    // A save from another tab or request created the note first: update that one.\n    db.ChangeTracker.Clear();\n    var existing = await db.ClinicalNotes.SingleAsync(n => n.EncounterId == id);\n    Apply(existing);\n    await db.SaveChangesAsync();\n}\nreturn Results.Ok(new { updatedUtc = now });"
+    },
     "data-catalog/migrate": {
       "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
       "start": 60,
       "end": 65,
       "code": "public async Task MigrateAsync(Clinic clinic)\n{\n    await using var db = Open(clinic);\n    await db.Database.MigrateAsync();\n    await ReferenceSeeder.SeedAsync(db);\n}"
+    },
+    "data-catalog/clinic": {
+      "file": "src/ClinicHub.Api/Catalog/CatalogDbContext.cs",
+      "start": 26,
+      "end": 30,
+      "code": "b.Entity<Clinic>(e =>\n{\n    e.ToTable(\"Clinic\", t => t.HasCheckConstraint(\"CK_Clinic_Slug\", \"Slug NOT LIKE '%[^a-z0-9-]%' AND LEN(Slug) >= 2\"));\n    e.HasIndex(x => x.Slug).IsUnique();\n    e.HasIndex(x => x.DatabaseName).IsUnique();"
+    },
+    "data-catalog/roles": {
+      "file": "src/ClinicHub.Api/Catalog/CatalogDbContext.cs",
+      "start": 37,
+      "end": 48,
+      "code": "b.Entity<Role>(e =>\n{\n    e.ToTable(\"Role\");\n    e.HasIndex(x => new { x.ClinicId, x.Name }).IsUnique();\n    e.HasOne(x => x.Clinic).WithMany(c => c.Roles).HasForeignKey(x => x.ClinicId).OnDelete(DeleteBehavior.Restrict);\n});\nb.Entity<AccountRole>(e =>\n{\n    e.ToTable(\"AccountRole\");\n    e.HasKey(x => new { x.AccountId, x.RoleId });\n    e.HasOne(x => x.Account).WithMany(a => a.Roles).HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);\n    e.HasOne(x => x.Role).WithMany(r => r.Accounts).HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Cascade);"
+    },
+    "data-catalog/openiddict": {
+      "file": "src/ClinicHub.Api/Catalog/ClinicDatabases.cs",
+      "start": 80,
+      "end": 81,
+      "code": "// The catalog also stores the sign-in server's registered applications, authorizations and tokens (OpenIddict).\nservices.AddDbContext<CatalogDbContext>(o => o.UseSqlServer(catalog, sql => sql.EnableRetryOnFailure()).UseOpenIddict());"
+    },
+    "data-catalog/seeder": {
+      "file": "src/ClinicHub.Api/Data/ReferenceSeeder.cs",
+      "start": 6,
+      "end": 8,
+      "code": "/// Lists every installation needs. Adds what is missing and never overwrites, because a clinic edits\n/// its own price list. OHIP codes here are a small ILLUSTRATIVE subset with approximate fees:\n/// a real installation imports the current Schedule of Benefits and diagnostic code list."
     },
     "data-care/conventions": {
       "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
@@ -629,6 +912,66 @@
       "start": 82,
       "end": 86,
       "code": "// SQL Server refuses multiple cascade paths, and clinical history must not vanish with a parent\n// row anyway: nothing cascades except pure child rows configured explicitly below.\nforeach (var fk in b.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))\n    if (fk.DeleteBehavior == DeleteBehavior.Cascade && !CascadingChildren.Contains(fk.DeclaringEntityType.ClrType))\n        fk.DeleteBehavior = DeleteBehavior.Restrict;"
+    },
+    "data-care/in": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 422,
+      "end": 423,
+      "code": "private static string In(string column, IEnumerable<string> values) =>\n    $\"{column} IN ({string.Join(\",\", values.Select(v => $\"'{v}'\"))})\";"
+    },
+    "data-care/encounter": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 234,
+      "end": 239,
+      "code": "e.ToTable(\"Encounter\", \"care\", t =>\n{\n    t.HasCheckConstraint(\"CK_Encounter_Ctas\", \"CtasLevel IS NULL OR CtasLevel BETWEEN 1 AND 5\");\n    t.HasCheckConstraint(\"CK_Encounter_Program\", In(\"PaymentProgram\", [PaymentPrograms.Hcp, PaymentPrograms.Rmb, PaymentPrograms.Wcb, PaymentPrograms.Uninsured]));\n    t.HasCheckConstraint(\"CK_Encounter_Signed\", \"Status <> 'Signed' OR (SignedUtc IS NOT NULL AND SignedByUserId IS NOT NULL)\");\n    t.HasCheckConstraint(\"CK_Encounter_Status\", In(\"Status\", [EncounterStatus.Open, EncounterStatus.Signed, EncounterStatus.Voided]));"
+    },
+    "data-care/primary": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 268,
+      "end": 268,
+      "code": "e.HasIndex(x => x.EncounterId).IsUnique().HasFilter(\"IsPrimary = 1\").HasDatabaseName(\"UX_EncounterDiagnosis_Primary\");"
+    },
+    "data-care/live": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 148,
+      "end": 148,
+      "code": "e.HasIndex(x => x.HealthCardNumber).IsUnique().HasFilter(\"HealthCardNumber IS NOT NULL AND MergedIntoPatientId IS NULL\");"
+    },
+    "data-orders/pending": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 333,
+      "end": 333,
+      "code": "e.HasIndex(x => x.NextAttemptUtc).HasFilter(\"SentUtc IS NULL\").HasDatabaseName(\"IX_Outbox_Pending\");"
+    },
+    "data-orders/unreviewed": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 324,
+      "end": 325,
+      "code": "// The results inbox: everything not yet reviewed.\ne.HasIndex(x => x.ReviewedUtc).HasFilter(\"ReviewedUtc IS NULL\").HasDatabaseName(\"IX_DiagnosticResult_Unreviewed\");"
+    },
+    "data-orders/claim": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 349,
+      "end": 357,
+      "code": "e.ToTable(\"Claim\", \"billing\", t =>\n{\n    t.HasCheckConstraint(\"CK_Claim_Program\", In(\"PaymentProgram\", [PaymentPrograms.Hcp, PaymentPrograms.Rmb, PaymentPrograms.Wcb]));\n    t.HasCheckConstraint(\"CK_Claim_Status\", In(\"Status\", [ClaimStatus.Draft, ClaimStatus.Ready, ClaimStatus.Submitted, ClaimStatus.Paid, ClaimStatus.PartiallyPaid, ClaimStatus.Rejected]));\n    t.HasCheckConstraint(\"CK_Claim_Amounts\", \"AmountSubmitted >= 0 AND AmountPaid >= 0\");\n});\ne.HasIndex(x => x.AccountingNumber).IsUnique();\ne.HasIndex(x => new { x.Status, x.ProviderId });\ne.HasIndex(x => new { x.EncounterId, x.PaymentProgram }).IsUnique();"
+    },
+    "data-orders/invoice": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 380,
+      "end": 381,
+      "code": "t.HasCheckConstraint(\"CK_Invoice_BillTo\", \"PatientId IS NOT NULL OR ThirdPartyName IS NOT NULL\");\nt.HasCheckConstraint(\"CK_Invoice_Totals\", \"Total = Subtotal + Tax AND Balance BETWEEN 0 AND Total\");"
+    },
+    "data-orders/export": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 392,
+      "end": 393,
+      "code": "e.ToTable(\"FinanceExport\", \"billing\");\ne.HasKey(x => x.ExternalId);"
+    },
+    "data-orders/staffid": {
+      "file": "src/ClinicHub.Api/Data/ClinicHubDbContext.cs",
+      "start": 407,
+      "end": 408,
+      "code": "// The catalog account's id, not a new one.\ne.Property(x => x.Id).ValueGeneratedNever();"
     }
   },
   "endpoints": [

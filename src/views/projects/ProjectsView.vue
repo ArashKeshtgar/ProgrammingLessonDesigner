@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import OverviewDoc from './OverviewDoc.vue'
 import ProjectDoc from './ProjectDoc.vue'
 import StylingDoc from './StylingDoc.vue'
 import TopicDoc from './TopicDoc.vue'
 import { DOC_LANGS, saveLang, STRINGS, type DocLang } from '../../projects/i18n'
 import { page, PAGES, topicsOf, type PageGroup } from '../../projects/model'
+import { isRead, readCount } from '../../projects/progress'
+import { search } from '../../projects/search'
 
 // The docs shell, laid out like a reference site: a fixed contents list, the page,
 // and previous / next. The address carries the language and the page:
 // #/projects/<lang>, #/projects/<lang>/<project>, #/projects/<lang>/<project>/<topic>.
 const route = useRoute()
+const router = useRouter()
 const lang = computed(() => route.params.lang as DocLang)
 const t = computed(() => STRINGS[lang.value])
 const currentId = computed(() => {
@@ -63,6 +66,29 @@ const href = (id: string, l: DocLang = lang.value) => (id === 'overview' ? `/pro
 // Phones: the contents list folds into a menu; it closes after picking a page.
 const menuOpen = ref(false)
 watch(() => route.fullPath, () => (menuOpen.value = false))
+
+// Search: while there is a query, the contents list shows what matches instead.
+const query = ref('')
+const hits = computed(() => search(query.value, lang.value))
+watch(() => route.fullPath, () => (query.value = ''))
+const searchBox = ref<HTMLInputElement>()
+const goFirst = () => hits.value[0] && router.push(href(hits.value[0].page.id))
+// "/" anywhere on the page (outside a field) jumps to the search box, as on most docs sites.
+const onKey = (e: KeyboardEvent) => {
+  const el = e.target as HTMLElement
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || el.closest('input, textarea, [contenteditable]')) return
+  e.preventDefault()
+  menuOpen.value = true
+  searchBox.value?.focus()
+}
+onMounted(() => document.addEventListener('keydown', onKey))
+onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
+
+const progressOf = (id: string) => {
+  const pages = topicsOf(id)?.pages
+  const n = (x: number) => x.toLocaleString(lang.value === 'fa' ? 'fa-IR' : 'en')
+  return pages ? `${n(readCount(id, pages))}/${n(pages.length)}` : ''
+}
 </script>
 
 <template>
@@ -84,6 +110,26 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
 
     <div class="docs-body">
       <nav id="docs-side" class="docs-side" :class="{ open: menuOpen }" :aria-label="t.title">
+        <div class="docs-search" role="search">
+          <input
+            ref="searchBox"
+            v-model="query"
+            type="search"
+            :placeholder="t.searchHint"
+            :aria-label="t.search"
+            aria-controls="docs-hits"
+            @keydown.enter="goFirst"
+            @keydown.esc="query = ''"
+          />
+        </div>
+        <div v-if="query.trim()" id="docs-hits" class="docs-hits" aria-live="polite">
+          <RouterLink v-for="h in hits" :key="h.page.id" :to="href(h.page.id)" :class="`accent-${h.page.project!.id}`">
+            {{ titleOf(h.page.id) }}
+            <small v-if="h.page.topic">{{ h.page.project!.name }}<template v-if="h.head"> · {{ t.inHeading }}: {{ h.head }}</template></small>
+          </RouterLink>
+          <p v-if="!hits.length" class="muted">{{ t.noResults }}</p>
+        </div>
+        <template v-else>
         <RouterLink :to="href('overview')" :class="{ on: current.id === 'overview' }">{{ t.overview }}</RouterLink>
         <template v-for="g in groups" :key="g.group">
           <h3>{{ t[g.label] }}</h3>
@@ -96,6 +142,7 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
               @click="toggle(p.project!.id)"
             >
               {{ titleOf(p.id) }}
+              <small v-if="progressOf(p.project!.id)" class="side-progress">{{ progressOf(p.project!.id) }}</small>
             </RouterLink>
             <div v-if="isOpen(p.project!.id) && openTopics.length" :class="['side-topics', `accent-${p.project!.id}`]">
               <template v-for="tg in openTopics" :key="tg.id">
@@ -108,6 +155,7 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
                   :aria-current="`${p.id}/${topic.id}` === current.id ? 'page' : undefined"
                 >
                   {{ topic.title[lang] }}
+                  <span v-if="isRead(`${p.id}/${topic.id}`)" class="read-mark" :title="t.isRead">✓</span>
                 </RouterLink>
               </template>
             </div>
@@ -115,6 +163,7 @@ watch(() => route.fullPath, () => (menuOpen.value = false))
         </template>
         <h3>{{ t.groupAbout }}</h3>
         <RouterLink :to="href('styling')" :class="{ on: current.id === 'styling' }">{{ t.styling }}</RouterLink>
+        </template>
       </nav>
 
       <main class="docs-main">

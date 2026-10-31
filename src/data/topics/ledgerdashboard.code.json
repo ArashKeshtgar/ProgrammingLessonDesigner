@@ -2,29 +2,31 @@
   "project": "ledgerdashboard",
   "repo": "LedgerDashboard",
   "files": {
-    "README.md": 159,
+    "README.md": 160,
     "server/index.js": 33,
     "server/src/config.js": 127,
     "Dockerfile": 62,
     "server/.env.example": 43,
-    "server/test/api.test.js": 983,
+    "server/test/api.test.js": 1034,
     "server/test/fixture.js": 135,
     ".github/workflows/ci.yml": 72,
     ".github/workflows/release.yml": 30,
+    "server/test/sqlTestDb.js": 49,
     "server/src/security.js": 73,
-    "server/src/app.js": 1572,
+    "server/src/app.js": 1574,
     "server/src/paths.js": 31,
     "server/src/csv.js": 63,
     "server/src/process.js": 63,
-    "client/src/pages/ApplicationsList.jsx": 576,
-    "client/src/pages/ApplicationDetail.jsx": 993,
+    "client/src/pages/ApplicationsList.jsx": 625,
+    "client/src/pages/ApplicationDetail.jsx": 1015,
     "server/src/pipeline.js": 109,
     "server/src/stores/csvStore.js": 154,
     "server/src/stores/sqlStore.js": 351,
-    "client/src/pages/PipelineBoard.jsx": 500,
+    "client/src/pages/PipelineBoard.jsx": 537,
     "server/src/contact.js": 64,
     "db/03-schema.sql": 143,
     "client/src/components/ContactEditor.jsx": 76,
+    "client/src/contact.js": 53,
     "server/src/funnel.js": 230,
     "server/src/rejections.js": 215,
     "server/src/recruiterNext.js": 81,
@@ -36,7 +38,7 @@
     "client/src/components/AssistantPanel.jsx": 215,
     "server/src/aiUsage.js": 113,
     "client/src/pages/CostsPage.jsx": 153,
-    "client/src/api.js": 293,
+    "client/src/api.js": 295,
     "server/src/truthBank.js": 342,
     "server/src/truthRoutes.js": 412,
     "server/src/engineGit.js": 74,
@@ -44,7 +46,7 @@
     "server/src/health.js": 273,
     "client/src/pages/HealthPage.jsx": 187,
     "client/src/pages/GapsPage.jsx": 309,
-    "client/src/App.jsx": 61,
+    "client/src/App.jsx": 63,
     "client/src/components/LoginGate.jsx": 56,
     "client/vite.config.js": 7,
     "server/src/stores/index.js": 13,
@@ -78,8 +80,8 @@
     },
     "tests/origin": {
       "file": "server/test/api.test.js",
-      "start": 92,
-      "end": 98,
+      "start": 143,
+      "end": 149,
       "code": "it(\"refuses a read from a foreign website\", async () => {\n  const res = await server.call(\"GET\", \"/api/applications\", {\n    headers: { Origin: \"https://evil.example\" },\n  });\n  expect(res.status).toBe(403);\n  expect(res.headers.get(\"access-control-allow-origin\")).toBeNull();\n});"
     },
     "tests/ci": {
@@ -94,6 +96,18 @@
       "end": 30,
       "code": "- name: Package\n  run: tar -czf ledger-dashboard-client-${GITHUB_REF_NAME}.tar.gz -C client dist\n- name: Publish release\n  env:\n    GH_TOKEN: ${{ github.token }}\n  run: gh release create \"$GITHUB_REF_NAME\" ledger-dashboard-client-*.tar.gz --title \"$GITHUB_REF_NAME\" --generate-notes"
     },
+    "tests/fake": {
+      "file": "server/test/fixture.js",
+      "start": 124,
+      "end": 136,
+      "code": "export function fakeAnthropic(inputFor) {\n  const calls = [];\n  return {\n    calls,\n    messages: {\n      create: async (req) => {\n        calls.push(req);\n        return { content: [{ type: \"tool_use\", input: await inputFor(req) }] };\n      },\n    },\n  };\n}\n"
+    },
+    "tests/kinds": {
+      "file": "server/test/api.test.js",
+      "start": 11,
+      "end": 14,
+      "code": "// The whole API suite runs once per store: the CSV files, and (when a SQL\n// Server is configured) a throwaway SQL database seeded from the same\n// fixture through the real migration. Same requests, same expectations.\nconst KINDS = sqlAvailable ? [\"csv\", \"sql\"] : [\"csv\"];"
+    },
     "login/secret": {
       "file": "server/src/config.js",
       "start": 37,
@@ -102,8 +116,8 @@
     },
     "login/cookie": {
       "file": "server/src/app.js",
-      "start": 97,
-      "end": 104,
+      "start": 98,
+      "end": 105,
       "code": "cookieSession({\n  name: \"ld_session\",\n  keys: [cfg.sessionSecret],\n  maxAge: 30 * 24 * 60 * 60 * 1000,\n  sameSite: \"lax\",\n  httpOnly: true,\n  secure: cfg.secureCookies ?? cfg.production,\n})"
     },
     "login/compare": {
@@ -114,20 +128,20 @@
     },
     "login/login": {
       "file": "server/src/app.js",
-      "start": 109,
-      "end": 126,
+      "start": 110,
+      "end": 127,
       "code": "app.post(\"/api/login\", (req, res) => {\n  const ip = req.ip;\n  const wait = limiter.retryAfterSeconds(ip);\n  if (wait > 0) {\n    res.set(\"Retry-After\", String(wait));\n    return res\n      .status(429)\n      .json({ error: `Too many wrong passwords — try again in ${Math.ceil(wait / 60)} min.` });\n  }\n  const { password } = req.body || {};\n  if (!passwordMatches(password, cfg.password)) {\n    limiter.recordFailure(ip);\n    return res.status(401).json({ error: \"Wrong password\" });\n  }\n  limiter.recordSuccess(ip);\n  req.session.authed = true;\n  res.json({ authed: true });\n});"
     },
     "login/token": {
       "file": "server/src/app.js",
-      "start": 135,
-      "end": 139,
+      "start": 136,
+      "end": 140,
       "code": "const hasApiToken = (req) => {\n  if (!cfg.apiToken) return false;\n  const m = /^Bearer (.+)$/.exec(req.get(\"authorization\") || \"\");\n  return !!m && passwordMatches(m[1], cfg.apiToken);\n};"
     },
     "login/gate": {
       "file": "server/src/app.js",
-      "start": 145,
-      "end": 149,
+      "start": 146,
+      "end": 150,
       "code": "app.use(\"/api\", (req, res, next) => {\n  if (req.path === \"/login\" || req.path === \"/session\") return next();\n  if (req.session?.authed || hasApiToken(req)) return next();\n  res.status(401).json({ error: \"Login required\" });\n});"
     },
     "origin/guard": {
@@ -147,6 +161,18 @@
       "start": 99,
       "end": 99,
       "code": "allowedOrigins: [...(production ? [] : DEV_ORIGINS), ...extraOrigins],"
+    },
+    "origin/extra": {
+      "file": "server/src/config.js",
+      "start": 86,
+      "end": 89,
+      "code": "const extraOrigins = (env.CORS_ORIGINS || \"\")\n  .split(\",\")\n  .map((o) => o.trim())\n  .filter(Boolean);"
+    },
+    "origin/preflight": {
+      "file": "server/test/api.test.js",
+      "start": 151,
+      "end": 156,
+      "code": "it(\"refuses a delete preflight from a foreign website\", async () => {\n  const res = await server.call(\"OPTIONS\", `/api/applications/${FOLDER_A}`, {\n    headers: { Origin: \"https://evil.example\", \"Access-Control-Request-Method\": \"DELETE\" },\n  });\n  expect(res.status).toBe(403);\n});"
     },
     "safety/name": {
       "file": "server/src/paths.js",
@@ -186,33 +212,45 @@
     },
     "safety/errors": {
       "file": "server/src/app.js",
-      "start": 65,
-      "end": 86,
+      "start": 66,
+      "end": 87,
       "code": "function sendError(res, err) {\n  if (err instanceof FileLockedError) return res.status(423).json({ error: err.message });\n  if (err instanceof UnsafeFolderError) return res.status(400).json({ error: err.message });\n  if (err instanceof ContactValidationError) return res.status(400).json({ error: err.message });\n  // A value the database refused (bad date, too long, duplicate, constraint).\n  if (isStoreValidationError(err)) return res.status(400).json({ error: `Invalid value: ${err.message}` });\n  // Claude's own errors say what to fix (a revoked key, no credit) and hold\n  // no server paths, so they're shown even in production.\n  if (err instanceof Anthropic.RateLimitError) {\n    return res.status(429).json({ error: \"Claude is busy right now (rate limit). Try again in a minute.\" });\n  }\n  if (err instanceof Anthropic.AuthenticationError) {\n    console.error(\"[claude]\", err.status, err.message);\n    return res.status(502).json({ error: \"Claude rejected the API key (401) — put a valid ANTHROPIC_API_KEY in server/.env and restart.\" });\n  }\n  if (err instanceof Anthropic.APIError) {\n    console.error(\"[claude]\", err.status, err.message);\n    return res.status(502).json({ error: `Claude API error${err.status ? ` (${err.status})` : \"\"}: ${err.message}` });\n  }\n  console.error(err);\n  res.status(500).json({ error: cfg.production ? \"Internal server error\" : err.message });\n}"
     },
     "applications/folder": {
       "file": "server/src/app.js",
-      "start": 286,
-      "end": 292,
+      "start": 287,
+      "end": 293,
       "code": "const base = `${date}__${slugify(company) || \"Company\"}__${slugify(role) || \"Role\"}`;\nconst existingFolders = new Set(rows.map((r) => r.folder));\nlet folder = base;\nlet n = 2;\nwhile (existingFolders.has(folder) || existsSync(path.join(APPLICATIONS_DIR, folder))) {\n  folder = `${base}-${n++}`;\n}"
     },
     "applications/editable": {
       "file": "server/src/app.js",
-      "start": 369,
-      "end": 371,
+      "start": 370,
+      "end": 372,
       "code": "const EDITABLE_LEDGER_FIELDS = new Set([\n  \"notes\", \"next_action\", \"last_contact\", \"outcome\", \"gap_tags\", ...CONTACT_FIELDS,\n]);"
     },
     "applications/delete": {
       "file": "server/src/app.js",
-      "start": 413,
-      "end": 430,
+      "start": 414,
+      "end": 431,
       "code": "app.delete(\"/api/applications/:id\", async (req, res) => {\n  try {\n    const folder = req.params.id;\n    const row = await findLedgerRow(folder);\n    if (!row) return res.status(404).json({ error: \"Not found\" });\n    if (buildsInFlight.has(folder)) {\n      return res.status(409).json({ error: \"A build is running for this application\" });\n    }\n\n    const folderPath = resolveApplicationFolder(APPLICATIONS_DIR, row.folder);\n    await store.deleteApplication(folder);\n    if (existsSync(folderPath)) rmSync(folderPath, { recursive: true, force: true });\n\n    res.json({ deleted: true, folder });\n  } catch (err) {\n    sendError(res, err);\n  }\n});"
     },
     "applications/download": {
       "file": "server/src/app.js",
-      "start": 598,
-      "end": 600,
+      "start": 599,
+      "end": 601,
       "code": "const listed = existsSync(folderPath) ? readdirSync(folderPath) : [];\nif (!listed.includes(name)) return res.status(404).json({ error: \"No such file\" });\nres.download(path.join(folderPath, name), name);"
+    },
+    "applications/unique": {
+      "file": "server/src/app.js",
+      "start": 288,
+      "end": 293,
+      "code": "const existingFolders = new Set(rows.map((r) => r.folder));\nlet folder = base;\nlet n = 2;\nwhile (existingFolders.has(folder) || existsSync(path.join(APPLICATIONS_DIR, folder))) {\n  folder = `${base}-${n++}`;\n}"
+    },
+    "applications/estimate": {
+      "file": "server/src/app.js",
+      "start": 348,
+      "end": 360,
+      "code": "if (variant && postingText) {\n  const score = Math.round(Number(match_score));\n  saveAnalysis(folder, {\n    source: \"nightly-estimate\",\n    match_score: Number.isFinite(score) ? Math.min(100, Math.max(0, score)) : null,\n    base_variant: variant,\n    recommendation: null,\n    reasoning: reasoning || \"\",\n    gaps: Array.isArray(gaps) ? gaps.map(String) : [],\n    gap_tags: tags,\n    ...(droppedClosedGaps.length ? { dropped_closed_gaps: droppedClosedGaps } : {}),\n  });\n}"
     },
     "pipeline/append": {
       "file": "server/src/stores/csvStore.js",
@@ -258,8 +296,8 @@
     },
     "contact/patch": {
       "file": "server/src/app.js",
-      "start": 387,
-      "end": 389,
+      "start": 388,
+      "end": 390,
       "code": "if (CONTACT_FIELDS.some((f) => f in updates)) {\n  Object.assign(updates, resolveContact(current, updates));\n}"
     },
     "contact/check": {
@@ -267,6 +305,12 @@
       "start": 75,
       "end": 79,
       "code": "ALTER TABLE dbo.Applications ADD CONSTRAINT CK_Applications_Contact CHECK (\n    (ContactEmail = N'' AND ContactSource = N'')\n    OR (ContactEmail LIKE N'_%@_%._%'\n        AND ContactSource IN (N'posting', N'ats_email', N'recruiter_reply', N'found')\n        AND ContactVerified = 1));"
+    },
+    "contact/mailto": {
+      "file": "client/src/contact.js",
+      "start": 29,
+      "end": 44,
+      "code": "export function followupMailto(app) {\n  const firstName = (app.contact_name || \"\").trim().split(/\\s+/)[0];\n  const when = appliedOn(app);\n  const subject = `Following up on my application: ${app.role}`;\n  const body = [\n    `Hi ${firstName || \"there\"},`,\n    \"\",\n    `I applied for the ${app.role} position at ${app.company}${when ? ` on ${when}` : \"\"} and wanted to follow up briefly. ` +\n      \"I'm still very interested in the role and would welcome the chance to talk about how my experience fits.\",\n    \"\",\n    \"Happy to share anything else that would help.\",\n    \"\",\n    \"Thank you for your time,\",\n    SIGNATURE,\n  ].join(\"\\r\\n\");\n  return `mailto:${encodeURIComponent(app.contact_email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;"
     },
     "boards/prior": {
       "file": "server/src/funnel.js",
@@ -286,64 +330,76 @@
       "end": 37,
       "code": "export function confusion(items, threshold) {\n  const m = { tp: 0, fp: 0, fn: 0, tn: 0 };\n  for (const it of items) {\n    const predicted = it.score >= threshold;\n    const actual = it.label === \"apply\";\n    if (predicted && actual) m.tp++;\n    else if (predicted) m.fp++;\n    else if (actual) m.fn++;\n    else m.tn++;\n  }\n  const n = m.tp + m.fp + m.fn + m.tn;\n  return {\n    threshold,\n    n,\n    ...m,\n    accuracy: pct(m.tp + m.tn, n),\n    // Of the postings the model said to apply to, how many were worth it.\n    precision: pct(m.tp, m.tp + m.fp),\n    // Of the postings worth applying to, how many the model caught.\n    recall: pct(m.tp, m.tp + m.fn),\n  };\n}"
     },
+    "boards/horizon": {
+      "file": "server/src/funnel.js",
+      "start": 10,
+      "end": 13,
+      "code": "// Hiring takes ~4-6 weeks, so only applications sent in the first 20 weeks\n// of a 26-week horizon can still turn into a job inside it.\nconst HORIZON_WEEKS = 26;\nconst USEFUL_WEEKS = 20;"
+    },
+    "boards/rejectWord": {
+      "file": "server/src/rejections.js",
+      "start": 12,
+      "end": 15,
+      "code": "// \"برای فردا\" sections list postings that passed and are waiting, even when\n// the heading also mentions a rejection, so they are never read as rejects.\n// \"رد\" must be a whole word: it is also inside \"فردا\" (tomorrow), \"کرد\" etc.\nconst REJECT_WORD_RE = /(^|[\\s(])رد($|[\\s‌)])/;"
+    },
     "analyze/strict": {
       "file": "server/src/app.js",
-      "start": 700,
-      "end": 708,
+      "start": 701,
+      "end": 709,
       "code": "// strict: the API then guarantees the input matches this schema. Without it\n// the model sometimes dropped gap_tags, or put the gap_tags array inside\n// the `gaps` string, so the row was saved with no tags. Strict mode doesn't\n// allow minimum/maximum, so normalizeAnalysis clamps match_score instead.\nconst ANALYZE_TOOL = {\n  name: \"submit_analysis\",\n  description: \"Submit the match analysis for this job posting against the candidate's fact bank.\",\n  strict: true,\n  input_schema: {"
     },
     "analyze/normalize": {
       "file": "server/src/app.js",
-      "start": 770,
-      "end": 780,
+      "start": 771,
+      "end": 781,
       "code": "if (message.stop_reason === \"max_tokens\") {\n  throw new Error(\"Analysis was cut off (max_tokens) — nothing was saved, try again\");\n}\nconst toolUse = message.content.find((b) => b.type === \"tool_use\");\nif (!toolUse) throw new Error(\"Model did not return a structured analysis\");\nconst a = toolUse.input;\nconst gaps = Array.isArray(a.gaps) ? a.gaps : [];\nconst allTags = toGapTagList(a.gap_tags);\nif (gaps.length > 0 && allTags.length === 0) {\n  throw new Error(\"Analysis listed gaps but no gap_tags — nothing was saved, try again\");\n}"
     },
     "analyze/closed": {
       "file": "server/src/app.js",
-      "start": 759,
-      "end": 764,
+      "start": 760,
+      "end": 765,
       "code": "function withoutClosedGaps(rawTags) {\n  const tags = resolveGapAliases(rawTags, readGapAliases(GAP_ALIASES_PATH));\n  const dict = loadGapTagsDict();\n  const isClosed = (t) => dict[t] != null && gapStatus(String(dict[t])) === \"closed\";\n  return { kept: tags.filter((t) => !isClosed(t)), dropped: tags.filter(isClosed) };\n}"
     },
     "analyze/cached": {
       "file": "server/src/app.js",
-      "start": 833,
-      "end": 837,
+      "start": 834,
+      "end": 838,
       "code": "function cachedSystem(text, tail = \"\") {\n  const blocks = [{ type: \"text\", text, cache_control: { type: \"ephemeral\" } }];\n  if (tail) blocks.push({ type: \"text\", text: tail });\n  return blocks;\n}"
     },
     "analyze/draftOnly": {
       "file": "server/src/app.js",
-      "start": 1011,
-      "end": 1013,
+      "start": 1012,
+      "end": 1014,
       "code": "if (row.stage !== \"draft\") {\n  return res.status(409).json({ error: \"Only drafts can be re-analyzed — this one was already sent\" });\n}"
     },
     "build/enum": {
       "file": "server/src/app.js",
-      "start": 1050,
-      "end": 1060,
+      "start": 1051,
+      "end": 1061,
       "code": "bullets: {\n  type: \"array\",\n  items: {\n    type: \"object\",\n    properties: {\n      fact_id: { type: \"string\", enum: selectableFactIds(facts, variant) },\n      text: { type: \"string\" },\n    },\n    required: [\"fact_id\", \"text\"],\n  },\n  minItems: 8,"
     },
     "build/roles": {
       "file": "server/src/app.js",
-      "start": 1214,
-      "end": 1223,
+      "start": 1215,
+      "end": 1224,
       "code": "validation = missingRoles.length\n  ? {\n      status: 1,\n      stdout:\n        `ERROR: employment role(s) missing from the résumé: ${missingRoles.join(\", \")} — ` +\n        \"every role needs at least one bullet, or the timeline shows a gap\\n\",\n    }\n  : await runProcess(python, [path.join(ENGINE_DIR, \"validate.py\"), planPath], {\n      timeoutMs: cfg.validateTimeoutMs ?? VALIDATE_TIMEOUT_MS,\n    });"
     },
     "build/repair": {
       "file": "server/src/app.js",
-      "start": 1189,
-      "end": 1195,
+      "start": 1190,
+      "end": 1196,
       "code": "for (let attempt = 0; attempt < 2; attempt++) {\n  const message = await client.messages.create(request);\n  logUsage(\"build\", message);\n  recordUsage(folderPath, usageRecord(attempt ? \"build-repair\" : \"build\", message, request.model));\n  const toolUse = message.content.find((b) => b.type === \"tool_use\");\n  if (!toolUse) throw new Error(\"Model did not return a structured package\");\n  generated = toolUse.input;"
     },
     "build/warnings": {
       "file": "server/src/app.js",
-      "start": 1268,
-      "end": 1274,
+      "start": 1269,
+      "end": 1275,
       "code": "let guardianWarnings = [];\nif (validation.status !== 0) {\n  guardianWarnings = (validation.stdout || validation.stderr || \"\").split(\"\\n\").filter(Boolean);\n  saveBuildError(\"guardian-warning\", guardianWarnings);\n} else if (existsSync(buildErrorPath)) {\n  unlinkSync(buildErrorPath);\n}"
     },
     "build/inflight": {
       "file": "server/src/app.js",
-      "start": 1373,
-      "end": 1389,
+      "start": 1374,
+      "end": 1390,
       "code": "app.post(\"/api/packages/build\", async (req, res) => {\n  const { folder } = req.body || {};\n  if (!isSafeFolderName(folder) || !(await findLedgerRow(folder))) {\n    return res.status(404).json({\n      error: `Unknown folder: ${folder} — call /api/packages/analyze first, it creates this`,\n    });\n  }\n  if (buildsInFlight.has(folder)) {\n    return res.status(409).json({ error: \"This application is already being built\" });\n  }\n  buildsInFlight.add(folder);\n  try {\n    await buildPackage(req, res);\n  } finally {\n    buildsInFlight.delete(folder);\n  }\n});"
     },
     "assistant/snapshot": {
@@ -370,6 +426,12 @@
       "end": 164,
       "code": "const known = new Set(snapshot.applications.map((a) => a.folder));\nconst actions = (Array.isArray(parsed.actions) ? parsed.actions : []).map((a) => ({\n  title: String(a.title || \"\"),\n  why: String(a.why || \"\"),\n  priority: [\"high\", \"medium\", \"low\"].includes(a.priority) ? a.priority : \"medium\",\n  folder: a.folder && known.has(a.folder) ? a.folder : null,\n}));"
     },
+    "assistant/request": {
+      "file": "server/src/assistant.js",
+      "start": 91,
+      "end": 102,
+      "code": "export function validateAssistantRequest(body) {\n  const mode = body?.mode === \"brief\" ? \"brief\" : body?.mode === \"ask\" ? \"ask\" : null;\n  if (!mode) return { error: 'mode must be \"brief\" or \"ask\"' };\n  const question = typeof body.question === \"string\" ? body.question.trim() : \"\";\n  if (mode === \"ask\" && !question) return { error: \"question is required\" };\n  if (question.length > QUESTION_MAX) return { error: `question is longer than ${QUESTION_MAX} characters` };\n  const history = (Array.isArray(body.history) ? body.history : [])\n    .filter((t) => t && typeof t.question === \"string\" && typeof t.answer === \"string\")\n    .slice(-HISTORY_MAX)\n    .map((t) => ({ question: t.question.slice(0, QUESTION_MAX), answer: t.answer.slice(0, 4000) }));\n  return { mode, question, history };\n}"
+    },
     "costs/prices": {
       "file": "server/src/aiUsage.js",
       "start": 13,
@@ -378,8 +440,8 @@
     },
     "costs/before": {
       "file": "server/src/app.js",
-      "start": 886,
-      "end": 888,
+      "start": 887,
+      "end": 889,
       "code": "// Filed before normalizeAnalysis, which can still throw: a failed call\n// was paid for all the same.\nif (folder) recordUsage(resolveApplicationFolder(APPLICATIONS_DIR, folder), usage);"
     },
     "costs/cost": {
@@ -390,8 +452,8 @@
     },
     "costs/brake": {
       "file": "server/src/app.js",
-      "start": 897,
-      "end": 913,
+      "start": 898,
+      "end": 914,
       "code": "const AI_ROUTES = {\n  \"/api/packages/analyze\": \"analyze\",\n  \"/api/packages/reanalyze\": \"analyze\",\n  \"/api/packages/build\": \"build\",\n  \"/api/assistant\": \"assistant\",\n};\napp.post(Object.keys(AI_ROUTES), (req, res, next) => {\n  if (req.get(\"x-ai-request\") === \"app\") return next();\n  const allowed = cfg.aiScriptCalls === \"all\" || (cfg.aiScriptCalls === \"analyze\" && AI_ROUTES[req.path] === \"analyze\");\n  if (allowed) return next();\n  res.status(403).json({\n    error:\n      \"Claude calls only start from a button in the dashboard (they spend API credit). \" +\n      \"Save the posting as a draft with POST /api/applications { postingText } and analyze it from its page.\",\n    code: \"ai_manual_only\",\n  });\n});"
     },
     "costs/header": {
@@ -468,9 +530,15 @@
     },
     "fe-app/static": {
       "file": "server/src/app.js",
-      "start": 1562,
-      "end": 1569,
+      "start": 1564,
+      "end": 1571,
       "code": "// Serve the built React app (so no dev server / Vite is needed to use this)\nif (existsSync(cfg.clientDist)) {\n  app.use(express.static(cfg.clientDist));\n  app.get(\"*\", (req, res, next) => {\n    if (req.path.startsWith(\"/api/\")) return next();\n    res.sendFile(path.join(cfg.clientDist, \"index.html\"));\n  });\n}"
+    },
+    "fe-app/shell": {
+      "file": "client/src/App.jsx",
+      "start": 28,
+      "end": 36,
+      "code": "<LoginGate>\n  <HashRouter>\n    <div className=\"app-shell\">\n      <Navbar />\n      <main className=\"app-scroll-panel\" id={SCROLL_PANEL_ID}>\n        <div className=\"container py-4\">\n          <UpdateBanner />\n          <DailyLine />\n          <Routes>"
     },
     "stores/open": {
       "file": "server/src/stores/index.js",
@@ -501,6 +569,18 @@
       "start": 108,
       "end": 111,
       "code": "const VALIDATION_ERROR_NUMBERS = new Set([220, 241, 242, 245, 547, 2601, 2627, 2628, 8114, 8115, 8152]);\nexport function isStoreValidationError(err) {\n  return !!err && typeof err.number === \"number\" && VALIDATION_ERROR_NUMBERS.has(err.number);\n}"
+    },
+    "stores/columns": {
+      "file": "server/src/stores/shape.js",
+      "start": 3,
+      "end": 12,
+      "code": "// The API's row shapes — the same field names ledger.csv and\n// target_list.csv always had. Both stores return exactly these, so the\n// client never knows which one is behind the API.\nexport const LEDGER_COLUMNS = [\n  \"date\", \"company\", \"role\", \"branch\", \"source\", \"source_detail\", \"poster_type\",\n  \"poster_name\", \"end_client\", \"applied_via\", \"posting_url\", \"date_posted\",\n  \"date_seen\", \"location\", \"match_score\", \"variant\", \"folder\", \"status\",\n  \"last_contact\", \"next_action\", \"outcome\", \"notes\", \"gap_tags\",\n  \"contact_name\", \"contact_email\", \"contact_source\", \"contact_verified\",\n];"
+    },
+    "stores/recruiterId": {
+      "file": "server/src/stores/shape.js",
+      "start": 24,
+      "end": 27,
+      "code": "export function recruiterId(r) {\n  const key = r.linkedin_url || `${r.name}|${r.company}`;\n  return createHash(\"sha1\").update(key).digest(\"hex\").slice(0, 12);\n}"
     },
     "schema/svc": {
       "file": "db/02-service-login.sql",
@@ -555,6 +635,12 @@
       "start": 65,
       "end": 65,
       "code": "DATEADD(day, -((DATEPART(weekday, ev.SentDate) + @@DATEFIRST - 2) % 7), ev.SentDate) AS SentWeek,"
+    },
+    "reporting/rptGrant": {
+      "file": "db/06-report-views.sql",
+      "start": 186,
+      "end": 186,
+      "code": "IF USER_ID(N'ledger_reader') IS NOT NULL GRANT SELECT ON SCHEMA::rpt TO ledger_reader;"
     }
   },
   "endpoints": [
@@ -564,7 +650,7 @@
       "path": "/api/login",
       "access": "public",
       "file": "server/src/app.js",
-      "line": 109
+      "line": 110
     },
     {
       "area": "logout",
@@ -572,7 +658,7 @@
       "path": "/api/logout",
       "access": "public",
       "file": "server/src/app.js",
-      "line": 128
+      "line": 129
     },
     {
       "area": "session",
@@ -580,7 +666,7 @@
       "path": "/api/session",
       "access": "public",
       "file": "server/src/app.js",
-      "line": 141
+      "line": 142
     },
     {
       "area": "motivation",
@@ -588,7 +674,7 @@
       "path": "/api/motivation",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 182
+      "line": 183
     },
     {
       "area": "pipeline-stages",
@@ -596,7 +682,7 @@
       "path": "/api/pipeline-stages",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 203
+      "line": 204
     },
     {
       "area": "pipeline-events",
@@ -604,7 +690,7 @@
       "path": "/api/pipeline-events",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 213
+      "line": 214
     },
     {
       "area": "pipeline-events",
@@ -612,7 +698,7 @@
       "path": "/api/pipeline-events/followup",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 241
+      "line": 242
     },
     {
       "area": "pipeline-events",
@@ -620,7 +706,7 @@
       "path": "/api/pipeline-events/undo",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 260
+      "line": 261
     },
     {
       "area": "applications",
@@ -628,7 +714,7 @@
       "path": "/api/applications",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 325
+      "line": 326
     },
     {
       "area": "applications",
@@ -636,7 +722,7 @@
       "path": "/api/applications/:id",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 372
+      "line": 373
     },
     {
       "area": "applications",
@@ -644,7 +730,7 @@
       "path": "/api/applications/:id",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 413
+      "line": 414
     },
     {
       "area": "applications",
@@ -652,7 +738,7 @@
       "path": "/api/applications",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 433
+      "line": 434
     },
     {
       "area": "applications",
@@ -660,7 +746,7 @@
       "path": "/api/applications/:id",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 442
+      "line": 443
     },
     {
       "area": "usage",
@@ -668,7 +754,7 @@
       "path": "/api/usage",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 480
+      "line": 481
     },
     {
       "area": "usage",
@@ -676,7 +762,7 @@
       "path": "/api/usage/calls",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 499
+      "line": 500
     },
     {
       "area": "funnel",
@@ -684,7 +770,7 @@
       "path": "/api/funnel",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 512
+      "line": 513
     },
     {
       "area": "rejections",
@@ -692,7 +778,7 @@
       "path": "/api/rejections",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 528
+      "line": 529
     },
     {
       "area": "rejections",
@@ -700,7 +786,7 @@
       "path": "/api/rejections/review",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 546
+      "line": 547
     },
     {
       "area": "applications",
@@ -708,7 +794,7 @@
       "path": "/api/applications/:id/similar",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 568
+      "line": 569
     },
     {
       "area": "applications",
@@ -716,7 +802,7 @@
       "path": "/api/applications/:id/files/:name",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 593
+      "line": 594
     },
     {
       "area": "gap-tags",
@@ -724,7 +810,7 @@
       "path": "/api/gap-tags",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 607
+      "line": 608
     },
     {
       "area": "assistant",
@@ -732,7 +818,7 @@
       "path": "/api/assistant",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 919
+      "line": 920
     },
     {
       "area": "packages",
@@ -740,7 +826,7 @@
       "path": "/api/packages/analyze",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 961
+      "line": 962
     },
     {
       "area": "packages",
@@ -748,7 +834,7 @@
       "path": "/api/packages/reanalyze",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1002
+      "line": 1003
     },
     {
       "area": "packages",
@@ -756,7 +842,7 @@
       "path": "/api/packages/build",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1373
+      "line": 1374
     },
     {
       "area": "recruiters",
@@ -764,7 +850,7 @@
       "path": "/api/recruiters",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1418
+      "line": 1419
     },
     {
       "area": "recruiters",
@@ -772,7 +858,7 @@
       "path": "/api/recruiters/candidates",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1463
+      "line": 1464
     },
     {
       "area": "recruiters",
@@ -780,7 +866,7 @@
       "path": "/api/recruiters/lookups",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1475
+      "line": 1476
     },
     {
       "area": "recruiters",
@@ -788,7 +874,7 @@
       "path": "/api/recruiters",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1494
+      "line": 1495
     },
     {
       "area": "recruiters",
@@ -796,7 +882,7 @@
       "path": "/api/recruiters/:id",
       "access": "signed-in",
       "file": "server/src/app.js",
-      "line": 1534
+      "line": 1535
     },
     {
       "area": "eval",
@@ -821,6 +907,14 @@
       "access": "signed-in",
       "file": "server/src/evalRoutes.js",
       "line": 94
+    },
+    {
+      "area": "interviews",
+      "method": "GET",
+      "path": "/api/interviews",
+      "access": "signed-in",
+      "file": "server/src/interviewRoutes.js",
+      "line": 55
     },
     {
       "area": "truth-bank",
@@ -1503,6 +1597,11 @@
     {
       "path": "/recruiters",
       "component": "RecruitersBoard",
+      "guards": []
+    },
+    {
+      "path": "/interviews",
+      "component": "InterviewsPage",
       "guards": []
     },
     {

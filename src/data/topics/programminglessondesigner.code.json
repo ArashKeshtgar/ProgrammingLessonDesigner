@@ -2,9 +2,9 @@
   "project": "programminglessondesigner",
   "repo": "ProgrammingLessonDesigner",
   "files": {
-    "README.md": 110,
+    "README.md": 120,
     "package.json": 36,
-    "vite.config.ts": 9,
+    "vite.config.ts": 53,
     "src/main.ts": 14,
     "src/App.vue": 19,
     "src/router/index.ts": 33,
@@ -18,12 +18,12 @@
     "examples/backend/python/portfolio/app.py": 83,
     "examples/backend/typescript/src/app.ts": 91,
     "examples/backend/java/src/main/java/portfolio/PortfolioController.java": 62,
+    ".github/workflows/deploy-pages.yml": 141,
     "examples/frontend/web/package.json": 40,
     "examples/frontend/web/shared/api.ts": 51,
     "examples/frontend/web/test/api.test.ts": 67,
     "examples/frontend/web/vue/router.ts": 25,
     "examples/docker/compose.yml": 65,
-    ".github/workflows/deploy-pages.yml": 141,
     "examples/ops/Dockerfile": 21,
     "examples/ops/tests/run.sh": 237,
     "examples/ops/deploy/deploy.sh": 43,
@@ -41,13 +41,13 @@
     "index.html": 17,
     "scripts/project-map.mjs": 292,
     "src/data/project-map.json": 898,
-    "src/projects/model.ts": 244,
-    "scripts/project-code.mjs": 741,
-    "src/data/topics/programminglessondesigner.json": 1355,
+    "src/projects/model.ts": 280,
+    "scripts/project-code.mjs": 744,
+    "src/data/topics/programminglessondesigner.json": 2081,
     "src/components/projects/DataTable.vue": 101,
-    "src/projects/i18n.ts": 214,
-    "scripts/check-projects.mjs": 131,
-    "src/views/projects/ProjectsView.vue": 138,
+    "src/projects/i18n.ts": 246,
+    "scripts/check-projects.mjs": 151,
+    "src/views/projects/ProjectsView.vue": 187,
     "src/projects/layout.ts": 84,
     "src/components/projects/SystemMap.vue": 72,
     "src/styles/abstracts/_tokens.scss": 130,
@@ -65,9 +65,9 @@
     },
     "run/vite": {
       "file": "vite.config.ts",
-      "start": 4,
-      "end": 9,
-      "code": "// For a GitHub Pages build pass --base=/ProgrammingLessonDesigner/ on the CLI.\nexport default defineConfig({\n  plugins: [vue()],\n  // Sass's modern API; the legacy one is deprecated and prints a warning per file.\n  css: { preprocessorOptions: { scss: { api: 'modern' } } },\n})"
+      "start": 48,
+      "end": 53,
+      "code": "// For a GitHub Pages build pass --base=/ProgrammingLessonDesigner/ on the CLI.\nexport default defineConfig({\n  plugins: [vue(), topicIndex()],\n  // Sass's modern API; the legacy one is deprecated and prints a warning per file.\n  css: { preprocessorOptions: { scss: { api: 'modern' } } },\n})"
     },
     "shell/tabs": {
       "file": "src/App.vue",
@@ -81,6 +81,12 @@
       "end": 21,
       "code": "// Hash history keeps deep links working on GitHub Pages with no rewrite rules.\nconst router = createRouter({\n  history: createWebHashHistory(),\n  routes: [\n    { path: '/', name: 'lessons', component: LessonListView },\n    { path: '/lesson/:id', name: 'lesson', component: LessonView },\n    { path: '/booklet/:tag', name: 'booklet', component: () => import('../views/BookletView.vue') },\n    { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },\n    // The Projects tab: the language is part of the address, so a link keeps it.\n    { path: '/projects', redirect: () => `/projects/${savedLang()}` },\n    { path: '/projects/:lang(fa|en)/:page?/:topic?', name: 'projects', component: () => import('../views/projects/ProjectsView.vue') },\n  ],\n  scrollBehavior: (to, from) => (to.path === from.path ? false : { top: 0 }),\n})"
     },
+    "shell/title": {
+      "file": "src/router/index.ts",
+      "start": 23,
+      "end": 31,
+      "code": "router.afterEach((to) => {\n  const APP = 'Programming Lessons'\n  let page = ''\n  if (to.name === 'lesson') page = getLesson(String(to.params.id))?.en ?? ''\n  if (to.name === 'booklet') page = `${BOOKLETS[String(to.params.tag)]?.title ?? to.params.tag} booklet`\n  if (to.name === 'review') page = 'Review'\n  if (to.name === 'projects') page = 'Projects' // ProjectsView puts the page's own name in front\n  document.title = page ? `${page} · ${APP}` : `${APP} · درس‌های برنامه‌نویسی`\n})"
+    },
     "shape/lesson": {
       "file": "src/types/lesson.ts",
       "start": 81,
@@ -92,6 +98,12 @@
       "start": 36,
       "end": 37,
       "code": "// One concept, several languages. `diff` is the one-line \"what really differs\".\nexport type CompareRow = { concept: string; diff: string } & Partial<Record<Lang, string>>"
+    },
+    "shape/sort": {
+      "file": "src/lib/lessons.ts",
+      "start": 6,
+      "end": 10,
+      "code": "// Booklet order first (each booklet numbers its lessons from 1), then lesson number.\nconst bookletOrder = Object.keys(BOOKLETS)\nconst lessons: Lesson[] = Object.values(modules)\n  .map((m) => m.default)\n  .sort((a, b) => bookletOrder.indexOf(a.tag) - bookletOrder.indexOf(b.tag) || a.n - b.n)"
     },
     "samples/sample": {
       "file": "src/types/lesson.ts",
@@ -123,6 +135,12 @@
       "end": 52,
       "code": "if (existsSync(refsRoot))\n  for (const r of l.refs ?? []) {\n    const file = path.join(refsRoot, r.project, r.file)\n    if (!existsSync(file)) {\n      at(`ref not found: ${r.project}/${r.file}`)\n      continue\n    }\n    const lines = readFileSync(file, 'utf-8').split('\\n').length\n    if (r.line && r.line > lines) at(`ref ${r.project}/${r.file}:${r.line} is past the end (${lines} lines)`)\n  }"
     },
+    "checks/fail": {
+      "file": "scripts/check-lessons.mjs",
+      "start": 55,
+      "end": 59,
+      "code": "if (problems.length) {\n  console.error(problems.join('\\n'))\n  process.exit(1)\n}\nconsole.log(`lessons ok (${ids.size})`)"
+    },
     "backend/cs": {
       "file": "examples/backend/csharp/Portfolio/PortfolioApp.cs",
       "start": 42,
@@ -134,6 +152,12 @@
       "start": 56,
       "end": 65,
       "code": "@app.get(\"/status\")\ndef status():\n    try:\n        s = queries.status()\n    except Exception:\n        # Unhealthy is an answer, not an error: the dashboard shows it.\n        return {\"healthy\": False, \"error\": \"Database unreachable.\"}\n    m = {k: v or 0 for k, v in s.model_dump().items()}\n    summary = f\"{m['sent']} sent, {m['interviewing']} interviewing, {m['followups_due']} follow-up(s) due\"\n    return {\"healthy\": True, \"summary\": summary, \"metrics\": m}"
+    },
+    "backend/job": {
+      "file": ".github/workflows/deploy-pages.yml",
+      "start": 20,
+      "end": 31,
+      "code": "python:\n  runs-on: ubuntu-latest\n  services:\n    mongo: { image: \"mongo:7\", ports: [\"27017:27017\"] }\n  defaults: { run: { working-directory: examples/backend/python } }\n  steps:\n    - uses: actions/checkout@v4\n    - uses: actions/setup-python@v5\n      with: { python-version: \"3.12\", cache: pip, cache-dependency-path: examples/backend/python/requirements.txt }\n    - run: pip install -r requirements.txt\n    - run: pytest -q\n      env: { MONGO_URL: \"mongodb://localhost:27017\" }"
     },
     "frontend/refresh": {
       "file": "examples/frontend/web/test/api.test.ts",
@@ -159,6 +183,12 @@
       "end": 93,
       "code": "- name: Build the four images and wait for them to be healthy\n  run: |\n    export JWT_SECRET=$(openssl rand -base64 48) JWT_REFRESH_SECRET=$(openssl rand -base64 48)\n    docker compose -f examples/docker/compose.yml up --build --wait --wait-timeout 300\n    for port in 8081 8082 8083 8084; do curl -fsS \"http://localhost:$port/status\"; echo; done\n- name: Compose refuses to start without the secrets\n  run: |\n    if docker compose -f examples/docker/compose.yml config > /dev/null 2>&1; then echo \"expected a failure\"; exit 1; fi"
     },
+    "docker/mongo": {
+      "file": "examples/docker/compose.yml",
+      "start": 46,
+      "end": 54,
+      "code": "image: mongo:7\n# No \"ports\": Mongo is not published on the host; only services on \"internal\" reach it.\nvolumes: [mongo-data:/data/db]\nnetworks: [internal]\nhealthcheck:\n  test: [\"CMD\", \"mongosh\", \"--quiet\", \"--eval\", \"db.adminCommand('ping').ok\"]\n  interval: 5s\n  retries: 10\n"
+    },
     "ops/image": {
       "file": "examples/ops/Dockerfile",
       "start": 4,
@@ -171,6 +201,18 @@
       "end": 30,
       "code": "# check <name> <exit: a number, or \"fail\" for any non-zero> <text the output must\n# contain, or \"!text\" it must not> -- <command...>\ncheck() {\n  local name=\"$1\" want=\"$2\" text=\"$3\" out code ok=true\n  shift 4\n  out=\"$(\"$@\" 2>&1)\"\n  code=$?\n  if [[ \"$want\" == fail ]]; then [[ $code -ne 0 ]] || ok=false; else [[ $code -eq $want ]] || ok=false; fi\n  if [[ \"$text\" == !* ]]; then [[ \"$out\" != *\"${text:1}\"* ]] || ok=false; else [[ \"$out\" == *\"$text\"* ]] || ok=false; fi\n  if $ok; then\n    echo \"  ok    $name\"\n    passed=$((passed + 1))\n  else\n    echo \"  FAIL  $name (exit $code, wanted $want)\"\n    printf '%s\\n' \"$out\" | sed 's/^/          /'\n    failed=$((failed + 1))\n  fi\n}"
     },
+    "ops/forced": {
+      "file": "examples/ops/tests/run.sh",
+      "start": 227,
+      "end": 228,
+      "code": "check \"no command: it deploys\" 0 \"deploying (asked for: nothing)\" -- ci_ssh /tmp/ci/known_hosts deployer@localhost\ncheck \"another command: it still only deploys\" 0 \"deploying (asked for: cat /etc/shadow)\" -- ci_ssh /tmp/ci/known_hosts deployer@localhost 'cat /etc/shadow'"
+    },
+    "ops/summary": {
+      "file": "examples/ops/tests/run.sh",
+      "start": 236,
+      "end": 237,
+      "code": "echo \"$passed passed, $failed failed\"\n[[ $failed -eq 0 ]]"
+    },
     "page/groups": {
       "file": "src/components/LessonBody.vue",
       "start": 13,
@@ -182,6 +224,12 @@
       "start": 20,
       "end": 24,
       "code": "const ORIGIN: Record<CodeSample['origin'], string> = {\n  real: 'از کد واقعی پروژه (کوتاه‌شده)',\n  tested: 'کد اجراشده و تست‌شده در examples/',\n  port: 'معادل نوشته‌شده، اجرا نشده',\n}"
+    },
+    "page/copy": {
+      "file": "src/components/CodeTabs.vue",
+      "start": 27,
+      "end": 35,
+      "code": "async function copy(s: CodeSample) {\n  try {\n    await navigator.clipboard.writeText(sampleCode(s))\n    copied.value = true\n    setTimeout(() => (copied.value = false), 1500)\n  } catch {\n    // clipboard can be blocked (insecure context); the code stays selectable\n  }\n}"
     },
     "booklets/print": {
       "file": "scripts/pdf.mjs",
@@ -251,26 +299,26 @@
     },
     "topics/types": {
       "file": "src/projects/model.ts",
-      "start": 104,
-      "end": 120,
-      "code": "export interface TopicExample {\n  title: Record<DocLang, string>\n  lang: string\n  file: string\n  from: string\n  to?: string\n  lines?: number\n}\nexport interface Topic {\n  id: string\n  group: string\n  title: Record<DocLang, string>\n  files?: string[]\n  fa: DocSection[]\n  en: DocSection[]\n  examples?: Record<string, TopicExample>\n}"
+      "start": 106,
+      "end": 122,
+      "code": "export interface TopicExample {\n  title: Record<DocLang, string>\n  lang: string\n  file: string\n  from: string\n  to?: string\n  lines?: number\n}\n// The quiz at the end of a topic: the same questions in both languages.\nexport interface QuizQuestion {\n  q: Record<DocLang, string>\n  options: Record<DocLang, string[]>\n  // index of the right option\n  answer: number\n  why: Record<DocLang, string>\n}\nexport interface Topic {"
     },
     "topics/find": {
       "file": "scripts/project-code.mjs",
-      "start": 683,
-      "end": 694,
+      "start": 685,
+      "end": 696,
       "code": "const start = src.findIndex((l) => l.includes(ex.from))\nif (start < 0) {\n  at(`${page.id}/${id}: \"${ex.from}\" not found in ${ex.file}`)\n  continue\n}\n// `to`: up to the first line after `from` that contains it; `lines`: that many lines.\nconst end = ex.lines ? start + ex.lines - 1 : ex.to ? src.findIndex((l, i) => i >= start && l.includes(ex.to)) : start\nif (end < 0 || end >= src.length) {\n  at(`${page.id}/${id}: \"${ex.to}\" not found after \"${ex.from}\" in ${ex.file}`)\n  continue\n}\nexamples[`${page.id}/${id}`] = { file: ex.file, start: start + 1, end: end + 1, code: dedent(src.slice(start, end + 1)) }"
     },
     "scanners/vue": {
       "file": "scripts/project-code.mjs",
-      "start": 542,
-      "end": 554,
+      "start": 544,
+      "end": 556,
       "code": "// Vue Router: { path: '...', component: Page }, a page loaded on demand,\n// component: () => import('../views/Page.vue'), or a redirect (a fixed path, or the\n// template string a function returns, shown as written).\nfunction vueRoutes(repo, file) {\n  return lines(readFileSync(path.join(repo, file), 'utf-8')).flatMap((l) => {\n    const p = /\\{ path: '([^']*)'/.exec(l)\n    if (!p) return []\n    const page = /component: (?:\\(\\) => import\\('[^']*\\/(\\w+)\\.vue'\\)|(\\w+))/.exec(l)\n    if (page) return [{ path: p[1], component: page[1] ?? page[2], guards: [] }]\n    const to = /redirect: (?:'([^']*)'|\\(\\) => `([^`]*)`)/.exec(l)\n    return to ? [{ path: p[1], redirect: to[1] ?? to[2], guards: [] }] : []\n  })\n}"
     },
     "scanners/aspnet": {
       "file": "scripts/project-code.mjs",
-      "start": 488,
-      "end": 493,
+      "start": 490,
+      "end": 495,
       "code": "// The endpoint's own policy is on its last line: the first one, before the next endpoint, that names one.\nconst until = found[k + 1]?.line ?? src.length\nconst auth = src.slice(e.line, until).map((l) => AUTH.exec(l)).find(Boolean)\nconst tag = src.slice(e.line, until).map((l) => TAG.exec(l)?.[1]).find(Boolean)\nconst group = groups[e.on]\nconst access = auth ? (auth[1] ? policy(auth[1]) : 'public') : group?.access ?? fallback"
     },
     "bilingual/head": {
@@ -281,26 +329,26 @@
     },
     "bilingual/same": {
       "file": "scripts/check-projects.mjs",
-      "start": 101,
-      "end": 106,
+      "start": 107,
+      "end": 112,
       "code": "if (fa.map((s) => s.id).join() !== en.map((s) => s.id).join()) at(`${where}: fa and en sections differ`)\nconst used = new Set()\nen.forEach((s, i) => {\n  const other = fa[i]\n  if (JSON.stringify(s.examples ?? []) !== JSON.stringify(other?.examples ?? [])) at(`${where}/${s.id}: fa and en show different examples`)\n  if (JSON.stringify(s.data ?? null) !== JSON.stringify(other?.data ?? null)) at(`${where}/${s.id}: fa and en show different data`)"
     },
     "bilingual/inline": {
       "file": "src/projects/i18n.ts",
-      "start": 194,
-      "end": 197,
+      "start": 226,
+      "end": 229,
       "code": "export function inline(text: string): string {\n  const escaped = text.replace(/[&<>\"']/g, (c) => `&#${c.charCodeAt(0)};`)\n  return escaped.replace(/`([^`]+)`/g, '<code dir=\"ltr\">$1</code>').replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')\n}"
     },
     "docs/pages": {
       "file": "src/projects/model.ts",
-      "start": 222,
-      "end": 235,
-      "code": "export const PAGES: Page[] = [\n  { id: 'overview', group: 'overview' },\n  ...(['server', 'pc', 'external', 'infra'] as PageGroup[]).flatMap((g) =>\n    MAP.projects\n      .filter((p) => groupOf(p) === g)\n      .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))\n      // A project's own page first, then its topics in the order they are written.\n      .flatMap((p) => [\n        { id: p.id, group: g, project: p },\n        ...(TOPICS[p.id]?.pages ?? []).map((topic) => ({ id: `${p.id}/${topic.id}`, group: g, project: p, topic })),\n      ]),\n  ),\n  { id: 'styling', group: 'about' },\n]"
+      "start": 258,
+      "end": 271,
+      "code": "export const PAGES: Page[] = [\n  { id: 'overview', group: 'overview' },\n  ...(['server', 'pc', 'external', 'infra'] as PageGroup[]).flatMap((g) =>\n    MAP.projects\n      .filter((p) => groupOf(p) === g)\n      .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))\n      // A project's own page first, then its topics in the order they are written.\n      .flatMap((p) => [\n        { id: p.id, group: g, project: p },\n        ...(INDEX[p.id]?.pages ?? []).map((topic) => ({ id: `${p.id}/${topic.id}`, group: g, project: p, topic })),\n      ]),\n  ),\n  { id: 'styling', group: 'about' },\n]"
     },
     "docs/fold": {
       "file": "src/views/projects/ProjectsView.vue",
-      "start": 40,
-      "end": 47,
+      "start": 43,
+      "end": 50,
       "code": "// Clicking the open project again folds its topics away, and the next click opens them;\n// going to another project opens that one.\nconst collapsed = ref<string | null>(null)\nwatch(() => current.value.project?.id, (id) => id !== collapsed.value && (collapsed.value = null))\nconst isOpen = (id: string) => id === current.value.project?.id && id !== collapsed.value\nconst toggle = (id: string) => {\n  if (id === current.value.project?.id) collapsed.value = collapsed.value === id ? null : id\n}"
     },
     "docs/layout": {
@@ -308,6 +356,12 @@
       "start": 33,
       "end": 45,
       "code": "// Longest path from the sources, skipping edges that would close a cycle.\nconst column = new Map<string, number>()\nconst visiting = new Set<string>()\nconst depth = (id: string): number => {\n  if (column.has(id)) return column.get(id)!\n  visiting.add(id)\n  const preds = inc.get(id)!.filter((p) => !visiting.has(p))\n  const d = preds.length ? Math.max(...preds.map(depth)) + 1 : 0\n  visiting.delete(id)\n  column.set(id, d)\n  return d\n}\nids.forEach(depth)"
+    },
+    "docs/edge": {
+      "file": "src/projects/layout.ts",
+      "start": 72,
+      "end": 84,
+      "code": "export function edgePath(a: LayoutNode, b: LayoutNode, box: Layout['box']): string {\n  const y1 = a.y + box.h / 2\n  const y2 = b.y + box.h / 2\n  if (b.column > a.column) {\n    const x1 = a.x + box.w\n    const x2 = b.x\n    const mid = (x1 + x2) / 2\n    return `M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2}`\n  }\n  const x = Math.max(a.x, b.x) + box.w\n  const bend = x + 40\n  return `M${a.x + box.w},${y1} C${bend},${y1} ${bend},${y2} ${b.x + box.w},${y2}`\n}"
     },
     "contrast/pairs": {
       "file": "src/styles/base/_theme.scss",
@@ -321,6 +375,12 @@
       "end": 43,
       "code": "// Stops the build when two colours that carry text are too close.\n@function require-contrast($fg, $bg, $min, $what) {\n  $ratio: contrast($fg, $bg);\n\n  @if $ratio < $min {\n    @error '#{$what}: contrast #{math.div(math.round($ratio * 100), 100)} is below #{$min}.';\n  }\n\n  @return $ratio;\n}"
     },
+    "contrast/list": {
+      "file": "src/styles/abstracts/_tokens.scss",
+      "start": 59,
+      "end": 75,
+      "code": "$contrast-pairs: (\n  (ink, bg, 4.5),\n  (ink, card, 4.5),\n  (muted, bg, 4.5),\n  (muted, card, 4.5),\n  (accent, card, 4.5),\n  (accent, accent-soft, 4.5),\n  (accent-ink, accent, 4.5),\n  (warn, warn-soft, 4.5),\n  (info, info-soft, 4.5),\n  (code-ink, code-bg, 4.5),\n  (hl-keyword, code-bg, 4.5),\n  (hl-string, code-bg, 4.5),\n  (hl-comment, code-bg, 4.5),\n  (hl-title, code-bg, 4.5),\n  (hl-type, code-bg, 4.5),\n);"
+    },
     "ci/deploy": {
       "file": ".github/workflows/deploy-pages.yml",
       "start": 118,
@@ -332,6 +392,12 @@
       "start": 135,
       "end": 141,
       "code": "- run: touch dist/.nojekyll\n- uses: peaceiris/actions-gh-pages@v4\n  with:\n    github_token: ${{ secrets.GITHUB_TOKEN }}\n    publish_dir: dist\n    publish_branch: gh-pages\n    force_orphan: true"
+    },
+    "ci/concurrency": {
+      "file": ".github/workflows/deploy-pages.yml",
+      "start": 15,
+      "end": 17,
+      "code": "concurrency:\n  group: pages\n  cancel-in-progress: true"
     },
     "vps/pdfbase": {
       "file": "src/lib/booklets.ts",

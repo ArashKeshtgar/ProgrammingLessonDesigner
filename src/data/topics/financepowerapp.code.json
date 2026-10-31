@@ -135,6 +135,12 @@
       "end": 47,
       "code": "// The documents endpoint is open to the sign-in (it checks the sender itself), so here the header check is what answers.\nvar res = await client.PostAsJsonAsync(\"/api/integration/documents\", Array.Empty<object>());\nAssert.Equal(HttpStatusCode.BadRequest, res.StatusCode);\nAssert.Contains(\"X-Finance\", await res.Content.ReadAsStringAsync());"
     },
+    "csrf/cookie": {
+      "file": "src/FinancePowerApp.Api/Auth/ClinicHubSignIn.cs",
+      "start": 30,
+      "end": 39,
+      "code": "o.Cookie.Name = \"finance.auth\";\no.Cookie.HttpOnly = true;\n// Lax: the browser arrives from ClinicHub's sign-in. Unsafe API calls must also carry X-Finance.\no.Cookie.SameSite = SameSiteMode.Lax;\no.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;\no.ExpireTimeSpan = TimeSpan.FromHours(12);\no.SlidingExpiration = true;\no.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = 401; return Task.CompletedTask; };\no.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = 403; return Task.CompletedTask; };\no.Events.OnValidatePrincipal = ValidateAsync;"
+    },
     "senders/sources": {
       "file": "src/FinancePowerApp.Api/Auth/AuthSetup.cs",
       "start": 44,
@@ -146,6 +152,12 @@
       "start": 86,
       "end": 104,
       "code": "var hub = http.RequestServices.GetRequiredService<IOptions<ClinicHubOptions>>().Value;\nif (!string.IsNullOrWhiteSpace(hub.Authority) && http.Request.Headers.Authorization.ToString().StartsWith(\"Bearer \", StringComparison.OrdinalIgnoreCase))\n{\n    var result = await http.AuthenticateAsync(ServiceScheme);\n    if (!result.Succeeded)\n        return null;\n    var p = result.Principal!;\n    var scopes = (p.FindFirstValue(\"scope\") ?? \"\").Split(' ');\n    if (!scopes.Contains(FinanceScope))\n        return null;\n    var client = p.FindFirstValue(\"client_id\") ?? p.FindFirstValue(\"azp\") ?? (p.FindFirstValue(\"sub\") == \"clinichub\" ? \"clinichub\" : null);\n    return client is not null && Sources.Contains(client) ? client : null;\n}\nvar env = http.RequestServices.GetRequiredService<IHostEnvironment>();\nif (!env.IsDevelopment() && env.EnvironmentName != \"Testing\")\n    return null;\nvar keys = http.RequestServices.GetRequiredService<IConfiguration>().GetSection(\"Integration:DevKeys\").Get<Dictionary<string, string>>() ?? [];\nvar key = http.Request.Headers[\"X-Finance-Key\"].ToString();\nreturn key.Length > 0 ? keys.FirstOrDefault(k => k.Value == key && Sources.Contains(k.Key)).Key : null;"
+    },
+    "senders/unknown": {
+      "file": "src/FinancePowerApp.Api/Endpoints/IntegrationEndpoints.cs",
+      "start": 23,
+      "end": 25,
+      "code": "var source = await AuthSetup.DocumentSourceAsync(http);\nif (source is null)\n    return Results.Problem(\"Send a ClinicHub token for the audience \\\"finance\\\" with the scope \\\"finance\\\".\", statusCode: StatusCodes.Status401Unauthorized);"
     },
     "businesses/itc": {
       "file": "src/FinancePowerApp.Api/Data/Entities.cs",
@@ -218,6 +230,12 @@
       "start": 468,
       "end": 469,
       "code": "private static string? Memo(FinancialDocument d, bool late) =>\n    late ? $\"{d.Memo ?? d.Reference} (dated {d.Date:yyyy-MM-dd}, a closed month)\" : d.Memo ?? $\"{d.Kind} {d.Reference}\";"
+    },
+    "periods/test": {
+      "file": "tests/FinancePowerApp.Tests/LedgerApiTests.cs",
+      "start": 81,
+      "end": 88,
+      "code": "public async Task A_document_for_a_closed_month_lands_in_the_next_open_one()\n{\n    await factory.Exec(\"UPDATE dbo.AccountingPeriods SET IsClosed = 1, ClosedDate = SYSUTCDATETIME() WHERE [Year] = 2025 AND [Month] = 3\");\n    var doc = await Send(factory.App(), Claim(\"late\", \"AB12-LATE\", 20m, date: \"2025-03-15\"));\n    var entry = await Json(await factory.App().GetAsync($\"/api/journal/{doc[\"journalEntryId\"]}\"));\n    Assert.Equal(\"2025-04\", (string)entry[\"entry\"]![\"period\"]!);\n    Assert.True(entry[\"entry\"]![\"latePosting\"]!.GetValue<bool>());\n}"
     },
     "documents/contract": {
       "file": "src/FinancePowerApp.Api/Domain/FinancialDocument.cs",
@@ -297,6 +315,12 @@
       "end": 176,
       "code": "var undo = PostingEngine.Plan(od, entity, maps).Effects\n    .Select(e => new ItemEffect(e.Reference, Raised: 0, Paid: -e.Paid, Adjusted: e.Raised > 0 ? e.Raised : -e.Adjusted)).ToList();\n// An invoice or bill taken back: its whole amount is adjusted away (payables have no adjustment column, so it is \"paid\").\nif (od.Kind is DocumentKinds.Bill)\n    undo = undo.Select(u => u with { Paid = u.Adjusted, Adjusted = 0 }).ToList();\nawait ApplyEffectsAsync(od.Kind, entity, party, original, od, undo);"
     },
+    "waiting/repost": {
+      "file": "src/FinancePowerApp.Api/Endpoints/LedgerEndpoints.cs",
+      "start": 222,
+      "end": 228,
+      "code": "public static async Task<int> Repost(FinanceDbContext db, Ledger ledger)\n{\n    var waiting = await db.Documents.Where(d => d.Status == DocumentStatus.NeedsMapping).OrderBy(d => d.DocumentId).ToListAsync();\n    foreach (var d in waiting)\n        await ledger.PostDocumentAsync(d);\n    return waiting.Count(d => d.Status == DocumentStatus.Posted);\n}"
+    },
     "openitems/effects": {
       "file": "src/FinancePowerApp.Api/Domain/Ledger.cs",
       "start": 132,
@@ -326,6 +350,12 @@
       "start": 28,
       "end": 38,
       "code": "-- The GST/HST return (GST34) per business and month: line 103 tax collected, 106 input tax credits, 109 net tax.\nCREATE VIEW tax.vw_HstReturn AS\nSELECT\n    EntityId, EntityCode, PeriodId, PeriodLabel,\n    SUM(CASE WHEN AccountType = 'Revenue' THEN Credit - Debit ELSE 0 END) AS Line101Sales,\n    SUM(CASE WHEN AccountSubtype = 'TaxPayable' THEN Credit - Debit ELSE 0 END) AS Line103TaxCollected,\n    SUM(CASE WHEN AccountSubtype = 'TaxRecoverable' THEN Debit - Credit ELSE 0 END) AS Line106InputTaxCredits,\n    SUM(CASE WHEN AccountSubtype = 'TaxPayable' THEN Credit - Debit ELSE 0 END)\n      - SUM(CASE WHEN AccountSubtype = 'TaxRecoverable' THEN Debit - Credit ELSE 0 END) AS Line109NetTax\nFROM gl.vw_LedgerLines\nGROUP BY EntityId, EntityCode, PeriodId, PeriodLabel;"
+    },
+    "hst/itc": {
+      "file": "tests/FinancePowerApp.Tests/LedgerApiTests.cs",
+      "start": 102,
+      "end": 116,
+      "code": "public async Task A_pharmacy_purchase_claims_hst_back_and_shows_on_the_hst_return()\n{\n    var pharmacy = factory.App(ApiFactory.PharmaKey);\n    var doc = await Send(pharmacy, new\n    {\n        sourceKey = \"pharmacy\", externalId = \"po:55\", kind = \"Bill\", date = \"2026-10-08\", reference = \"PO-55\",\n        party = new { type = \"Supplier\", code = \"WHOLESALER\", name = \"Drug wholesaler\" },\n        lines = new[] { new { category = \"Inventory.Drugs\", amount = 1000m, taxCode = \"ZERO\" }, new { category = \"Medical Supplies\", amount = 200m, taxCode = \"HST13\" } },\n    });\n    Assert.Equal(\"Posted\", (string)doc[\"status\"]!);\n    var rx = await factory.Scalar<int>(\"SELECT EntityId FROM org.Entity WHERE Code = 'RX'\");\n    var hst = (await Json(await factory.App().GetAsync($\"/api/reports/hst?entityId={rx}&from=2026-10-01&to=2026-10-31\"))).AsArray();\n    Assert.Equal(26m, hst.Single()![\"inputTaxCredits\"]!.GetValue<decimal>());\n    Assert.Equal(1226m, await factory.Scalar<decimal>(\"SELECT Balance FROM ap.Item WHERE Reference = 'PO-55'\"));\n}"
     },
     "statements/bs": {
       "file": "src/FinancePowerApp.Api/Domain/Reports.cs",
@@ -374,6 +404,12 @@
       "start": 55,
       "end": 55,
       "code": "const can = (p: string) => me.permissions.includes(p) || me.permissions.includes('admin')"
+    },
+    "web/request": {
+      "file": "web/src/api.ts",
+      "start": 7,
+      "end": 19,
+      "code": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {\n  const res = await fetch(url, {\n    method, credentials: 'same-origin',\n    // X-Finance: with sign-in through ClinicHub the session is a cookie, so the API wants proof the call comes from this app.\n    headers: { 'X-Finance': '1', ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },\n    body: body !== undefined ? JSON.stringify(body) : undefined,\n  })\n  if (res.status === 204) return undefined as T\n  const text = await res.text()\n  const data = text ? JSON.parse(text) : undefined\n  if (!res.ok) throw new ApiError(res.status, data?.detail ?? data?.title ?? `Request failed (${res.status})`, data?.errors ?? {})\n  return data as T\n}"
     }
   },
   "endpoints": [

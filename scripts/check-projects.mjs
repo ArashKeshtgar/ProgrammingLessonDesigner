@@ -5,7 +5,9 @@
 // - every example a section names exists, has a title in both languages, and its
 //   file and region exist when it quotes this repo's Sass;
 // - each ref points at a real file/line when the projects folder is available
-//   (LESSON_REFS_ROOT, default D:/E/Projects; skipped silently in CI).
+//   (LESSON_REFS_ROOT, default D:/E/Projects; skipped silently in CI);
+// - every topic ends with a short quiz, the same questions in both languages.
+// `--only <project>` checks the topics of that project alone.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,6 +17,7 @@ const dir = path.join(root, 'src', 'data', 'projects')
 const refsRoot = process.env.LESSON_REFS_ROOT || 'D:/E/Projects'
 const LANGS = ['fa', 'en']
 const problems = []
+const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : null
 
 const map = JSON.parse(readFileSync(path.join(root, 'src', 'data', 'project-map.json'), 'utf-8'))
 const tokens = readFileSync(path.join(root, 'src', 'styles', 'abstracts', '_tokens.scss'), 'utf-8')
@@ -80,8 +83,11 @@ const topicsDir = path.join(root, 'src', 'data', 'topics')
 const KINDS = ['endpoints', 'tables', 'routes']
 for (const f of readdirSync(topicsDir).filter((x) => x.endsWith('.json') && !x.endsWith('.code.json'))) {
   const t = JSON.parse(readFileSync(path.join(topicsDir, f), 'utf-8'))
+  if (only && t.project !== only) continue
   const at = (m) => problems.push(`topics/${f}: ${m}`)
   if (!map.projects.some((p) => p.id === t.project)) at(`project "${t.project}" is not in the map`)
+  // The site loads a project's topics by file name (src/projects/model.ts).
+  if (f !== `${t.project}.json`) at(`the file should be named ${t.project}.json`)
   const snapFile = path.join(topicsDir, f.replace(/\.json$/, '.code.json'))
   const snap = existsSync(snapFile) ? JSON.parse(readFileSync(snapFile, 'utf-8')) : null
   if (!snap) at('no code snapshot; run npm run code')
@@ -120,6 +126,20 @@ for (const f of readdirSync(topicsDir).filter((x) => x.endsWith('.json') && !x.e
       if (!ex.file || !ex.from || !ex.lang) at(`${where}: example ${id} needs file, from and lang`)
       if (snap && !snap.examples[`${page.id}/${id}`]) at(`${where}: example ${id} is not in the snapshot; run npm run code`)
     }
+    // The quiz: 2 or more questions, each with 2-4 options in both languages, the
+    // index of the right one, and why it is right.
+    if ((page.quiz?.length ?? 0) < 2) at(`${where}: needs a quiz of at least 2 questions`)
+    ;(page.quiz ?? []).forEach((q, i) => {
+      const w = `${where}: quiz ${i + 1}`
+      for (const l of LANGS) {
+        if (!q.q?.[l]) at(`${w} has no ${l} question`)
+        if (!q.why?.[l]) at(`${w} has no ${l} explanation`)
+        const n = q.options?.[l]?.length ?? 0
+        if (n < 2 || n > 4) at(`${w} needs 2-4 ${l} options`)
+      }
+      if (q.options?.fa?.length !== q.options?.en?.length) at(`${w}: fa and en have different options`)
+      if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= (q.options?.en?.length ?? 0)) at(`${w}: answer is not an option`)
+    })
     for (const file of page.files ?? []) if (snap && snap.files[file] === undefined) at(`${where}: ${file} is not in the snapshot; run npm run code`)
   }
 }

@@ -1,0 +1,3489 @@
+{
+  "project": "pharmaflow",
+  "repo": "PharmaFlow",
+  "scan": {
+    "aspnetEndpoints": [
+      "src/PharmaFlow.Api"
+    ],
+    "sql": [
+      {
+        "dir": "database",
+        "database": "PharmaFlow"
+      }
+    ],
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    {
+      "id": "start",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع"
+      }
+    },
+    {
+      "id": "data",
+      "title": {
+        "en": "The database and the catalog",
+        "fa": "دیتابیس و کاتالوگ"
+      }
+    },
+    {
+      "id": "people",
+      "title": {
+        "en": "Patients and prescribers",
+        "fa": "بیماران و تجویزکنندگان"
+      }
+    },
+    {
+      "id": "reception",
+      "title": {
+        "en": "Reception",
+        "fa": "پذیرش نسخه"
+      }
+    },
+    {
+      "id": "stock",
+      "title": {
+        "en": "Stock, dispensing and money",
+        "fa": "موجودی، تحویل و پول"
+      }
+    },
+    {
+      "id": "access",
+      "title": {
+        "en": "Sign-in and permissions",
+        "fa": "ورود و مجوزها"
+      }
+    },
+    {
+      "id": "erx",
+      "title": {
+        "en": "Electronic prescriptions from ClinicHub",
+        "fa": "نسخه‌ی الکترونیکی از ClinicHub"
+      }
+    },
+    {
+      "id": "web",
+      "title": {
+        "en": "The web app",
+        "fa": "اپ وب"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "overview",
+      "group": "start",
+      "title": {
+        "en": "What PharmaFlow is",
+        "fa": "PharmaFlow چیست"
+      },
+      "files": [
+        "README.md",
+        "docs/drugstore-to-ontario.md"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "A community pharmacy for an Ontario clinic group",
+          "p": [
+            "PharmaFlow is the pharmacy of the ClinicHub platform: an ASP.NET Core 10 Minimal API with EF Core over SQL Server, and a React 19 + Vite + TypeScript web app. It covers the work of a community pharmacy from the shelf to the money: base definitions, a drug catalog with one product per DIN, patients with their allergies and drug plan, prescribers, prescription reception with safety checks, stock by lot and expiry, dispensing priced by the patient's plan, and the financial documents sent to FinancePowerApp, the group's accounting.",
+            "Two connections to the rest of the platform are optional. Electronic prescriptions arrive from ClinicHub as FHIR Bundles, and staff sign in through ClinicHub, which decides who may use the pharmacy. When neither is configured the API runs alone with a development sign-in, so the whole app can be tried with nothing but SQL Server."
+          ],
+          "examples": [
+            "what"
+          ]
+        },
+        {
+          "id": "origin",
+          "h": "The Ontario version of a hospital pharmacy",
+          "p": [
+            "The design starts from a mapping study, `docs/drugstore-to-ontario.md`. The legacy \"Drugstore\" was the pharmacy module of a hospital information system in Iran: 124 tables with no foreign keys, Jalali dates kept as `varchar` and money as `float`. The study takes each legacy workflow, says how an Ontario community pharmacy does the same job, and names the PharmaFlow table that does it. Ward requests are not carried over, because a community pharmacy has no wards; insurer drug codes become the DIN, and allergies and interactions are checked at the level of the ingredient instead of the product.",
+            "The data rule matters as much as the tables: the study was made from schema metadata, aggregate counts and reference lists only, and no patient record was read. That is why every patient, prescriber and price in PharmaFlow is synthetic, and the demo catalog is marked `IsDemo`."
+          ],
+          "examples": [
+            "map",
+            "rule"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "یک داروخانه‌ی محلی برای یک گروه کلینیک در Ontario",
+          "p": [
+            "PharmaFlow داروخانه‌ی پلتفرم ClinicHub است: یک Minimal API با ASP.NET Core 10 که با EF Core روی SQL Server کار می‌کند، و یک اپ وب با React 19 و Vite و TypeScript. کار یک داروخانه‌ی محلی را از قفسه تا پول پوشش می‌دهد: تعریف‌های پایه، کاتالوگ دارو با یک محصول برای هر DIN، بیماران با آلرژی‌ها و بیمه‌ی دارویی‌شان، تجویزکنندگان، پذیرش نسخه با بررسی‌های ایمنی، موجودی بر اساس lot و تاریخ انقضا، تحویل دارو با قیمتی که بیمه‌ی بیمار تعیین می‌کند، و سندهای مالی که برای FinancePowerApp، حسابداری گروه، فرستاده می‌شوند.",
+            "دو اتصال به بقیه‌ی پلتفرم اختیاری‌اند. نسخه‌های الکترونیکی به‌صورت FHIR Bundle از ClinicHub می‌رسند، و کارکنان از طریق ClinicHub وارد می‌شوند که تصمیم می‌گیرد چه کسی از داروخانه استفاده کند. وقتی هیچ‌کدام تنظیم نشده باشد، API تنها و با یک ورود توسعه اجرا می‌شود، پس کل اپ را می‌شود فقط با یک SQL Server امتحان کرد."
+          ],
+          "examples": [
+            "what"
+          ]
+        },
+        {
+          "id": "origin",
+          "h": "نسخه‌ی Ontario یک داروخانه‌ی بیمارستانی",
+          "p": [
+            "طراحی از یک مطالعه‌ی نگاشت شروع می‌شود، `docs/drugstore-to-ontario.md`. سیستم قدیمی \"Drugstore\" بخش داروخانه‌ی یک سیستم اطلاعات بیمارستانی در ایران بود: 124 جدول بدون هیچ foreign key، تاریخ‌های شمسی به‌صورت `varchar` و پول به‌صورت `float`. این مطالعه هر گردش کار قدیمی را برمی‌دارد، می‌گوید یک داروخانه‌ی محلی در Ontario همان کار را چطور انجام می‌دهد، و جدول PharmaFlow مربوط به آن را نام می‌برد. درخواست‌های بخش‌های بستری منتقل نشده‌اند، چون داروخانه‌ی محلی بخش بستری ندارد؛ کدهای دارویی بیمه‌ها جای خود را به DIN داده‌اند، و آلرژی و تداخل در سطح ماده‌ی مؤثره بررسی می‌شوند، نه در سطح محصول.",
+            "قاعده‌ی داده به اندازه‌ی جدول‌ها مهم است: مطالعه فقط از metadata‌ی schema، شمارش‌های کلی و فهرست‌های مرجع ساخته شده و هیچ رکورد بیماری خوانده نشده است. برای همین هر بیمار، تجویزکننده و قیمتی در PharmaFlow ساختگی است و کاتالوگ نمایشی با `IsDemo` علامت خورده است."
+          ],
+          "examples": [
+            "map",
+            "rule"
+          ]
+        }
+      ],
+      "examples": {
+        "what": {
+          "title": {
+            "en": "What it does",
+            "fa": "چه کار می‌کند"
+          },
+          "lang": "markdown",
+          "file": "README.md",
+          "from": "- **Base definitions:**",
+          "lines": 15
+        },
+        "map": {
+          "title": {
+            "en": "Legacy workflow to PharmaFlow table",
+            "fa": "گردش کار قدیمی به جدول PharmaFlow"
+          },
+          "lang": "markdown",
+          "file": "docs/drugstore-to-ontario.md",
+          "from": "| Legacy | Tables |",
+          "lines": 13
+        },
+        "rule": {
+          "title": {
+            "en": "The data rule",
+            "fa": "قاعده‌ی داده"
+          },
+          "lang": "markdown",
+          "file": "docs/drugstore-to-ontario.md",
+          "from": "> **Data rule.**",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does PharmaFlow check allergies at the ingredient level rather than per product?",
+            "fa": "چرا PharmaFlow آلرژی را در سطح ماده‌ی مؤثره بررسی می‌کند و نه در سطح هر محصول؟"
+          },
+          "options": {
+            "en": [
+              "Because products have no names in the catalog",
+              "Because several products (DINs) share one ingredient, and an allergy is to the substance",
+              "Because the legacy system did it that way"
+            ],
+            "fa": [
+              "چون محصولات در کاتالوگ اسم ندارند",
+              "چون چند محصول (DIN) یک ماده‌ی مؤثره‌ی مشترک دارند و آلرژی به خود ماده است",
+              "چون سیستم قدیمی همین کار را می‌کرد"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The study moves the identity of a drug to the DIN and puts allergies and interactions on the ingredient, so every brand of amoxicillin is caught by one allergy.",
+            "fa": "مطالعه هویت دارو را به DIN می‌برد و آلرژی و تداخل را روی ماده‌ی مؤثره می‌گذارد، پس همه‌ی برندهای amoxicillin با یک آلرژی شناخته می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "What can you run PharmaFlow with if ClinicHub is not available?",
+            "fa": "اگر ClinicHub در دسترس نباشد، PharmaFlow را با چه چیزی می‌شود اجرا کرد؟"
+          },
+          "options": {
+            "en": [
+              "Only SQL Server: the API falls back to a development sign-in",
+              "Nothing: the API needs ClinicHub to start in any environment",
+              "A copy of the legacy Drugstore database"
+            ],
+            "fa": [
+              "فقط SQL Server: API به ورود توسعه برمی‌گردد",
+              "هیچ: API در هر محیطی برای بالا آمدن ClinicHub لازم دارد",
+              "یک کپی از دیتابیس قدیمی Drugstore"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Without ClinicHub settings the development stub signs everyone in as the developer pharmacist; only outside Development does the API refuse to start.",
+            "fa": "بدون تنظیمات ClinicHub، stub توسعه همه را به‌عنوان داروساز توسعه وارد می‌کند؛ فقط بیرون از Development است که API بالا نمی‌آید."
+          }
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "group": "start",
+      "title": {
+        "en": "Run it: the database, the API, the web app",
+        "fa": "اجرا: دیتابیس، API، اپ وب"
+      },
+      "files": [
+        "README.md",
+        "database/deploy.ps1",
+        "src/PharmaFlow.Api/Program.cs",
+        "src/PharmaFlow.Api/Properties/launchSettings.json",
+        "src/PharmaFlow.Api/appsettings.json",
+        "web/vite.config.ts"
+      ],
+      "en": [
+        {
+          "id": "db",
+          "h": "Four commands, and the scripts own the schema",
+          "p": [
+            "The README's four commands are the whole setup: `deploy.ps1 -Recreate` builds the `PharmaFlow` database with the demo data, `dotnet run` starts the API on port 5500, `npm run dev` in `web/` starts the React app on 5501, and `dotnet test` builds a database of its own. SQL Server and `sqlcmd` must be installed.",
+            "`deploy.ps1` runs each numbered script (`010_schema.sql`, `020_seed_reference.sql`, ...) once, in name order, and records it in `dbo.SchemaMigration`. A script already listed is skipped, so the same command upgrades an existing database: after `051_prescription_mrn_and_label.sql` was added, running it again only added the two new columns. `-NoDemo` leaves out `030_seed_demo.sql`, the synthetic patients and catalog."
+          ],
+          "examples": [
+            "commands",
+            "deploy"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "The API refuses to start without a real sign-in",
+          "p": [
+            "`Program.cs` reads secrets as files from `/run/secrets` (one file per setting, the way Docker mounts them), then decides how staff sign in. With `ClinicHub:Authority` and `ClinicHub:ClientSecret` set, sign-in goes through ClinicHub; without them, only the development stub exists, and only in `Development` and `Testing`. In any other environment the API throws at startup rather than run with a sign-in that lets everyone in.",
+            "In development Vite proxies `/api` and the two OpenID Connect callbacks to port 5500 and keeps the browser's Host, so the browser stays on one origin (no CORS policy is needed) and a sign-in through ClinicHub returns to 5501, the address registered there. The table lists the endpoints `Program.cs` maps itself: who is signed in, how sign-in works, and the health check."
+          ],
+          "examples": [
+            "refuse",
+            "proxy"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Program"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "چهار دستور، و اسکریپت‌ها صاحب schema هستند",
+          "p": [
+            "چهار دستور README کل راه‌اندازی است: `deploy.ps1 -Recreate` دیتابیس `PharmaFlow` را با داده‌ی نمایشی می‌سازد، `dotnet run` API را روی پورت 5500 بالا می‌آورد، `npm run dev` در `web/` اپ React را روی 5501، و `dotnet test` یک دیتابیس برای خودش می‌سازد. SQL Server و `sqlcmd` باید نصب باشند.",
+            "`deploy.ps1` هر اسکریپت شماره‌دار (`010_schema.sql`، `020_seed_reference.sql`، ...) را یک بار، به ترتیب اسم، اجرا می‌کند و در `dbo.SchemaMigration` ثبتش می‌کند. اسکریپتی که قبلاً در فهرست هست رد می‌شود، پس همین دستور یک دیتابیس موجود را ارتقا می‌دهد: وقتی `051_prescription_mrn_and_label.sql` اضافه شد، اجرای دوباره فقط دو ستون تازه را اضافه کرد. `-NoDemo` فایل `030_seed_demo.sql`، یعنی بیماران و کاتالوگ ساختگی، را کنار می‌گذارد."
+          ],
+          "examples": [
+            "commands",
+            "deploy"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "API بدون یک ورود واقعی بالا نمی‌آید",
+          "p": [
+            "`Program.cs` secretها را به‌صورت فایل از `/run/secrets` می‌خواند (یک فایل برای هر تنظیم، همان‌طور که Docker آن‌ها را mount می‌کند)، بعد تصمیم می‌گیرد کارکنان چطور وارد شوند. با `ClinicHub:Authority` و `ClinicHub:ClientSecret`، ورود از طریق ClinicHub است؛ بدون آن‌ها فقط stub توسعه وجود دارد، و آن هم فقط در `Development` و `Testing`. در هر محیط دیگری API هنگام شروع exception می‌دهد، به‌جای این‌که با ورودی اجرا شود که همه را راه می‌دهد.",
+            "در توسعه Vite مسیر `/api` و دو callback‌ی OpenID Connect را به پورت 5500 proxy می‌کند و Host مرورگر را نگه می‌دارد، پس مرورگر روی یک origin می‌ماند (سیاست CORS لازم نیست) و ورود از طریق ClinicHub به 5501، آدرسی که آن‌جا ثبت شده، برمی‌گردد. جدول endpointهایی را نشان می‌دهد که خود `Program.cs` تعریف می‌کند: چه کسی وارد شده، ورود چطور کار می‌کند، و health check."
+          ],
+          "examples": [
+            "refuse",
+            "proxy"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Program"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "commands": {
+          "title": {
+            "en": "Run it",
+            "fa": "اجرا"
+          },
+          "lang": "powershell",
+          "file": "README.md",
+          "from": "./database/deploy.ps1 -Recreate",
+          "lines": 4
+        },
+        "deploy": {
+          "title": {
+            "en": "Each script once",
+            "fa": "هر اسکریپت یک بار"
+          },
+          "lang": "powershell",
+          "file": "database/deploy.ps1",
+          "from": "foreach ($s in $scripts) {",
+          "lines": 6
+        },
+        "refuse": {
+          "title": {
+            "en": "No sign-in, no start",
+            "fa": "بدون ورود، بدون شروع"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Program.cs",
+          "from": "// Secrets as files, one per setting",
+          "lines": 9
+        },
+        "proxy": {
+          "title": {
+            "en": "One origin through Vite",
+            "fa": "یک origin از طریق Vite"
+          },
+          "lang": "typescript",
+          "file": "web/vite.config.ts",
+          "from": "// The API runs on :5500",
+          "lines": 13
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "You add `052_new_column.sql` and run `deploy.ps1` on an existing database. What happens?",
+            "fa": "یک فایل `052_new_column.sql` اضافه می‌کنید و `deploy.ps1` را روی یک دیتابیس موجود اجرا می‌کنید. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Every script runs again from 010",
+              "The database is dropped and rebuilt",
+              "Only 052 runs, because the others are listed in dbo.SchemaMigration"
+            ],
+            "fa": [
+              "همه‌ی اسکریپت‌ها از 010 دوباره اجرا می‌شوند",
+              "دیتابیس حذف و از نو ساخته می‌شود",
+              "فقط 052 اجرا می‌شود، چون بقیه در dbo.SchemaMigration ثبت شده‌اند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The loop skips any script whose name is already in dbo.SchemaMigration; only -Recreate drops the database.",
+            "fa": "حلقه هر اسکریپتی را که اسمش در dbo.SchemaMigration هست رد می‌کند؛ فقط -Recreate دیتابیس را حذف می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "The API is started with ASPNETCORE_ENVIRONMENT=Production and no ClinicHub secret. What happens?",
+            "fa": "API با ASPNETCORE_ENVIRONMENT=Production و بدون secret‌ی ClinicHub اجرا می‌شود. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It runs with the development stub",
+              "It throws at startup and does not run",
+              "It runs but answers 401 to everything"
+            ],
+            "fa": [
+              "با stub توسعه اجرا می‌شود",
+              "هنگام شروع exception می‌دهد و اجرا نمی‌شود",
+              "اجرا می‌شود ولی به همه چیز 401 می‌دهد"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Program.cs throws InvalidOperationException when sign-in through ClinicHub is off outside Development and Testing.",
+            "fa": "Program.cs وقتی ورود از طریق ClinicHub خاموش است و محیط Development یا Testing نیست InvalidOperationException می‌دهد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the Vite proxy keep the browser's Host (changeOrigin: false)?",
+            "fa": "چرا proxy‌ی Vite هدر Host مرورگر را نگه می‌دارد (changeOrigin: false)؟"
+          },
+          "options": {
+            "en": [
+              "So the sign-in callback returns to :5501, the address registered at ClinicHub",
+              "So the API can enable CORS",
+              "Because Vite cannot change the Host header"
+            ],
+            "fa": [
+              "تا callback‌ی ورود به 5501، آدرس ثبت‌شده در ClinicHub، برگردد",
+              "تا API بتواند CORS را روشن کند",
+              "چون Vite نمی‌تواند هدر Host را عوض کند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The comment in vite.config.ts says it: with the browser's Host kept, the redirect after sign-in lands back on :5501.",
+            "fa": "توضیح vite.config.ts همین را می‌گوید: با نگه داشتن Host مرورگر، redirect بعد از ورود به 5501 برمی‌گردد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": {
+        "en": "Tests: xUnit on a real SQL Server, Vitest for the web",
+        "fa": "تست‌ها: xUnit روی یک SQL Server واقعی، Vitest برای وب"
+      },
+      "files": [
+        "tests/PharmaFlow.Tests/PharmaFlow.Tests.csproj",
+        "tests/PharmaFlow.Tests/ReceptionTests.cs",
+        "tests/PharmaFlow.Tests/FhirTests.cs",
+        "web/src/components/RestrictedPanel.test.tsx"
+      ],
+      "en": [
+        {
+          "id": "db",
+          "h": "A throwaway database from the same scripts",
+          "p": [
+            "`ApiFactory` is a `WebApplicationFactory<Program>`: it starts the real API in the `Testing` environment against a database named `PharmaFlow_Test_<guid>`, runs every numbered script into it batch by batch at each `GO` (the way `sqlcmd` does), and drops it when the tests end. The test project copies `database/*.sql` next to its output, so the tests always run on the schema `deploy.ps1` would build, with its CHECK constraints, unique indexes and demo rows. The server comes from `PHARMAFLOW_TEST_SQL`, or the local instance with Windows authentication.",
+            "The same factory stands in for ClinicHub: it sets a made-up issuer and signs tokens with a test RSA key, so the FHIR endpoint can be called exactly as ClinicHub would call it."
+          ],
+          "examples": [
+            "build"
+          ]
+        },
+        {
+          "id": "kinds",
+          "h": "Pure functions, stories, and permissions",
+          "list": [
+            "`Sig`, `ReceptionChecks` and `Pricing` are pure static code, so their tests need no database: a SIG becomes label text, a penicillin allergy flags amoxicillin, a co-payment comes out of the fee first.",
+            "The API tests read like a day at the counter: a prescription is received, the allergy is cancelled, the rest reviewed, the cream matched; stock is received into two lots and the one expiring first is used.",
+            "`PermissionTests` sends `X-Dev-Permissions` to the development stub to play each ClinicHub role and checks what it may write.",
+            "In the web app Vitest with Testing Library checks the restricted-prescription panel: no reason, no button."
+          ],
+          "examples": [
+            "sig",
+            "perm",
+            "vitest"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "db",
+          "h": "یک دیتابیس یک‌بارمصرف از همان اسکریپت‌ها",
+          "p": [
+            "`ApiFactory` یک `WebApplicationFactory<Program>` است: API واقعی را در محیط `Testing` روی دیتابیسی به اسم `PharmaFlow_Test_<guid>` بالا می‌آورد، همه‌ی اسکریپت‌های شماره‌دار را دسته به دسته در هر `GO` (همان‌طور که `sqlcmd` می‌کند) در آن اجرا می‌کند، و در پایان تست‌ها حذفش می‌کند. پروژه‌ی تست فایل‌های `database/*.sql` را کنار خروجی‌اش کپی می‌کند، پس تست‌ها همیشه روی همان schemaی اجرا می‌شوند که `deploy.ps1` می‌سازد، با قیدهای CHECK، indexهای یکتا و ردیف‌های نمایشی. سرور از `PHARMAFLOW_TEST_SQL` می‌آید، یا instance محلی با Windows authentication.",
+            "همین factory جای ClinicHub را هم می‌گیرد: یک issuer ساختگی تنظیم می‌کند و tokenها را با یک کلید RSA آزمایشی امضا می‌کند، تا endpoint‌ی FHIR را بشود دقیقاً همان‌طور صدا زد که ClinicHub صدا می‌زند."
+          ],
+          "examples": [
+            "build"
+          ]
+        },
+        {
+          "id": "kinds",
+          "h": "تابع‌های خالص، سناریوها، و مجوزها",
+          "list": [
+            "`Sig`، `ReceptionChecks` و `Pricing` کد static و خالص‌اند، پس تست‌هایشان دیتابیس نمی‌خواهد: یک SIG به متن برچسب تبدیل می‌شود، آلرژی به پنی‌سیلین amoxicillin را علامت می‌زند، سهم بیمار اول از هزینه‌ی خدمت کم می‌شود.",
+            "تست‌های API مثل یک روز پشت پیشخوان خوانده می‌شوند: نسخه پذیرش می‌شود، داروی آلرژی‌زا لغو می‌شود، بقیه بررسی می‌شوند، کرم به یک محصول وصل می‌شود؛ موجودی در دو lot وارد می‌شود و lot‌ی که زودتر منقضی می‌شود اول مصرف می‌شود.",
+            "`PermissionTests` هدر `X-Dev-Permissions` را به stub توسعه می‌فرستد تا نقش هر role‌ی ClinicHub را بازی کند و ببیند چه چیزی را می‌تواند بنویسد.",
+            "در اپ وب Vitest با Testing Library پنل نسخه‌ی محدودشده را بررسی می‌کند: بدون دلیل، دکمه‌ای در کار نیست."
+          ],
+          "examples": [
+            "sig",
+            "perm",
+            "vitest"
+          ]
+        }
+      ],
+      "examples": {
+        "build": {
+          "title": {
+            "en": "The scripts, batch by batch",
+            "fa": "اسکریپت‌ها، دسته به دسته"
+          },
+          "lang": "csharp",
+          "file": "tests/PharmaFlow.Tests/ReceptionTests.cs",
+          "from": "public async Task InitializeAsync()",
+          "lines": 13
+        },
+        "sig": {
+          "title": {
+            "en": "A SIG becomes a label",
+            "fa": "یک SIG برچسب می‌شود"
+          },
+          "lang": "csharp",
+          "file": "tests/PharmaFlow.Tests/ReceptionTests.cs",
+          "from": "public void Codes_become_label_text_and_the_days_supply_follows()",
+          "lines": 7
+        },
+        "perm": {
+          "title": {
+            "en": "Reception writes only reception work",
+            "fa": "پذیرش فقط کار پذیرش را می‌نویسد"
+          },
+          "lang": "csharp",
+          "file": "tests/PharmaFlow.Tests/FhirTests.cs",
+          "from": "public async Task Reception_reads_everything_and_writes_only_reception_work()",
+          "lines": 11
+        },
+        "vitest": {
+          "title": {
+            "en": "No reason, no button",
+            "fa": "بدون دلیل، بدون دکمه"
+          },
+          "lang": "typescript",
+          "file": "web/src/components/RestrictedPanel.test.tsx",
+          "from": "it('names the label and asks for a reason",
+          "lines": 11
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why do the API tests build their database from database/*.sql instead of using EF migrations?",
+            "fa": "چرا تست‌های API دیتابیسشان را از database/*.sql می‌سازند و نه با migration‌های EF؟"
+          },
+          "options": {
+            "en": [
+              "EF cannot create SQL Server databases",
+              "There are no migrations: the scripts are the schema, so tests see the same constraints production has",
+              "It is faster than EF"
+            ],
+            "fa": [
+              "EF نمی‌تواند دیتابیس SQL Server بسازد",
+              "migration‌ای وجود ندارد: اسکریپت‌ها خود schema هستند، پس تست‌ها همان قیدهایی را می‌بینند که production دارد",
+              "از EF سریع‌تر است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "PharmaDbContext only maps the tables the scripts build; running the scripts makes the CHECKs and unique indexes part of every test.",
+            "fa": "PharmaDbContext فقط جدول‌هایی را map می‌کند که اسکریپت‌ها می‌سازند؛ اجرای اسکریپت‌ها CHECKها و indexهای یکتا را بخشی از هر تست می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "How do the permission tests act as a reception-only user without ClinicHub?",
+            "fa": "تست‌های مجوز بدون ClinicHub چطور نقش کاربری را بازی می‌کنند که فقط پذیرش دارد؟"
+          },
+          "options": {
+            "en": [
+              "They sign a token with role reception",
+              "They edit the database user",
+              "They send X-Dev-Permissions: reception to the development stub"
+            ],
+            "fa": [
+              "یک token با role پذیرش امضا می‌کنند",
+              "کاربر دیتابیس را عوض می‌کنند",
+              "هدر X-Dev-Permissions: reception را به stub توسعه می‌فرستند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "DevAuthHandler grants every permission unless that header narrows it, which is how one test can try each role.",
+            "fa": "DevAuthHandler همه‌ی مجوزها را می‌دهد مگر این‌که آن هدر محدودش کند، و این‌طور یک تست می‌تواند هر role را امتحان کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "schema",
+      "group": "data",
+      "title": {
+        "en": "Six schemas, written in SQL",
+        "fa": "شش schema، نوشته‌شده با SQL"
+      },
+      "files": [
+        "database/010_schema.sql",
+        "database/040_inventory_dispensing.sql",
+        "src/PharmaFlow.Api/Data/PharmaDbContext.cs",
+        "src/PharmaFlow.Api/Data/Entities.cs"
+      ],
+      "en": [
+        {
+          "id": "schemas",
+          "h": "One schema per kind of data",
+          "p": [
+            "The tables are grouped into SQL schemas by what they hold: `ref` for base definitions and the drug catalog, `core` for patients and prescribers, `rx` for prescriptions and dispenses, `audit` for who opened which patient, `inv` for purchases and stock lots, and `billing` for what the accounting has accepted. The first four come from `010_schema.sql`, the last two from `040_inventory_dispensing.sql`.",
+            "The schemas make the boundaries readable in every query (`rx.PrescriptionItem` against `ref.Drug`) and would let a database role be granted one area without the others. Money is `decimal` everywhere, dates are `date` or `datetime2`, and every relation is a real foreign key: the three things the legacy system did not have."
+          ],
+          "examples": [
+            "heads"
+          ]
+        },
+        {
+          "id": "ef",
+          "h": "EF Core maps, the scripts decide",
+          "p": [
+            "There are no EF migrations. `PharmaDbContext` maps each class in `Entities.cs` to its table with `ToTable(\"Prescription\", \"rx\")`, and adds only what EF must know to read and write correctly: composite keys, decimal precision, which column is a `rowversion`. If a constraint is wrong, it is fixed in a new numbered SQL script, never by generating a migration.",
+            "Some things are easier in SQL than in EF. Prescription numbers come from a SQL `SEQUENCE`, `rx.RxNumber`, starting at 100001, which `NextRxNumberAsync` reads with a raw query. A sequence hands out numbers without a lock on the table, and two pharmacists receiving prescriptions at the same moment never get the same number."
+          ],
+          "examples": [
+            "context",
+            "sequence"
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "Read from the scripts",
+          "p": [
+            "Every table on these pages is read from the SQL scripts themselves. Two small ones show the idea: the access log and the list of documents the accounting has accepted. The others appear with the topic that uses them."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "AccessLog",
+              "FinanceExport"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "schemas",
+          "h": "یک schema برای هر نوع داده",
+          "p": [
+            "جدول‌ها بر اساس چیزی که نگه می‌دارند در schemaهای SQL دسته‌بندی شده‌اند: `ref` برای تعریف‌های پایه و کاتالوگ دارو، `core` برای بیماران و تجویزکنندگان، `rx` برای نسخه‌ها و تحویل‌ها، `audit` برای این‌که چه کسی پرونده‌ی کدام بیمار را باز کرده، `inv` برای خریدها و lotهای موجودی، و `billing` برای چیزی که حسابداری پذیرفته است. چهار تای اول از `010_schema.sql` می‌آیند و دو تای آخر از `040_inventory_dispensing.sql`.",
+            "schemaها مرزها را در هر query خوانا می‌کنند (`rx.PrescriptionItem` در برابر `ref.Drug`) و اجازه می‌دهند یک role‌ی دیتابیس به یک بخش دسترسی بگیرد بدون بقیه. پول همه‌جا `decimal` است، تاریخ‌ها `date` یا `datetime2`، و هر رابطه یک foreign key واقعی است: سه چیزی که سیستم قدیمی نداشت."
+          ],
+          "examples": [
+            "heads"
+          ]
+        },
+        {
+          "id": "ef",
+          "h": "EF Core map می‌کند، اسکریپت‌ها تصمیم می‌گیرند",
+          "p": [
+            "migration‌ی EF وجود ندارد. `PharmaDbContext` هر کلاس `Entities.cs` را با `ToTable(\"Prescription\", \"rx\")` به جدولش map می‌کند و فقط چیزی را اضافه می‌کند که EF برای خواندن و نوشتن درست باید بداند: کلیدهای چندستونی، دقت decimal، و این‌که کدام ستون `rowversion` است. اگر قیدی اشتباه باشد، در یک اسکریپت SQL شماره‌دار تازه درست می‌شود، هرگز با ساختن migration.",
+            "بعضی کارها در SQL ساده‌تر از EF است. شماره‌ی نسخه‌ها از یک `SEQUENCE`ی SQL به اسم `rx.RxNumber` می‌آید که از 100001 شروع می‌شود و `NextRxNumberAsync` آن را با یک query‌ی خام می‌خواند. sequence بدون قفل کردن جدول شماره می‌دهد، و دو داروسازی که هم‌زمان نسخه پذیرش می‌کنند هرگز شماره‌ی یکسان نمی‌گیرند."
+          ],
+          "examples": [
+            "context",
+            "sequence"
+          ]
+        },
+        {
+          "id": "tables",
+          "h": "خوانده‌شده از خود اسکریپت‌ها",
+          "p": [
+            "هر جدولی در این صفحه‌ها از خود اسکریپت‌های SQL خوانده شده است. دو جدول کوچک ایده را نشان می‌دهند: log‌ی دسترسی و فهرست سندهایی که حسابداری پذیرفته است. بقیه همراه موضوعی می‌آیند که از آن‌ها استفاده می‌کند."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "AccessLog",
+              "FinanceExport"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "heads": {
+          "title": {
+            "en": "The schemas, as the script describes them",
+            "fa": "schemaها، همان‌طور که اسکریپت توضیح می‌دهد"
+          },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "-- PharmaFlow: a community pharmacy",
+          "lines": 7
+        },
+        "context": {
+          "title": {
+            "en": "No migrations: the scripts own the schema",
+            "fa": "بدون migration: اسکریپت‌ها صاحب schema هستند"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Data/PharmaDbContext.cs",
+          "from": "/// <summary>Maps the tables built by database/*.sql.",
+          "lines": 2
+        },
+        "sequence": {
+          "title": {
+            "en": "Rx numbers from a SQL sequence",
+            "fa": "شماره‌ی نسخه از یک sequence‌ی SQL"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Data/PharmaDbContext.cs",
+          "from": "public async Task<int> NextRxNumberAsync()",
+          "lines": 2
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A CHECK constraint on rx.Dispense needs changing. Where is that change made?",
+            "fa": "یک قید CHECK روی rx.Dispense باید عوض شود. این تغییر کجا انجام می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "In a new numbered SQL script run by deploy.ps1",
+              "In an EF migration generated from PharmaDbContext",
+              "In Entities.cs with a data annotation"
+            ],
+            "fa": [
+              "در یک اسکریپت SQL شماره‌دار تازه که deploy.ps1 اجرا می‌کند",
+              "در یک migration‌ی EF که از PharmaDbContext ساخته می‌شود",
+              "در Entities.cs با یک data annotation"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The context says it maps the tables built by database/*.sql and has no migrations; the scripts are the schema.",
+            "fa": "context می‌گوید جدول‌هایی را map می‌کند که database/*.sql می‌سازد و migration ندارد؛ اسکریپت‌ها خود schema هستند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why do prescription numbers come from a SEQUENCE rather than MAX(RxNumber) + 1?",
+            "fa": "چرا شماره‌ی نسخه از یک SEQUENCE می‌آید و نه از MAX(RxNumber) + 1؟"
+          },
+          "options": {
+            "en": [
+              "MAX is not allowed on varchar columns",
+              "Two receptions at the same moment could read the same MAX and collide; a sequence never hands out a number twice",
+              "EF cannot run MAX"
+            ],
+            "fa": [
+              "MAX روی ستون varchar مجاز نیست",
+              "دو پذیرش هم‌زمان ممکن است یک MAX را بخوانند و تداخل کنند؛ sequence هیچ شماره‌ای را دو بار نمی‌دهد",
+              "EF نمی‌تواند MAX اجرا کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "NEXT VALUE FOR rx.RxNumber is atomic and needs no lock on rx.Prescription; RxNumber is also UNIQUE as a second guard.",
+            "fa": "NEXT VALUE FOR rx.RxNumber اتمی است و به قفل روی rx.Prescription نیاز ندارد؛ RxNumber به‌عنوان محافظ دوم UNIQUE هم هست."
+          }
+        }
+      ]
+    },
+    {
+      "id": "refdefs",
+      "group": "data",
+      "title": {
+        "en": "Base definitions: schedules, SIG codes, ingredients, plans",
+        "fa": "تعریف‌های پایه: schedule، کد SIG، ماده‌ی مؤثره، بیمه"
+      },
+      "files": [
+        "database/010_schema.sql",
+        "database/020_seed_reference.sql",
+        "src/PharmaFlow.Api/Endpoints/RefEndpoints.cs",
+        "web/src/pages/BaseDefinitions.tsx"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "What every Ontario pharmacy works from",
+          "p": [
+            "`020_seed_reference.sql` fills the lists every pharmacy needs, with English and French names: dosage forms, routes, units (strength units like mg and dispensing units like tablet), SIG abbreviations, three dozen common ingredients with their WHO ATC code and allergy family, and the payer plans. The schedules are NAPRA's national ones (I, II, III, unscheduled) plus the three Controlled Drugs and Substances Act classes; those three are `Monitored`, which reception turns into a warning and dispensing into a reminder to record the fill in the Narcotics Monitoring System.",
+            "The plans hold the money settings, `CopayAmount`, `CopayPercent`, `DispensingFee` and `MarkupPercent`, which a CHECK keeps in range. They are the pharmacy's own numbers, to be confirmed against the ODB agreement and each insurer's contract."
+          ],
+          "examples": [
+            "schedules"
+          ]
+        },
+        {
+          "id": "pair",
+          "h": "An interaction is stored once",
+          "p": [
+            "An interaction is between two ingredients, and \"warfarin with ibuprofen\" is the same fact as \"ibuprofen with warfarin\". The table makes that impossible to store twice: the key is the pair, and `CK_Interaction_Order` demands `IngredientAId < IngredientBId`. The endpoint orders the two ids before it looks or writes, so the caller may send them either way, and the reception check orders them the same way before it looks one up. Without the rule, one direction could say Major and the other Minor."
+          ],
+          "examples": [
+            "interaction",
+            "normalise"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "One read for every list, administrators for the rest",
+          "p": [
+            "`GET /api/ref` returns every list the forms need in one call, which the web app loads once after sign-in. Reads are open to anyone with a pharmacy permission; every write needs `admin`. Codes are upper-cased and limited to letters, digits and `_`, and the schedules have no write endpoint at all, since they are NAPRA's and the CDSA's, not the pharmacy's."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Base definitions"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "چیزی که هر داروخانه‌ی Ontario با آن کار می‌کند",
+          "p": [
+            "`020_seed_reference.sql` فهرست‌هایی را که هر داروخانه لازم دارد با اسم انگلیسی و فرانسوی پر می‌کند: شکل‌های دارویی، راه‌های مصرف، واحدها (واحد قدرت مثل mg و واحد تحویل مثل tablet)، اختصارهای SIG، سی‌وشش ماده‌ی مؤثره‌ی رایج با کد ATC سازمان جهانی بهداشت و خانواده‌ی آلرژی‌شان، و بیمه‌ها. scheduleها همان‌های ملی NAPRA هستند (I، II، III، بدون schedule) به‌علاوه‌ی سه دسته‌ی قانون Controlled Drugs and Substances Act؛ این سه `Monitored` هستند، که پذیرش آن را به هشدار تبدیل می‌کند و تحویل به یادآوری برای ثبت در Narcotics Monitoring System.",
+            "بیمه‌ها تنظیمات پولی را نگه می‌دارند، `CopayAmount`، `CopayPercent`، `DispensingFee` و `MarkupPercent`، که یک CHECK در محدوده نگهشان می‌دارد. این‌ها عددهای خود داروخانه‌اند و باید با قرارداد ODB و هر بیمه‌گر تطبیق داده شوند."
+          ],
+          "examples": [
+            "schedules"
+          ]
+        },
+        {
+          "id": "pair",
+          "h": "هر تداخل یک بار ذخیره می‌شود",
+          "p": [
+            "تداخل بین دو ماده‌ی مؤثره است، و \"warfarin با ibuprofen\" همان واقعیت \"ibuprofen با warfarin\" است. جدول دو بار ذخیره کردنش را غیرممکن می‌کند: کلید همان جفت است و `CK_Interaction_Order` شرط `IngredientAId < IngredientBId` را می‌گذارد. endpoint قبل از جست‌وجو یا نوشتن دو شناسه را مرتب می‌کند، پس فرستنده می‌تواند آن‌ها را به هر ترتیبی بفرستد، و بررسی پذیرش هم قبل از جست‌وجو همین‌طور مرتبشان می‌کند. بدون این قاعده، یک جهت ممکن بود Major بگوید و جهت دیگر Minor."
+          ],
+          "examples": [
+            "interaction",
+            "normalise"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "یک خواندن برای همه‌ی فهرست‌ها، مدیرها برای بقیه",
+          "p": [
+            "`GET /api/ref` همه‌ی فهرست‌هایی را که فرم‌ها لازم دارند در یک درخواست برمی‌گرداند، که اپ وب بعد از ورود یک بار بارش می‌کند. خواندن برای هر کسی که مجوز داروخانه دارد باز است؛ هر نوشتنی `admin` می‌خواهد. کدها حروف بزرگ می‌شوند و فقط حرف، رقم و `_` می‌پذیرند، و scheduleها هیچ endpoint‌ی نوشتنی ندارند، چون مال NAPRA و CDSA هستند، نه داروخانه."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Base definitions"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "schedules": {
+          "title": {
+            "en": "NAPRA schedules and the CDSA classes",
+            "fa": "scheduleهای NAPRA و دسته‌های CDSA"
+          },
+          "lang": "sql",
+          "file": "database/020_seed_reference.sql",
+          "from": "INSERT ref.Schedule",
+          "lines": 8
+        },
+        "interaction": {
+          "title": {
+            "en": "The pair, in order",
+            "fa": "جفت، مرتب‌شده"
+          },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE TABLE ref.Interaction (",
+          "lines": 8
+        },
+        "normalise": {
+          "title": {
+            "en": "Either order in, one order stored",
+            "fa": "هر ترتیبی می‌آید، یک ترتیب ذخیره می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/RefEndpoints.cs",
+          "from": "api.MapPut(\"/interactions\"",
+          "lines": 12
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A client sends PUT /api/ref/interactions with ingredientAId 9 and ingredientBId 4. What is stored?",
+            "fa": "یک کلاینت PUT /api/ref/interactions را با ingredientAId برابر 9 و ingredientBId برابر 4 می‌فرستد. چه ذخیره می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Nothing: the CHECK rejects it with an error",
+              "A row (4, 9): the endpoint orders the pair first",
+              "Two rows, (9, 4) and (4, 9)"
+            ],
+            "fa": [
+              "هیچ: CHECK با خطا ردش می‌کند",
+              "یک ردیف (4, 9): endpoint اول جفت را مرتب می‌کند",
+              "دو ردیف، (9, 4) و (4, 9)"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The endpoint computes (lo, hi) before FindAsync and Add, so the CHECK IngredientAId < IngredientBId always holds.",
+            "fa": "endpoint قبل از FindAsync و Add مقدار (lo, hi) را حساب می‌کند، پس CHECK شرط IngredientAId < IngredientBId همیشه برقرار است."
+          }
+        },
+        {
+          "q": {
+            "en": "What does the Monitored flag on a schedule change in the app?",
+            "fa": "علامت Monitored روی یک schedule در اپ چه چیزی را تغییر می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "The drug cannot be sold",
+              "The price doubles",
+              "Reception warns about it and dispensing reminds the pharmacist to record it in the Narcotics Monitoring System"
+            ],
+            "fa": [
+              "دارو را نمی‌شود فروخت",
+              "قیمت دو برابر می‌شود",
+              "پذیرش درباره‌اش هشدار می‌دهد و تحویل به داروساز یادآوری می‌کند که در Narcotics Monitoring System ثبتش کند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "ReceptionChecks adds a MonitoredDrug warning, and the dispense answer carries monitored: true, which the web app turns into the reminder.",
+            "fa": "ReceptionChecks یک هشدار MonitoredDrug اضافه می‌کند و جواب dispense مقدار monitored: true دارد که اپ وب آن را به یادآوری تبدیل می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "drugs",
+      "group": "data",
+      "title": {
+        "en": "The drug catalog: one product per DIN",
+        "fa": "کاتالوگ دارو: یک محصول برای هر DIN"
+      },
+      "files": [
+        "database/010_schema.sql",
+        "database/030_seed_demo.sql",
+        "src/PharmaFlow.Api/Endpoints/DrugEndpoints.cs",
+        "web/src/pages/Drugs.tsx"
+      ],
+      "en": [
+        {
+          "id": "din",
+          "h": "A DIN, an ingredient, a strength and a form",
+          "p": [
+            "Health Canada gives every drug product a Drug Identification Number of 8 digits, and `ref.Drug` has one row per DIN. The table says so in constraints rather than comments: `Din` is `char(8)`, UNIQUE, and `CK_Drug_Din` refuses any character that is not a digit. `CK_Drug_Strength` demands a strength together with its unit, or neither (a cream may have no strength). The cost is per dispensing unit, a tablet or a mL, with four decimals, because a tablet can cost a fraction of a cent.",
+            "Two flags come from the Ontario Drug Benefit Formulary: `OdbBenefit` and `OdbLimitedUse`. `InterchangeGroup` puts interchangeable products together for generic substitution, and `IsDemo` marks the made-up catalog that `030_seed_demo.sql` loads."
+          ],
+          "examples": [
+            "drug"
+          ]
+        },
+        {
+          "id": "save",
+          "h": "The API checks before the database does",
+          "p": [
+            "`Save` repeats the table's rules and adds the ones only code can check: the DIN is 8 digits and not already in the catalog, the strength unit is a unit of kind `Strength`, the dispensing unit one of kind `Dispensing`, the cost has at most four decimals. Every problem goes into one dictionary and comes back as a single `ValidationProblem`, so the form can show all of them next to their fields at once instead of one per save.",
+            "The search, `GET /api/drugs?q=`, matches a DIN prefix, the brand or the ingredient, and orders by ingredient, strength and brand, so a search for \"amox\" lists every amoxicillin product together: the interchangeable choices."
+          ],
+          "examples": [
+            "save"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Drugs"
+            ]
+          }
+        },
+        {
+          "id": "table",
+          "h": "The tables",
+          "p": [
+            "The catalog and the ingredient it points to, as the script builds them."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Drug",
+              "Ingredient"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "din",
+          "h": "یک DIN، یک ماده‌ی مؤثره، یک قدرت و یک شکل",
+          "p": [
+            "Health Canada به هر محصول دارویی یک Drug Identification Number هشت‌رقمی می‌دهد، و `ref.Drug` برای هر DIN یک ردیف دارد. جدول این را با قید می‌گوید نه با توضیح: `Din` از نوع `char(8)` و UNIQUE است، و `CK_Drug_Din` هر نویسه‌ای را که رقم نباشد رد می‌کند. `CK_Drug_Strength` قدرت را همراه با واحدش می‌خواهد، یا هیچ‌کدام (یک کرم ممکن است قدرت نداشته باشد). هزینه برای هر واحد تحویل است، یک قرص یا یک mL، با چهار رقم اعشار، چون یک قرص می‌تواند کسری از یک سنت بیرزد.",
+            "دو علامت از فهرست Ontario Drug Benefit می‌آیند: `OdbBenefit` و `OdbLimitedUse`. `InterchangeGroup` محصولات جایگزین‌پذیر را برای جایگزینی ژنریک کنار هم می‌گذارد، و `IsDemo` کاتالوگ ساختگی‌ای را علامت می‌زند که `030_seed_demo.sql` بار می‌کند."
+          ],
+          "examples": [
+            "drug"
+          ]
+        },
+        {
+          "id": "save",
+          "h": "API قبل از دیتابیس بررسی می‌کند",
+          "p": [
+            "`Save` قاعده‌های جدول را تکرار می‌کند و آن‌هایی را اضافه می‌کند که فقط کد می‌تواند بررسی کند: DIN هشت رقم است و قبلاً در کاتالوگ نیست، واحد قدرت از نوع `Strength` است و واحد تحویل از نوع `Dispensing`، هزینه حداکثر چهار رقم اعشار دارد. هر مشکل در یک dictionary می‌رود و همه با هم به‌صورت یک `ValidationProblem` برمی‌گردند، پس فرم می‌تواند همه را یک‌جا کنار فیلدهایشان نشان دهد، نه یکی در هر ذخیره.",
+            "جست‌وجو، `GET /api/drugs?q=`، با ابتدای DIN، اسم برند یا ماده‌ی مؤثره جور می‌شود و بر اساس ماده‌ی مؤثره، قدرت و برند مرتب می‌کند، پس جست‌وجوی \"amox\" همه‌ی محصولات amoxicillin را کنار هم نشان می‌دهد: انتخاب‌های جایگزین."
+          ],
+          "examples": [
+            "save"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Drugs"
+            ]
+          }
+        },
+        {
+          "id": "table",
+          "h": "جدول‌ها",
+          "p": [
+            "کاتالوگ و ماده‌ی مؤثره‌ای که به آن اشاره می‌کند، همان‌طور که اسکریپت می‌سازد."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Drug",
+              "Ingredient"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "drug": {
+          "title": {
+            "en": "A product, with its rules as constraints",
+            "fa": "یک محصول، با قاعده‌هایش به‌صورت قید"
+          },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE TABLE ref.Drug (",
+          "to": "CONSTRAINT CK_Drug_Strength"
+        },
+        "save": {
+          "title": {
+            "en": "Every problem at once",
+            "fa": "همه‌ی مشکل‌ها یک‌جا"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/DrugEndpoints.cs",
+          "from": "var din = (b.Din ?? \"\").Trim();",
+          "lines": 18
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is UnitCost decimal(10,4) and not decimal(10,2)?",
+            "fa": "چرا UnitCost از نوع decimal(10,4) است و نه decimal(10,2)؟"
+          },
+          "options": {
+            "en": [
+              "It is the cost of one tablet or mL, which can be a fraction of a cent",
+              "SQL Server has no decimal(10,2)",
+              "To hold the HST"
+            ],
+            "fa": [
+              "هزینه‌ی یک قرص یا یک mL است که می‌تواند کسری از یک سنت باشد",
+              "SQL Server نوع decimal(10,2) ندارد",
+              "برای نگه داشتن HST"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The demo metformin costs 0.0300 a tablet; with two decimals a lot of 500 tablets could be priced wrongly.",
+            "fa": "metformin‌ی نمایشی قرصی 0.0300 قیمت دارد؛ با دو رقم اعشار، یک lot‌ی 500 قرصی ممکن بود اشتباه قیمت بخورد."
+          }
+        },
+        {
+          "q": {
+            "en": "A form sends a DIN of 7 digits and a strength with no unit. What does the API answer?",
+            "fa": "یک فرم DIN هفت‌رقمی و قدرتی بدون واحد می‌فرستد. API چه جوابی می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "A 500 from the CHECK constraint",
+              "One ValidationProblem naming both fields, din and strength",
+              "Only the first error, din"
+            ],
+            "fa": [
+              "یک 500 از قید CHECK",
+              "یک ValidationProblem که هر دو فیلد، din و strength، را نام می‌برد",
+              "فقط خطای اول، din"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Save collects every failed check in one dictionary before returning, so the database constraints are never reached with bad data.",
+            "fa": "Save قبل از برگشتن همه‌ی بررسی‌های ناموفق را در یک dictionary جمع می‌کند، پس داده‌ی بد هرگز به قیدهای دیتابیس نمی‌رسد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "patients",
+      "group": "people",
+      "title": {
+        "en": "Patients, allergies and prescribers",
+        "fa": "بیماران، آلرژی‌ها و تجویزکنندگان"
+      },
+      "files": [
+        "database/010_schema.sql",
+        "src/PharmaFlow.Api/Domain/HealthCard.cs",
+        "src/PharmaFlow.Api/Endpoints/PeopleEndpoints.cs",
+        "web/src/pages/People.tsx"
+      ],
+      "en": [
+        {
+          "id": "card",
+          "h": "An Ontario health card, checked by its last digit",
+          "p": [
+            "An Ontario health card number is 10 digits whose last digit is a Luhn (mod 10) check digit, the same scheme credit cards use. `HealthCard.IsValidNumber` doubles every second digit from the right, subtracts 9 from any result above 9, and expects the sum to end in 0. A typo in one digit, or two neighbouring digits swapped, almost always fails, so a mistyped card is caught at the counter instead of matching, or creating, the wrong patient.",
+            "`Normalize` first strips spaces and dashes, so \"1234-567-897\" is accepted. The number is optional (a visitor may have none), but when present it is unique: a filtered unique index, `WHERE HealthCardNumber IS NOT NULL`, allows many patients without a card and only one with each number."
+          ],
+          "examples": [
+            "luhn"
+          ]
+        },
+        {
+          "id": "allergy",
+          "h": "An allergy names an ingredient, a family, or what the patient said",
+          "p": [
+            "A patient may say \"allergic to amoxicillin\", \"allergic to penicillins\" or just \"a rash from some antibiotic\". `core.PatientAllergy` keeps each kind: `IngredientId`, `AllergyClass` or a free `Description`, and `CK_PatientAllergy_What` demands at least one of them. Reception checks all three, which is why an allergy recorded only as a family still catches a new product of that family.",
+            "Saving a patient uses the row's `rowversion`: the form sends back the version it loaded, and if someone else saved in between, EF's concurrency check fails and the API answers 409 \"Someone else just changed this patient\" instead of silently overwriting their change."
+          ],
+          "examples": [
+            "allergy"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "Prescribers by college, and the endpoints",
+          "p": [
+            "A prescriber is identified by college and registration number together, `UNIQUE (LicenceBody, LicenceNumber)`: CPSO for physicians, CNO for nurse practitioners, RCDSO for dentists, OCP for pharmacists who prescribe for minor ailments. The patient search accepts a last name, a 10-digit health card, a birth date as yyyy-mm-dd or the last digits of a phone number. Writes need `reception`."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Patients",
+              "Prescribers"
+            ]
+          }
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "p": [
+            "The patient record, its allergies and the prescribers, read from the script."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Patient",
+              "PatientAllergy",
+              "Prescriber"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "card",
+          "h": "کارت سلامت Ontario، بررسی‌شده با رقم آخرش",
+          "p": [
+            "شماره‌ی کارت سلامت Ontario ده رقم است که رقم آخرش یک رقم کنترلی Luhn (mod 10) است، همان روشی که کارت‌های اعتباری دارند. `HealthCard.IsValidNumber` از راست هر رقم دوم را دو برابر می‌کند، از هر نتیجه‌ی بزرگ‌تر از 9 عدد 9 را کم می‌کند، و انتظار دارد جمع به 0 ختم شود. یک اشتباه تایپی در یک رقم، یا جابه‌جایی دو رقم کنار هم، تقریباً همیشه رد می‌شود، پس کارتی که اشتباه وارد شده پشت پیشخوان گرفته می‌شود، به‌جای این‌که به بیمار اشتباهی وصل شود یا بیمار تازه‌ای بسازد.",
+            "`Normalize` اول فاصله‌ها و خط تیره‌ها را برمی‌دارد، پس \"1234-567-897\" پذیرفته می‌شود. شماره اختیاری است (یک مسافر ممکن است کارت نداشته باشد)، ولی اگر باشد یکتاست: یک index‌ی یکتای فیلترشده، `WHERE HealthCardNumber IS NOT NULL`، اجازه می‌دهد بیماران زیادی بدون کارت باشند و فقط یکی با هر شماره."
+          ],
+          "examples": [
+            "luhn"
+          ]
+        },
+        {
+          "id": "allergy",
+          "h": "آلرژی یک ماده‌ی مؤثره، یک خانواده، یا حرف خود بیمار را نام می‌برد",
+          "p": [
+            "بیمار ممکن است بگوید \"به amoxicillin حساسیت دارم\"، \"به پنی‌سیلین‌ها حساسیت دارم\" یا فقط \"از یک آنتی‌بیوتیک کهیر زدم\". `core.PatientAllergy` هر سه را نگه می‌دارد: `IngredientId`، `AllergyClass` یا یک `Description` آزاد، و `CK_PatientAllergy_What` دست‌کم یکی را لازم می‌داند. پذیرش هر سه را بررسی می‌کند، برای همین آلرژی‌ای که فقط به‌صورت خانواده ثبت شده هم محصول تازه‌ای از آن خانواده را می‌گیرد.",
+            "ذخیره‌ی بیمار از `rowversion` ردیف استفاده می‌کند: فرم نسخه‌ای را که بار کرده بود برمی‌گرداند، و اگر کس دیگری در این فاصله ذخیره کرده باشد، بررسی هم‌زمانی EF شکست می‌خورد و API به‌جای این‌که بی‌صدا روی تغییر او بنویسد، 409 با پیام \"Someone else just changed this patient\" برمی‌گرداند."
+          ],
+          "examples": [
+            "allergy"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "تجویزکنندگان بر اساس کالج، و endpointها",
+          "p": [
+            "تجویزکننده با کالج و شماره‌ی ثبت با هم شناخته می‌شود، `UNIQUE (LicenceBody, LicenceNumber)`: CPSO برای پزشکان، CNO برای nurse practitionerها، RCDSO برای دندان‌پزشکان، OCP برای داروسازانی که برای بیماری‌های جزئی نسخه می‌نویسند. جست‌وجوی بیمار نام خانوادگی، کارت سلامت ده‌رقمی، تاریخ تولد به شکل yyyy-mm-dd یا رقم‌های آخر شماره تلفن را می‌پذیرد. نوشتن `reception` می‌خواهد."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Patients",
+              "Prescribers"
+            ]
+          }
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "p": [
+            "پرونده‌ی بیمار، آلرژی‌هایش و تجویزکنندگان، خوانده‌شده از اسکریپت."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Patient",
+              "PatientAllergy",
+              "Prescriber"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "luhn": {
+          "title": {
+            "en": "The Luhn check digit",
+            "fa": "رقم کنترلی Luhn"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/HealthCard.cs",
+          "from": "public static bool IsValidNumber(string? number)",
+          "lines": 18
+        },
+        "allergy": {
+          "title": {
+            "en": "Three ways to name an allergy",
+            "fa": "سه راه برای نام بردن آلرژی"
+          },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE TABLE core.PatientAllergy (",
+          "lines": 11
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is the health card unique only through a filtered index (WHERE HealthCardNumber IS NOT NULL)?",
+            "fa": "چرا کارت سلامت فقط با یک index‌ی فیلترشده (WHERE HealthCardNumber IS NOT NULL) یکتاست؟"
+          },
+          "options": {
+            "en": [
+              "Filtered indexes are faster to build",
+              "Because the number is checked by Luhn instead",
+              "A plain UNIQUE would allow only one patient with no card at all"
+            ],
+            "fa": [
+              "ساختن index‌ی فیلترشده سریع‌تر است",
+              "چون شماره به‌جایش با Luhn بررسی می‌شود",
+              "یک UNIQUE‌ی ساده فقط به یک بیمار اجازه می‌داد که اصلاً کارت نداشته باشد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "In SQL Server a UNIQUE constraint treats NULL as a value, so two patients without a card would collide; the filter leaves NULLs out.",
+            "fa": "در SQL Server قید UNIQUE مقدار NULL را یک مقدار حساب می‌کند، پس دو بیمار بدون کارت تداخل می‌کردند؛ فیلتر NULLها را کنار می‌گذارد."
+          }
+        },
+        {
+          "q": {
+            "en": "Two people edit the same patient; the second saves after the first. What does the second one get?",
+            "fa": "دو نفر یک بیمار را ویرایش می‌کنند؛ دومی بعد از اولی ذخیره می‌کند. دومی چه می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "A 409 asking them to reload, thanks to the rowversion",
+              "Their change silently replaces the first",
+              "Both changes are merged"
+            ],
+            "fa": [
+              "یک 409 که می‌خواهد دوباره بار کند، به لطف rowversion",
+              "تغییرش بی‌صدا جای اولی را می‌گیرد",
+              "دو تغییر با هم ادغام می‌شوند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "SavePatient sets the original RowVer to the one the form loaded; a mismatch raises DbUpdateConcurrencyException, answered with 409.",
+            "fa": "SavePatient مقدار اصلی RowVer را همانی می‌گذارد که فرم بار کرده بود؛ ناهماهنگی DbUpdateConcurrencyException می‌دهد که با 409 جواب داده می‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit",
+      "group": "people",
+      "title": {
+        "en": "The access log (PHIPA)",
+        "fa": "log‌ی دسترسی (PHIPA)"
+      },
+      "files": [
+        "database/010_schema.sql",
+        "src/PharmaFlow.Api/Endpoints/PeopleEndpoints.cs",
+        "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "why",
+          "h": "Who opened which patient, and why",
+          "p": [
+            "Ontario's health privacy law, PHIPA, expects a custodian of health information to know who looked at a patient's record. `audit.AccessLog` is that record: when, who, what kind of action (`View`, `Create`, `Update`, `Print`, enforced by a CHECK), which patient, and a short context such as \"Patient profile\" or \"Prescription 100004\". It is indexed by patient and time, the question a privacy officer asks: who saw this person, and when.",
+            "Every place that shows or changes a patient calls the same helper, `PeopleEndpoints.Audit`, with the signed-in user's name. Opening a patient's profile writes a `View`, receiving a prescription a `Create`, adding an allergy or dispensing an `Update`. The helper only adds the row; it is saved with the same `SaveChangesAsync` as the work itself."
+          ],
+          "examples": [
+            "table",
+            "helper"
+          ]
+        },
+        {
+          "id": "others",
+          "h": "Not only people",
+          "p": [
+            "ClinicHub writes to the same log. A patient created from an electronic prescription is logged under the name \"ClinicHub (harbourview)\", the clinic's slug, and so is a withdrawal or a merge sent by the clinic. The most sensitive entry is the \"break the glass\" override of a restricted prescription: it keeps the user's own reason, cut to 200 characters, after the words `RESTRICTED OVERRIDE`, so the log answers not only who opened it but why they said they needed to."
+          ],
+          "examples": [
+            "override"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "why",
+          "h": "چه کسی پرونده‌ی کدام بیمار را باز کرد، و چرا",
+          "p": [
+            "قانون حریم خصوصی سلامت Ontario، یعنی PHIPA، از نگه‌دارنده‌ی اطلاعات سلامت انتظار دارد بداند چه کسی پرونده‌ی یک بیمار را دیده است. `audit.AccessLog` همان سابقه است: کی، چه کسی، چه نوع کاری (`View`، `Create`، `Update`، `Print` که یک CHECK اجباری‌اش می‌کند)، کدام بیمار، و یک زمینه‌ی کوتاه مثل \"Patient profile\" یا \"Prescription 100004\". روی بیمار و زمان index دارد، همان سؤالی که مسئول حریم خصوصی می‌پرسد: چه کسی این آدم را دید، و کی.",
+            "هر جایی که بیماری را نشان می‌دهد یا تغییر می‌دهد همان helper را صدا می‌زند، `PeopleEndpoints.Audit`، با اسم کاربر واردشده. باز کردن پرونده‌ی بیمار یک `View` می‌نویسد، پذیرش نسخه یک `Create`، اضافه کردن آلرژی یا تحویل دارو یک `Update`. helper فقط ردیف را اضافه می‌کند؛ با همان `SaveChangesAsync`ی ذخیره می‌شود که خود کار."
+          ],
+          "examples": [
+            "table",
+            "helper"
+          ]
+        },
+        {
+          "id": "others",
+          "h": "نه فقط آدم‌ها",
+          "p": [
+            "ClinicHub هم در همین log می‌نویسد. بیماری که از یک نسخه‌ی الکترونیکی ساخته می‌شود با اسم \"ClinicHub (harbourview)\"، یعنی slug‌ی کلینیک، ثبت می‌شود، و همین‌طور لغو یا ادغامی که کلینیک می‌فرستد. حساس‌ترین ردیف، override‌ی \"شکستن شیشه\" برای یک نسخه‌ی محدودشده است: دلیل خود کاربر را، کوتاه‌شده تا 200 نویسه، بعد از عبارت `RESTRICTED OVERRIDE` نگه می‌دارد، پس log نه فقط می‌گوید چه کسی آن را باز کرد بلکه می‌گوید به گفته‌ی خودش چرا لازمش داشت."
+          ],
+          "examples": [
+            "override"
+          ]
+        }
+      ],
+      "examples": {
+        "table": {
+          "title": {
+            "en": "The log",
+            "fa": "log"
+          },
+          "lang": "sql",
+          "file": "database/010_schema.sql",
+          "from": "CREATE TABLE audit.AccessLog (",
+          "lines": 8
+        },
+        "helper": {
+          "title": {
+            "en": "One helper for every write",
+            "fa": "یک helper برای هر نوشتن"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PeopleEndpoints.cs",
+          "from": "public static void Audit(",
+          "lines": 2
+        },
+        "override": {
+          "title": {
+            "en": "The reason goes into the log",
+            "fa": "دلیل در log می‌رود"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "var until = gate.Open(user, id);",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does Audit only add the row and not save it?",
+            "fa": "چرا Audit فقط ردیف را اضافه می‌کند و ذخیره‌اش نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Saving is not allowed on the audit schema",
+              "So the log row is written with the same SaveChangesAsync as the work it describes",
+              "Because the log is written by a background job"
+            ],
+            "fa": [
+              "ذخیره روی schema‌ی audit مجاز نیست",
+              "تا ردیف log با همان SaveChangesAsyncی نوشته شود که کار مربوطه",
+              "چون log را یک کار پس‌زمینه می‌نویسد"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The callers call SaveChangesAsync after Audit; the action and its log entry are saved together.",
+            "fa": "صدازننده‌ها بعد از Audit متد SaveChangesAsync را صدا می‌زنند؛ کار و ردیف log آن با هم ذخیره می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "A privacy officer asks who saw a given patient last month. Which part of the table makes that fast?",
+            "fa": "مسئول حریم خصوصی می‌پرسد چه کسانی ماه گذشته یک بیمار را دیده‌اند. کدام بخش جدول این را سریع می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "The CHECK on Action",
+              "The identity column AuditId",
+              "The index IX_AccessLog_Patient on (PatientId, OccurredAt)"
+            ],
+            "fa": [
+              "CHECK روی Action",
+              "ستون identity به اسم AuditId",
+              "index‌ی IX_AccessLog_Patient روی (PatientId, OccurredAt)"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The index is on exactly that question: one patient, ordered by time.",
+            "fa": "index دقیقاً روی همین سؤال است: یک بیمار، مرتب‌شده بر اساس زمان."
+          }
+        }
+      ]
+    },
+    {
+      "id": "receive",
+      "group": "reception",
+      "title": {
+        "en": "Receiving a prescription, drug by drug",
+        "fa": "پذیرش نسخه، دارو به دارو"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+        "database/010_schema.sql",
+        "src/PharmaFlow.Api/Data/Entities.cs"
+      ],
+      "en": [
+        {
+          "id": "shape",
+          "h": "A prescription and its items",
+          "p": [
+            "A prescription arrives on paper, by fax, by phone or electronically (`Channel`), and is entered as one `rx.Prescription` with one `rx.PrescriptionItem` per drug ordered. Each item keeps what the prescriber wrote (`DrugText`, `Sig`) even after it is matched to a product, so the pharmacist can always compare the order with what was chosen. The API refuses what must never be received: a prescription dated in the future, more than 20 drugs, more than 12 refills, and any refill at all on a narcotic or controlled drug (schedules `N` and `C`), which the law does not allow.",
+            "When no plan is chosen the patient's usual plan is taken. The number comes from the `rx.RxNumber` sequence, and the whole prescription is saved in one `SaveChangesAsync` together with the checks' warnings for each drug, stored as JSON in `WarningsJson`."
+          ],
+          "examples": [
+            "narcotic"
+          ]
+        },
+        {
+          "id": "states",
+          "h": "Ready to fill only after review",
+          "p": [
+            "An item becomes `ReadyToFill` only through `review`: it must be matched to a product, and the name of the pharmacist who looked at the warnings and the time are stored with it. Matching a product afterwards runs the checks again and clears the review, since the findings may have changed. Hold and cancel are open until the drug is dispensed, and cancelling needs a reason.",
+            "The prescription's own status is never set by hand. `Settle` derives it from its items after every change: all cancelled is `Cancelled`, all the others dispensed is `Completed`, only held or cancelled ones is `OnHold`, anything ready or further is `InProgress`, else `Received`. One rule in one place keeps the queue and the items from disagreeing."
+          ],
+          "examples": [
+            "review",
+            "settle"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "The reception endpoints",
+          "p": [
+            "Reads need any pharmacy permission, writes need `reception`. `POST /check` runs the checks and expands the SIG without saving anything, which the form calls while the pharmacist types."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Reception"
+            ]
+          }
+        },
+        {
+          "id": "tables",
+          "h": "The tables",
+          "p": [
+            "`CK_PrescriptionItem_Ready` repeats the review rule in the database: past `Received`, `OnHold` or `Cancelled`, an item must have a `DrugId`."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Prescription",
+              "PrescriptionItem"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "shape",
+          "h": "یک نسخه و قلم‌هایش",
+          "p": [
+            "نسخه روی کاغذ، با فکس، تلفنی یا الکترونیکی می‌رسد (`Channel`) و به‌صورت یک `rx.Prescription` با یک `rx.PrescriptionItem` برای هر داروی تجویزشده وارد می‌شود. هر قلم چیزی را که تجویزکننده نوشته (`DrugText`، `Sig`) حتی بعد از وصل شدن به یک محصول نگه می‌دارد، تا داروساز همیشه بتواند دستور را با انتخاب انجام‌شده مقایسه کند. API چیزی را که هرگز نباید پذیرفته شود رد می‌کند: نسخه‌ای با تاریخ آینده، بیش از 20 دارو، بیش از 12 بار تکرار، و هر تکراری روی یک داروی مخدر یا کنترل‌شده (scheduleهای `N` و `C`) که قانون اجازه نمی‌دهد.",
+            "اگر بیمه‌ای انتخاب نشده باشد، بیمه‌ی همیشگی بیمار گرفته می‌شود. شماره از sequence‌ی `rx.RxNumber` می‌آید و کل نسخه با یک `SaveChangesAsync` ذخیره می‌شود، همراه با هشدارهای بررسی برای هر دارو که به‌صورت JSON در `WarningsJson` نگه داشته می‌شوند."
+          ],
+          "examples": [
+            "narcotic"
+          ]
+        },
+        {
+          "id": "states",
+          "h": "آماده‌ی پیچیدن فقط بعد از بررسی",
+          "p": [
+            "یک قلم فقط از راه `review` به `ReadyToFill` می‌رسد: باید به یک محصول وصل شده باشد، و اسم داروسازی که هشدارها را دیده و زمانش همراه آن ذخیره می‌شود. وصل کردن محصول بعد از آن، بررسی‌ها را دوباره اجرا می‌کند و بررسی قبلی را پاک می‌کند، چون یافته‌ها ممکن است عوض شده باشند. نگه داشتن و لغو تا وقتی دارو تحویل نشده باز است، و لغو دلیل می‌خواهد.",
+            "وضعیت خود نسخه هرگز دستی تعیین نمی‌شود. `Settle` بعد از هر تغییر آن را از قلم‌هایش به دست می‌آورد: همه لغوشده یعنی `Cancelled`، همه‌ی بقیه تحویل‌شده یعنی `Completed`، فقط نگه‌داشته یا لغوشده یعنی `OnHold`، هر چیز آماده یا جلوتر یعنی `InProgress`، وگرنه `Received`. یک قاعده در یک جا نمی‌گذارد صف و قلم‌ها با هم ناسازگار شوند."
+          ],
+          "examples": [
+            "review",
+            "settle"
+          ]
+        },
+        {
+          "id": "api",
+          "h": "endpointهای پذیرش",
+          "p": [
+            "خواندن هر مجوز داروخانه را کافی می‌داند، نوشتن `reception` می‌خواهد. `POST /check` بررسی‌ها را اجرا و SIG را باز می‌کند بدون این‌که چیزی ذخیره کند، و فرم هنگام تایپ داروساز آن را صدا می‌زند."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Reception"
+            ]
+          }
+        },
+        {
+          "id": "tables",
+          "h": "جدول‌ها",
+          "p": [
+            "`CK_PrescriptionItem_Ready` قاعده‌ی بررسی را در دیتابیس تکرار می‌کند: بعد از `Received`، `OnHold` یا `Cancelled`، یک قلم باید `DrugId` داشته باشد."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Prescription",
+              "PrescriptionItem"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "narcotic": {
+          "title": {
+            "en": "No refills on narcotics",
+            "fa": "بدون تکرار برای مخدرها"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "// Narcotics and controlled drugs may not be refilled",
+          "lines": 3
+        },
+        "review": {
+          "title": {
+            "en": "Reviewed, then ready",
+            "fa": "بررسی‌شده، بعد آماده"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "// The pharmacist has looked at what the checks found",
+          "lines": 13
+        },
+        "settle": {
+          "title": {
+            "en": "The prescription follows its drugs",
+            "fa": "نسخه دنبال داروهایش می‌رود"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "internal static async Task Settle(",
+          "lines": 12
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A pharmacist matches a product to an item that was already reviewed. What happens to the review?",
+            "fa": "داروساز یک محصول را به قلمی وصل می‌کند که قبلاً بررسی شده بود. بررسی چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It stays, since the same person reviewed it",
+              "The item is cancelled",
+              "It is cleared and the checks run again for the new product"
+            ],
+            "fa": [
+              "می‌ماند، چون همان آدم بررسی‌اش کرده",
+              "قلم لغو می‌شود",
+              "پاک می‌شود و بررسی‌ها برای محصول تازه دوباره اجرا می‌شوند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The match endpoint recomputes WarningsJson and sets WarningsReviewedBy and WarningsReviewedAt back to null.",
+            "fa": "endpoint‌ی match مقدار WarningsJson را دوباره حساب می‌کند و WarningsReviewedBy و WarningsReviewedAt را null می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "A prescription has two items: one Cancelled, one Dispensed. What is its status?",
+            "fa": "یک نسخه دو قلم دارد: یکی Cancelled و یکی Dispensed. وضعیتش چیست؟"
+          },
+          "options": {
+            "en": [
+              "Completed",
+              "Cancelled",
+              "InProgress"
+            ],
+            "fa": [
+              "Completed",
+              "Cancelled",
+              "InProgress"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Settle ignores cancelled items when it asks whether all the others are dispensed.",
+            "fa": "Settle وقتی می‌پرسد آیا همه‌ی بقیه تحویل شده‌اند، قلم‌های لغوشده را حساب نمی‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "sig",
+      "group": "reception",
+      "title": {
+        "en": "SIG codes: from \"1 TAB PO BID\" to a label",
+        "fa": "کدهای SIG: از \"1 TAB PO BID\" تا برچسب"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Domain/Sig.cs",
+        "database/020_seed_reference.sql",
+        "tests/PharmaFlow.Tests/ReceptionTests.cs"
+      ],
+      "en": [
+        {
+          "id": "expand",
+          "h": "Word by word, with the pharmacy's codes",
+          "p": [
+            "Prescribers write directions in Latin abbreviations, \"1 TAB PO BID X 10 D\", and the label must say \"Take 1 tablet by mouth twice daily for 10 days\". `Sig.Expand` splits the text into words, looks each up (upper-cased) in the active `ref.SigCode` rows, and replaces the codes with their expansion; any other word is kept as written, so \"for wheeze\" survives. The first number becomes the dose and the first code with `DosesPerDay` the frequency.",
+            "A label starts with a verb. If the prescriber already wrote one (apply, instill, inhale, use...) it is only capitalised; otherwise \"Take\" is put in front. Because the codes live in a table and not in the code, a pharmacy can add its own abbreviation through the base definitions without a release."
+          ],
+          "examples": [
+            "expand"
+          ]
+        },
+        {
+          "id": "days",
+          "h": "Days' supply, only when it can be known",
+          "p": [
+            "Days' supply is quantity ÷ (dose × doses a day): 20 tablets at 1 twice a day last 10 days. It matters for refills and for plans that pay a limited supply. `DaysSupply` answers only when both numbers are known; \"as needed\" (`PRN`) has no `DosesPerDay`, so a PRN inhaler gets no guessed number, and the field stays for the pharmacist to fill. The result is rounded down and kept between 1 and 365, the same range the column's CHECK allows. A number the pharmacist types always wins over the computed one."
+          ],
+          "examples": [
+            "days",
+            "prn"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "expand",
+          "h": "کلمه به کلمه، با کدهای خود داروخانه",
+          "p": [
+            "تجویزکنندگان دستور مصرف را با اختصارهای لاتین می‌نویسند، \"1 TAB PO BID X 10 D\"، و برچسب باید بگوید \"Take 1 tablet by mouth twice daily for 10 days\". `Sig.Expand` متن را به کلمه‌ها می‌شکند، هر کدام را (با حروف بزرگ) در ردیف‌های فعال `ref.SigCode` پیدا می‌کند و کدها را با بازشده‌شان عوض می‌کند؛ هر کلمه‌ی دیگری همان‌طور که نوشته شده می‌ماند، پس \"for wheeze\" حفظ می‌شود. اولین عدد مقدار هر دوز می‌شود و اولین کدی که `DosesPerDay` دارد تعداد دفعات در روز.",
+            "برچسب با یک فعل شروع می‌شود. اگر تجویزکننده خودش فعلی نوشته باشد (apply، instill، inhale، use...) فقط حرف اولش بزرگ می‌شود؛ وگرنه \"Take\" جلویش می‌آید. چون کدها در یک جدول هستند و نه در کد، داروخانه می‌تواند اختصار خودش را از راه تعریف‌های پایه اضافه کند، بدون انتشار نسخه‌ی تازه."
+          ],
+          "examples": [
+            "expand"
+          ]
+        },
+        {
+          "id": "days",
+          "h": "تعداد روزهای مصرف، فقط وقتی قابل دانستن است",
+          "p": [
+            "تعداد روزها برابر است با مقدار ÷ (دوز × دفعات در روز): 20 قرص با روزی دو بار یکی، 10 روز دوام می‌آورد. این عدد برای تکرار نسخه و برای بیمه‌هایی که فقط مقدار محدودی را می‌پردازند مهم است. `DaysSupply` فقط وقتی جواب می‌دهد که هر دو عدد معلوم باشند؛ \"در صورت نیاز\" (`PRN`) مقدار `DosesPerDay` ندارد، پس یک اسپری PRN عدد حدسی نمی‌گیرد و فیلد برای داروساز خالی می‌ماند. نتیجه رو به پایین گرد می‌شود و بین 1 و 365 نگه داشته می‌شود، همان بازه‌ای که CHECK ستون اجازه می‌دهد. عددی که داروساز تایپ کند همیشه بر عدد محاسبه‌شده مقدم است."
+          ],
+          "examples": [
+            "days",
+            "prn"
+          ]
+        }
+      ],
+      "examples": {
+        "expand": {
+          "title": {
+            "en": "Codes in, label out",
+            "fa": "کد وارد، برچسب خارج"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/Sig.cs",
+          "from": "public static Expanded Expand(",
+          "to": "return new Expanded(text, perDay, dose);"
+        },
+        "days": {
+          "title": {
+            "en": "Days' supply",
+            "fa": "تعداد روزها"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/Sig.cs",
+          "from": "/// <summary>Days a quantity lasts",
+          "lines": 5
+        },
+        "prn": {
+          "title": {
+            "en": "Unknown words kept, PRN has no days",
+            "fa": "کلمه‌ی ناشناخته می‌ماند، PRN روز ندارد"
+          },
+          "lang": "csharp",
+          "file": "tests/PharmaFlow.Tests/ReceptionTests.cs",
+          "from": "public void Unknown_words_are_kept_and_as_needed_has_no_days_supply()",
+          "lines": 7
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "What label does \"2 PUFFS INH Q4H PRN for wheeze\" become, and what days' supply?",
+            "fa": "متن \"2 PUFFS INH Q4H PRN for wheeze\" به چه برچسبی تبدیل می‌شود و تعداد روزهایش چیست؟"
+          },
+          "options": {
+            "en": [
+              "\"Take 2 puffs by inhalation every 4 hours as needed for wheeze\", and a days' supply worked out from Q4H",
+              "An error, because \"wheeze\" is not a code",
+              "\"2 puffs by inhalation every 4 hours as needed for wheeze\" with no verb"
+            ],
+            "fa": [
+              "\"Take 2 puffs by inhalation every 4 hours as needed for wheeze\" و تعداد روزی که از Q4H حساب می‌شود",
+              "خطا، چون \"wheeze\" کد نیست",
+              "\"2 puffs by inhalation every 4 hours as needed for wheeze\" بدون فعل"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Unknown words are kept and \"Take\" is added; Q4H has 6 doses a day, so with a known dose a days' supply can be computed (the test checks the label).",
+            "fa": "کلمه‌های ناشناخته می‌مانند و \"Take\" اضافه می‌شود؛ Q4H روزی 6 دوز دارد، پس با دوز معلوم تعداد روزها حساب‌پذیر است (تست برچسب را بررسی می‌کند)."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does \"apply PRN\" get no days' supply?",
+            "fa": "چرا \"apply PRN\" تعداد روز نمی‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "Creams are never counted",
+              "PRN has no DosesPerDay and there is no dose number, so it cannot be known",
+              "Because the verb is apply"
+            ],
+            "fa": [
+              "کرم‌ها هیچ‌وقت شمرده نمی‌شوند",
+              "PRN مقدار DosesPerDay ندارد و عدد دوزی هم نیست، پس قابل دانستن نیست",
+              "چون فعل apply است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "DaysSupply returns null unless both DosesPerDay and DoseQuantity are above zero.",
+            "fa": "DaysSupply مقدار null برمی‌گرداند مگر این‌که هم DosesPerDay و هم DoseQuantity بزرگ‌تر از صفر باشند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "checks",
+      "group": "reception",
+      "title": {
+        "en": "The safety checks at reception",
+        "fa": "بررسی‌های ایمنی در پذیرش"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Domain/ReceptionChecks.cs",
+        "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "Seven findings, checked for every drug",
+          "list": [
+            "**Allergy**, at three levels: the same ingredient, the same allergy family (an allergy to \"Penicillins\" catches amoxicillin), or a free description that names the ingredient.",
+            "**Interaction** with the other drugs on the prescription and with what the patient already takes, at the severity `ref.Interaction` gives.",
+            "**Duplicate therapy**: the same ingredient twice.",
+            "**Monitored drug**: a narcotic, controlled drug or targeted substance, to check identification and record in the Narcotics Monitoring System.",
+            "**Limited Use**: an ODB Limited Use product on an ODB plan needs the prescriber's LU reason code.",
+            "**Stale**: written more than a year ago.",
+            "**Not matched**: the drug is still only text; nothing else can be checked until it has a product."
+          ],
+          "examples": [
+            "allergy",
+            "against"
+          ]
+        },
+        {
+          "id": "design",
+          "h": "It warns; the pharmacist decides",
+          "p": [
+            "`ReceptionChecks.For` is a pure function: it is given the drug, the other drugs, what the patient takes, the allergies and the interactions, and returns a list of `Warning(Kind, Severity, Message)`. It reads nothing itself, which is why its tests need no database. `CheckAsync` gathers the facts: \"what the patient takes\" is every matched, not cancelled drug on the patient's prescriptions received in the last 120 days, except the prescription being checked.",
+            "No finding blocks a prescription. A Major interaction may be exactly what the prescriber intends, with monitoring; a computer cannot know. So the warnings are stored, shown, and the item cannot be filled until a pharmacist has reviewed them, with their name on the record."
+          ],
+          "examples": [
+            "taking"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "هفت یافته، برای هر دارو",
+          "list": [
+            "**آلرژی**، در سه سطح: همان ماده‌ی مؤثره، همان خانواده‌ی آلرژی (آلرژی به \"Penicillins\" amoxicillin را می‌گیرد)، یا توضیح آزادی که اسم ماده را دارد.",
+            "**تداخل** با داروهای دیگر همان نسخه و با چیزی که بیمار الان مصرف می‌کند، با شدتی که `ref.Interaction` می‌دهد.",
+            "**درمان تکراری**: یک ماده‌ی مؤثره دو بار.",
+            "**داروی تحت نظارت**: مخدر، داروی کنترل‌شده یا ماده‌ی هدف، برای بررسی هویت و ثبت در Narcotics Monitoring System.",
+            "**Limited Use**: یک محصول Limited Use‌ی ODB روی بیمه‌ی ODB کد دلیل LU‌ی تجویزکننده را لازم دارد.",
+            "**کهنه**: بیش از یک سال پیش نوشته شده.",
+            "**وصل‌نشده**: دارو هنوز فقط متن است؛ تا محصولی نداشته باشد هیچ چیز دیگری قابل بررسی نیست."
+          ],
+          "examples": [
+            "allergy",
+            "against"
+          ]
+        },
+        {
+          "id": "design",
+          "h": "هشدار می‌دهد؛ داروساز تصمیم می‌گیرد",
+          "p": [
+            "`ReceptionChecks.For` یک تابع خالص است: دارو، داروهای دیگر، چیزی که بیمار مصرف می‌کند، آلرژی‌ها و تداخل‌ها را می‌گیرد و فهرستی از `Warning(Kind, Severity, Message)` برمی‌گرداند. خودش چیزی نمی‌خواند، برای همین تست‌هایش دیتابیس نمی‌خواهند. `CheckAsync` واقعیت‌ها را جمع می‌کند: \"چیزی که بیمار مصرف می‌کند\" یعنی هر داروی وصل‌شده و لغونشده روی نسخه‌هایی از بیمار که در 120 روز گذشته پذیرش شده‌اند، به‌جز خود نسخه‌ای که بررسی می‌شود.",
+            "هیچ یافته‌ای جلوی نسخه را نمی‌گیرد. یک تداخل Major ممکن است دقیقاً همان چیزی باشد که تجویزکننده با پایش در نظر دارد؛ کامپیوتر نمی‌تواند بداند. پس هشدارها ذخیره و نشان داده می‌شوند، و قلم تا وقتی داروسازی بررسی‌شان نکرده، با اسمش در سابقه، قابل پیچیدن نیست."
+          ],
+          "examples": [
+            "taking"
+          ]
+        }
+      ],
+      "examples": {
+        "allergy": {
+          "title": {
+            "en": "Three levels of allergy",
+            "fa": "سه سطح آلرژی"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/ReceptionChecks.cs",
+          "from": "foreach (var a in allergies)",
+          "lines": 9
+        },
+        "against": {
+          "title": {
+            "en": "Duplicates and interactions, in either order",
+            "fa": "تکرار و تداخل، به هر ترتیب"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/ReceptionChecks.cs",
+          "from": "var against = others.Where",
+          "to": "warnings.Add(new(WarningKinds.Interaction"
+        },
+        "taking": {
+          "title": {
+            "en": "What the patient takes",
+            "fa": "چیزی که بیمار مصرف می‌کند"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "// What the patient takes:",
+          "lines": 7
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A patient's only allergy is recorded as the family \"NSAIDs\". Naproxen is prescribed. What happens?",
+            "fa": "تنها آلرژی ثبت‌شده‌ی بیمار خانواده‌ی \"NSAIDs\" است. naproxen تجویز می‌شود. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Nothing: the ingredient itself is not on the allergy",
+              "The prescription is refused",
+              "A Major allergy warning, because naproxen's AllergyClass is NSAIDs"
+            ],
+            "fa": [
+              "هیچ: خود ماده روی آلرژی نیست",
+              "نسخه رد می‌شود",
+              "یک هشدار آلرژی Major، چون AllergyClass‌ی naproxen برابر NSAIDs است"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The second branch compares the allergy's family with the drug's AllergyClass, case-insensitively; warnings never refuse.",
+            "fa": "شاخه‌ی دوم خانواده‌ی آلرژی را با AllergyClass‌ی دارو، بدون توجه به بزرگی حروف، مقایسه می‌کند؛ هشدارها هیچ‌وقت رد نمی‌کنند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is ReceptionChecks.For given all its data instead of querying the database?",
+            "fa": "چرا همه‌ی داده به ReceptionChecks.For داده می‌شود به‌جای این‌که خودش از دیتابیس بخواند؟"
+          },
+          "options": {
+            "en": [
+              "So it is a pure function that can be tested without a database, and CheckAsync loads everything once for all items",
+              "Because EF is not allowed in the Domain folder by the compiler",
+              "To make it run in the browser"
+            ],
+            "fa": [
+              "تا یک تابع خالص باشد که بدون دیتابیس قابل تست است، و CheckAsync همه چیز را یک بار برای همه‌ی قلم‌ها بار کند",
+              "چون کامپایلر EF را در پوشه‌ی Domain اجازه نمی‌دهد",
+              "تا در مرورگر اجرا شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "ReceptionCheckTests call it with in-memory lists; CheckAsync does the queries once per request.",
+            "fa": "ReceptionCheckTests آن را با فهرست‌های درون حافظه صدا می‌زنند؛ CheckAsync queryها را یک بار در هر درخواست انجام می‌دهد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "purchases",
+      "group": "stock",
+      "title": {
+        "en": "Supplier invoices into lots",
+        "fa": "فاکتورهای تأمین‌کننده به lotها"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Endpoints/InventoryEndpoints.cs",
+        "database/040_inventory_dispensing.sql",
+        "web/src/pages/Stock.tsx"
+      ],
+      "en": [
+        {
+          "id": "lots",
+          "h": "An invoice, its lots, and the HST on supplies",
+          "p": [
+            "A supplier's invoice is received as one `inv.Purchase` and one `inv.StockLot` per line: the drug, the lot number on the box, the expiry date, the quantity and the cost per unit. Stock is tracked by lot because expiry and recalls are by lot; a recall names a lot number, and the pharmacy can find exactly which boxes it has.",
+            "Drugs are zero-rated for HST, but the same invoice may carry supplies (bags, vials) that are taxed at 13 %. The purchase keeps `DrugsAmount`, `SuppliesAmount` and `SuppliesHst` apart, and the API refuses an HST above 13 % of the supplies. The drugs amount is not typed in: it is the sum of quantity × cost of the lines, rounded to the cent."
+          ],
+          "examples": [
+            "purchase",
+            "rules"
+          ]
+        },
+        {
+          "id": "guards",
+          "h": "Twice the same invoice is refused",
+          "p": [
+            "`UQ_Purchase_Invoice (SupplierId, InvoiceNumber)` means an invoice scanned twice cannot double the stock, and the API checks it first so the user gets a message instead of a constraint error. A lot already expired is refused at receipt, and `CK_StockLot_OnHand` keeps the quantity on hand between zero and what was received, so no code path can dispense below zero."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Purchase",
+              "StockLot"
+            ]
+          }
+        },
+        {
+          "id": "api",
+          "h": "The endpoints",
+          "p": [
+            "Receiving an invoice needs `stock`; the lists are open to every pharmacy permission. `GET /api/stock` flags lots that have expired and those expiring within 90 days."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Inventory"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "lots",
+          "h": "یک فاکتور، lotهایش، و HST‌ی لوازم",
+          "p": [
+            "فاکتور یک تأمین‌کننده به‌صورت یک `inv.Purchase` و یک `inv.StockLot` برای هر سطر وارد می‌شود: دارو، شماره‌ی lot روی جعبه، تاریخ انقضا، مقدار و هزینه‌ی هر واحد. موجودی بر اساس lot نگه داشته می‌شود چون انقضا و فراخوان بر اساس lot است؛ فراخوان یک شماره‌ی lot را نام می‌برد و داروخانه می‌تواند دقیقاً پیدا کند کدام جعبه‌ها را دارد.",
+            "داروها از HST معاف (zero-rated) هستند، ولی همان فاکتور ممکن است لوازمی (کیسه، ویال) داشته باشد که 13 درصد مالیات دارند. خرید `DrugsAmount`، `SuppliesAmount` و `SuppliesHst` را جدا نگه می‌دارد، و API مالیاتی بیش از 13 درصد لوازم را رد می‌کند. مبلغ داروها تایپ نمی‌شود: جمع مقدار × هزینه‌ی سطرهاست، گردشده تا سنت."
+          ],
+          "examples": [
+            "purchase",
+            "rules"
+          ]
+        },
+        {
+          "id": "guards",
+          "h": "یک فاکتور دو بار پذیرفته نمی‌شود",
+          "p": [
+            "`UQ_Purchase_Invoice (SupplierId, InvoiceNumber)` یعنی فاکتوری که دو بار اسکن شود نمی‌تواند موجودی را دو برابر کند، و API اول خودش این را بررسی می‌کند تا کاربر به‌جای خطای قید یک پیام بگیرد. lot‌ی که منقضی شده هنگام دریافت رد می‌شود، و `CK_StockLot_OnHand` موجودی را بین صفر و مقدار دریافتی نگه می‌دارد، پس هیچ مسیری در کد نمی‌تواند زیر صفر تحویل دهد."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Purchase",
+              "StockLot"
+            ]
+          }
+        },
+        {
+          "id": "api",
+          "h": "endpointها",
+          "p": [
+            "دریافت فاکتور `stock` می‌خواهد؛ فهرست‌ها برای هر مجوز داروخانه بازند. `GET /api/stock` lotهای منقضی‌شده و آن‌هایی را که تا 90 روز دیگر منقضی می‌شوند علامت می‌زند."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Inventory"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "purchase": {
+          "title": {
+            "en": "Drugs and supplies kept apart",
+            "fa": "دارو و لوازم جدا"
+          },
+          "lang": "sql",
+          "file": "database/040_inventory_dispensing.sql",
+          "from": "CREATE TABLE inv.Purchase (",
+          "to": "CONSTRAINT UQ_Purchase_Invoice"
+        },
+        "rules": {
+          "title": {
+            "en": "Duplicate, future, too much HST",
+            "fa": "تکراری، آینده، HST‌ی زیاد"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/InventoryEndpoints.cs",
+          "from": "Check(await db.Purchases.AnyAsync(p => p.SupplierId == b.SupplierId",
+          "lines": 3
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "An invoice has 100.00 of supplies. Which SuppliesHst does the API refuse?",
+            "fa": "یک فاکتور 100.00 لوازم دارد. API کدام SuppliesHst را رد می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "13.00",
+              "0.00",
+              "15.00"
+            ],
+            "fa": [
+              "13.00",
+              "0.00",
+              "15.00"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "HST may be at most 13 % of the supplies (plus a cent of rounding); 0 is allowed, for untaxed supplies.",
+            "fa": "HST حداکثر 13 درصد لوازم است (به‌علاوه‌ی یک سنت برای گرد کردن)؛ صفر مجاز است، برای لوازم بی‌مالیات."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is stock kept per lot rather than one quantity per drug?",
+            "fa": "چرا موجودی برای هر lot نگه داشته می‌شود و نه یک مقدار برای هر دارو؟"
+          },
+          "options": {
+            "en": [
+              "A database cannot sum quantities",
+              "Expiry, cost and recalls belong to a lot, and dispensing must use the lot that expires first",
+              "Suppliers require it for payment"
+            ],
+            "fa": [
+              "دیتابیس نمی‌تواند مقدارها را جمع بزند",
+              "انقضا، هزینه و فراخوان مال یک lot هستند، و تحویل باید از lot‌ی باشد که زودتر منقضی می‌شود",
+              "تأمین‌کننده‌ها برای پرداخت لازمش دارند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Each StockLot has its own ExpiryDate and UnitCost; the dispense picks lots by expiry and prices them at their own cost.",
+            "fa": "هر StockLot تاریخ انقضا و هزینه‌ی خودش را دارد؛ تحویل lotها را بر اساس انقضا انتخاب می‌کند و با هزینه‌ی خودشان قیمت می‌گذارد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "dispense",
+      "group": "stock",
+      "title": {
+        "en": "Dispensing and refills: first to expire, first out",
+        "fa": "تحویل و تکرار: اول آن‌که زودتر منقضی می‌شود"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Endpoints/InventoryEndpoints.cs",
+        "database/040_inventory_dispensing.sql"
+      ],
+      "en": [
+        {
+          "id": "fefo",
+          "h": "From the lots that expire first",
+          "p": [
+            "A drug that is `ReadyToFill` is dispensed from the lots of that product with stock left and an expiry after today, ordered by expiry date (then by lot id). The loop takes what it can from the first lot, then the next, until the quantity is reached, and records each lot it used in `rx.DispenseLot` with that lot's own cost. If the unexpired stock is not enough, nothing is taken and the API answers 409 with how much there is. Expired stock is never dispensed, whatever is on the shelf.",
+            "In the test, 40 tablets of a lot expiring in January 2027 at 0.025 go before a lot expiring in 2028 at 0.03; 60 tablets cost 1.00 + 0.60 = 1.60, and the earlier lot ends at zero."
+          ],
+          "examples": [
+            "lots"
+          ]
+        },
+        {
+          "id": "refill",
+          "h": "Refills, and a price the database checks",
+          "p": [
+            "A drug already `Dispensed` can be dispensed again only while `RefillsRemaining` is above zero; each refill counts one down, and with none left the answer is 409 \"the prescriber must authorize more\". When the patient pays a share, a payment method is required (Cash, Debit, Credit or Account).",
+            "`rx.Dispense` stores the price parts, and `CK_Dispense_Price` checks that they add up: total = cost + mark-up + fee, and plan + patient = total. A bug in the pricing code would fail at the database instead of reaching the accounting. The answer tells the web app whether the drug is monitored, so it can remind the pharmacist about the Narcotics Monitoring System."
+          ],
+          "examples": [
+            "refill",
+            "price"
+          ]
+        },
+        {
+          "id": "data",
+          "h": "The tables",
+          "p": [
+            "A dispense, and the lots it came from with their cost."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Dispense",
+              "DispenseLot"
+            ]
+          }
+        },
+        {
+          "id": "api",
+          "h": "The endpoint",
+          "p": [
+            "Dispensing needs `dispense` and passes the same restricted-prescription filter as reception."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Dispensing"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "fefo",
+          "h": "از lotهایی که زودتر منقضی می‌شوند",
+          "p": [
+            "دارویی که `ReadyToFill` است از lotهایی از همان محصول تحویل می‌شود که موجودی دارند و تاریخ انقضایشان بعد از امروز است، مرتب بر اساس تاریخ انقضا (و بعد شناسه‌ی lot). حلقه از lot اول هر قدر می‌تواند برمی‌دارد، بعد سراغ بعدی می‌رود تا مقدار کامل شود، و هر lot‌ی را که استفاده کرده با هزینه‌ی خود آن lot در `rx.DispenseLot` ثبت می‌کند. اگر موجودی منقضی‌نشده کافی نباشد، چیزی برداشته نمی‌شود و API با 409 و مقدار موجود جواب می‌دهد. موجودی منقضی هرگز تحویل نمی‌شود، هر چه روی قفسه باشد.",
+            "در تست، 40 قرص از lot‌ی که ژانویه‌ی 2027 منقضی می‌شود با قیمت 0.025 قبل از lot‌ی که 2028 منقضی می‌شود با قیمت 0.03 مصرف می‌شود؛ 60 قرص 1.00 + 0.60 = 1.60 هزینه دارد، و lot زودتر به صفر می‌رسد."
+          ],
+          "examples": [
+            "lots"
+          ]
+        },
+        {
+          "id": "refill",
+          "h": "تکرار، و قیمتی که دیتابیس بررسی می‌کند",
+          "p": [
+            "دارویی که قبلاً `Dispensed` شده فقط تا وقتی `RefillsRemaining` بزرگ‌تر از صفر است دوباره تحویل می‌شود؛ هر تکرار یکی کم می‌کند، و وقتی چیزی نمانده جواب 409 است، \"the prescriber must authorize more\". وقتی بیمار سهمی می‌پردازد، روش پرداخت لازم است (Cash، Debit، Credit یا Account).",
+            "`rx.Dispense` اجزای قیمت را نگه می‌دارد و `CK_Dispense_Price` بررسی می‌کند که با هم جور باشند: جمع = هزینه + سود + هزینه‌ی خدمت، و سهم بیمه + سهم بیمار = جمع. یک باگ در کد قیمت‌گذاری در دیتابیس شکست می‌خورد به‌جای این‌که به حسابداری برسد. جواب به اپ وب می‌گوید دارو تحت نظارت است یا نه، تا داروساز را درباره‌ی Narcotics Monitoring System یادآوری کند."
+          ],
+          "examples": [
+            "refill",
+            "price"
+          ]
+        },
+        {
+          "id": "data",
+          "h": "جدول‌ها",
+          "p": [
+            "یک تحویل، و lotهایی که از آن‌ها آمده با هزینه‌شان."
+          ],
+          "data": {
+            "kind": "tables",
+            "only": [
+              "Dispense",
+              "DispenseLot"
+            ]
+          }
+        },
+        {
+          "id": "api",
+          "h": "endpoint",
+          "p": [
+            "تحویل `dispense` می‌خواهد و از همان فیلتر نسخه‌ی محدودشده‌ی پذیرش می‌گذرد."
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Dispensing"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "lots": {
+          "title": {
+            "en": "First to expire, first out",
+            "fa": "اول آن‌که زودتر منقضی می‌شود"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/InventoryEndpoints.cs",
+          "from": "var lots = await db.StockLots.Where",
+          "lines": 14
+        },
+        "refill": {
+          "title": {
+            "en": "A refill needs refills left",
+            "fa": "تکرار، تکرار باقی‌مانده می‌خواهد"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/InventoryEndpoints.cs",
+          "from": "var refill = item.Status == ItemStatus.Dispensed;",
+          "lines": 3
+        },
+        "price": {
+          "title": {
+            "en": "The price must add up",
+            "fa": "قیمت باید جور باشد"
+          },
+          "lang": "sql",
+          "file": "database/040_inventory_dispensing.sql",
+          "from": "CONSTRAINT CK_Dispense_Price",
+          "lines": 2
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Two lots are on hand: 10 expiring next month and 100 expiring next year. 30 are dispensed. Where do they come from?",
+            "fa": "دو lot موجود است: 10 عدد که ماه بعد منقضی می‌شود و 100 عدد که سال بعد. 30 عدد تحویل می‌شود. از کجا می‌آیند؟"
+          },
+          "options": {
+            "en": [
+              "10 from the first lot, 20 from the second",
+              "All 30 from the larger lot",
+              "From whichever lot was received last"
+            ],
+            "fa": [
+              "10 از lot اول، 20 از دومی",
+              "هر 30 از lot بزرگ‌تر",
+              "از lot‌ی که آخر از همه دریافت شده"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Lots are ordered by expiry and the loop empties each before taking from the next.",
+            "fa": "lotها بر اساس انقضا مرتب می‌شوند و حلقه هر کدام را خالی می‌کند و بعد سراغ بعدی می‌رود."
+          }
+        },
+        {
+          "q": {
+            "en": "What does CK_Dispense_Price protect against?",
+            "fa": "CK_Dispense_Price از چه چیزی محافظت می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "A patient paying by credit card",
+              "A dispense whose parts do not add up to the total, or whose plan and patient shares do not",
+              "Dispensing expired lots"
+            ],
+            "fa": [
+              "پرداخت بیمار با کارت اعتباری",
+              "تحویلی که اجزایش با جمع جور نیست، یا سهم بیمه و بیمارش جور نیست",
+              "تحویل lotهای منقضی"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The CHECK requires Total = DrugCost + Markup + DispensingFee and PlanPays + PatientPays = Total, both non-negative.",
+            "fa": "این CHECK شرط Total = DrugCost + Markup + DispensingFee و PlanPays + PatientPays = Total، هر دو نامنفی، را می‌گذارد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "group": "stock",
+      "title": {
+        "en": "Pricing: cost, mark-up, fee, and who pays",
+        "fa": "قیمت‌گذاری: هزینه، سود، خدمت، و چه کسی می‌پردازد"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Domain/Pricing.cs",
+        "database/020_seed_reference.sql",
+        "tests/PharmaFlow.Tests/ReceptionTests.cs"
+      ],
+      "en": [
+        {
+          "id": "for",
+          "h": "One formula for every plan",
+          "p": [
+            "The price of a fill is the acquisition cost of the lots used, plus the plan's mark-up on that cost, plus its dispensing fee. The patient pays the plan's co-payment, a fixed amount, a percentage of the total, or both, but never more than the total; the plan pays the rest. With no plan the `Cash` terms apply: a 10 % mark-up, an 11.99 fee and 100 % paid by the patient, the pharmacy's own settings. Each part is rounded to the cent half away from zero before it is added, so the parts always add up to the total exactly.",
+            "With the demo ODB terms (2.00 co-pay, 8 % mark-up, 8.83 fee) a drug cost of 12.345 becomes 12.35 + 0.99 + 8.83 = 22.17: the patient pays 2.00 and ODB 20.17."
+          ],
+          "examples": [
+            "for"
+          ]
+        },
+        {
+          "id": "split",
+          "h": "Two invoices that add up line by line",
+          "p": [
+            "The accounting gets two invoices for one fill, one to the plan and one to the patient, each with a drug line and a fee line. `Split` decides which part of the price the patient's share pays for: the dispensing fee first, then the drug. In the ODB example the patient's 2.00 comes out of the 8.83 fee, so the plan is invoiced 13.34 for the drug and 6.83 for the fee, and the patient 2.00 for the fee only. Added line by line, the two invoices give back the price, which is what lets the accounting reconcile them."
+          ],
+          "examples": [
+            "split",
+            "test"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "for",
+          "h": "یک فرمول برای هر بیمه",
+          "p": [
+            "قیمت یک تحویل برابر است با هزینه‌ی خرید lotهای مصرف‌شده، به‌علاوه‌ی سود بیمه روی آن هزینه، به‌علاوه‌ی هزینه‌ی خدمت آن. بیمار سهم بیمه (co-payment) را می‌پردازد، یک مبلغ ثابت، درصدی از جمع، یا هر دو، ولی هرگز بیشتر از جمع؛ بیمه بقیه را می‌پردازد. بدون بیمه شرایط `Cash` اعمال می‌شود: 10 درصد سود، 11.99 هزینه‌ی خدمت و 100 درصد پرداخت بیمار، که تنظیمات خود داروخانه است. هر جزء قبل از جمع شدن تا سنت، با گرد کردن نیمه به دور از صفر، گرد می‌شود، پس اجزا همیشه دقیقاً با جمع جورند.",
+            "با شرایط نمایشی ODB (سهم بیمار 2.00، سود 8 درصد، خدمت 8.83) هزینه‌ی داروی 12.345 می‌شود 12.35 + 0.99 + 8.83 = 22.17: بیمار 2.00 می‌پردازد و ODB مبلغ 20.17."
+          ],
+          "examples": [
+            "for"
+          ]
+        },
+        {
+          "id": "split",
+          "h": "دو فاکتور که سطر به سطر جورند",
+          "p": [
+            "حسابداری برای یک تحویل دو فاکتور می‌گیرد، یکی برای بیمه و یکی برای بیمار، هر کدام با یک سطر دارو و یک سطر خدمت. `Split` تعیین می‌کند سهم بیمار بابت کدام بخش قیمت است: اول هزینه‌ی خدمت، بعد دارو. در مثال ODB، 2.00ی بیمار از 8.83ی خدمت کم می‌شود، پس به بیمه 13.34 برای دارو و 6.83 برای خدمت فاکتور می‌شود، و به بیمار 2.00 فقط برای خدمت. دو فاکتور سطر به سطر جمع که شوند همان قیمت را می‌دهند، و همین به حسابداری اجازه می‌دهد آن‌ها را تطبیق دهد."
+          ],
+          "examples": [
+            "split",
+            "test"
+          ]
+        }
+      ],
+      "examples": {
+        "for": {
+          "title": {
+            "en": "The price and the shares",
+            "fa": "قیمت و سهم‌ها"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/Pricing.cs",
+          "from": "public static readonly PlanTerms Cash",
+          "to": "return new Price(cost, markup, fee, total, total - patient, patient);"
+        },
+        "split": {
+          "title": {
+            "en": "The patient's share: fee first",
+            "fa": "سهم بیمار: اول خدمت"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/Pricing.cs",
+          "from": "public static (decimal PlanDrug",
+          "lines": 6
+        },
+        "test": {
+          "title": {
+            "en": "The ODB example",
+            "fa": "مثال ODB"
+          },
+          "lang": "csharp",
+          "file": "tests/PharmaFlow.Tests/ReceptionTests.cs",
+          "from": "public void Odb_pays_all_but_the_copay_which_comes_out_of_the_fee_first()",
+          "lines": 8
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A plan has a 50.00 co-pay and the total is 12.21. What does the patient pay?",
+            "fa": "یک بیمه سهم بیمار 50.00 دارد و جمع 12.21 است. بیمار چقدر می‌پردازد؟"
+          },
+          "options": {
+            "en": [
+              "50.00",
+              "12.21, the whole total, and the plan pays nothing",
+              "Nothing, the plan refuses"
+            ],
+            "fa": [
+              "50.00",
+              "12.21، کل جمع، و بیمه چیزی نمی‌پردازد",
+              "هیچ، بیمه رد می‌کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The patient share is Math.Min(total, co-pay); a co-pay never exceeds the total.",
+            "fa": "سهم بیمار Math.Min(total, co-pay) است؛ سهم بیمار هرگز از جمع بیشتر نمی‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does Split take the patient's share out of the dispensing fee first?",
+            "fa": "چرا Split سهم بیمار را اول از هزینه‌ی خدمت کم می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Because fees are taxed",
+              "Because ODB never pays fees",
+              "So that one fixed rule makes the two invoices add up to the price line by line"
+            ],
+            "fa": [
+              "چون هزینه‌ی خدمت مالیات دارد",
+              "چون ODB هیچ‌وقت هزینه‌ی خدمت نمی‌پردازد",
+              "تا یک قاعده‌ی ثابت باعث شود دو فاکتور سطر به سطر با قیمت جور باشند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Any fixed order would do; the point is that plan lines + patient lines = the drug and fee of the price.",
+            "fa": "هر ترتیب ثابتی کار می‌کرد؛ نکته این است که سطرهای بیمه + سطرهای بیمار = دارو و خدمت قیمت."
+          }
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "group": "stock",
+      "title": {
+        "en": "The money to FinancePowerApp",
+        "fa": "پول به FinancePowerApp"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Domain/FinanceFeed.cs",
+        "src/PharmaFlow.Api/Program.cs",
+        "src/PharmaFlow.Api/appsettings.Development.json",
+        "database/040_inventory_dispensing.sql"
+      ],
+      "en": [
+        {
+          "id": "docs",
+          "h": "Documents built from what happened",
+          "p": [
+            "`FinanceFeed.BuildAsync` turns the pharmacy's purchases and dispenses into accounting documents. A supplier invoice becomes a `Bill`: drugs to `Inventory.Drugs` (zero-rated) and supplies with their HST, which the pharmacy claims back because it makes zero-rated supplies. A dispense becomes up to four documents: an `Invoice` to the plan for its share (party ODB, or the insurer), an `Invoice` to the patient for theirs, a `Receipt` when the patient paid at pick-up, and a `Usage` moving the cost of the lots used from inventory to cost of goods sold.",
+            "The documents carry no health information: no patient name, no drug. The patient is the party \"PATIENT\", and the test checks that the demo patient's name appears nowhere in them. The accounting needs amounts, not diagnoses."
+          ],
+          "examples": [
+            "dispense"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "Sent once, retried until accepted",
+          "p": [
+            "Each document has an id that never changes, `dispense:17:plan` or `purchase:3`. `FinanceWorker`, a `BackgroundService`, calls `SendAsync` every 30 seconds while `Finance:BaseUrl` is set: it rebuilds the documents, leaves out the ids already in `billing.FinanceExport`, and posts the rest in chunks of 100. Only an accepted chunk is recorded; a refusal or an unreachable FinancePowerApp stops the round, and the next round tries again. Because ids are stable, a document sent twice by a crash between posting and recording is recognised by the other side.",
+            "With sign-in through ClinicHub, PharmaFlow authenticates as itself with a client-credentials token for the scope `finance`, kept until a minute before it expires; in development it sends the `X-Finance-Key` development key instead."
+          ],
+          "examples": [
+            "sent",
+            "worker"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "docs",
+          "h": "سندهایی ساخته‌شده از چیزی که رخ داده",
+          "p": [
+            "`FinanceFeed.BuildAsync` خریدها و تحویل‌های داروخانه را به سندهای حسابداری تبدیل می‌کند. فاکتور تأمین‌کننده یک `Bill` می‌شود: داروها به `Inventory.Drugs` (zero-rated) و لوازم با HSTشان، که داروخانه پس می‌گیرد چون عرضه‌هایش zero-rated است. یک تحویل تا چهار سند می‌شود: یک `Invoice` به بیمه برای سهمش (طرف ODB، یا بیمه‌گر)، یک `Invoice` به بیمار برای سهم او، یک `Receipt` وقتی بیمار هنگام تحویل پرداخته، و یک `Usage` که هزینه‌ی lotهای مصرف‌شده را از موجودی به بهای تمام‌شده‌ی کالای فروش‌رفته می‌برد.",
+            "سندها هیچ اطلاعات سلامتی ندارند: نه اسم بیمار، نه دارو. بیمار طرفی به اسم \"PATIENT\" است، و تست بررسی می‌کند که اسم بیمار نمایشی هیچ‌جای آن‌ها نیامده باشد. حسابداری مبلغ لازم دارد، نه تشخیص."
+          ],
+          "examples": [
+            "dispense"
+          ]
+        },
+        {
+          "id": "once",
+          "h": "یک بار فرستاده، تا پذیرش دوباره امتحان می‌شود",
+          "p": [
+            "هر سند شناسه‌ای دارد که هرگز عوض نمی‌شود، `dispense:17:plan` یا `purchase:3`. `FinanceWorker` که یک `BackgroundService` است، تا وقتی `Finance:BaseUrl` تنظیم است هر 30 ثانیه `SendAsync` را صدا می‌زند: سندها را از نو می‌سازد، شناسه‌هایی را که در `billing.FinanceExport` هستند کنار می‌گذارد، و بقیه را در دسته‌های 100 تایی می‌فرستد. فقط دسته‌ی پذیرفته‌شده ثبت می‌شود؛ رد شدن یا در دسترس نبودن FinancePowerApp دور را متوقف می‌کند و دور بعد دوباره امتحان می‌کند. چون شناسه‌ها ثابت‌اند، سندی که به‌خاطر یک crash بین فرستادن و ثبت کردن دو بار فرستاده شود، در طرف مقابل شناخته می‌شود.",
+            "با ورود از طریق ClinicHub، PharmaFlow با یک token‌ی client-credentials برای scope‌ی `finance` خودش را معرفی می‌کند که تا یک دقیقه قبل از انقضا نگه داشته می‌شود؛ در توسعه به‌جایش کلید توسعه‌ی `X-Finance-Key` را می‌فرستد."
+          ],
+          "examples": [
+            "sent",
+            "worker"
+          ]
+        }
+      ],
+      "examples": {
+        "dispense": {
+          "title": {
+            "en": "A dispense, as accounting documents",
+            "fa": "یک تحویل، به‌صورت سندهای حسابداری"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/FinanceFeed.cs",
+          "from": "if (d.PlanPays > 0 && d.Plan is { } plan)",
+          "to": "memo: $\"Cost of drugs, Rx {d.Rx}\"));"
+        },
+        "sent": {
+          "title": {
+            "en": "Only what was not accepted yet",
+            "fa": "فقط آن‌چه هنوز پذیرفته نشده"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/FinanceFeed.cs",
+          "from": "var sent = (await db.FinanceExports",
+          "lines": 2
+        },
+        "worker": {
+          "title": {
+            "en": "Every 30 seconds",
+            "fa": "هر 30 ثانیه"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Domain/FinanceFeed.cs",
+          "from": "while (!stoppingToken.IsCancellationRequested && feed.Connected)",
+          "lines": 5
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "FinancePowerApp is down for an hour. What happens to the documents of that hour?",
+            "fa": "FinancePowerApp یک ساعت از دسترس خارج است. سندهای آن ساعت چه می‌شوند؟"
+          },
+          "options": {
+            "en": [
+              "They are lost",
+              "They are sent when it is back, since they are not in billing.FinanceExport yet",
+              "Dispensing is blocked until it is back"
+            ],
+            "fa": [
+              "گم می‌شوند",
+              "وقتی برگشت فرستاده می‌شوند، چون هنوز در billing.FinanceExport نیستند",
+              "تحویل تا برگشتنش متوقف می‌شود"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Documents are rebuilt from the purchases and dispenses every round; only accepted ids are recorded, so the rest wait.",
+            "fa": "سندها در هر دور از خریدها و تحویل‌ها از نو ساخته می‌شوند؛ فقط شناسه‌های پذیرفته‌شده ثبت می‌شوند، پس بقیه منتظر می‌مانند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why do the financial documents name the patient only as \"PATIENT\"?",
+            "fa": "چرا سندهای مالی بیمار را فقط \"PATIENT\" می‌نامند؟"
+          },
+          "options": {
+            "en": [
+              "The accounting needs amounts, not health information, so none leaves the pharmacy",
+              "Because patient names are too long",
+              "FinancePowerApp has no party field"
+            ],
+            "fa": [
+              "حسابداری مبلغ لازم دارد، نه اطلاعات سلامت، پس هیچ اطلاعاتی از داروخانه خارج نمی‌شود",
+              "چون اسم بیماران خیلی طولانی است",
+              "FinancePowerApp فیلد طرف حساب ندارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The class comment says no health information is sent, and the dispensing test asserts the patient's name is absent.",
+            "fa": "توضیح کلاس می‌گوید اطلاعات سلامت فرستاده نمی‌شود، و تست تحویل بررسی می‌کند که اسم بیمار نیامده باشد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "permissions",
+      "group": "access",
+      "title": {
+        "en": "Four permissions, and reads versus writes",
+        "fa": "چهار مجوز، و خواندن در برابر نوشتن"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Auth/PharmaPermissions.cs",
+        "src/PharmaFlow.Api/Auth/DevAuth.cs",
+        "src/PharmaFlow.Api/Endpoints/PeopleEndpoints.cs"
+      ],
+      "en": [
+        {
+          "id": "four",
+          "h": "reception, dispense, stock, admin",
+          "p": [
+            "ClinicHub's roles can grant four PharmaFlow permissions, which arrive as `permission` claims: `reception` (prescriptions, patients, allergies, prescribers), `dispense`, `stock` (purchasing) and `admin` (the catalog, plans and base definitions). Each work policy accepts its own permission or `admin`, so a clinic can build a \"pharmacy manager\" role from `admin` alone; `admin` itself is granted only by `admin`. The policy `pharmacy` accepts any of the four: it is what everyone who may use PharmaFlow at all needs."
+          ],
+          "examples": [
+            "policies"
+          ]
+        },
+        {
+          "id": "writes",
+          "h": "Read with any, write with the right one",
+          "p": [
+            "A pharmacy technician at reception needs to see the stock and the catalog, but not to change them. Each endpoint group therefore requires `pharmacy` for everything and adds `RequireForWrites` with its own policy: an endpoint filter that lets GET, HEAD and OPTIONS through and runs the authorization service for any other method, answering 403 \"Your role at the clinic does not allow this in PharmaFlow\". One line per group states the whole rule, and a new endpoint in the group cannot forget it.",
+            "In development, `DevAuthHandler` signs everyone in as the developer pharmacist with all four permissions. The header `X-Dev-Permissions` narrows them (\"reception stock\", or \"none\") so a role can be tried without ClinicHub; the permission tests use exactly that."
+          ],
+          "examples": [
+            "writes",
+            "group",
+            "dev"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "four",
+          "h": "reception، dispense، stock، admin",
+          "p": [
+            "roleهای ClinicHub می‌توانند چهار مجوز PharmaFlow بدهند که به‌صورت claimهای `permission` می‌رسند: `reception` (نسخه‌ها، بیماران، آلرژی‌ها، تجویزکنندگان)، `dispense`، `stock` (خرید) و `admin` (کاتالوگ، بیمه‌ها و تعریف‌های پایه). هر policy‌ی کاری مجوز خودش یا `admin` را می‌پذیرد، پس یک کلینیک می‌تواند نقش \"مدیر داروخانه\" را فقط از `admin` بسازد؛ خود `admin` را فقط `admin` می‌دهد. policy‌ی `pharmacy` هر کدام از چهار را می‌پذیرد: چیزی که هر کسی که اصلاً اجازه‌ی استفاده از PharmaFlow دارد لازم دارد."
+          ],
+          "examples": [
+            "policies"
+          ]
+        },
+        {
+          "id": "writes",
+          "h": "خواندن با هر مجوز، نوشتن با مجوز درست",
+          "p": [
+            "یک تکنسین داروخانه در پذیرش باید موجودی و کاتالوگ را ببیند ولی نه این‌که عوضشان کند. برای همین هر گروه endpoint برای همه چیز `pharmacy` را می‌خواهد و `RequireForWrites` را با policy‌ی خودش اضافه می‌کند: یک endpoint filter که GET و HEAD و OPTIONS را رد می‌کند برود و برای هر متد دیگری سرویس authorization را اجرا می‌کند و با 403 و پیام \"Your role at the clinic does not allow this in PharmaFlow\" جواب می‌دهد. یک خط برای هر گروه کل قاعده را می‌گوید، و endpoint‌ی تازه در آن گروه نمی‌تواند فراموشش کند.",
+            "در توسعه، `DevAuthHandler` همه را به‌عنوان داروساز توسعه با هر چهار مجوز وارد می‌کند. هدر `X-Dev-Permissions` آن‌ها را محدود می‌کند (\"reception stock\"، یا \"none\") تا بشود یک role را بدون ClinicHub امتحان کرد؛ تست‌های مجوز دقیقاً همین کار را می‌کنند."
+          ],
+          "examples": [
+            "writes",
+            "group",
+            "dev"
+          ]
+        }
+      ],
+      "examples": {
+        "policies": {
+          "title": {
+            "en": "The policies",
+            "fa": "policyها"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/PharmaPermissions.cs",
+          "from": "public static AuthorizationBuilder AddPharmaPolicies",
+          "lines": 6
+        },
+        "writes": {
+          "title": {
+            "en": "Writes need the group's policy too",
+            "fa": "نوشتن policy‌ی گروه را هم می‌خواهد"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/PharmaPermissions.cs",
+          "from": "public static RouteGroupBuilder RequireForWrites",
+          "lines": 8
+        },
+        "group": {
+          "title": {
+            "en": "One line per group",
+            "fa": "یک خط برای هر گروه"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PeopleEndpoints.cs",
+          "from": "var api = app.MapGroup(\"/api\").RequireAuthorization(Policies.Any).RequireForWrites(Policies.Reception);",
+          "lines": 1
+        },
+        "dev": {
+          "title": {
+            "en": "Narrowing the development user",
+            "fa": "محدود کردن کاربر توسعه"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/DevAuth.cs",
+          "from": "// Everything, unless X-Dev-Permissions narrows it",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A user with reception, stock and dispense, but not admin, posts a new drug. What happens?",
+            "fa": "کاربری با reception و stock و dispense ولی بدون admin یک داروی تازه ثبت می‌کند. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It is saved, since three permissions are more than one",
+              "403: catalog writes need admin",
+              "401: they are not signed in"
+            ],
+            "fa": [
+              "ذخیره می‌شود، چون سه مجوز بیشتر از یکی است",
+              "403: نوشتن در کاتالوگ admin می‌خواهد",
+              "401: وارد نشده است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The drug group uses RequireForWrites(Policies.Admin), and the Admin policy accepts only admin; the permission test checks this exact case.",
+            "fa": "گروه دارو RequireForWrites(Policies.Admin) دارد و policy‌ی Admin فقط admin را می‌پذیرد؛ تست مجوز دقیقاً همین حالت را بررسی می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why put the write rule in an endpoint filter on the group rather than on each endpoint?",
+            "fa": "چرا قاعده‌ی نوشتن در یک endpoint filter روی گروه است و نه روی هر endpoint؟"
+          },
+          "options": {
+            "en": [
+              "Filters are faster than policies",
+              "Minimal APIs cannot authorize a single endpoint",
+              "One line covers every write in the group, including endpoints added later"
+            ],
+            "fa": [
+              "filterها از policyها سریع‌ترند",
+              "Minimal API نمی‌تواند یک endpoint را جدا authorize کند",
+              "یک خط هر نوشتنی را در گروه پوشش می‌دهد، حتی endpointهایی که بعداً اضافه می‌شوند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The filter decides by HTTP method, so any POST, PUT or DELETE mapped on the group gets the policy without being written again.",
+            "fa": "filter بر اساس متد HTTP تصمیم می‌گیرد، پس هر POST، PUT یا DELETE‌ی روی گروه بدون نوشتن دوباره policy را می‌گیرد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "signin",
+      "group": "access",
+      "title": {
+        "en": "Sign-in through ClinicHub",
+        "fa": "ورود از طریق ClinicHub"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Auth/ClinicHubSignIn.cs",
+        "src/PharmaFlow.Api/Auth/ClinicHubService.cs",
+        "src/PharmaFlow.Api/Program.cs",
+        "web/src/api.ts"
+      ],
+      "en": [
+        {
+          "id": "oidc",
+          "h": "OpenID Connect, then a cookie of PharmaFlow's own",
+          "p": [
+            "Staff sign in at ClinicHub with OpenID Connect, code flow with PKCE, asking for `openid profile clinic offline_access`. When the id token comes back, `ToLocalPrincipal` keeps only what PharmaFlow uses: the person, the clinic (its slug must be valid), and the `permission` claims that are among PharmaFlow's four. A person with none of them is refused right there, and the browser is sent back with \"you have no role that allows PharmaFlow at the clinic you chose\". There is no local user table; the audit names the person ClinicHub named.",
+            "The session is a cookie, `pharmaflow.auth`, HttpOnly, SameSite=Lax, 12 hours sliding. Of the tokens only the refresh token and the id token are kept, the access token would only make the cookie bigger. API calls without a session get 401, not a redirect, so the React app can show its own sign-in page."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "recheck",
+          "h": "Checked again every five minutes",
+          "p": [
+            "A cookie valid for 12 hours would keep a person in after their role was removed. So on every request `ValidateAsync` looks at when the session was last checked; after `RecheckMinutes` (5) it asks ClinicHub's token endpoint again with the refresh token. A refusal (4xx: role removed, signed out everywhere) ends the session at once and takes the new permission list otherwise. If ClinicHub cannot be reached the session goes on, but only for `OfflineGraceMinutes` (30) after the last good check, so an outage of ClinicHub does not stop the counter, and a long one does not keep stale access forever."
+          ],
+          "examples": [
+            "recheck"
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "A header the attacker's page cannot send",
+          "p": [
+            "A cookie goes with every request to the site, including one a malicious page makes the browser send. SameSite=Lax already stops most of those, and PharmaFlow adds a second lock when sign-in is through ClinicHub: every unsafe request to `/api` must carry the header `X-PharmaFlow`. A page on another origin cannot add a custom header to a cross-site request without a CORS preflight, which the API never grants. The web app's one `request` function always sends it."
+          ],
+          "examples": [
+            "csrf",
+            "header"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "oidc",
+          "h": "OpenID Connect، و بعد یک cookie‌ی مال خود PharmaFlow",
+          "p": [
+            "کارکنان در ClinicHub با OpenID Connect، code flow همراه PKCE، وارد می‌شوند و `openid profile clinic offline_access` را می‌خواهند. وقتی id token برمی‌گردد، `ToLocalPrincipal` فقط چیزی را نگه می‌دارد که PharmaFlow به کار می‌برد: آدم، کلینیک (slugش باید معتبر باشد)، و claimهای `permission`ی که جزو چهار مجوز PharmaFlow هستند. کسی که هیچ‌کدام را ندارد همان‌جا رد می‌شود و مرورگر با پیام \"you have no role that allows PharmaFlow at the clinic you chose\" برمی‌گردد. جدول کاربر محلی وجود ندارد؛ audit همان آدمی را نام می‌برد که ClinicHub نام برده.",
+            "session یک cookie است، `pharmaflow.auth`، با HttpOnly و SameSite=Lax و 12 ساعت لغزان. از tokenها فقط refresh token و id token نگه داشته می‌شوند، access token فقط cookie را بزرگ‌تر می‌کرد. درخواست‌های API بدون session جواب 401 می‌گیرند نه redirect، تا اپ React بتواند صفحه‌ی ورود خودش را نشان دهد."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "recheck",
+          "h": "هر پنج دقیقه دوباره بررسی می‌شود",
+          "p": [
+            "cookieی که 12 ساعت معتبر است، آدمی را بعد از برداشته شدن نقشش هم داخل نگه می‌داشت. پس در هر درخواست `ValidateAsync` نگاه می‌کند session آخرین بار کی بررسی شده؛ بعد از `RecheckMinutes` (پنج دقیقه) دوباره با refresh token از token endpoint‌ی ClinicHub می‌پرسد. رد شدن (4xx: نقش برداشته شده، از همه‌جا خارج شده) session را فوراً تمام می‌کند و در غیر این صورت فهرست تازه‌ی مجوزها گرفته می‌شود. اگر ClinicHub در دسترس نباشد session ادامه پیدا می‌کند، ولی فقط تا `OfflineGraceMinutes` (سی دقیقه) بعد از آخرین بررسی موفق، پس قطعی ClinicHub پیشخوان را متوقف نمی‌کند و یک قطعی طولانی هم دسترسی کهنه را برای همیشه نگه نمی‌دارد."
+          ],
+          "examples": [
+            "recheck"
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "هدری که صفحه‌ی مهاجم نمی‌تواند بفرستد",
+          "p": [
+            "cookie با هر درخواستی به سایت می‌رود، حتی درخواستی که یک صفحه‌ی مخرب مرورگر را وادار به فرستادنش می‌کند. SameSite=Lax بیشتر این‌ها را از قبل متوقف می‌کند، و PharmaFlow وقتی ورود از طریق ClinicHub است یک قفل دوم اضافه می‌کند: هر درخواست غیرامن به `/api` باید هدر `X-PharmaFlow` را داشته باشد. صفحه‌ای از یک origin دیگر بدون preflight‌ی CORS نمی‌تواند هدر سفارشی به درخواست cross-site اضافه کند، و API هرگز چنین اجازه‌ای نمی‌دهد. تنها تابع `request` در اپ وب همیشه آن را می‌فرستد."
+          ],
+          "examples": [
+            "csrf",
+            "header"
+          ]
+        }
+      ],
+      "examples": {
+        "local": {
+          "title": {
+            "en": "Only PharmaFlow's permissions are kept",
+            "fa": "فقط مجوزهای PharmaFlow نگه داشته می‌شوند"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/ClinicHubSignIn.cs",
+          "from": "var permissions = hub.FindAll(\"permission\")",
+          "lines": 2
+        },
+        "recheck": {
+          "title": {
+            "en": "Refused ends it, unreachable for a while",
+            "fa": "رد شدن تمامش می‌کند، در دسترس نبودن برای مدتی"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/ClinicHubSignIn.cs",
+          "from": "if (DateTime.UtcNow - checkedAt >= TimeSpan.FromMinutes(options.RecheckMinutes))",
+          "lines": 15
+        },
+        "csrf": {
+          "title": {
+            "en": "The header check",
+            "fa": "بررسی هدر"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/ClinicHubSignIn.cs",
+          "from": "public static IApplicationBuilder UseCsrfHeaderCheck",
+          "lines": 11
+        },
+        "header": {
+          "title": {
+            "en": "The web app always sends it",
+            "fa": "اپ وب همیشه می‌فرستدش"
+          },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "// X-PharmaFlow: with sign-in through ClinicHub",
+          "lines": 2
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "ClinicHub has been unreachable for 10 minutes and a session was last checked 6 minutes ago. What happens?",
+            "fa": "ClinicHub ده دقیقه است در دسترس نیست و session شش دقیقه پیش آخرین بار بررسی شده. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The session ends immediately",
+              "The session goes on, since it is within the 30-minute grace",
+              "The user is asked for a password"
+            ],
+            "fa": [
+              "session فوراً تمام می‌شود",
+              "session ادامه پیدا می‌کند، چون در مهلت سی دقیقه است",
+              "از کاربر رمز خواسته می‌شود"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Unreachable rejects only when more than OfflineGraceMinutes have passed since checkedAt.",
+            "fa": "Unreachable فقط وقتی رد می‌کند که بیش از OfflineGraceMinutes از checkedAt گذشته باشد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the API demand the X-PharmaFlow header on POSTs when the cookie is already SameSite=Lax?",
+            "fa": "چرا API وقتی cookie از قبل SameSite=Lax است، روی POSTها هدر X-PharmaFlow را می‌خواهد؟"
+          },
+          "options": {
+            "en": [
+              "As a second guard against cross-site requests: another origin cannot add that header without CORS",
+              "To carry the access token",
+              "Because ClinicHub requires it"
+            ],
+            "fa": [
+              "به‌عنوان محافظ دوم در برابر درخواست‌های cross-site: یک origin دیگر بدون CORS نمی‌تواند آن هدر را اضافه کند",
+              "برای حمل access token",
+              "چون ClinicHub لازمش دارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "UseCsrfHeaderCheck answers 400 to unsafe /api requests without it; a custom header forces a preflight the API never allows.",
+            "fa": "UseCsrfHeaderCheck به درخواست‌های غیرامن /api بدون آن جواب 400 می‌دهد؛ هدر سفارشی preflightی را لازم می‌کند که API هرگز اجازه نمی‌دهد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "fhir",
+      "group": "erx",
+      "title": {
+        "en": "Electronic prescriptions: a FHIR Bundle to /fhir",
+        "fa": "نسخه‌ی الکترونیکی: یک FHIR Bundle به /fhir"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+        "src/PharmaFlow.Api/Auth/ClinicHubService.cs",
+        "database/050_electronic_prescriptions.sql",
+        "tests/PharmaFlow.Tests/FhirTests.cs"
+      ],
+      "en": [
+        {
+          "id": "bundle",
+          "h": "Who may send, and what they may send",
+          "p": [
+            "ClinicHub sends a prescription as one FHIR R4 transaction Bundle to `POST /fhir`, directly or through IntegrationHub: a `Patient`, a `Practitioner` and one `MedicationRequest` per drug, under one group identifier. The endpoint exists only when `ClinicHub:Authority` is set. It accepts a bearer token signed by ClinicHub, for the audience `pharmaflow`, with the scope `prescriptions` and a valid `clinic_slug`; a token for LabFlow, one signed with another key, or one with another scope is refused.",
+            "The token also names the clinic, and every identifier in the Bundle must start with `urn:clinichub:{slug}:`. A token for one clinic therefore cannot create or withdraw another clinic's prescriptions: the answer is 403. The whole Bundle is validated (text, directions, quantity, days, at most 12 refills, at most 20 drugs, a 10-digit health card) before anything is saved, and saving happens in one transaction."
+          ],
+          "examples": [
+            "policy",
+            "own"
+          ]
+        },
+        {
+          "id": "same",
+          "h": "A resend is the same prescription",
+          "p": [
+            "The patient is found by health card, or else by name and birth date, and created when new to the pharmacy; a prescriber is found by CPSO number or created. The group becomes one `eRx` prescription at reception with `ExternalId` \"{system}|{value}\", and each drug keeps its own `ExternalId`, both unique (script 050). When ClinicHub sends the same Bundle again, after a lost answer, the prescription is found and only drugs not seen before are added; the answer says `200 OK` instead of `201 Created` with the same locations. If two copies arrive at the same instant, the unique index catches the second, which gets 409 and finds the first on retry.",
+            "From there it is an ordinary prescription: matched by DIN, checked against the allergies, reviewed and filled by the pharmacist."
+          ],
+          "examples": [
+            "patient",
+            "resend"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Fhir"
+            ]
+          }
+        }
+      ],
+      "fa": [
+        {
+          "id": "bundle",
+          "h": "چه کسی می‌تواند بفرستد، و چه چیزی",
+          "p": [
+            "ClinicHub نسخه را به‌صورت یک transaction Bundle‌ی FHIR R4 به `POST /fhir` می‌فرستد، مستقیم یا از طریق IntegrationHub: یک `Patient`، یک `Practitioner` و یک `MedicationRequest` برای هر دارو، زیر یک شناسه‌ی گروه. این endpoint فقط وقتی وجود دارد که `ClinicHub:Authority` تنظیم شده باشد. bearer tokenی را می‌پذیرد که ClinicHub امضا کرده، برای audience‌ی `pharmaflow`، با scope‌ی `prescriptions` و یک `clinic_slug` معتبر؛ token‌ی برای LabFlow، tokenی که با کلید دیگری امضا شده، یا tokenی با scope‌ی دیگر رد می‌شود.",
+            "token کلینیک را هم نام می‌برد، و هر شناسه‌ای در Bundle باید با `urn:clinichub:{slug}:` شروع شود. پس token‌ی یک کلینیک نمی‌تواند نسخه‌های کلینیک دیگری را بسازد یا لغو کند: جواب 403 است. کل Bundle (متن، دستور مصرف، مقدار، روزها، حداکثر 12 تکرار، حداکثر 20 دارو، کارت سلامت ده‌رقمی) قبل از ذخیره‌ی هر چیزی اعتبارسنجی می‌شود، و ذخیره در یک transaction انجام می‌شود."
+          ],
+          "examples": [
+            "policy",
+            "own"
+          ]
+        },
+        {
+          "id": "same",
+          "h": "ارسال دوباره همان نسخه است",
+          "p": [
+            "بیمار با کارت سلامت پیدا می‌شود، وگرنه با نام و تاریخ تولد، و اگر برای داروخانه تازه باشد ساخته می‌شود؛ تجویزکننده با شماره‌ی CPSO پیدا یا ساخته می‌شود. گروه به یک نسخه‌ی `eRx` در پذیرش تبدیل می‌شود با `ExternalId` به شکل \"{system}|{value}\"، و هر دارو `ExternalId`‌ی خودش را دارد، هر دو یکتا (اسکریپت 050). وقتی ClinicHub همان Bundle را دوباره می‌فرستد، بعد از جوابی که گم شده، نسخه پیدا می‌شود و فقط داروهایی که قبلاً دیده نشده‌اند اضافه می‌شوند؛ جواب به‌جای `201 Created` می‌گوید `200 OK` با همان locationها. اگر دو نسخه هم‌زمان برسند، index‌ی یکتا دومی را می‌گیرد که 409 می‌گیرد و در تلاش دوباره اولی را پیدا می‌کند.",
+            "از آن‌جا به بعد یک نسخه‌ی معمولی است: با DIN وصل می‌شود، با آلرژی‌ها بررسی می‌شود، و داروساز بررسی‌اش می‌کند و می‌پیچد."
+          ],
+          "examples": [
+            "patient",
+            "resend"
+          ],
+          "data": {
+            "kind": "endpoints",
+            "only": [
+              "Fhir"
+            ]
+          }
+        }
+      ],
+      "examples": {
+        "policy": {
+          "title": {
+            "en": "Audience, scope and clinic",
+            "fa": "audience، scope و کلینیک"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/ClinicHubService.cs",
+          "from": "auth.Services.AddAuthorizationBuilder().AddPolicy(PrescriptionsPolicy",
+          "lines": 4
+        },
+        "own": {
+          "title": {
+            "en": "Only this clinic's identifiers",
+            "fa": "فقط شناسه‌های همین کلینیک"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "var own = $\"urn:clinichub:{slug}:\";",
+          "lines": 3
+        },
+        "patient": {
+          "title": {
+            "en": "Health card, or name and birth date",
+            "fa": "کارت سلامت، یا نام و تاریخ تولد"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "// The patient: the health card, or else name and birth date",
+          "lines": 3
+        },
+        "resend": {
+          "title": {
+            "en": "Keyed on the identifiers",
+            "fa": "کلیدشده روی شناسه‌ها"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "var externalGroup = $\"{groupSystem}|{groupValue}\";",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "ClinicHub sends a Bundle, the answer is lost, and it sends the same Bundle again. What is in the database?",
+            "fa": "ClinicHub یک Bundle می‌فرستد، جواب گم می‌شود، و همان Bundle را دوباره می‌فرستد. در دیتابیس چه هست؟"
+          },
+          "options": {
+            "en": [
+              "Two prescriptions with the same drugs",
+              "One prescription with its drugs once; the second answer says 200 OK",
+              "Nothing: the second Bundle cancels the first"
+            ],
+            "fa": [
+              "دو نسخه با داروهای یکسان",
+              "یک نسخه با داروهایش یک بار؛ جواب دوم 200 OK می‌گوید",
+              "هیچ: Bundle‌ی دوم اولی را لغو می‌کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The group and each drug are looked up by ExternalId; only drugs not already known are added.",
+            "fa": "گروه و هر دارو با ExternalId جست‌وجو می‌شوند؛ فقط داروهایی که هنوز شناخته نشده‌اند اضافه می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "A token for clinic \"lakeshore\" carries identifiers starting urn:clinichub:harbourview:. What is the answer?",
+            "fa": "token‌ی برای کلینیک \"lakeshore\" شناسه‌هایی با شروع urn:clinichub:harbourview: دارد. جواب چیست؟"
+          },
+          "options": {
+            "en": [
+              "201: the token is valid",
+              "401: wrong audience",
+              "403: the identifiers do not belong to the token's clinic"
+            ],
+            "fa": [
+              "201: token معتبر است",
+              "401: audience اشتباه",
+              "403: شناسه‌ها مال کلینیک token نیستند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "ReceiveAsync compares the group system with urn:clinichub:{slug}: and throws Invalid with 403 \"forbidden\".",
+            "fa": "ReceiveAsync سیستم گروه را با urn:clinichub:{slug}: مقایسه می‌کند و Invalid با 403 \"forbidden\" می‌دهد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "withdraw",
+      "group": "erx",
+      "title": {
+        "en": "Withdrawals and patient merges from the clinic",
+        "fa": "لغو و ادغام بیمار از طرف کلینیک"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+        "database/051_prescription_mrn_and_label.sql",
+        "tests/PharmaFlow.Tests/FhirTests.cs"
+      ],
+      "en": [
+        {
+          "id": "cancel",
+          "h": "Until it is filled, and not after",
+          "p": [
+            "A clinic withdraws a drug by sending the same `MedicationRequest` again with status `cancelled`, alone in a Bundle. Every identifier must be the clinic's and every drug must exist, or nothing changes (404). If any of them is already `Filled`, `Verified` or `Dispensed`, the whole withdrawal is refused with 409 and the message \"Already being dispensed: the pharmacy cannot cancel it. Call the pharmacy.\" A drug in a bag on the counter is a matter for a phone call, not a silent status change.",
+            "Otherwise each drug becomes `Cancelled` with the clinic's reason (or \"Cancelled by the prescriber's clinic\"), the prescription's status is settled again, and the access log gets a line under the clinic's name. Sending the same withdrawal twice is harmless: an item already cancelled is left as it is and the answer is still 200."
+          ],
+          "examples": [
+            "late"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "A merge at the clinic is followed, not copied",
+          "p": [
+            "When ClinicHub merges two patient records it sends a `Patient` with a `replaced-by` link. PharmaFlow keeps its own patients, matched by health card or name and birth date, so it does not merge them on the clinic's word. Instead each eRx prescription carries `SourceMrn`, \"{clinic}|{MRN}\" (script 051), and the merge moves the old MRN on its prescriptions to the survivor's. If that leaves two pharmacy patients behind one clinic MRN, the access log notes \"possible duplicate pharmacy patients\" for a person to look at. The answer is 200 either way, also for an MRN never seen here."
+          ],
+          "examples": [
+            "merge"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "cancel",
+          "h": "تا وقتی پیچیده نشده، نه بعد از آن",
+          "p": [
+            "کلینیک یک دارو را با فرستادن دوباره‌ی همان `MedicationRequest` با وضعیت `cancelled`، تنها در یک Bundle، لغو می‌کند. همه‌ی شناسه‌ها باید مال کلینیک باشند و همه‌ی داروها باید وجود داشته باشند، وگرنه چیزی عوض نمی‌شود (404). اگر هر کدام از قبل `Filled`، `Verified` یا `Dispensed` باشد، کل لغو با 409 و پیام \"Already being dispensed: the pharmacy cannot cancel it. Call the pharmacy.\" رد می‌شود. دارویی که در کیسه روی پیشخوان است موضوع یک تماس تلفنی است، نه یک تغییر وضعیت بی‌صدا.",
+            "در غیر این صورت هر دارو با دلیل کلینیک (یا \"Cancelled by the prescriber's clinic\") `Cancelled` می‌شود، وضعیت نسخه دوباره تعیین می‌شود، و log‌ی دسترسی یک سطر به اسم کلینیک می‌گیرد. فرستادن دو باره‌ی همان لغو بی‌ضرر است: قلمی که قبلاً لغو شده دست نمی‌خورد و جواب باز هم 200 است."
+          ],
+          "examples": [
+            "late"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "ادغام در کلینیک دنبال می‌شود، نه کپی",
+          "p": [
+            "وقتی ClinicHub دو پرونده‌ی بیمار را ادغام می‌کند، یک `Patient` با پیوند `replaced-by` می‌فرستد. PharmaFlow بیماران خودش را دارد، که با کارت سلامت یا نام و تاریخ تولد پیدا می‌شوند، پس آن‌ها را به حرف کلینیک ادغام نمی‌کند. در عوض هر نسخه‌ی eRx یک `SourceMrn` دارد، \"{clinic}|{MRN}\" (اسکریپت 051)، و ادغام MRN قدیمی را روی نسخه‌هایش به MRN بازمانده منتقل می‌کند. اگر این کار دو بیمار داروخانه را پشت یک MRN‌ی کلینیک قرار دهد، log‌ی دسترسی \"possible duplicate pharmacy patients\" را ثبت می‌کند تا یک آدم بررسی کند. جواب در هر حال 200 است، حتی برای MRNی که این‌جا هرگز دیده نشده."
+          ],
+          "examples": [
+            "merge"
+          ]
+        }
+      ],
+      "examples": {
+        "late": {
+          "title": {
+            "en": "Too late to withdraw",
+            "fa": "برای لغو دیر است"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "// Dispensing has begun for any one: nothing is changed.",
+          "lines": 3
+        },
+        "merge": {
+          "title": {
+            "en": "Follow the MRN, do not merge",
+            "fa": "MRN را دنبال کن، ادغام نکن"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "/// ClinicHub merged two records",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A withdrawal names two drugs; one is Received, the other Filled. What happens?",
+            "fa": "یک لغو دو دارو را نام می‌برد؛ یکی Received و دیگری Filled است. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The Received one is cancelled, the Filled one stays",
+              "Nothing changes and the answer is 409",
+              "Both are cancelled"
+            ],
+            "fa": [
+              "Received لغو می‌شود، Filled می‌ماند",
+              "هیچ چیز عوض نمی‌شود و جواب 409 است",
+              "هر دو لغو می‌شوند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "CancelAsync checks all items before changing any; one filled item refuses the whole request.",
+            "fa": "CancelAsync قبل از تغییر هر کدام همه را بررسی می‌کند؛ یک قلم پیچیده‌شده کل درخواست را رد می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does PharmaFlow not merge its own patient records when ClinicHub merges two?",
+            "fa": "چرا PharmaFlow وقتی ClinicHub دو پرونده را ادغام می‌کند، پرونده‌های بیمار خودش را ادغام نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "It keeps its own patients by its own identifiers, so it moves the MRN and flags possible duplicates for a person",
+              "SQL Server cannot merge rows",
+              "The merge Bundle has no patient in it"
+            ],
+            "fa": [
+              "بیماران خودش را با شناسه‌های خودش نگه می‌دارد، پس MRN را منتقل می‌کند و تکراری‌های احتمالی را برای یک آدم علامت می‌زند",
+              "SQL Server نمی‌تواند ردیف‌ها را ادغام کند",
+              "Bundle‌ی ادغام بیماری ندارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "MergeAsync updates SourceMrn and writes a log entry; merging pharmacy records is left to a person.",
+            "fa": "MergeAsync مقدار SourceMrn را به‌روز می‌کند و یک ردیف log می‌نویسد؛ ادغام پرونده‌های داروخانه به یک آدم سپرده می‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "restricted",
+      "group": "erx",
+      "title": {
+        "en": "Restricted prescriptions: breaking the glass",
+        "fa": "نسخه‌های محدودشده: شکستن شیشه"
+      },
+      "files": [
+        "src/PharmaFlow.Api/Auth/ConfidentialityGate.cs",
+        "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+        "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+        "web/src/components/RestrictedPanel.tsx"
+      ],
+      "en": [
+        {
+          "id": "label",
+          "h": "A label from the patient's consent directive",
+          "p": [
+            "A patient may tell the clinic to restrict who sees their prescriptions. ClinicHub then labels the MedicationRequests with an HL7 confidentiality code, and PharmaFlow stores `R` (restricted) or `V` (very restricted) in `rx.Prescription.Confidentiality`; any other restricting code counts as `R`, and the ordinary codes U, L, M and N mean no label.",
+            "A labelled prescription is closed to everyone. It still appears in the reception queue, so it is not lost, but as \"Restricted\" with no patient, prescriber or plan. Its detail and every action on it or on one of its drugs (review, hold, cancel, dispense) answer 403 with `code: \"restricted\"`. One endpoint filter, `RestrictedFilter`, does this for the whole reception group and for dispensing, whether the route names the prescription or one of its items."
+          ],
+          "examples": [
+            "label",
+            "mask"
+          ]
+        },
+        {
+          "id": "glass",
+          "h": "One user, one prescription, one hour, with a reason",
+          "p": [
+            "Care cannot wait for paperwork, so a user may open a restricted prescription for themselves by giving a reason of at least 10 characters (`POST /api/prescriptions/{id}/override`, which sits outside the filtered group because it is what the filter opens). The reason goes into the access log after `RESTRICTED OVERRIDE`. `ConfidentialityGate` then remembers, in memory, a key made of the clinic, the user and the prescription for one hour. A restart forgets every override, which is the safe way to fail: people must give their reason again, nobody gains access.",
+            "In the web app a 403 `restricted` shows `RestrictedPanel` instead of the prescription: it explains the directive, asks why, and keeps its button disabled until the reason is long enough."
+          ],
+          "examples": [
+            "gate",
+            "filter"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "label",
+          "h": "برچسبی از دستور رضایت بیمار",
+          "p": [
+            "بیمار ممکن است از کلینیک بخواهد دیدن نسخه‌هایش را محدود کند. آن‌وقت ClinicHub روی MedicationRequestها یک کد محرمانگی HL7 می‌گذارد، و PharmaFlow مقدار `R` (محدود) یا `V` (خیلی محدود) را در `rx.Prescription.Confidentiality` ذخیره می‌کند؛ هر کد محدودکننده‌ی دیگری `R` حساب می‌شود، و کدهای معمولی U، L، M و N یعنی بدون برچسب.",
+            "نسخه‌ی برچسب‌دار برای همه بسته است. هنوز در صف پذیرش دیده می‌شود تا گم نشود، ولی به‌صورت \"Restricted\" بدون بیمار، تجویزکننده یا بیمه. جزئیاتش و هر کاری روی آن یا یکی از داروهایش (بررسی، نگه داشتن، لغو، تحویل) با 403 و `code: \"restricted\"` جواب می‌گیرد. یک endpoint filter، `RestrictedFilter`، این کار را برای کل گروه پذیرش و برای تحویل انجام می‌دهد، چه مسیر خود نسخه را نام ببرد چه یکی از قلم‌هایش را."
+          ],
+          "examples": [
+            "label",
+            "mask"
+          ]
+        },
+        {
+          "id": "glass",
+          "h": "یک کاربر، یک نسخه، یک ساعت، با دلیل",
+          "p": [
+            "درمان نمی‌تواند منتظر کاغذبازی بماند، پس کاربر می‌تواند با دادن دلیلی حداقل ده‌نویسه‌ای یک نسخه‌ی محدودشده را برای خودش باز کند (`POST /api/prescriptions/{id}/override`، که بیرون از گروه فیلترشده است چون همان چیزی است که filter باز می‌کند). دلیل بعد از `RESTRICTED OVERRIDE` در log‌ی دسترسی می‌رود. بعد `ConfidentialityGate` کلیدی از کلینیک، کاربر و نسخه را یک ساعت در حافظه به خاطر می‌سپارد. راه‌اندازی دوباره همه‌ی overrideها را فراموش می‌کند، و این راه امن شکست است: آدم‌ها باید دوباره دلیل بدهند، کسی دسترسی بیشتری نمی‌گیرد.",
+            "در اپ وب، یک 403 با `restricted` به‌جای نسخه `RestrictedPanel` را نشان می‌دهد: دستور رضایت را توضیح می‌دهد، می‌پرسد چرا، و دکمه‌اش را تا وقتی دلیل به اندازه‌ی کافی بلند نشده غیرفعال نگه می‌دارد."
+          ],
+          "examples": [
+            "gate",
+            "filter"
+          ]
+        }
+      ],
+      "examples": {
+        "label": {
+          "title": {
+            "en": "R, V, or none",
+            "fa": "R، V، یا هیچ"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/FhirEndpoints.cs",
+          "from": "public static string? Confidentiality(JsonNode? resource)",
+          "lines": 8
+        },
+        "mask": {
+          "title": {
+            "en": "Listed, but not for whom",
+            "fa": "فهرست‌شده، ولی نه برای چه کسی"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "// A restricted prescription is listed, so it is not lost",
+          "lines": 6
+        },
+        "gate": {
+          "title": {
+            "en": "Per user, per prescription, an hour",
+            "fa": "برای هر کاربر، هر نسخه، یک ساعت"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Auth/ConfidentialityGate.cs",
+          "from": "private static string Key(",
+          "to": "return until;"
+        },
+        "filter": {
+          "title": {
+            "en": "The filter, by prescription or by item",
+            "fa": "filter، با نسخه یا با قلم"
+          },
+          "lang": "csharp",
+          "file": "src/PharmaFlow.Api/Endpoints/PrescriptionEndpoints.cs",
+          "from": "public static async ValueTask<object?> RestrictedFilter",
+          "lines": 13
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A pharmacist opened a restricted prescription, then the API restarted. What happens on their next request?",
+            "fa": "داروسازی یک نسخه‌ی محدودشده را باز کرد، بعد API دوباره راه‌اندازی شد. در درخواست بعدی‌اش چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It stays open for the rest of the hour",
+              "It is open to every user now",
+              "403 restricted again: overrides live in memory, so they must give a reason again"
+            ],
+            "fa": [
+              "تا آخر ساعت باز می‌ماند",
+              "حالا برای همه‌ی کاربران باز است",
+              "دوباره 403 restricted: overrideها در حافظه‌اند، پس باید دوباره دلیل بدهد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "ConfidentialityGate uses IMemoryCache; losing it closes everything, which the class comment calls the safe way to fail.",
+            "fa": "ConfidentialityGate از IMemoryCache استفاده می‌کند؛ از دست رفتنش همه چیز را می‌بندد، که توضیح کلاس آن را راه امن شکست می‌نامد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is the restricted prescription still listed in the queue at all?",
+            "fa": "چرا نسخه‌ی محدودشده اصلاً در صف دیده می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "So it is not lost: the pharmacy knows it exists, without seeing who it is for",
+              "By mistake: the filter misses GET requests",
+              "Because the clinic asked for it"
+            ],
+            "fa": [
+              "تا گم نشود: داروخانه می‌داند وجود دارد، بدون این‌که ببیند برای چه کسی است",
+              "اشتباهاً: filter درخواست‌های GET را نمی‌گیرد",
+              "چون کلینیک خواسته"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The queue replaces patient, prescriber and plan with \"Restricted\" and empty values until the user's gate is open.",
+            "fa": "صف بیمار، تجویزکننده و بیمه را تا باز شدن gate‌ی کاربر با \"Restricted\" و مقدار خالی عوض می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "group": "web",
+      "title": {
+        "en": "The React app",
+        "fa": "اپ React"
+      },
+      "files": [
+        "web/src/App.tsx",
+        "web/src/api.ts",
+        "web/src/pages/Reception.tsx",
+        "web/src/pages/Stock.tsx",
+        "web/package.json"
+      ],
+      "en": [
+        {
+          "id": "shell",
+          "h": "Signed in, allowed, loaded, then the pages",
+          "p": [
+            "The app asks two things before it shows a page: who is signed in (`/api/me`) and how sign-in works (`/api/auth/settings`). With nobody signed in it shows a single button, \"Sign in through ClinicHub\"; signed in with no pharmacy permission, a message and a sign-out link; otherwise it loads the base definitions once (`/api/ref`) into a React context that every form reads its lists from. Five pages follow, with `/` and any unknown path sent to Reception, and a strip on every page saying the catalog is made up and not for dispensing."
+          ],
+          "examples": [
+            "gate",
+            "routes"
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "client",
+          "h": "One typed client, and checks while typing",
+          "p": [
+            "`api.ts` is a typed client whose shapes mirror the C# records. All calls go through one `request` function: same-origin credentials, the `X-PharmaFlow` header, and errors turned into an `ApiError` that keeps the status, the message and the field errors of a `ValidationProblem`. Forms show those errors next to their fields, and `isRestricted` recognises the 403 that opens the restricted panel.",
+            "The reception form calls `POST /api/prescriptions/check` 350 ms after the pharmacist stops typing, debounced with a timeout that each keystroke clears. The label text and the warnings appear under each drug before anything is saved, so an allergy is seen while the prescription is still being entered, not after."
+          ],
+          "examples": [
+            "request",
+            "live"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "shell",
+          "h": "واردشده، مجاز، بارشده، بعد صفحه‌ها",
+          "p": [
+            "اپ قبل از نشان دادن هر صفحه دو چیز را می‌پرسد: چه کسی وارد شده (`/api/me`) و ورود چطور کار می‌کند (`/api/auth/settings`). اگر کسی وارد نشده باشد فقط یک دکمه نشان می‌دهد، \"Sign in through ClinicHub\"؛ اگر وارد شده ولی مجوز داروخانه ندارد، یک پیام و پیوند خروج؛ وگرنه تعریف‌های پایه را یک بار (`/api/ref`) در یک context‌ی React بار می‌کند که هر فرمی فهرست‌هایش را از آن می‌خواند. بعد پنج صفحه می‌آید، و `/` و هر مسیر ناشناخته به Reception فرستاده می‌شود، و نواری در هر صفحه می‌گوید کاتالوگ ساختگی است و برای تحویل واقعی نیست."
+          ],
+          "examples": [
+            "gate",
+            "routes"
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "client",
+          "h": "یک کلاینت typed، و بررسی هنگام تایپ",
+          "p": [
+            "`api.ts` یک کلاینت typed است که شکل‌هایش رکوردهای C# را تقلید می‌کنند. همه‌ی درخواست‌ها از یک تابع `request` می‌گذرند: credentialهای same-origin، هدر `X-PharmaFlow`، و خطاهایی که به یک `ApiError` تبدیل می‌شوند که status، پیام و خطاهای فیلدی یک `ValidationProblem` را نگه می‌دارد. فرم‌ها آن خطاها را کنار فیلدهایشان نشان می‌دهند، و `isRestricted` آن 403ی را می‌شناسد که پنل محدودشده را باز می‌کند.",
+            "فرم پذیرش 350 میلی‌ثانیه بعد از این‌که داروساز تایپ را متوقف کرد `POST /api/prescriptions/check` را صدا می‌زند، با یک timeout که هر کلید آن را پاک می‌کند (debounce). متن برچسب و هشدارها قبل از ذخیره‌ی هر چیزی زیر هر دارو ظاهر می‌شوند، پس آلرژی وقتی دیده می‌شود که نسخه هنوز در حال ورود است، نه بعد از آن."
+          ],
+          "examples": [
+            "request",
+            "live"
+          ]
+        }
+      ],
+      "examples": {
+        "gate": {
+          "title": {
+            "en": "Before any page",
+            "fa": "قبل از هر صفحه"
+          },
+          "lang": "tsx",
+          "file": "web/src/App.tsx",
+          "from": "if (error) return <p className=\"page error\">",
+          "lines": 5
+        },
+        "routes": {
+          "title": {
+            "en": "The routes",
+            "fa": "مسیرها"
+          },
+          "lang": "tsx",
+          "file": "web/src/App.tsx",
+          "from": "<Routes>",
+          "to": "</Routes>"
+        },
+        "request": {
+          "title": {
+            "en": "One request function",
+            "fa": "یک تابع request"
+          },
+          "lang": "typescript",
+          "file": "web/src/api.ts",
+          "from": "async function request<T>",
+          "lines": 13
+        },
+        "live": {
+          "title": {
+            "en": "Checks while typing",
+            "fa": "بررسی هنگام تایپ"
+          },
+          "lang": "tsx",
+          "file": "web/src/pages/Reception.tsx",
+          "from": "// Live checks while typing",
+          "lines": 9
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does the reception form wait 350 ms before calling /check?",
+            "fa": "چرا فرم پذیرش قبل از صدا زدن /check 350 میلی‌ثانیه صبر می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "The API refuses faster calls",
+              "To call once after the typing pauses instead of on every keystroke",
+              "To let the database save first"
+            ],
+            "fa": [
+              "API درخواست‌های سریع‌تر را رد می‌کند",
+              "تا به‌جای هر کلید، یک بار بعد از مکث تایپ صدا بزند",
+              "تا دیتابیس اول ذخیره کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Each change clears the previous timeout, so only the last state of the form is checked.",
+            "fa": "هر تغییر timeout‌ی قبلی را پاک می‌کند، پس فقط آخرین حالت فرم بررسی می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "A signed-in user has no pharmacy permission. What does the app show?",
+            "fa": "کاربری وارد شده ولی هیچ مجوز داروخانه‌ای ندارد. اپ چه نشان می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "The Reception page with empty lists",
+              "The sign-in button",
+              "A message that their role does not allow PharmaFlow, with a sign-out link"
+            ],
+            "fa": [
+              "صفحه‌ی Reception با فهرست‌های خالی",
+              "دکمه‌ی ورود",
+              "پیامی که نقشش اجازه‌ی PharmaFlow را نمی‌دهد، با پیوند خروج"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "App checks me.permissions.length === 0 before loading the base definitions or any page.",
+            "fa": "App قبل از بار کردن تعریف‌های پایه یا هر صفحه‌ای me.permissions.length === 0 را بررسی می‌کند."
+          }
+        }
+      ]
+    }
+  ]
+}

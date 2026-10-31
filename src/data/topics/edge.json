@@ -29,9 +29,18 @@
           "id": "files",
           "h": "Its files",
           "p": [
-            "Compose mounts the Caddyfile read-only, one extra site file per compose layer under `/etc/caddy/sites/`, and the folder the Context export is pushed into. Certificates and Caddy's own state are kept in two named volumes, so a rebuilt container does not ask Let's Encrypt again."
+            "Compose mounts the Caddyfile read-only, one extra site file per compose layer under `/etc/caddy/sites/`, and the folder the Context export is pushed into. Certificates and Caddy's own state are kept in two named volumes, so a rebuilt container does not ask Let's Encrypt again.",
+            "The Context export is mounted as a folder, not as a single file, on purpose: `push-context.ps1` writes a new `context.json` and renames it into place, and a folder mount shows that rename inside the container, where a single-file mount would keep showing the old file (the same problem the Caddyfile has after a `git pull`)."
           ],
           "examples": ["mounts"]
+        },
+        {
+          "id": "start",
+          "h": "Started last, restarted on its own",
+          "p": [
+            "Caddy's `depends_on` lists the web containers it sends traffic to, so compose starts them first and Caddy last. `restart: unless-stopped` brings it back after a crash or a reboot of the server, unless someone stopped it on purpose. Caddy is not one of the containers Control Panel can stop: it carries no `controlpanel.managed` label, so the panel cannot take the door of the whole server away."
+          ],
+          "examples": ["depends"]
         }
       ],
       "fa": [
@@ -48,9 +57,18 @@
           "id": "files",
           "h": "فایل‌هایش",
           "p": [
-            "compose فایل Caddyfile را فقط‌خواندنی mount می‌کند، برای هر لایه‌ی compose یک فایل سایت اضافه زیر `/etc/caddy/sites/`، و پوشه‌ای که خروجی Context به آن فرستاده می‌شود. گواهی‌ها و وضعیت خود Caddy در دو volume نام‌دار نگه داشته می‌شوند، پس کانتینری که از نو ساخته شود دوباره از Let's Encrypt گواهی نمی‌خواهد."
+            "compose فایل Caddyfile را فقط‌خواندنی mount می‌کند، برای هر لایه‌ی compose یک فایل سایت اضافه زیر `/etc/caddy/sites/`، و پوشه‌ای که خروجی Context به آن فرستاده می‌شود. گواهی‌ها و وضعیت خود Caddy در دو volume نام‌دار نگه داشته می‌شوند، پس کانتینری که از نو ساخته شود دوباره از Let's Encrypt گواهی نمی‌خواهد.",
+            "خروجی Context عمداً به‌صورت پوشه mount می‌شود، نه یک فایل تنها: `push-context.ps1` یک `context.json` تازه می‌نویسد و با rename آن را سر جایش می‌گذارد، و mount پوشه این rename را داخل کانتینر نشان می‌دهد، در حالی که mount یک فایل تنها همچنان فایل قدیمی را نشان می‌داد (همان مشکلی که Caddyfile بعد از `git pull` دارد)."
           ],
           "examples": ["mounts"]
+        },
+        {
+          "id": "start",
+          "h": "آخر از همه روشن می‌شود، خودش دوباره بالا می‌آید",
+          "p": [
+            "`depends_on` در Caddy کانتینرهای وبی را فهرست می‌کند که ترافیک را به آن‌ها می‌دهد، پس compose اول آن‌ها را روشن می‌کند و Caddy را آخر. `restart: unless-stopped` بعد از crash یا ری‌استارت سرور دوباره بالایش می‌آورد، مگر این‌که کسی عمداً متوقفش کرده باشد. Caddy جزو کانتینرهایی نیست که کنترل پنل می‌تواند متوقف کند: برچسب `controlpanel.managed` ندارد، پس پنل نمی‌تواند در ورودی کل سرور را بردارد."
+          ],
+          "examples": ["depends"]
         }
       ],
       "examples": {
@@ -67,8 +85,44 @@
           "file": "deploy/vps/compose.vps.yml",
           "from": "- ./deploy/vps/Caddyfile:/etc/caddy/Caddyfile:ro",
           "lines": 7
+        },
+        "depends": {
+          "title": { "en": "Started after the sites it serves", "fa": "بعد از سایت‌هایی که سرو می‌کند" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.vps.yml",
+          "from": "    depends_on:",
+          "lines": 10
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why can the apps behind Caddy speak plain HTTP?", "fa": "چرا اپ‌های پشت Caddy می‌توانند HTTP ساده حرف بزنند؟" },
+          "options": {
+            "en": ["Docker encrypts all traffic between containers", "Caddy handles HTTPS at the edge and is the only container with published ports", "Browsers accept plain HTTP for portfolio sites"],
+            "fa": ["Docker همه‌ی ترافیک بین کانتینرها را رمز می‌کند", "Caddy در لبه HTTPS را انجام می‌دهد و تنها کانتینری است که پورت باز دارد", "مرورگرها برای سایت‌های پورتفولیو HTTP ساده را قبول می‌کنند"]
+          },
+          "answer": 1,
+          "why": { "en": "Visitors only ever talk to Caddy over HTTPS; the HTTP hop happens inside Docker's network, which nothing outside can reach.", "fa": "بازدیدکننده فقط با Caddy و روی HTTPS حرف می‌زند؛ قدم HTTP داخل شبکه‌ی Docker است که از بیرون در دسترس نیست." }
+        },
+        {
+          "q": { "en": "The caddy container is removed and created again. What happens to the certificates?", "fa": "کانتینر caddy حذف و دوباره ساخته می‌شود. گواهی‌ها چه می‌شوند؟" },
+          "options": {
+            "en": ["They are still there, in the caddy-data volume", "Caddy asks Let's Encrypt for all of them again", "The sites stay on HTTP until someone copies them back"],
+            "fa": ["هنوز هستند، در volume به اسم caddy-data", "Caddy دوباره همه را از Let's Encrypt می‌خواهد", "سایت‌ها روی HTTP می‌مانند تا کسی آن‌ها را برگرداند"]
+          },
+          "answer": 0,
+          "why": { "en": "Certificates and Caddy's state live in the named volumes caddy-data and caddy-config, which outlive the container.", "fa": "گواهی‌ها و وضعیت Caddy در volumeهای نام‌دار caddy-data و caddy-config هستند که بعد از کانتینر هم می‌مانند." }
+        },
+        {
+          "q": { "en": "Why is the Context export mounted as a folder?", "fa": "چرا خروجی Context به‌صورت پوشه mount می‌شود؟" },
+          "options": {
+            "en": ["Caddy can only serve files from folders", "A folder can be larger than a file", "The new file is renamed into place, and only a folder mount shows that rename"],
+            "fa": ["Caddy فقط از پوشه می‌تواند فایل سرو کند", "پوشه می‌تواند از فایل بزرگ‌تر باشد", "فایل تازه با rename سر جایش می‌رود و فقط mount پوشه آن rename را نشان می‌دهد"]
+          },
+          "answer": 2,
+          "why": { "en": "A single-file bind mount keeps pointing at the old file after it is replaced; a folder mount sees the folder's current contents.", "fa": "mount یک فایل تنها بعد از جایگزینی هنوز به فایل قدیمی اشاره می‌کند؛ mount پوشه محتوای فعلی پوشه را می‌بیند." }
+        }
+      ]
     },
     {
       "id": "firewall",
@@ -80,7 +134,8 @@
           "id": "ufw",
           "h": "The firewall",
           "p": [
-            "`bootstrap.sh` sets the firewall once: nothing comes in except SSH, 80 and 443. That alone would not be enough, because Docker writes its own rules for published ports and bypasses ufw: a database with `ports:` would be on the internet whatever the firewall says."
+            "`bootstrap.sh` sets the firewall once: nothing comes in except SSH, 80 and 443. That alone would not be enough, because Docker writes its own rules for published ports and bypasses ufw: a database with `ports:` would be on the internet whatever the firewall says.",
+            "Besides SSH, the rules let in 80 and 443 over TCP, and 443 over UDP for HTTP/3. Outgoing traffic is allowed, so the server can still pull images, reach GitHub and talk to Let's Encrypt. The same script turns on fail2ban for SSH, which bans an address for an hour after five failed logins within ten minutes."
           ],
           "examples": ["ufw"]
         },
@@ -88,9 +143,18 @@
           "id": "reset",
           "h": "No other published port",
           "p": [
-            "So the server's compose layer takes every other port away with `ports: !reset []`, and Caddy's 80 and 443 are what is left. SQL Server, MongoDB, PostgreSQL, RabbitMQ, the APIs and the adapters are reachable only inside Docker's network."
+            "So the server's compose layer takes every other port away with `ports: !reset []`, and Caddy's 80 and 443 are what is left. SQL Server, MongoDB, PostgreSQL, RabbitMQ, the APIs and the adapters are reachable only inside Docker's network.",
+            "`!reset` empties the `ports:` list a service got from the base compose files, which publish ports for working on the PC; it needs Compose 2.24 or newer. The databases and the APIs keep talking to each other by their compose names, so nothing inside changes: only the doors to the outside are gone."
           ],
           "examples": ["reset"]
+        },
+        {
+          "id": "loopback",
+          "h": "One port on loopback only",
+          "p": [
+            "LedgerDashboard is the one exception, and it is not open either: `ports: !override` replaces its list with `127.0.0.1:4310`. A port bound to loopback is reachable only from the server itself, so the nightly job search on the PC gets there through an SSH tunnel (`ssh -L`), with an API token instead of a login."
+          ],
+          "examples": ["loopback"]
         }
       ],
       "fa": [
@@ -98,7 +162,8 @@
           "id": "ufw",
           "h": "فایروال",
           "p": [
-            "`bootstrap.sh` فایروال را یک بار تنظیم می‌کند: هیچ‌چیز به‌جز SSH و 80 و 443 وارد نمی‌شود. این به‌تنهایی کافی نیست، چون Docker برای پورت‌های publish‌شده قاعده‌های خودش را می‌نویسد و ufw را دور می‌زند: دیتابیسی که `ports:` داشته باشد، فایروال هر چه بگوید، روی اینترنت است."
+            "`bootstrap.sh` فایروال را یک بار تنظیم می‌کند: هیچ‌چیز به‌جز SSH و 80 و 443 وارد نمی‌شود. این به‌تنهایی کافی نیست، چون Docker برای پورت‌های publish‌شده قاعده‌های خودش را می‌نویسد و ufw را دور می‌زند: دیتابیسی که `ports:` داشته باشد، فایروال هر چه بگوید، روی اینترنت است.",
+            "به‌جز SSH، قاعده‌ها 80 و 443 را روی TCP و 443 را روی UDP برای HTTP/3 راه می‌دهند. ترافیک خروجی آزاد است، پس سرور همچنان می‌تواند image بگیرد، به GitHub برسد و با Let's Encrypt حرف بزند. همین اسکریپت fail2ban را هم برای SSH روشن می‌کند که بعد از پنج ورود ناموفق در ده دقیقه، آن آدرس را یک ساعت مسدود می‌کند."
           ],
           "examples": ["ufw"]
         },
@@ -106,9 +171,18 @@
           "id": "reset",
           "h": "هیچ پورت باز دیگری",
           "p": [
-            "برای همین لایه‌ی compose سرور همه‌ی پورت‌های دیگر را با `ports: !reset []` برمی‌دارد و فقط 80 و 443 Caddy می‌ماند. SQL Server، MongoDB، PostgreSQL، RabbitMQ، APIها و adapterها فقط داخل شبکه‌ی Docker در دسترس‌اند."
+            "برای همین لایه‌ی compose سرور همه‌ی پورت‌های دیگر را با `ports: !reset []` برمی‌دارد و فقط 80 و 443 Caddy می‌ماند. SQL Server، MongoDB، PostgreSQL، RabbitMQ، APIها و adapterها فقط داخل شبکه‌ی Docker در دسترس‌اند.",
+            "`!reset` فهرست `ports:` را که سرویس از فایل‌های compose پایه گرفته خالی می‌کند؛ آن فایل‌ها برای کار روی PC پورت باز می‌کنند. این قابلیت Compose نسخه‌ی 2.24 یا جدیدتر می‌خواهد. دیتابیس‌ها و APIها همچنان با اسم compose با هم حرف می‌زنند، پس داخل هیچ چیز عوض نمی‌شود: فقط درهای رو به بیرون برداشته شده‌اند."
           ],
           "examples": ["reset"]
+        },
+        {
+          "id": "loopback",
+          "h": "یک پورت فقط روی loopback",
+          "p": [
+            "LedgerDashboard تنها استثناست و آن هم باز نیست: `ports: !override` فهرستش را با `127.0.0.1:4310` جایگزین می‌کند. پورتی که به loopback بسته شده فقط از خود سرور در دسترس است، پس جست‌وجوی کار شبانه روی PC از طریق یک تونل SSH (`ssh -L`) و با یک API token به‌جای ورود به آن می‌رسد."
+          ],
+          "examples": ["loopback"]
         }
       ],
       "examples": {
@@ -125,8 +199,44 @@
           "file": "deploy/vps/compose.vps.yml",
           "from": "  sqlserver:",
           "lines": 2
+        },
+        "loopback": {
+          "title": { "en": "Reachable through SSH only", "fa": "فقط از طریق SSH" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.vps.yml",
+          "from": "# Loopback only: the nightly job search on the PC reaches it through",
+          "lines": 4
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is ufw alone not enough to keep a database off the internet?", "fa": "چرا ufw به‌تنهایی برای دور نگه داشتن دیتابیس از اینترنت کافی نیست؟" },
+          "options": {
+            "en": ["ufw only filters UDP", "Docker writes its own iptables rules for published ports and bypasses ufw", "ufw is turned off after every reboot"],
+            "fa": ["ufw فقط UDP را فیلتر می‌کند", "Docker برای پورت‌های publish‌شده قاعده‌های iptables خودش را می‌نویسد و ufw را دور می‌زند", "ufw بعد از هر ری‌استارت خاموش می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "That is why the server layer removes every published port except Caddy's instead of trusting the firewall.", "fa": "برای همین لایه‌ی سرور به‌جای اعتماد به فایروال همه‌ی پورت‌های باز به‌جز پورت‌های Caddy را برمی‌دارد." }
+        },
+        {
+          "q": { "en": "LedgerDashboard publishes 127.0.0.1:4310. Who can connect to it?", "fa": "LedgerDashboard پورت 127.0.0.1:4310 را باز می‌کند. چه کسی می‌تواند به آن وصل شود؟" },
+          "options": {
+            "en": ["Only programs on the server itself, such as the end of an SSH tunnel", "Anyone on the internet who knows the port", "Only other containers in the Docker network"],
+            "fa": ["فقط برنامه‌های روی خود سرور، مثل سر یک تونل SSH", "هر کسی در اینترنت که پورت را بداند", "فقط کانتینرهای دیگر در شبکه‌ی Docker"]
+          },
+          "answer": 0,
+          "why": { "en": "Loopback is not reachable from outside the machine; the PC gets there with `ssh -L`.", "fa": "loopback از بیرون ماشین در دسترس نیست؛ PC با `ssh -L` به آن می‌رسد." }
+        },
+        {
+          "q": { "en": "What does `ports: !reset []` change for SQL Server on the VPS?", "fa": "`ports: !reset []` برای SQL Server روی VPS چه چیزی را عوض می‌کند؟" },
+          "options": {
+            "en": ["It moves SQL Server to a random port", "It stops other containers from reaching SQL Server", "It removes the port the base file published, so SQL Server is reachable only inside Docker's network"],
+            "fa": ["SQL Server را به یک پورت تصادفی می‌برد", "جلوی رسیدن کانتینرهای دیگر به SQL Server را می‌گیرد", "پورتی را که فایل پایه باز کرده برمی‌دارد، پس SQL Server فقط داخل شبکه‌ی Docker در دسترس است"]
+          },
+          "answer": 2,
+          "why": { "en": "Containers still reach it as `sqlserver`; only the published host port is gone.", "fa": "کانتینرها هنوز با اسم `sqlserver` به آن می‌رسند؛ فقط پورت باز روی میزبان حذف شده است." }
+        }
+      ]
     },
     {
       "id": "certs",
@@ -138,7 +248,8 @@
           "id": "acme",
           "h": "Certificates with no certificate code",
           "p": [
-            "Nothing in the Caddyfile mentions certificates. For every site with a real domain name, Caddy gets a Let's Encrypt certificate by itself, renews it 30 days before it ends, and sends HTTP to HTTPS. The only setting is the email Let's Encrypt writes to when something goes wrong."
+            "Nothing in the Caddyfile mentions certificates. For every site with a real domain name, Caddy gets a Let's Encrypt certificate by itself, renews it 30 days before it ends, and sends HTTP to HTTPS. The only setting is the email Let's Encrypt writes to when something goes wrong.",
+            "The certificates are kept in the `caddy-data` volume, so a restart or a rebuilt container serves the ones it already has. Let's Encrypt limits how many certificates one domain can get in a week, so not asking again on every deploy matters."
           ],
           "examples": ["global"]
         },
@@ -149,6 +260,15 @@
             "Let's Encrypt checks that the domain points at this server, so each name needs its A record before Caddy can get its certificate. Domains are not written into the Caddyfile: each site is `{$PANEL_DOMAIN}` and so on, filled in from the caddy service's environment, which comes from the server's `.env`."
           ],
           "examples": ["dns"]
+        },
+        {
+          "id": "env",
+          "h": "Missing values stop compose",
+          "p": [
+            "Most of the caddy service's variables are written `${NAME:?message}`: when `.env` lacks one, `docker compose` refuses to start and prints the message, instead of starting a Caddy with an empty site address. The domains added later (`CONTEXT_DOMAIN`, `CLINICREPORT_DOMAIN`, `PROGRAMMING_DOMAIN`) have a default instead, so an older `.env` keeps deploying.",
+            "Because each address is a variable, the same Caddyfile works for any domain: moving the portfolio to another name means editing `.env` and the DNS, not the configuration."
+          ],
+          "examples": ["env"]
         }
       ],
       "fa": [
@@ -156,7 +276,8 @@
           "id": "acme",
           "h": "گواهی بدون هیچ کدی برای گواهی",
           "p": [
-            "هیچ‌جای Caddyfile اسمی از گواهی نیست. Caddy برای هر سایتی که دامنه‌ی واقعی دارد خودش گواهی Let's Encrypt می‌گیرد، ۳۰ روز قبل از تمام شدنش تمدیدش می‌کند، و HTTP را به HTTPS می‌فرستد. تنها تنظیم، ایمیلی است که Let's Encrypt وقتی مشکلی پیش بیاید به آن می‌نویسد."
+            "هیچ‌جای Caddyfile اسمی از گواهی نیست. Caddy برای هر سایتی که دامنه‌ی واقعی دارد خودش گواهی Let's Encrypt می‌گیرد، ۳۰ روز قبل از تمام شدنش تمدیدش می‌کند، و HTTP را به HTTPS می‌فرستد. تنها تنظیم، ایمیلی است که Let's Encrypt وقتی مشکلی پیش بیاید به آن می‌نویسد.",
+            "گواهی‌ها در volume به اسم `caddy-data` نگه داشته می‌شوند، پس ری‌استارت یا کانتینر از نو ساخته‌شده همان گواهی‌هایی را که دارد سرو می‌کند. Let's Encrypt تعداد گواهی‌هایی را که یک دامنه در هفته می‌تواند بگیرد محدود می‌کند، پس دوباره نخواستن در هر deploy مهم است."
           ],
           "examples": ["global"]
         },
@@ -167,6 +288,15 @@
             "Let's Encrypt چک می‌کند که دامنه به همین سرور اشاره کند، پس هر اسم قبل از این‌که Caddy بتواند گواهی‌اش را بگیرد رکورد A لازم دارد. دامنه‌ها در Caddyfile نوشته نشده‌اند: هر سایت `{$PANEL_DOMAIN}` و مانند آن است که از environment سرویس caddy پر می‌شود، و آن هم از `.env` سرور می‌آید."
           ],
           "examples": ["dns"]
+        },
+        {
+          "id": "env",
+          "h": "مقدار جاافتاده compose را متوقف می‌کند",
+          "p": [
+            "بیشتر متغیرهای سرویس caddy به شکل `${NAME:?message}` نوشته شده‌اند: وقتی یکی در `.env` نباشد، `docker compose` شروع نمی‌کند و پیام را چاپ می‌کند، به‌جای این‌که Caddy را با آدرس سایت خالی بالا بیاورد. دامنه‌هایی که بعداً اضافه شدند (`CONTEXT_DOMAIN`، `CLINICREPORT_DOMAIN`، `PROGRAMMING_DOMAIN`) به‌جایش مقدار پیش‌فرض دارند، تا `.env` قدیمی‌تر هم همچنان deploy شود.",
+            "چون هر آدرس یک متغیر است، همین Caddyfile برای هر دامنه‌ای کار می‌کند: بردن پورتفولیو به اسم دیگر یعنی ویرایش `.env` و DNS، نه تنظیمات."
+          ],
+          "examples": ["env"]
         }
       ],
       "examples": {
@@ -183,8 +313,35 @@
           "file": "deploy/vps/README.md",
           "from": "## 2. Domain and DNS",
           "lines": 5
+        },
+        "env": {
+          "title": { "en": "Required and defaulted", "fa": "اجباری و با پیش‌فرض" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.vps.yml",
+          "from": "ACME_EMAIL: ${ACME_EMAIL:?",
+          "to": "PROGRAMMING_DOMAIN:"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A new site is added, but its DNS A record does not exist yet. What happens?", "fa": "سایت تازه‌ای اضافه می‌شود ولی رکورد A آن در DNS هنوز نیست. چه می‌شود؟" },
+          "options": {
+            "en": ["Caddy serves it with a self-made certificate that browsers trust", "Caddy cannot get its certificate until the name points at the server", "Let's Encrypt issues it anyway, by email"],
+            "fa": ["Caddy با یک گواهی خودساخته که مرورگرها قبولش دارند سرو می‌کند", "Caddy تا وقتی اسم به سرور اشاره نکند نمی‌تواند گواهی‌اش را بگیرد", "Let's Encrypt به هر حال آن را از طریق ایمیل صادر می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Let's Encrypt checks that the domain reaches this server before issuing, which is why the README says to set DNS early.", "fa": "Let's Encrypt قبل از صدور چک می‌کند که دامنه به همین سرور برسد، برای همین README می‌گوید DNS را زود تنظیم کن." }
+        },
+        {
+          "q": { "en": "`ACME_EMAIL` is missing from the server's `.env`. What does `docker compose up` do?", "fa": "`ACME_EMAIL` در `.env` سرور نیست. `docker compose up` چه می‌کند؟" },
+          "options": {
+            "en": ["Stops with the message \"set ACME_EMAIL in .env\"", "Starts Caddy without an email", "Uses a default address from the image"],
+            "fa": ["با پیام \"set ACME_EMAIL in .env\" متوقف می‌شود", "Caddy را بدون ایمیل بالا می‌آورد", "از یک آدرس پیش‌فرض داخل image استفاده می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "The `:?` form makes a missing value an error with that message.", "fa": "شکل `:?` نبودن مقدار را به خطایی با همان پیام تبدیل می‌کند." }
+        }
+      ]
     },
     {
       "id": "common",
@@ -196,7 +353,9 @@
           "id": "snippet",
           "h": "One snippet, imported by every site",
           "p": [
-            "`(common)` is a snippet: every site starts with `import common` and gets the same compression (zstd, then gzip), the same security headers and the same log to stdout, which `docker compose logs caddy` shows. HSTS tells the browser to use HTTPS only for a year; `nosniff` stops it guessing content types; the referrer policy keeps full addresses inside the site."
+            "`(common)` is a snippet: every site starts with `import common` and gets the same compression (zstd, then gzip), the same security headers and the same log to stdout, which `docker compose logs caddy` shows. HSTS tells the browser to use HTTPS only for a year; `nosniff` stops it guessing content types; the referrer policy keeps full addresses inside the site.",
+            "Because every site imports the same snippet, a change here, such as a new header, reaches every site at once, and no site can quietly drift. A site that forgot `import common` would have no compression, none of these headers and no log line, which is why every site block starts with it.",
+            "`encode zstd gzip` compresses answers for browsers that accept it, zstd when the browser supports it and gzip otherwise. HSTS is set with `max-age` only, without `includeSubDomains`, so each site asks for HTTPS on its own name."
           ],
           "examples": ["common"]
         },
@@ -204,7 +363,8 @@
           "id": "two",
           "h": "Why two header blocks",
           "p": [
-            "Removing a header (`-Server`, which hides what the apps run on) defers its whole block until the final response, and deferred headers are lost on an error such as basic auth's 401. So the headers that must reach every response are set in one block, right away, and the removal sits in a second one."
+            "Removing a header (`-Server`, which hides what the apps run on) defers its whole block until the final response, and deferred headers are lost on an error such as basic auth's 401. So the headers that must reach every response are set in one block, right away, and the removal sits in a second one.",
+            "This matters most on the private sites: the 401 that asks for the password is exactly the kind of error response that would otherwise go out without HSTS or `nosniff`."
           ]
         }
       ],
@@ -213,7 +373,9 @@
           "id": "snippet",
           "h": "یک snippet که همه‌ی سایت‌ها import می‌کنند",
           "p": [
-            "`(common)` یک snippet است: هر سایت با `import common` شروع می‌شود و همان فشرده‌سازی (zstd، بعد gzip)، همان هدرهای امنیتی و همان لاگ روی stdout را می‌گیرد که `docker compose logs caddy` نشانش می‌دهد. HSTS به مرورگر می‌گوید تا یک سال فقط از HTTPS استفاده کند؛ `nosniff` جلوی حدس زدن نوع محتوا را می‌گیرد؛ referrer policy آدرس کامل را داخل همان سایت نگه می‌دارد."
+            "`(common)` یک snippet است: هر سایت با `import common` شروع می‌شود و همان فشرده‌سازی (zstd، بعد gzip)، همان هدرهای امنیتی و همان لاگ روی stdout را می‌گیرد که `docker compose logs caddy` نشانش می‌دهد. HSTS به مرورگر می‌گوید تا یک سال فقط از HTTPS استفاده کند؛ `nosniff` جلوی حدس زدن نوع محتوا را می‌گیرد؛ referrer policy آدرس کامل را داخل همان سایت نگه می‌دارد.",
+            "چون همه‌ی سایت‌ها همین snippet را import می‌کنند، تغییری این‌جا، مثلاً یک هدر تازه، یک‌جا به همه‌ی سایت‌ها می‌رسد و هیچ سایتی بی‌صدا از بقیه جدا نمی‌شود. سایتی که `import common` را فراموش کند نه فشرده‌سازی دارد، نه این هدرها و نه خط لاگ، برای همین هر بلوک سایت با آن شروع می‌شود.",
+            "`encode zstd gzip` جواب را برای مرورگرهایی که قبول می‌کنند فشرده می‌کند، zstd وقتی مرورگر پشتیبانی کند و در غیر این صورت gzip. HSTS فقط با `max-age` تنظیم شده، بدون `includeSubDomains`، پس هر سایت فقط برای اسم خودش HTTPS می‌خواهد."
           ],
           "examples": ["common"]
         },
@@ -221,7 +383,8 @@
           "id": "two",
           "h": "چرا دو بلوک header",
           "p": [
-            "حذف یک هدر (`-Server`، که پنهان می‌کند اپ‌ها روی چه چیزی اجرا می‌شوند) کل بلوکش را تا جواب نهایی عقب می‌اندازد، و هدرهای عقب‌افتاده روی جواب خطا مثل 401 مربوط به basic auth گم می‌شوند. پس هدرهایی که باید به همه‌ی جواب‌ها برسند در یک بلوک و فوراً گذاشته می‌شوند و حذف در بلوک دوم است."
+            "حذف یک هدر (`-Server`، که پنهان می‌کند اپ‌ها روی چه چیزی اجرا می‌شوند) کل بلوکش را تا جواب نهایی عقب می‌اندازد، و هدرهای عقب‌افتاده روی جواب خطا مثل 401 مربوط به basic auth گم می‌شوند. پس هدرهایی که باید به همه‌ی جواب‌ها برسند در یک بلوک و فوراً گذاشته می‌شوند و حذف در بلوک دوم است.",
+            "این بیشتر از همه روی سایت‌های خصوصی مهم است: 401 که رمز را می‌خواهد دقیقاً همان نوع جواب خطاست که در غیر این صورت بدون HSTS یا `nosniff` بیرون می‌رفت."
           ]
         }
       ],
@@ -233,7 +396,36 @@
           "from": "(common) {",
           "lines": 17
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why are the headers split into two `header` blocks?", "fa": "چرا هدرها در دو بلوک `header` جدا شده‌اند؟" },
+          "options": {
+            "en": ["Caddy allows at most three headers per block", "The second block is only for HTTP/3", "A removal defers its whole block, and deferred headers are lost on errors such as the 401"],
+            "fa": ["Caddy در هر بلوک حداکثر سه هدر قبول می‌کند", "بلوک دوم فقط برای HTTP/3 است", "حذف یک هدر کل بلوکش را عقب می‌اندازد و هدرهای عقب‌افتاده روی خطاهایی مثل 401 گم می‌شوند"]
+          },
+          "answer": 2,
+          "why": { "en": "Set right away in their own block, the security headers reach every response, including basic auth's 401.", "fa": "هدرهای امنیتی وقتی فوراً و در بلوک خودشان گذاشته شوند به همه‌ی جواب‌ها می‌رسند، حتی 401 مربوط به basic auth." }
+        },
+        {
+          "q": { "en": "A new site block is added without `import common`. What does it lose?", "fa": "بلوک سایت تازه‌ای بدون `import common` اضافه می‌شود. چه چیزی از دست می‌رود؟" },
+          "options": {
+            "en": ["Its HTTPS certificate", "Compression, the security headers and its log lines", "Its connection to the container behind it"],
+            "fa": ["گواهی HTTPS آن", "فشرده‌سازی، هدرهای امنیتی و خط‌های لاگش", "اتصالش به کانتینر پشت آن"]
+          },
+          "answer": 1,
+          "why": { "en": "Certificates come from Caddy for every named site; the snippet adds encoding, headers and logging.", "fa": "گواهی را Caddy برای هر سایت اسم‌دار می‌گیرد؛ snippet فشرده‌سازی، هدرها و لاگ را اضافه می‌کند." }
+        },
+        {
+          "q": { "en": "What does `header -Server` do?", "fa": "`header -Server` چه می‌کند؟" },
+          "options": {
+            "en": ["Removes the Server header, so answers do not say what the apps run on", "Turns off the server for that site", "Hides the site from search engines"],
+            "fa": ["هدر Server را حذف می‌کند تا جواب‌ها نگویند اپ‌ها روی چه چیزی اجرا می‌شوند", "سرور را برای آن سایت خاموش می‌کند", "سایت را از موتورهای جست‌وجو پنهان می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "It also removes the apps' own Server header, which is why it has to be deferred until the final response.", "fa": "هدر Server خود اپ‌ها را هم حذف می‌کند، برای همین باید تا جواب نهایی عقب بیفتد." }
+        }
+      ]
     },
     {
       "id": "certwatch",
@@ -245,9 +437,19 @@
           "id": "days",
           "h": "Under 14 days means renewal is failing",
           "p": [
-            "Every five minutes `watchdog.sh` asks Caddy, on the server itself, for each site's certificate and reads its end date. Caddy renews at 30 days, so a certificate with fewer than 14 left means renewal has been failing for two weeks (DNS moved, port 80 closed, a rate limit), and the watchdog reports a failure to healthchecks.io. The list of domains is read from `.env`, plus the clinic platform's names when it is on."
+            "Every five minutes `watchdog.sh` asks Caddy, on the server itself, for each site's certificate and reads its end date. Caddy renews at 30 days, so a certificate with fewer than 14 left means renewal has been failing for two weeks (DNS moved, port 80 closed, a rate limit), and the watchdog reports a failure to healthchecks.io. The list of domains is read from `.env`, plus the clinic platform's names when it is on.",
+            "Each check opens a TLS connection to `127.0.0.1:443` and names the site with `-servername`, so it asks Caddy on this machine for that name's certificate without going through DNS. A name with no certificate at all is reported too. The threshold is `CERT_DAYS`, 14 unless set otherwise."
           ],
           "examples": ["certs"]
+        },
+        {
+          "id": "more",
+          "h": "One of several checks",
+          "p": [
+            "Certificates are one line of the watchdog's list. It also checks that every container is running and healthy, that the disk and the memory are not running out, and that there is a local backup from the last 26 hours. Every problem is collected, and one ping carries them all: `ok` with a short summary, or `fail` with the list.",
+            "healthchecks.io expects a ping every five minutes, so it also alerts when the pings stop: a server that is down cannot report its own failure, but its silence is noticed."
+          ],
+          "examples": ["report"]
         }
       ],
       "fa": [
@@ -255,9 +457,19 @@
           "id": "days",
           "h": "کمتر از ۱۴ روز یعنی تمدید شکست می‌خورد",
           "p": [
-            "`watchdog.sh` هر پنج دقیقه روی خود سرور از Caddy گواهی هر سایت را می‌گیرد و تاریخ پایانش را می‌خواند. Caddy در ۳۰ روز تمدید می‌کند، پس گواهی‌ای که کمتر از ۱۴ روز مانده یعنی تمدید دو هفته است شکست می‌خورد (DNS عوض شده، پورت 80 بسته است، محدودیت تعداد)، و watchdog شکست را به healthchecks.io گزارش می‌دهد. فهرست دامنه‌ها از `.env` خوانده می‌شود، به‌علاوه‌ی اسم‌های پلتفرم کلینیک وقتی روشن است."
+            "`watchdog.sh` هر پنج دقیقه روی خود سرور از Caddy گواهی هر سایت را می‌گیرد و تاریخ پایانش را می‌خواند. Caddy در ۳۰ روز تمدید می‌کند، پس گواهی‌ای که کمتر از ۱۴ روز مانده یعنی تمدید دو هفته است شکست می‌خورد (DNS عوض شده، پورت 80 بسته است، محدودیت تعداد)، و watchdog شکست را به healthchecks.io گزارش می‌دهد. فهرست دامنه‌ها از `.env` خوانده می‌شود، به‌علاوه‌ی اسم‌های پلتفرم کلینیک وقتی روشن است.",
+            "هر چک یک اتصال TLS به `127.0.0.1:443` باز می‌کند و اسم سایت را با `-servername` می‌دهد، پس بدون عبور از DNS از Caddy همین ماشین گواهی آن اسم را می‌خواهد. اسمی که اصلاً گواهی ندارد هم گزارش می‌شود. آستانه `CERT_DAYS` است که اگر جور دیگری تنظیم نشود ۱۴ است."
           ],
           "examples": ["certs"]
+        },
+        {
+          "id": "more",
+          "h": "یکی از چند چک",
+          "p": [
+            "گواهی‌ها یک خط از فهرست watchdog هستند. watchdog همچنین چک می‌کند که همه‌ی کانتینرها روشن و سالم باشند، دیسک و حافظه تمام نشده باشند، و یک backup محلی از ۲۶ ساعت گذشته باشد. همه‌ی مشکل‌ها جمع می‌شوند و یک ping همه را می‌برد: `ok` با خلاصه‌ای کوتاه، یا `fail` با فهرست.",
+            "healthchecks.io هر پنج دقیقه منتظر یک ping است، پس وقتی pingها قطع شوند هم هشدار می‌دهد: سروری که خاموش است نمی‌تواند خرابی خودش را گزارش کند، ولی سکوتش دیده می‌شود."
+          ],
+          "examples": ["report"]
         }
       ],
       "examples": {
@@ -267,8 +479,44 @@
           "file": "deploy/vps/watchdog.sh",
           "from": "mapfile -t domains",
           "lines": 12
+        },
+        "report": {
+          "title": { "en": "One ping with every problem", "fa": "یک ping با همه‌ی مشکل‌ها" },
+          "lang": "bash",
+          "file": "deploy/vps/watchdog.sh",
+          "from": "if [[ ${#problems[@]} -gt 0 ]]; then",
+          "lines": 7
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Caddy renews at 30 days left. Why does the watchdog alert under 14, not under 30?", "fa": "Caddy در ۳۰ روز مانده تمدید می‌کند. چرا watchdog زیر ۱۴ هشدار می‌دهد، نه زیر ۳۰؟" },
+          "options": {
+            "en": ["Let's Encrypt certificates only last 14 days", "Under 30 is normal for a moment before renewal; under 14 means renewal has failed for about two weeks", "Browsers warn at 14 days"],
+            "fa": ["گواهی‌های Let's Encrypt فقط ۱۴ روز اعتبار دارند", "زیر ۳۰ لحظه‌ای قبل از تمدید عادی است؛ زیر ۱۴ یعنی تمدید حدود دو هفته است شکست می‌خورد", "مرورگرها در ۱۴ روز هشدار می‌دهند"]
+          },
+          "answer": 1,
+          "why": { "en": "The gap leaves time to fix DNS, port 80 or a rate limit before the certificate actually ends.", "fa": "این فاصله وقت می‌دهد DNS، پورت 80 یا محدودیت تعداد قبل از تمام شدن واقعی گواهی درست شود." }
+        },
+        {
+          "q": { "en": "Why does the check connect to 127.0.0.1 with `-servername`?", "fa": "چرا چک با `-servername` به 127.0.0.1 وصل می‌شود؟" },
+          "options": {
+            "en": ["To ask this server's Caddy for each name's certificate directly, without DNS", "Because openssl cannot resolve names", "To avoid using HTTPS"],
+            "fa": ["تا مستقیم و بدون DNS از Caddy همین سرور گواهی هر اسم را بخواهد", "چون openssl نمی‌تواند اسم‌ها را resolve کند", "تا از HTTPS استفاده نکند"]
+          },
+          "answer": 0,
+          "why": { "en": "The name sent with SNI picks the certificate; the address makes sure it is this server's Caddy that answers.", "fa": "اسمی که با SNI فرستاده می‌شود گواهی را انتخاب می‌کند؛ آدرس مطمئن می‌کند که Caddy همین سرور جواب می‌دهد." }
+        },
+        {
+          "q": { "en": "The whole server goes down. How does anyone find out?", "fa": "کل سرور از کار می‌افتد. کسی چطور خبردار می‌شود؟" },
+          "options": {
+            "en": ["The watchdog sends a last `fail` ping", "Caddy emails the owner", "healthchecks.io notices that the five-minute pings stopped"],
+            "fa": ["watchdog یک ping آخر `fail` می‌فرستد", "Caddy به مالک ایمیل می‌زند", "healthchecks.io می‌فهمد که pingهای پنج‌دقیقه‌ای قطع شده‌اند"]
+          },
+          "answer": 2,
+          "why": { "en": "A dead server cannot report; the missing ping is the alert.", "fa": "سرور خاموش نمی‌تواند گزارش بدهد؛ ping جاافتاده خودش هشدار است." }
+        }
+      ]
     },
     {
       "id": "public",
@@ -280,7 +528,8 @@
           "id": "proxy",
           "h": "A domain, a container",
           "p": [
-            "Most sites are three lines: the domain, `import common`, and `reverse_proxy` to a container by its compose name and port. Control Panel is public and has its own login; ReBiomed and the programming lessons are public demos and static pages."
+            "Most sites are three lines: the domain, `import common`, and `reverse_proxy` to a container by its compose name and port. Control Panel is public and has its own login; ReBiomed and the programming lessons are public demos and static pages.",
+            "Control Panel's site sends everything to `frontend:80`, its own nginx, which serves the Angular app and forwards `/api` to `core-api` itself. So Caddy needs one line for the whole panel, and `core-api` is never reached from outside except through the frontend."
           ],
           "examples": ["panel", "code"]
         },
@@ -291,6 +540,15 @@
             "ClinicReport's live updates go over a SignalR WebSocket on `/hubs`. `reverse_proxy` passes the upgrade through as it is, so its site is no longer than the others."
           ],
           "examples": ["report"]
+        },
+        {
+          "id": "names",
+          "h": "Compose names, not ports on the server",
+          "p": [
+            "`rebiomed-web:80` is a name that Docker's network resolves to that container, and 80 is the port inside it. None of these containers publishes a port on the server (the server layer resets them all), so Caddy is the only way in. Moving an app to another port means changing one line here, and nothing on the firewall.",
+            "ClinicReport's public site is a demo: synthetic data, one-click demo users and a nightly reset, so it needs no lock in front of it."
+          ],
+          "examples": ["rebiomed"]
         }
       ],
       "fa": [
@@ -298,7 +556,8 @@
           "id": "proxy",
           "h": "یک دامنه، یک کانتینر",
           "p": [
-            "بیشتر سایت‌ها سه خط‌اند: دامنه، `import common`، و `reverse_proxy` به یک کانتینر با اسم و پورتش در compose. کنترل پنل عمومی است و ورود خودش را دارد؛ ReBiomed و درس‌های برنامه‌نویسی دموی عمومی و صفحه‌ی ایستا هستند."
+            "بیشتر سایت‌ها سه خط‌اند: دامنه، `import common`، و `reverse_proxy` به یک کانتینر با اسم و پورتش در compose. کنترل پنل عمومی است و ورود خودش را دارد؛ ReBiomed و درس‌های برنامه‌نویسی دموی عمومی و صفحه‌ی ایستا هستند.",
+            "سایت کنترل پنل همه چیز را به `frontend:80` می‌فرستد، یعنی nginx خودش، که اپ Angular را سرو می‌کند و `/api` را خودش به `core-api` می‌دهد. پس Caddy برای کل پنل یک خط لازم دارد و از بیرون به `core-api` جز از طریق frontend نمی‌رسی."
           ],
           "examples": ["panel", "code"]
         },
@@ -309,6 +568,15 @@
             "به‌روزرسانی‌های زنده‌ی ClinicReport از یک WebSocket مربوط به SignalR روی `/hubs` می‌گذرند. `reverse_proxy` ارتقای اتصال را همان‌طور که هست رد می‌کند، پس سایتش از بقیه بلندتر نیست."
           ],
           "examples": ["report"]
+        },
+        {
+          "id": "names",
+          "h": "اسم‌های compose، نه پورت‌های روی سرور",
+          "p": [
+            "`rebiomed-web:80` اسمی است که شبکه‌ی Docker آن را به همان کانتینر resolve می‌کند و 80 پورت داخل آن است. هیچ‌کدام از این کانتینرها روی سرور پورت باز نمی‌کنند (لایه‌ی سرور همه را reset می‌کند)، پس Caddy تنها راه ورود است. بردن یک اپ به پورت دیگر یعنی عوض کردن یک خط این‌جا، و هیچ تغییری در فایروال.",
+            "سایت عمومی ClinicReport یک دموست: داده‌ی ساختگی، کاربران دموی یک‌کلیکی و reset شبانه، پس قفلی جلویش لازم نیست."
+          ],
+          "examples": ["rebiomed"]
         }
       ],
       "examples": {
@@ -332,20 +600,57 @@
           "file": "deploy/vps/Caddyfile",
           "from": "# ClinicReport: public demo",
           "lines": 6
+        },
+        "rebiomed": {
+          "title": { "en": "ReBiomed", "fa": "ReBiomed" },
+          "lang": "nginx",
+          "file": "deploy/vps/Caddyfile",
+          "from": "# ReBiomed marketplace: public demo.",
+          "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "The frontend container publishes no port on the VPS. How does `reverse_proxy frontend:80` reach it?", "fa": "کانتینر frontend روی VPS هیچ پورتی باز نمی‌کند. `reverse_proxy frontend:80` چطور به آن می‌رسد؟" },
+          "options": {
+            "en": ["Through Docker's network, by its compose name and the port inside the container", "Through the server's public IP", "It cannot; the frontend must publish port 80"],
+            "fa": ["از طریق شبکه‌ی Docker، با اسم compose و پورت داخل کانتینر", "از طریق IP عمومی سرور", "نمی‌تواند؛ frontend باید پورت 80 را باز کند"]
+          },
+          "answer": 0,
+          "why": { "en": "Published ports are for reaching a container from outside Docker; Caddy is inside the same network.", "fa": "پورت‌های باز برای رسیدن به کانتینر از بیرون Docker هستند؛ Caddy داخل همان شبکه است." }
+        },
+        {
+          "q": { "en": "What extra configuration does ClinicReport's SignalR WebSocket need in Caddy?", "fa": "WebSocket مربوط به SignalR در ClinicReport چه تنظیم اضافه‌ای در Caddy لازم دارد؟" },
+          "options": {
+            "en": ["A separate `handle /hubs` block", "A WebSocket module added to the image", "None: `reverse_proxy` passes the upgrade through"],
+            "fa": ["یک بلوک جدای `handle /hubs`", "یک ماژول WebSocket که به image اضافه شود", "هیچ: `reverse_proxy` ارتقای اتصال را رد می‌کند"]
+          },
+          "answer": 2,
+          "why": { "en": "Its site block is as short as the others.", "fa": "بلوک سایتش به همان کوتاهی بقیه است." }
+        },
+        {
+          "q": { "en": "Where does a request to `panel.<domain>/api/projects` go after Caddy?", "fa": "درخواست `panel.<domain>/api/projects` بعد از Caddy کجا می‌رود؟" },
+          "options": {
+            "en": ["Straight to `core-api`, because Caddy matches `/api`", "To the frontend's nginx, which forwards it to `core-api`", "To the Docker socket proxy"],
+            "fa": ["مستقیم به `core-api`، چون Caddy مسیر `/api` را می‌شناسد", "به nginx مربوط به frontend که آن را به `core-api` می‌دهد", "به socket proxy مربوط به Docker"]
+          },
+          "answer": 1,
+          "why": { "en": "The panel's site has a single `reverse_proxy frontend:80`; the `/api` forwarding lives in the frontend's nginx.conf.", "fa": "سایت پنل فقط یک `reverse_proxy frontend:80` دارد؛ فرستادن `/api` در nginx.conf مربوط به frontend است." }
+        }
+      ]
     },
     {
       "id": "lessons",
       "group": "sites",
       "title": { "en": "One app, two sites: english and ctx", "fa": "یک اپ، دو سایت: english و ctx" },
-      "files": ["deploy/vps/Caddyfile", "deploy/vps/compose.vps.yml"],
+      "files": ["deploy/vps/Caddyfile", "deploy/vps/compose.vps.yml", "deploy/vps/deploy.sh"],
       "en": [
         {
           "id": "english",
           "h": "Paths to different containers",
           "p": [
-            "The English lessons are one static app, but their site sends two paths elsewhere: `/api/sync` goes to `lessons-sync`, which keeps review progress in step between the phone and the PC and checks its own key; `/api/context` answers 404 here, and the app takes that to mean its Context tab is local-only. `handle` blocks are tried in order and the first that matches wins; the last one, with no path, takes the rest."
+            "The English lessons are one static app, but their site sends two paths elsewhere: `/api/sync` goes to `lessons-sync`, which keeps review progress in step between the phone and the PC and checks its own key; `/api/context` answers 404 here, and the app takes that to mean its Context tab is local-only. `handle` blocks are tried in order and the first that matches wins; the last one, with no path, takes the rest.",
+            "Both sites send `/api/sync` to the same `lessons-sync` container, so the public site and the private reader share one review history. Caddy does not check the sync key itself: `lessons-sync` reads `X-Sync-Key` on every request, which is why its health check can be open while its data is not."
           ],
           "examples": ["english"]
         },
@@ -353,9 +658,10 @@
           "id": "ctx",
           "h": "The same app, private, with a file",
           "p": [
-            "`ctx.<domain>` is the same app as the owner's own reader, behind basic auth. Here `/api/context` is a file: the context engine's export, pushed from the PC into a folder on the server and served by Caddy itself, with `no-store` so the phone never shows a stale copy. It is never part of an image."
+            "`ctx.<domain>` is the same app as the owner's own reader, behind basic auth. Here `/api/context` is a file: the context engine's export, pushed from the PC into a folder on the server and served by Caddy itself, with `no-store` so the phone never shows a stale copy. It is never part of an image.",
+            "Inside the `/api/context` block, `root` points at the mounted folder, `rewrite` turns any request into `/context.json`, and `file_server` sends it. The folder is created by `deploy.sh` as the deploy user, before compose starts: if Docker created it, it would belong to root and `push-context.ps1` could no longer write into it."
           ],
-          "examples": ["ctx"]
+          "examples": ["ctx", "folder"]
         }
       ],
       "fa": [
@@ -363,7 +669,8 @@
           "id": "english",
           "h": "مسیرها به کانتینرهای مختلف",
           "p": [
-            "درس‌های انگلیسی یک اپ ایستا هستند، ولی سایتشان دو مسیر را جای دیگری می‌فرستد: `/api/sync` به `lessons-sync` می‌رود که پیشرفت مرور را بین گوشی و PC هم‌گام نگه می‌دارد و کلید خودش را چک می‌کند؛ `/api/context` این‌جا 404 می‌دهد و اپ از آن می‌فهمد که تب Context فقط محلی است. بلوک‌های `handle` به ترتیب امتحان می‌شوند و اولی که بخواند برنده است؛ آخری که مسیری ندارد بقیه را می‌گیرد."
+            "درس‌های انگلیسی یک اپ ایستا هستند، ولی سایتشان دو مسیر را جای دیگری می‌فرستد: `/api/sync` به `lessons-sync` می‌رود که پیشرفت مرور را بین گوشی و PC هم‌گام نگه می‌دارد و کلید خودش را چک می‌کند؛ `/api/context` این‌جا 404 می‌دهد و اپ از آن می‌فهمد که تب Context فقط محلی است. بلوک‌های `handle` به ترتیب امتحان می‌شوند و اولی که بخواند برنده است؛ آخری که مسیری ندارد بقیه را می‌گیرد.",
+            "هر دو سایت `/api/sync` را به همان کانتینر `lessons-sync` می‌فرستند، پس سایت عمومی و خواننده‌ی خصوصی یک تاریخچه‌ی مرور مشترک دارند. خود Caddy کلید sync را چک نمی‌کند: `lessons-sync` در هر درخواست `X-Sync-Key` را می‌خواند، برای همین health check آن می‌تواند باز باشد در حالی که داده‌اش باز نیست."
           ],
           "examples": ["english"]
         },
@@ -371,9 +678,10 @@
           "id": "ctx",
           "h": "همان اپ، خصوصی، با یک فایل",
           "p": [
-            "`ctx.<domain>` همان اپ است به‌عنوان خواننده‌ی شخصی مالک، پشت basic auth. این‌جا `/api/context` یک فایل است: خروجی موتور context که از PC به پوشه‌ای روی سرور فرستاده می‌شود و خود Caddy آن را سرو می‌کند، با `no-store` تا گوشی هیچ‌وقت کپی کهنه نشان ندهد. این فایل هیچ‌وقت داخل image نیست."
+            "`ctx.<domain>` همان اپ است به‌عنوان خواننده‌ی شخصی مالک، پشت basic auth. این‌جا `/api/context` یک فایل است: خروجی موتور context که از PC به پوشه‌ای روی سرور فرستاده می‌شود و خود Caddy آن را سرو می‌کند، با `no-store` تا گوشی هیچ‌وقت کپی کهنه نشان ندهد. این فایل هیچ‌وقت داخل image نیست.",
+            "داخل بلوک `/api/context`، `root` به پوشه‌ی mount‌شده اشاره می‌کند، `rewrite` هر درخواستی را به `/context.json` تبدیل می‌کند، و `file_server` آن را می‌فرستد. پوشه را `deploy.sh` با کاربر deploy و قبل از شروع compose می‌سازد: اگر Docker آن را می‌ساخت مال root می‌شد و `push-context.ps1` دیگر نمی‌توانست در آن بنویسد."
           ],
-          "examples": ["ctx"]
+          "examples": ["ctx", "folder"]
         }
       ],
       "examples": {
@@ -390,8 +698,44 @@
           "file": "deploy/vps/Caddyfile",
           "from": "# The same lessons app as the owner's private Context reader",
           "lines": 19
+        },
+        "folder": {
+          "title": { "en": "The folder, made by the deploy user", "fa": "پوشه، ساخته‌شده با کاربر deploy" },
+          "lang": "bash",
+          "file": "deploy/vps/deploy.sh",
+          "from": "# Caddy mounts this for ctx.<domain>",
+          "lines": 3
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "On `english.<domain>`, which block answers `/api/sync/health`?", "fa": "در `english.<domain>` کدام بلوک به `/api/sync/health` جواب می‌دهد؟" },
+          "options": {
+            "en": ["The last `handle`, which sends it to `lessons-web`", "`handle /api/sync*`, which sends it to `lessons-sync`", "None; Caddy answers 404"],
+            "fa": ["آخرین `handle` که آن را به `lessons-web` می‌فرستد", "`handle /api/sync*` که آن را به `lessons-sync` می‌فرستد", "هیچ‌کدام؛ Caddy جواب 404 می‌دهد"]
+          },
+          "answer": 1,
+          "why": { "en": "The path matches `/api/sync*`, and the first `handle` that matches wins.", "fa": "مسیر با `/api/sync*` می‌خواند و اولین `handle` که بخواند برنده است." }
+        },
+        {
+          "q": { "en": "Why is `/api/context` sent with `Cache-Control: no-store`?", "fa": "چرا `/api/context` با `Cache-Control: no-store` فرستاده می‌شود؟" },
+          "options": {
+            "en": ["To make the file smaller", "Because basic auth requires it", "So the phone always fetches the latest export instead of showing a stale copy"],
+            "fa": ["تا فایل کوچک‌تر شود", "چون basic auth لازمش دارد", "تا گوشی همیشه آخرین خروجی را بگیرد و کپی کهنه نشان ندهد"]
+          },
+          "answer": 2,
+          "why": { "en": "The file is replaced whenever the PC pushes a new export; a cached copy would hide the change.", "fa": "هر بار که PC خروجی تازه می‌فرستد فایل عوض می‌شود؛ کپی cache‌شده تغییر را پنهان می‌کرد." }
+        },
+        {
+          "q": { "en": "Why does `deploy.sh` create the context folder itself?", "fa": "چرا `deploy.sh` پوشه‌ی context را خودش می‌سازد؟" },
+          "options": {
+            "en": ["So it belongs to the deploy user and `push-context.ps1` can write into it", "Because Caddy cannot read folders it did not create", "To empty it on every deploy"],
+            "fa": ["تا مال کاربر deploy باشد و `push-context.ps1` بتواند در آن بنویسد", "چون Caddy پوشه‌ای را که خودش نساخته نمی‌تواند بخواند", "تا در هر deploy خالی‌اش کند"]
+          },
+          "answer": 0,
+          "why": { "en": "A folder Docker creates for a missing mount source is owned by root.", "fa": "پوشه‌ای که Docker برای منبع mount ناموجود می‌سازد مال root است." }
+        }
+      ]
     },
     {
       "id": "basicauth",
@@ -403,15 +747,17 @@
           "id": "snippet",
           "h": "A second snippet",
           "p": [
-            "`(private)` asks for a user name and password before anything else. The password is stored only as a bcrypt hash, in the server's `.env`. Three sites import it: LedgerDashboard, which holds the job search (companies, contacts); `ctx`, the owner's reading; and LabFlow's demo."
+            "`(private)` asks for a user name and password before anything else. The password is stored only as a bcrypt hash, in the server's `.env`. Three sites import it: LedgerDashboard, which holds the job search (companies, contacts); `ctx`, the owner's reading; and LabFlow's demo.",
+            "The user name and the hash reach Caddy as `BASIC_AUTH_USER` and `BASIC_AUTH_HASH`, both required: without them compose does not start, so a private site can never come up unlocked by accident. Basic auth sends the password with every request, which is acceptable only because every site is HTTPS-only."
           ],
-          "examples": ["private", "ledger"]
+          "examples": ["private", "ledger", "env"]
         },
         {
           "id": "why",
           "h": "Why LabFlow needs it",
           "p": [
-            "Without the clinic platform LabFlow runs in Development, where its demo sign-in is a role switcher with no password. Basic auth is the lock in front of it. Its site sits in its own file so that the clinic layer can replace it."
+            "Without the clinic platform LabFlow runs in Development, where its demo sign-in is a role switcher with no password. Basic auth is the lock in front of it. Its site sits in its own file so that the clinic layer can replace it.",
+            "When the clinic platform is on, the clinic layer mounts a different `labflow.caddy` at the same path: LabFlow then runs in Production and signs people in through ClinicHub, so its old address only redirects, and the basic auth goes with it. LedgerDashboard keeps both locks, since it also has its own login."
           ],
           "examples": ["labflow"]
         }
@@ -421,15 +767,17 @@
           "id": "snippet",
           "h": "snippet دوم",
           "p": [
-            "`(private)` قبل از هر چیز اسم کاربری و رمز می‌خواهد. رمز فقط به‌صورت hash از نوع bcrypt در `.env` سرور نگه داشته می‌شود. سه سایت آن را import می‌کنند: LedgerDashboard که جست‌وجوی کار (شرکت‌ها، آدم‌ها) را نگه می‌دارد؛ `ctx` که خواندنی‌های مالک است؛ و دموی LabFlow."
+            "`(private)` قبل از هر چیز اسم کاربری و رمز می‌خواهد. رمز فقط به‌صورت hash از نوع bcrypt در `.env` سرور نگه داشته می‌شود. سه سایت آن را import می‌کنند: LedgerDashboard که جست‌وجوی کار (شرکت‌ها، آدم‌ها) را نگه می‌دارد؛ `ctx` که خواندنی‌های مالک است؛ و دموی LabFlow.",
+            "اسم کاربری و hash با اسم‌های `BASIC_AUTH_USER` و `BASIC_AUTH_HASH` به Caddy می‌رسند و هر دو اجباری‌اند: بدون آن‌ها compose شروع نمی‌کند، پس سایت خصوصی هیچ‌وقت تصادفی بدون قفل بالا نمی‌آید. basic auth رمز را با هر درخواست می‌فرستد، و این فقط به این دلیل قابل قبول است که همه‌ی سایت‌ها فقط HTTPS هستند."
           ],
-          "examples": ["private", "ledger"]
+          "examples": ["private", "ledger", "env"]
         },
         {
           "id": "why",
           "h": "چرا LabFlow لازمش دارد",
           "p": [
-            "بدون پلتفرم کلینیک، LabFlow در حالت Development اجرا می‌شود که در آن ورود دمو یک انتخاب‌گر نقش بدون رمز است. basic auth قفل جلوی آن است. سایتش در فایل جدای خودش است تا لایه‌ی کلینیک بتواند جایگزینش کند."
+            "بدون پلتفرم کلینیک، LabFlow در حالت Development اجرا می‌شود که در آن ورود دمو یک انتخاب‌گر نقش بدون رمز است. basic auth قفل جلوی آن است. سایتش در فایل جدای خودش است تا لایه‌ی کلینیک بتواند جایگزینش کند.",
+            "وقتی پلتفرم کلینیک روشن است، لایه‌ی کلینیک یک `labflow.caddy` دیگر را روی همان مسیر mount می‌کند: LabFlow آن وقت در Production اجرا می‌شود و آدم‌ها را از طریق ClinicHub وارد می‌کند، پس آدرس قدیمی‌اش فقط redirect می‌کند و basic auth هم با آن می‌رود. LedgerDashboard هر دو قفل را نگه می‌دارد، چون ورود خودش را هم دارد."
           ],
           "examples": ["labflow"]
         }
@@ -455,8 +803,44 @@
           "file": "deploy/vps/labflow.caddy",
           "from": "# LabFlow as the owner's demo",
           "lines": 8
+        },
+        "env": {
+          "title": { "en": "Both values required", "fa": "هر دو مقدار اجباری" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.vps.yml",
+          "from": "BASIC_AUTH_USER: ${BASIC_AUTH_USER",
+          "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "What does the server's `.env` hold for basic auth?", "fa": "`.env` سرور برای basic auth چه چیزی نگه می‌دارد؟" },
+          "options": {
+            "en": ["The password in plain text", "The user name and a bcrypt hash of the password", "Nothing; Caddy stores it in its volume"],
+            "fa": ["رمز به‌صورت متن ساده", "اسم کاربری و hash از نوع bcrypt برای رمز", "هیچ؛ Caddy آن را در volume خودش نگه می‌دارد"]
+          },
+          "answer": 1,
+          "why": { "en": "Caddy compares the typed password with the hash; the password itself is stored nowhere.", "fa": "Caddy رمز تایپ‌شده را با hash مقایسه می‌کند؛ خود رمز هیچ‌جا ذخیره نمی‌شود." }
+        },
+        {
+          "q": { "en": "Why does LabFlow's demo need basic auth?", "fa": "چرا دموی LabFlow به basic auth نیاز دارد؟" },
+          "options": {
+            "en": ["Its data is real", "Caddy requires it for every .NET app", "In Development its demo sign-in is a role switcher with no password"],
+            "fa": ["داده‌اش واقعی است", "Caddy برای همه‌ی اپ‌های .NET لازمش دارد", "در Development ورود دمویش یک انتخاب‌گر نقش بدون رمز است"]
+          },
+          "answer": 2,
+          "why": { "en": "Without the lock, anyone could pick a role and walk in.", "fa": "بدون قفل، هر کسی می‌توانست یک نقش انتخاب کند و وارد شود." }
+        },
+        {
+          "q": { "en": "What happens to LabFlow's basic auth when the clinic platform is switched on?", "fa": "وقتی پلتفرم کلینیک روشن می‌شود basic auth مربوط به LabFlow چه می‌شود؟" },
+          "options": {
+            "en": ["Its site file is replaced; the old address redirects to the clinic's lab, which signs in through ClinicHub", "It stays, in front of the clinic's lab too", "It moves to ClinicHub"],
+            "fa": ["فایل سایتش جایگزین می‌شود؛ آدرس قدیمی به آزمایشگاه کلینیک redirect می‌کند که از طریق ClinicHub وارد می‌کند", "می‌ماند، جلوی آزمایشگاه کلینیک هم", "به ClinicHub منتقل می‌شود"]
+          },
+          "answer": 0,
+          "why": { "en": "The clinic layer mounts its own `labflow.caddy` over the demo's, and that one only redirects.", "fa": "لایه‌ی کلینیک `labflow.caddy` خودش را روی فایل دمو mount می‌کند و آن فایل فقط redirect می‌کند." }
+        }
+      ]
     },
     {
       "id": "password",
@@ -469,9 +853,19 @@
           "h": "Typed twice, hashed by Caddy",
           "p": [
             "`set-basic-auth.sh` runs on the server. It asks for the password twice without showing it, refuses one under 12 characters, and refuses anything but printable English characters: a password typed with a Persian keyboard layout by mistake looks fine on a screen that shows nothing, and then never matches in the browser.",
-            "The hash comes from `caddy hash-password` in a throwaway container, so it is exactly the format Caddy reads. The script writes it into `.env` and recreates the caddy container, which then reads the new value."
+            "The hash comes from `caddy hash-password` in a throwaway container, so it is exactly the format Caddy reads. The script writes it into `.env` and recreates the caddy container, which then reads the new value.",
+            "The printable check keeps only the characters from space to `~` (`\\40-\\176`) and compares the result with the original; any other character makes them differ. After hashing, `unset P1 P2` drops the password from the shell, and the script checks that the result starts with `$2`, the mark of a bcrypt hash, before writing anything.",
+            "The hash is written between single quotes, so the `$` signs in it are taken as they are. The script then runs `docker compose up -d caddy`, not `restart`: a restart keeps the container's old environment, while `up` notices the changed value and recreates it."
           ],
           "examples": ["hash"]
+        },
+        {
+          "id": "run",
+          "h": "Run over SSH with a terminal",
+          "p": [
+            "The script is started from the PC with `ssh -t`, which gives it a terminal, so `read -s` can ask for the password without echoing it. The user name stays what `BASIC_AUTH_USER` already says."
+          ],
+          "examples": ["usage"]
         }
       ],
       "fa": [
@@ -480,9 +874,19 @@
           "h": "دو بار تایپ، hash به دست Caddy",
           "p": [
             "`set-basic-auth.sh` روی سرور اجرا می‌شود. رمز را دو بار بدون نشان دادن می‌پرسد، رمز کوتاه‌تر از ۱۲ حرف را رد می‌کند، و هر چیزی جز حروف قابل چاپ انگلیسی را هم رد می‌کند: رمزی که اشتباهی با صفحه‌کلید فارسی تایپ شده روی صفحه‌ای که چیزی نشان نمی‌دهد درست به نظر می‌آید و بعد در مرورگر هیچ‌وقت نمی‌خواند.",
-            "hash از `caddy hash-password` در یک کانتینر یک‌بارمصرف می‌آید، پس دقیقاً همان قالبی است که Caddy می‌خواند. اسکریپت آن را در `.env` می‌نویسد و کانتینر caddy را از نو می‌سازد تا مقدار تازه را بخواند."
+            "hash از `caddy hash-password` در یک کانتینر یک‌بارمصرف می‌آید، پس دقیقاً همان قالبی است که Caddy می‌خواند. اسکریپت آن را در `.env` می‌نویسد و کانتینر caddy را از نو می‌سازد تا مقدار تازه را بخواند.",
+            "چک حروف قابل چاپ فقط کاراکترهای بین فاصله تا `~` (`\\40-\\176`) را نگه می‌دارد و نتیجه را با رمز اصلی مقایسه می‌کند؛ هر کاراکتر دیگری آن دو را متفاوت می‌کند. بعد از hash، `unset P1 P2` رمز را از shell پاک می‌کند، و اسکریپت قبل از نوشتن هر چیزی چک می‌کند که نتیجه با `$2` شروع شود، که نشانه‌ی hash از نوع bcrypt است.",
+            "hash بین دو علامت نقل‌قول تکی نوشته می‌شود، پس علامت‌های `$` داخلش همان‌طور که هستند خوانده می‌شوند. بعد اسکریپت `docker compose up -d caddy` را اجرا می‌کند، نه `restart`: restart محیط قدیمی کانتینر را نگه می‌دارد، در حالی که `up` مقدار تغییرکرده را می‌بیند و کانتینر را از نو می‌سازد."
           ],
           "examples": ["hash"]
+        },
+        {
+          "id": "run",
+          "h": "اجرا روی SSH با ترمینال",
+          "p": [
+            "اسکریپت از PC با `ssh -t` اجرا می‌شود که به آن ترمینال می‌دهد، تا `read -s` بتواند رمز را بدون نمایش آن بپرسد. اسم کاربری همانی می‌ماند که `BASIC_AUTH_USER` از قبل می‌گوید."
+          ],
+          "examples": ["usage"]
         }
       ],
       "examples": {
@@ -492,8 +896,44 @@
           "file": "deploy/vps/set-basic-auth.sh",
           "from": "read -r -s -p \"New basic-auth password",
           "to": "docker compose up -d caddy"
+        },
+        "usage": {
+          "title": { "en": "How it is started", "fa": "چطور اجرا می‌شود" },
+          "lang": "bash",
+          "file": "deploy/vps/set-basic-auth.sh",
+          "from": "# Changes the basic-auth password",
+          "lines": 4
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why does the script refuse characters outside printable English?", "fa": "چرا اسکریپت کاراکترهای خارج از حروف قابل چاپ انگلیسی را رد می‌کند؟" },
+          "options": {
+            "en": ["bcrypt cannot hash them", "A password typed in the wrong keyboard layout looks fine on a hidden prompt and then never matches in the browser", "Caddy rejects long passwords"],
+            "fa": ["bcrypt نمی‌تواند آن‌ها را hash کند", "رمزی که با چیدمان اشتباه صفحه‌کلید تایپ شده در prompt پنهان درست به نظر می‌آید و بعد در مرورگر هیچ‌وقت نمی‌خواند", "Caddy رمزهای بلند را رد می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Nothing is shown while typing, so the mistake would only appear later, at the login prompt.", "fa": "هنگام تایپ چیزی نشان داده نمی‌شود، پس اشتباه فقط بعداً، موقع ورود، معلوم می‌شد." }
+        },
+        {
+          "q": { "en": "Why is the hash made with `caddy hash-password` in a throwaway `caddy:2` container?", "fa": "چرا hash با `caddy hash-password` در یک کانتینر یک‌بارمصرف `caddy:2` ساخته می‌شود؟" },
+          "options": {
+            "en": ["It is exactly the format Caddy reads, with nothing to install on the server", "It is faster than bcrypt", "The running Caddy must not see the password"],
+            "fa": ["دقیقاً همان قالبی است که Caddy می‌خواند و چیزی لازم نیست روی سرور نصب شود", "از bcrypt سریع‌تر است", "Caddy در حال اجرا نباید رمز را ببیند"]
+          },
+          "answer": 0,
+          "why": { "en": "The same image that serves the sites produces the hash, so the two always agree.", "fa": "همان imageی که سایت‌ها را سرو می‌کند hash را می‌سازد، پس این دو همیشه با هم جورند." }
+        },
+        {
+          "q": { "en": "Why `docker compose up -d caddy` and not `docker compose restart caddy`?", "fa": "چرا `docker compose up -d caddy` و نه `docker compose restart caddy`؟" },
+          "options": {
+            "en": ["`restart` would ask for a new certificate", "`up` is faster", "`restart` keeps the old environment; `up` recreates the container with the new hash"],
+            "fa": ["`restart` گواهی تازه می‌خواست", "`up` سریع‌تر است", "`restart` محیط قدیمی را نگه می‌دارد؛ `up` کانتینر را با hash تازه از نو می‌سازد"]
+          },
+          "answer": 2,
+          "why": { "en": "The hash reaches Caddy as an environment variable, which is fixed when the container is created.", "fa": "hash به‌صورت متغیر محیطی به Caddy می‌رسد که موقع ساخت کانتینر ثابت می‌شود." }
+        }
+      ]
     },
     {
       "id": "clinicsites",
@@ -514,9 +954,18 @@
           "id": "app",
           "h": "API and page under one address",
           "p": [
-            "LabFlow, PharmaFlow and FinancePowerApp each have an API container and a React container. The `(app)` snippet takes their two names as arguments: the API's own paths (`/api/*` and the sign-in callbacks) go to the API, everything else to the page. One origin for both means no CORS, and cookies that stay on one site."
+            "LabFlow, PharmaFlow and FinancePowerApp each have an API container and a React container. The `(app)` snippet takes their two names as arguments: the API's own paths (`/api/*` and the sign-in callbacks) go to the API, everything else to the page. One origin for both means no CORS, and cookies that stay on one site.",
+            "The `@api` matcher names three paths: `/api/*`, `/signin-oidc` and `/signout-callback-oidc`. The two callbacks are where ClinicHub sends the browser back after sign-in and sign-out; the API handles them on the server, so they must reach the API container and not the React app. Inside the snippet, `{args[0]}` and `{args[1]}` are replaced by the two names the site passes."
           ],
           "examples": ["app", "lab"]
+        },
+        {
+          "id": "own",
+          "h": "Sites that need no split",
+          "p": [
+            "ClinicHub serves its pages and its API from one container, so its site is a single `reverse_proxy`. Analytics and IntegrationHub's admin web proxy `/api` themselves, with their own nginx, so Caddy sends everything to their web container. `report.clinic.<domain>` is a second ClinicReport, connected to ClinicHub; `report.<domain>` stays the public demo."
+          ],
+          "examples": ["analytics"]
         }
       ],
       "fa": [
@@ -533,9 +982,18 @@
           "id": "app",
           "h": "API و صفحه زیر یک آدرس",
           "p": [
-            "LabFlow، PharmaFlow و FinancePowerApp هر کدام یک کانتینر API و یک کانتینر React دارند. snippet `(app)` اسم این دو را به‌عنوان آرگومان می‌گیرد: مسیرهای خود API (`/api/*` و callbackهای ورود) به API می‌روند و بقیه به صفحه. یک origin برای هر دو یعنی CORS لازم نیست و cookieها روی یک سایت می‌مانند."
+            "LabFlow، PharmaFlow و FinancePowerApp هر کدام یک کانتینر API و یک کانتینر React دارند. snippet `(app)` اسم این دو را به‌عنوان آرگومان می‌گیرد: مسیرهای خود API (`/api/*` و callbackهای ورود) به API می‌روند و بقیه به صفحه. یک origin برای هر دو یعنی CORS لازم نیست و cookieها روی یک سایت می‌مانند.",
+            "matcher به اسم `@api` سه مسیر را نام می‌برد: `/api/*`، `/signin-oidc` و `/signout-callback-oidc`. این دو callback جایی هستند که ClinicHub مرورگر را بعد از ورود و خروج به آن برمی‌گرداند؛ API آن‌ها را روی سرور انجام می‌دهد، پس باید به کانتینر API برسند نه به اپ React. داخل snippet، `{args[0]}` و `{args[1]}` با دو اسمی که سایت می‌دهد جایگزین می‌شوند."
           ],
           "examples": ["app", "lab"]
+        },
+        {
+          "id": "own",
+          "h": "سایت‌هایی که تقسیم لازم ندارند",
+          "p": [
+            "ClinicHub صفحه‌ها و API خودش را از یک کانتینر سرو می‌کند، پس سایتش یک `reverse_proxy` تنهاست. Analytics و وب مدیریت IntegrationHub خودشان `/api` را با nginx خودشان proxy می‌کنند، پس Caddy همه چیز را به کانتینر وبشان می‌فرستد. `report.clinic.<domain>` یک ClinicReport دوم است که به ClinicHub وصل است؛ `report.<domain>` همان دموی عمومی می‌ماند."
+          ],
+          "examples": ["analytics"]
         }
       ],
       "examples": {
@@ -559,8 +1017,44 @@
           "file": "deploy/clinic/clinic.caddy",
           "from": "lab.{$CLINIC_DOMAIN} {",
           "lines": 4
+        },
+        "analytics": {
+          "title": { "en": "Analytics and IntegrationHub", "fa": "Analytics و IntegrationHub" },
+          "lang": "nginx",
+          "file": "deploy/clinic/clinic.caddy",
+          "from": "# Analytics and the hub's admin web proxy /api themselves",
+          "lines": 10
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why does `/signin-oidc` go to the API container and not to the React app?", "fa": "چرا `/signin-oidc` به کانتینر API می‌رود و نه به اپ React؟" },
+          "options": {
+            "en": ["React apps cannot read URLs", "The API handles the sign-in callback on the server", "ClinicHub only knows the API's address"],
+            "fa": ["اپ‌های React نمی‌توانند URL بخوانند", "API callback ورود را روی سرور انجام می‌دهد", "ClinicHub فقط آدرس API را می‌شناسد"]
+          },
+          "answer": 1,
+          "why": { "en": "The callback finishes the sign-in and sets the cookie, which the API does.", "fa": "callback ورود را تمام می‌کند و cookie را می‌گذارد، و این کار API است." }
+        },
+        {
+          "q": { "en": "Why do Analytics and IntegrationHub not use the `(app)` snippet?", "fa": "چرا Analytics و IntegrationHub از snippet `(app)` استفاده نمی‌کنند؟" },
+          "options": {
+            "en": ["They have no API", "They are behind basic auth", "Their own nginx already forwards `/api`"],
+            "fa": ["API ندارند", "پشت basic auth هستند", "nginx خودشان از قبل `/api` را می‌فرستد"]
+          },
+          "answer": 2,
+          "why": { "en": "Caddy only needs to reach their web container; the split happens one step later.", "fa": "Caddy فقط باید به کانتینر وبشان برسد؛ تقسیم یک قدم بعد انجام می‌شود." }
+        },
+        {
+          "q": { "en": "What does serving the API and the page under one origin avoid?", "fa": "سرو کردن API و صفحه زیر یک origin از چه چیزی جلوگیری می‌کند؟" },
+          "options": {
+            "en": ["CORS, and cookies split across two sites", "Certificates", "The need for ClinicHub"],
+            "fa": ["CORS، و تقسیم cookieها بین دو سایت", "گواهی‌ها", "نیاز به ClinicHub"]
+          },
+          "answer": 0,
+          "why": { "en": "The browser sees one site, so its calls to `/api` are same-origin.", "fa": "مرورگر یک سایت می‌بیند، پس درخواست‌هایش به `/api` هم‌origin هستند." }
+        }
+      ]
     },
     {
       "id": "layers",
@@ -572,15 +1066,17 @@
           "id": "import",
           "h": "The Caddyfile imports a folder",
           "p": [
-            "The Caddyfile ends by importing every file in `/etc/caddy/sites/`. Which files are there is up to compose: the server's layer mounts LabFlow's demo site, and the clinic layer, when `.env` turns it on, mounts the clinic's sites and gives Caddy `CLINIC_DOMAIN`. The Caddyfile itself never changes when the platform is switched on or off."
+            "The Caddyfile ends by importing every file in `/etc/caddy/sites/`. Which files are there is up to compose: the server's layer mounts LabFlow's demo site, and the clinic layer, when `.env` turns it on, mounts the clinic's sites and gives Caddy `CLINIC_DOMAIN`. The Caddyfile itself never changes when the platform is switched on or off.",
+            "Which layers are on is decided by one line of the server's `.env`, `COMPOSE_FILE`: the clinic platform is on when it lists `deploy/vps/compose.clinic.yml` after the other three files. The watchdog reads the same line to decide whether to check the clinic's certificates."
           ],
-          "examples": ["import", "mount"]
+          "examples": ["import", "mount", "composefile"]
         },
         {
           "id": "replace",
           "h": "Replacing a site by mounting over it",
           "p": [
-            "With the clinic platform, LabFlow is the clinic's lab at `lab.clinic.<domain>`. The clinic layer mounts its own `labflow.caddy` on the same path as the demo's, so it replaces it: LabFlow's old address now sends people to the lab with a permanent redirect that keeps the path."
+            "With the clinic platform, LabFlow is the clinic's lab at `lab.clinic.<domain>`. The clinic layer mounts its own `labflow.caddy` on the same path as the demo's, so it replaces it: LabFlow's old address now sends people to the lab with a permanent redirect that keeps the path.",
+            "This works because compose merges a service's volumes by their path inside the container: two layers mounting a file at `/etc/caddy/sites/labflow.caddy` leave only the last one. `redir ... {uri} permanent` keeps the path and the query, so an old bookmark lands on the same page of the lab. `deploy.sh` includes `deploy/clinic/*.caddy` in its checksum, so a change to these files restarts Caddy too."
           ],
           "examples": ["redir"]
         }
@@ -590,15 +1086,17 @@
           "id": "import",
           "h": "Caddyfile یک پوشه را import می‌کند",
           "p": [
-            "Caddyfile با import کردن همه‌ی فایل‌های `/etc/caddy/sites/` تمام می‌شود. این‌که چه فایل‌هایی آن‌جا باشند با compose است: لایه‌ی سرور سایت دموی LabFlow را mount می‌کند، و لایه‌ی کلینیک، وقتی `.env` روشنش کند، سایت‌های کلینیک را mount می‌کند و `CLINIC_DOMAIN` را به Caddy می‌دهد. خود Caddyfile با روشن یا خاموش شدن پلتفرم عوض نمی‌شود."
+            "Caddyfile با import کردن همه‌ی فایل‌های `/etc/caddy/sites/` تمام می‌شود. این‌که چه فایل‌هایی آن‌جا باشند با compose است: لایه‌ی سرور سایت دموی LabFlow را mount می‌کند، و لایه‌ی کلینیک، وقتی `.env` روشنش کند، سایت‌های کلینیک را mount می‌کند و `CLINIC_DOMAIN` را به Caddy می‌دهد. خود Caddyfile با روشن یا خاموش شدن پلتفرم عوض نمی‌شود.",
+            "این‌که کدام لایه‌ها روشن‌اند را یک خط از `.env` سرور تعیین می‌کند، `COMPOSE_FILE`: پلتفرم کلینیک وقتی روشن است که بعد از سه فایل دیگر `deploy/vps/compose.clinic.yml` را هم فهرست کند. watchdog همین خط را می‌خواند تا تصمیم بگیرد گواهی‌های کلینیک را چک کند یا نه."
           ],
-          "examples": ["import", "mount"]
+          "examples": ["import", "mount", "composefile"]
         },
         {
           "id": "replace",
           "h": "جایگزین کردن یک سایت با mount روی آن",
           "p": [
-            "با پلتفرم کلینیک، LabFlow آزمایشگاه کلینیک در `lab.clinic.<domain>` است. لایه‌ی کلینیک `labflow.caddy` خودش را روی همان مسیر فایل دمو mount می‌کند، پس جایگزینش می‌شود: آدرس قدیمی LabFlow حالا آدم‌ها را با redirect دائمی، و با حفظ مسیر، به آزمایشگاه می‌فرستد."
+            "با پلتفرم کلینیک، LabFlow آزمایشگاه کلینیک در `lab.clinic.<domain>` است. لایه‌ی کلینیک `labflow.caddy` خودش را روی همان مسیر فایل دمو mount می‌کند، پس جایگزینش می‌شود: آدرس قدیمی LabFlow حالا آدم‌ها را با redirect دائمی، و با حفظ مسیر، به آزمایشگاه می‌فرستد.",
+            "این کار می‌کند چون compose volumeهای یک سرویس را بر اساس مسیرشان داخل کانتینر ادغام می‌کند: دو لایه که فایلی را روی `/etc/caddy/sites/labflow.caddy` mount کنند فقط آخری را باقی می‌گذارند. `redir ... {uri} permanent` مسیر و query را نگه می‌دارد، پس یک bookmark قدیمی روی همان صفحه‌ی آزمایشگاه می‌نشیند. `deploy.sh` فایل‌های `deploy/clinic/*.caddy` را هم در checksum خودش می‌آورد، پس تغییر این فایل‌ها هم Caddy را restart می‌کند."
           ],
           "examples": ["redir"]
         }
@@ -624,8 +1122,44 @@
           "file": "deploy/clinic/labflow.caddy",
           "from": "# With the clinic platform, LabFlow is the clinic's lab",
           "lines": 6
+        },
+        "composefile": {
+          "title": { "en": "The line that turns the platform on", "fa": "خطی که پلتفرم را روشن می‌کند" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.clinic.yml",
+          "from": "#   COMPOSE_FILE=docker-compose.yml:compose.apps.yml:deploy/vps/compose.vps.yml:deploy/vps/compose.clinic.yml",
+          "lines": 1
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "How does the clinic layer replace LabFlow's demo site?", "fa": "لایه‌ی کلینیک چطور سایت دموی LabFlow را جایگزین می‌کند؟" },
+          "options": {
+            "en": ["It edits the Caddyfile on the server", "It mounts its own file at the same path inside the container", "It deletes the demo file before starting Caddy"],
+            "fa": ["Caddyfile را روی سرور ویرایش می‌کند", "فایل خودش را روی همان مسیر داخل کانتینر mount می‌کند", "قبل از شروع Caddy فایل دمو را پاک می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Compose keeps one mount per container path, the one from the last layer.", "fa": "compose برای هر مسیر داخل کانتینر یک mount نگه می‌دارد، همانی که از آخرین لایه می‌آید." }
+        },
+        {
+          "q": { "en": "What changes in the Caddyfile when the clinic platform is switched on?", "fa": "وقتی پلتفرم کلینیک روشن می‌شود در Caddyfile چه چیزی عوض می‌شود؟" },
+          "options": {
+            "en": ["Nothing; it imports whatever files the layers mount", "A new import line is added by deploy.sh", "The clinic sites are pasted into it"],
+            "fa": ["هیچ؛ هر فایلی را که لایه‌ها mount کنند import می‌کند", "deploy.sh یک خط import تازه اضافه می‌کند", "سایت‌های کلینیک داخلش چسبانده می‌شوند"]
+          },
+          "answer": 0,
+          "why": { "en": "The last line imports `/etc/caddy/sites/*.caddy`; compose decides what is in that folder.", "fa": "خط آخر `/etc/caddy/sites/*.caddy` را import می‌کند؛ compose تعیین می‌کند چه چیزی در آن پوشه باشد." }
+        },
+        {
+          "q": { "en": "Someone opens an old link `labflow.<domain>/orders/12` with the clinic platform on. Where do they land?", "fa": "کسی با پلتفرم کلینیک روشن، لینک قدیمی `labflow.<domain>/orders/12` را باز می‌کند. کجا می‌رسد؟" },
+          "options": {
+            "en": ["On the lab's home page", "On a 404 page", "On `lab.clinic.<domain>/orders/12`"],
+            "fa": ["روی صفحه‌ی اصلی آزمایشگاه", "روی صفحه‌ی 404", "روی `lab.clinic.<domain>/orders/12`"]
+          },
+          "answer": 2,
+          "why": { "en": "`{uri}` carries the path and query into the redirect.", "fa": "`{uri}` مسیر و query را به redirect می‌برد." }
+        }
+      ]
     },
     {
       "id": "aliases",
@@ -637,15 +1171,17 @@
           "id": "issuer",
           "h": "Containers reach Caddy under the public names",
           "p": [
-            "A ClinicHub token says who issued it, `https://hub.clinic.<domain>/`, and every application checks that, and fetches the signing keys from that address. Inside Docker the applications reach Caddy under the same public names, as network aliases of the caddy container, so the issuer is one address in the browser and between containers, over HTTPS, without leaving the server."
+            "A ClinicHub token says who issued it, `https://hub.clinic.<domain>/`, and every application checks that, and fetches the signing keys from that address. Inside Docker the applications reach Caddy under the same public names, as network aliases of the caddy container, so the issuer is one address in the browser and between containers, over HTTPS, without leaving the server.",
+            "Calling ClinicHub directly as `http://clinichub:8080` would not work for this: the address would not match the issuer written in the tokens, and OpenIddict refuses plain HTTP to its endpoints outside development. So IntegrationHub, for example, fetches the keys from `https://hub.clinic.<domain>/.well-known/jwks`, which the alias sends to Caddy, and Caddy to ClinicHub."
           ],
-          "examples": ["aliases"]
+          "examples": ["aliases", "jwks"]
         },
         {
           "id": "forwarded",
           "h": "Caddy terminates TLS",
           "p": [
-            "Behind Caddy the .NET applications see plain HTTP. They read the original scheme and client address from Caddy's `X-Forwarded-*` headers, so sign-in redirects say `https://` and cookies are marked Secure."
+            "Behind Caddy the .NET applications see plain HTTP. They read the original scheme and client address from Caddy's `X-Forwarded-*` headers, so sign-in redirects say `https://` and cookies are marked Secure.",
+            "`ASPNETCORE_FORWARDEDHEADERS_ENABLED` is set once, in the `x-dotnet` block that every .NET service of the platform includes. Without it the apps would think they were on `http://`: sign-in redirects would point at HTTP, and Secure cookies would not be set."
           ],
           "examples": ["forwarded"]
         }
@@ -655,15 +1191,17 @@
           "id": "issuer",
           "h": "کانتینرها با اسم‌های عمومی به Caddy می‌رسند",
           "p": [
-            "توکن ClinicHub می‌گوید چه کسی صادرش کرده، `https://hub.clinic.<domain>/`، و هر اپ همین را چک می‌کند و کلیدهای امضا را از همان آدرس می‌گیرد. داخل Docker اپ‌ها با همان اسم‌های عمومی به Caddy می‌رسند، به‌صورت network alias کانتینر caddy، پس صادرکننده در مرورگر و بین کانتینرها یک آدرس است، روی HTTPS، بدون این‌که درخواست از سرور بیرون برود."
+            "توکن ClinicHub می‌گوید چه کسی صادرش کرده، `https://hub.clinic.<domain>/`، و هر اپ همین را چک می‌کند و کلیدهای امضا را از همان آدرس می‌گیرد. داخل Docker اپ‌ها با همان اسم‌های عمومی به Caddy می‌رسند، به‌صورت network alias کانتینر caddy، پس صادرکننده در مرورگر و بین کانتینرها یک آدرس است، روی HTTPS، بدون این‌که درخواست از سرور بیرون برود.",
+            "صدا زدن مستقیم ClinicHub با `http://clinichub:8080` این‌جا کار نمی‌کرد: آدرس با صادرکننده‌ای که در توکن‌ها نوشته شده نمی‌خواند، و OpenIddict خارج از development به HTTP ساده برای endpointهایش جواب نمی‌دهد. پس مثلاً IntegrationHub کلیدها را از `https://hub.clinic.<domain>/.well-known/jwks` می‌گیرد که alias آن را به Caddy می‌فرستد و Caddy به ClinicHub."
           ],
-          "examples": ["aliases"]
+          "examples": ["aliases", "jwks"]
         },
         {
           "id": "forwarded",
           "h": "TLS در Caddy تمام می‌شود",
           "p": [
-            "پشت Caddy، اپ‌های .NET فقط HTTP ساده می‌بینند. scheme و آدرس اصلی کاربر را از هدرهای `X-Forwarded-*` که Caddy می‌فرستد می‌خوانند، پس redirectهای ورود `https://` می‌گویند و cookieها Secure علامت می‌خورند."
+            "پشت Caddy، اپ‌های .NET فقط HTTP ساده می‌بینند. scheme و آدرس اصلی کاربر را از هدرهای `X-Forwarded-*` که Caddy می‌فرستد می‌خوانند، پس redirectهای ورود `https://` می‌گویند و cookieها Secure علامت می‌خورند.",
+            "`ASPNETCORE_FORWARDEDHEADERS_ENABLED` یک بار تنظیم شده، در بلوک `x-dotnet` که همه‌ی سرویس‌های .NET پلتفرم آن را include می‌کنند. بدون آن اپ‌ها فکر می‌کردند روی `http://` هستند: redirectهای ورود به HTTP اشاره می‌کردند و cookieهای Secure گذاشته نمی‌شدند."
           ],
           "examples": ["forwarded"]
         }
@@ -682,8 +1220,41 @@
           "file": "deploy/vps/compose.clinic.yml",
           "from": "# Caddy terminates TLS",
           "lines": 2
+        },
+        "jwks": {
+          "title": { "en": "Keys over HTTPS, through the alias", "fa": "کلیدها روی HTTPS، از طریق alias" },
+          "lang": "yaml",
+          "file": "deploy/vps/compose.clinic.yml",
+          "from": "# Over HTTPS through Caddy's alias",
+          "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why don't the containers fetch ClinicHub's keys from `http://clinichub:8080`?", "fa": "چرا کانتینرها کلیدهای ClinicHub را از `http://clinichub:8080` نمی‌گیرند؟" },
+          "options": {
+            "en": ["clinichub has no port 8080", "Docker blocks HTTP between containers", "It would not match the tokens' issuer, and OpenIddict refuses plain HTTP outside development"],
+            "fa": ["clinichub پورت 8080 ندارد", "Docker جلوی HTTP بین کانتینرها را می‌گیرد", "با صادرکننده‌ی توکن‌ها نمی‌خواند و OpenIddict خارج از development به HTTP ساده جواب نمی‌دهد"]
+          },
+          "answer": 2,
+          "why": { "en": "The aliases let the containers use the public HTTPS address without leaving the server.", "fa": "aliasها اجازه می‌دهند کانتینرها بدون بیرون رفتن از سرور از آدرس عمومی HTTPS استفاده کنند." }
+        },
+        {
+          "q": { "en": "Which container carries the network aliases `hub.clinic.<domain>` and the others?", "fa": "aliasهای شبکه مثل `hub.clinic.<domain>` روی کدام کانتینر هستند؟" },
+          "options": { "en": ["caddy", "clinichub", "Every application"], "fa": ["caddy", "clinichub", "همه‌ی اپ‌ها"] },
+          "answer": 0,
+          "why": { "en": "The names lead to Caddy, which holds the certificates and passes each name on, exactly as from the browser.", "fa": "اسم‌ها به Caddy می‌رسند که گواهی‌ها را دارد و هر اسم را، دقیقاً مثل مرورگر، جلو می‌فرستد." }
+        },
+        {
+          "q": { "en": "What goes wrong if a .NET app does not read the `X-Forwarded-*` headers?", "fa": "اگر یک اپ .NET هدرهای `X-Forwarded-*` را نخواند چه خراب می‌شود؟" },
+          "options": {
+            "en": ["Caddy refuses to proxy to it", "It believes it is on HTTP: sign-in redirects say `http://` and cookies are not Secure", "Its database connection fails"],
+            "fa": ["Caddy حاضر نمی‌شود به آن proxy کند", "فکر می‌کند روی HTTP است: redirectهای ورود `http://` می‌گویند و cookieها Secure نیستند", "اتصال دیتابیسش قطع می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "TLS ends at Caddy, so the app learns the original scheme only from those headers.", "fa": "TLS در Caddy تمام می‌شود، پس اپ scheme اصلی را فقط از همین هدرها می‌فهمد." }
+        }
+      ]
     },
     {
       "id": "reload",
@@ -695,9 +1266,19 @@
           "id": "restart",
           "h": "A pulled file the container doesn't see",
           "p": [
-            "Compose mounts the Caddyfile as a single file. `git pull` replaces that file with a new one, and the running container keeps reading the old one, so a change to a site would quietly do nothing. `deploy.sh` therefore takes a checksum of every Caddy file before pulling and after, and restarts Caddy only when it changed, so a deploy that touches no site does not drop connections."
+            "Compose mounts the Caddyfile as a single file. `git pull` replaces that file with a new one, and the running container keeps reading the old one, so a change to a site would quietly do nothing. `deploy.sh` therefore takes a checksum of every Caddy file before pulling and after, and restarts Caddy only when it changed, so a deploy that touches no site does not drop connections.",
+            "The reason is how a single-file bind mount works: it is tied to the file itself, and `git pull` writes a new file in its place instead of changing the old one, so the container keeps the old one open. The Context export avoids the same trap by being mounted as a folder.",
+            "`caddy_sum` concatenates the Caddyfile, the demo's `labflow.caddy` and every `deploy/clinic/*.caddy`, and hashes them with `sha1sum`; one hash covers every file Caddy reads. The restart comes after `docker compose up -d --build`, so it happens once, with everything else already rebuilt."
           ],
           "examples": ["sum", "restart"]
+        },
+        {
+          "id": "lock",
+          "h": "One deploy at a time",
+          "p": [
+            "`deploy.sh` takes a lock with `flock` before anything else, so a second deploy started meanwhile waits for the first. Without it, two runs could take their checksums at different moments and one of them could miss the change that needs the restart."
+          ],
+          "examples": ["lock"]
         }
       ],
       "fa": [
@@ -705,9 +1286,19 @@
           "id": "restart",
           "h": "فایل pull‌شده‌ای که کانتینر نمی‌بیند",
           "p": [
-            "compose فایل Caddyfile را به‌صورت یک فایل تنها mount می‌کند. `git pull` آن فایل را با یک فایل تازه عوض می‌کند و کانتینر در حال اجرا همچنان قدیمی را می‌خواند، پس تغییر یک سایت بی‌صدا هیچ اثری نمی‌گذارد. برای همین `deploy.sh` قبل و بعد از pull از همه‌ی فایل‌های Caddy checksum می‌گیرد و فقط وقتی عوض شده باشد Caddy را restart می‌کند، تا deployی که به هیچ سایتی دست نزده اتصال‌ها را قطع نکند."
+            "compose فایل Caddyfile را به‌صورت یک فایل تنها mount می‌کند. `git pull` آن فایل را با یک فایل تازه عوض می‌کند و کانتینر در حال اجرا همچنان قدیمی را می‌خواند، پس تغییر یک سایت بی‌صدا هیچ اثری نمی‌گذارد. برای همین `deploy.sh` قبل و بعد از pull از همه‌ی فایل‌های Caddy checksum می‌گیرد و فقط وقتی عوض شده باشد Caddy را restart می‌کند، تا deployی که به هیچ سایتی دست نزده اتصال‌ها را قطع نکند.",
+            "دلیلش طرز کار mount یک فایل تنهاست: به خود فایل بسته است، و `git pull` به‌جای تغییر فایل قدیمی یک فایل تازه جایش می‌نویسد، پس کانتینر همچنان فایل قدیمی را باز نگه می‌دارد. خروجی Context با mount شدن به‌صورت پوشه از همین تله دوری می‌کند.",
+            "`caddy_sum` فایل Caddyfile، `labflow.caddy` دمو و همه‌ی `deploy/clinic/*.caddy` را پشت هم می‌گذارد و با `sha1sum` از آن‌ها hash می‌گیرد؛ یک hash همه‌ی فایل‌هایی را که Caddy می‌خواند پوشش می‌دهد. restart بعد از `docker compose up -d --build` می‌آید، پس یک بار انجام می‌شود، وقتی بقیه چیزها از قبل ساخته شده‌اند."
           ],
           "examples": ["sum", "restart"]
+        },
+        {
+          "id": "lock",
+          "h": "هر بار یک deploy",
+          "p": [
+            "`deploy.sh` قبل از هر چیز با `flock` یک قفل می‌گیرد، پس deploy دومی که در همین حین شروع شود منتظر اولی می‌ماند. بدون آن، دو اجرا می‌توانستند checksumهایشان را در لحظه‌های مختلف بگیرند و یکی‌شان تغییری را که restart لازم دارد نبیند."
+          ],
+          "examples": ["lock"]
         }
       ],
       "examples": {
@@ -724,8 +1315,35 @@
           "file": "deploy/vps/deploy.sh",
           "from": "if [[ \"$(caddy_sum)\" != \"$caddy_before\" ]]; then",
           "lines": 4
+        },
+        "lock": {
+          "title": { "en": "The deploy lock", "fa": "قفل deploy" },
+          "lang": "bash",
+          "file": "deploy/vps/deploy.sh",
+          "from": "# One deploy at a time",
+          "lines": 3
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "After `git pull` changes the Caddyfile, why does the running Caddy still use the old one?", "fa": "بعد از این‌که `git pull` فایل Caddyfile را عوض می‌کند، چرا Caddy در حال اجرا هنوز قدیمی را به کار می‌برد؟" },
+          "options": {
+            "en": ["The single-file mount is tied to the old file, and the pull wrote a new one in its place", "Caddy caches its configuration for a day", "git pull does not touch mounted files"],
+            "fa": ["mount فایل تنها به فایل قدیمی بسته است و pull یک فایل تازه جایش نوشته", "Caddy تنظیماتش را یک روز cache می‌کند", "git pull به فایل‌های mount‌شده دست نمی‌زند"]
+          },
+          "answer": 0,
+          "why": { "en": "Only a restart makes the container mount the file again.", "fa": "فقط restart باعث می‌شود کانتینر فایل را دوباره mount کند." }
+        },
+        {
+          "q": { "en": "Why restart Caddy only when the checksum changed?", "fa": "چرا Caddy فقط وقتی checksum عوض شده restart می‌شود؟" },
+          "options": {
+            "en": ["Restarting needs a new certificate", "A restart drops open connections, which a deploy that touches no site should not do", "Caddy can only restart once a day"],
+            "fa": ["restart گواهی تازه لازم دارد", "restart اتصال‌های باز را قطع می‌کند و deployی که به هیچ سایتی دست نزده نباید این کار را بکند", "Caddy فقط روزی یک بار می‌تواند restart شود"]
+          },
+          "answer": 1,
+          "why": { "en": "Every site goes through Caddy, so its restart is felt everywhere.", "fa": "همه‌ی سایت‌ها از Caddy می‌گذرند، پس restart آن همه‌جا حس می‌شود." }
+        }
+      ]
     },
     {
       "id": "smoke",
@@ -737,9 +1355,19 @@
           "id": "codes",
           "h": "Every site answers as it should",
           "p": [
-            "The last step of a release calls each site from the PC, through Caddy, and compares the status code with what it should be: 200 for the public sites, 401 for the ones behind basic auth. A 401 is the right answer there, and a 200 would mean the lock is gone. The review sync is checked the same way: its health check is open and its data needs the key."
+            "The last step of a release calls each site from the PC, through Caddy, and compares the status code with what it should be: 200 for the public sites, 401 for the ones behind basic auth. A 401 is the right answer there, and a 200 would mean the lock is gone. The review sync is checked the same way: its health check is open and its data needs the key.",
+            "Each check is a `curl` from the PC to `https://<site>.<domain>/`, so it goes through the public DNS, the real certificate and Caddy, the same path a visitor takes. It runs after the deploy and the migrations, as step 7 of 7, and records only the status code.",
+            "The two sync checks show why both kinds of answer matter: `/api/sync/health` must answer 200 without a key, and `/api/sync` must answer 401 without one. A 200 on the second would mean anyone could read the review history."
           ],
           "examples": ["smoke"]
+        },
+        {
+          "id": "fail",
+          "h": "A failed check stops the release loudly",
+          "p": [
+            "Every site is checked before the verdict, so one run lists all the sites that answered wrongly. Then the script throws with that list. The code is already released and tagged at that point, so the message says so, and the last lines explain how to go back: check out the previous `release-*` tag in each repo and run `deploy.sh` again."
+          ],
+          "examples": ["fail"]
         }
       ],
       "fa": [
@@ -747,9 +1375,19 @@
           "id": "codes",
           "h": "هر سایت همان‌طور که باید جواب می‌دهد",
           "p": [
-            "آخرین مرحله‌ی release هر سایت را از PC و از طریق Caddy صدا می‌زند و کد وضعیت را با چیزی که باید باشد مقایسه می‌کند: 200 برای سایت‌های عمومی، 401 برای سایت‌های پشت basic auth. آن‌جا 401 جواب درست است و 200 یعنی قفل برداشته شده. هم‌گام‌سازی مرور هم همین‌طور چک می‌شود: health check آن باز است و داده‌اش کلید می‌خواهد."
+            "آخرین مرحله‌ی release هر سایت را از PC و از طریق Caddy صدا می‌زند و کد وضعیت را با چیزی که باید باشد مقایسه می‌کند: 200 برای سایت‌های عمومی، 401 برای سایت‌های پشت basic auth. آن‌جا 401 جواب درست است و 200 یعنی قفل برداشته شده. هم‌گام‌سازی مرور هم همین‌طور چک می‌شود: health check آن باز است و داده‌اش کلید می‌خواهد.",
+            "هر چک یک `curl` از PC به `https://<site>.<domain>/` است، پس از DNS عمومی، گواهی واقعی و Caddy می‌گذرد، همان راهی که بازدیدکننده می‌رود. بعد از deploy و migrationها، به‌عنوان مرحله‌ی ۷ از ۷، اجرا می‌شود و فقط کد وضعیت را ثبت می‌کند.",
+            "دو چک sync نشان می‌دهند چرا هر دو نوع جواب مهم‌اند: `/api/sync/health` باید بدون کلید 200 بدهد و `/api/sync` بدون کلید 401. 200 روی دومی یعنی هر کسی می‌توانست تاریخچه‌ی مرور را بخواند."
           ],
           "examples": ["smoke"]
+        },
+        {
+          "id": "fail",
+          "h": "چک ناموفق release را با صدای بلند متوقف می‌کند",
+          "p": [
+            "همه‌ی سایت‌ها قبل از نتیجه چک می‌شوند، پس یک اجرا همه‌ی سایت‌هایی را که جواب اشتباه داده‌اند فهرست می‌کند. بعد اسکریپت با همان فهرست خطا می‌دهد. در این لحظه کد release و tag شده است، پس پیام همین را می‌گوید، و خط‌های آخر توضیح می‌دهند چطور برگردی: tag قبلی `release-*` را در هر repo checkout کن و `deploy.sh` را دوباره اجرا کن."
+          ],
+          "examples": ["fail"]
         }
       ],
       "examples": {
@@ -759,8 +1397,44 @@
           "file": "deploy/vps/release.ps1",
           "from": "# Public sites; labflow, ledger and ctx sit behind basic auth",
           "lines": 9
+        },
+        "fail": {
+          "title": { "en": "The verdict", "fa": "نتیجه" },
+          "lang": "powershell",
+          "file": "deploy/vps/release.ps1",
+          "from": "if ($failed) { throw",
+          "lines": 4
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "The smoke test gets 200 from `ledger.<domain>`. What does that mean?", "fa": "تست دود از `ledger.<domain>` جواب 200 می‌گیرد. معنی‌اش چیست؟" },
+          "options": {
+            "en": ["Everything is fine", "The certificate was renewed", "The basic-auth lock is gone, so the check fails"],
+            "fa": ["همه چیز درست است", "گواهی تمدید شده", "قفل basic auth برداشته شده، پس چک شکست می‌خورد"]
+          },
+          "answer": 2,
+          "why": { "en": "Behind basic auth the right answer to an anonymous request is 401.", "fa": "پشت basic auth جواب درست به درخواست بی‌نام 401 است." }
+        },
+        {
+          "q": { "en": "Why are the checks run from the PC and not on the server?", "fa": "چرا چک‌ها از PC اجرا می‌شوند و نه روی سرور؟" },
+          "options": {
+            "en": ["The server has no curl", "From the PC they go through public DNS, the real certificate and Caddy, like a visitor", "The PC is faster"],
+            "fa": ["سرور curl ندارد", "از PC از DNS عمومی، گواهی واقعی و Caddy می‌گذرند، مثل یک بازدیدکننده", "PC سریع‌تر است"]
+          },
+          "answer": 1,
+          "why": { "en": "A check on the server itself could pass while the site is unreachable from outside.", "fa": "چک روی خود سرور می‌توانست موفق شود در حالی که سایت از بیرون در دسترس نیست." }
+        },
+        {
+          "q": { "en": "Two sites fail the smoke test. What does `release.ps1` do?", "fa": "دو سایت در تست دود شکست می‌خورند. `release.ps1` چه می‌کند؟" },
+          "options": {
+            "en": ["Throws with both names; the release is already deployed and can be undone with the previous tag", "Rolls the server back by itself", "Retries until they pass"],
+            "fa": ["با هر دو اسم خطا می‌دهد؛ release از قبل deploy شده و با tag قبلی می‌شود برگرداند", "خودش سرور را برمی‌گرداند", "آن‌قدر تکرار می‌کند تا موفق شوند"]
+          },
+          "answer": 0,
+          "why": { "en": "The script reports, it does not roll back: the undo is a manual checkout of the previous `release-*` tag and a new deploy.", "fa": "اسکریپت گزارش می‌دهد و برنمی‌گرداند: برگرداندن یک checkout دستی از tag قبلی `release-*` و یک deploy تازه است." }
+        }
+      ]
     }
   ]
 }

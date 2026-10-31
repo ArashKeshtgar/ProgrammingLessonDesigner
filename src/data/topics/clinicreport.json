@@ -3,9 +3,7 @@
   "repo": "ClinicReport",
   "scan": {
     "aspnetEndpoints": ["src/ClinicReport.Api"],
-    "efSnapshots": [
-      { "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs", "database": "clinicreport-{clinic}.db", "provider": "sqlite" }
-    ],
+    "efSnapshots": [{ "file": "src/ClinicReport.Api/Data/Migrations/ClinicReportDbContextModelSnapshot.cs", "database": "clinicreport-{clinic}.db", "provider": "sqlite" }],
     "reactRoutes": "web/src/App.tsx"
   },
   "groups": [
@@ -113,7 +111,36 @@
           "from": "// Standalone: one database, prepared now.",
           "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "The container is redeployed. Why are people not signed out and the reports not lost?", "fa": "کانتینر دوباره deploy می‌شود. چرا افراد خارج نمی‌شوند و گزارش‌ها از بین نمی‌روند؟" },
+          "options": {
+            "en": ["The image contains a copy of the database", "The SQLite files and the cookie keys live in the `/data` volume", "The browser keeps the reports offline"],
+            "fa": ["image یک نسخه از دیتابیس را دارد", "فایل‌های SQLite و کلیدهای کوکی در volume‌ی `/data` هستند", "مرورگر گزارش‌ها را آفلاین نگه می‌دارد"]
+          },
+          "answer": 1,
+          "why": { "en": "Everything that must survive a redeploy is in `/data`; the image itself is replaced.", "fa": "هر چیزی که باید از redeploy جان سالم به در ببرد در `/data` است؛ خود image عوض می‌شود." }
+        },
+        {
+          "q": { "en": "ClinicReport starts connected to ClinicHub. What is prepared at start?", "fa": "ClinicReport متصل به ClinicHub شروع می‌شود. موقع شروع چه چیزی آماده می‌شود؟" },
+          "options": {
+            "en": ["Nothing: each clinic's database is created at its first sign-in", "One database for every clinic ClinicHub knows", "The demo patients"],
+            "fa": ["هیچ: دیتابیس هر کلینیک در اولین ورودش ساخته می‌شود", "یک دیتابیس برای هر کلینیکی که ClinicHub می‌شناسد", "بیماران دمو"]
+          },
+          "answer": 0,
+          "why": { "en": "Only standalone migrates and seeds its one database before the first request.", "fa": "فقط حالت مستقل دیتابیس تنهایش را قبل از اولین درخواست migrate و seed می‌کند." }
+        },
+        {
+          "q": { "en": "How does the first administrator of a fresh standalone install get in?", "fa": "اولین مدیر یک نصب مستقل تازه چطور وارد می‌شود؟" },
+          "options": {
+            "en": ["With a password written in the Dockerfile", "Through ClinicHub", "With a generated password printed in the log, which must be changed at once"],
+            "fa": ["با رمزی که در Dockerfile نوشته شده", "از طریق ClinicHub", "با رمزی تولیدشده که در لاگ چاپ می‌شود و باید فوراً عوض شود"]
+          },
+          "answer": 2,
+          "why": { "en": "`docker compose logs clinicreport` shows it on the first start; `admin` must choose a new one before anything else.", "fa": "`docker compose logs clinicreport` آن را در اولین شروع نشان می‌دهد؛ `admin` باید قبل از هر کاری رمز تازه انتخاب کند." }
+        }
+      ]
     },
     {
       "id": "tests",
@@ -217,7 +244,36 @@
           "from": "- name: Smoke test",
           "lines": 7
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "What does each API test class get as its database?", "fa": "هر کلاس تست API چه دیتابیسی می‌گیرد؟" },
+          "options": {
+            "en": ["A shared test database cleaned between tests", "A fresh SQLite file in the temp folder, with the demo data", "An in-memory list instead of a database"],
+            "fa": ["یک دیتابیس تست مشترک که بین تست‌ها پاک می‌شود", "یک فایل SQLite تازه در پوشه‌ی temp، با داده‌ی دمو", "یک فهرست در حافظه به‌جای دیتابیس"]
+          },
+          "answer": 1,
+          "why": { "en": "`WebApplicationFactory` points the real API at a throwaway file, so tests go through HTTP as the page does.", "fa": "`WebApplicationFactory` API واقعی را به یک فایل یک‌بارمصرف وصل می‌کند، تا تست‌ها مثل صفحه از HTTP عبور کنند." }
+        },
+        {
+          "q": { "en": "A typist and a physician save ten different fields of one report at once. What must the test find?", "fa": "یک تایپیست و یک پزشک هم‌زمان ده فیلد مختلف از یک گزارش را ذخیره می‌کنند. تست باید چه چیزی پیدا کند؟" },
+          "options": {
+            "en": ["Only the last save's fields", "A conflict error for the slower one", "Every value kept, and the revision raised once per save"],
+            "fa": ["فقط فیلدهای آخرین ذخیره", "خطای تداخل برای کندتر", "همه‌ی مقدارها نگه داشته شده و revision برای هر ذخیره یک بار بالا رفته"]
+          },
+          "answer": 2,
+          "why": { "en": "Co-editing must never lose an answer; that is what the concurrency retry in the service is for.", "fa": "ویرایش هم‌زمان نباید هیچ جوابی را گم کند؛ تلاش دوباره‌ی همزمانی در سرویس برای همین است." }
+        },
+        {
+          "q": { "en": "What does the CI smoke test check after building the Docker image?", "fa": "smoke test در CI بعد از ساختن image داکر چه چیزی را چک می‌کند؟" },
+          "options": {
+            "en": ["`/healthz` answers, `/` is the React page, and the log says the echo template was imported", "That the image is under a size limit", "That ClinicHub accepts a result"],
+            "fa": ["`/healthz` جواب می‌دهد، `/` صفحه‌ی React است، و لاگ می‌گوید قالب اکو وارد شده", "این‌که image از یک اندازه کوچک‌تر است", "این‌که ClinicHub یک جواب را قبول می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "Starting the real image catches what unit tests cannot: the page copied into `wwwroot` and the bundled templates found.", "fa": "اجرای image واقعی چیزی را می‌گیرد که تست واحد نمی‌گیرد: صفحه‌ای که در `wwwroot` کپی شده و قالب‌های همراه که پیدا شده‌اند." }
+        }
+      ]
     },
     {
       "id": "template-model",
@@ -323,7 +379,36 @@
           "from": "// A misspelt property",
           "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Where does the sentence \"There is moderate mitral stenosis.\" come from?", "fa": "جمله‌ی «There is moderate mitral stenosis.» از کجا می‌آید؟" },
+          "options": {
+            "en": ["The phrase of the option *Moderate* in the template", "A C# switch over field names", "The physician types it"],
+            "fa": ["phrase‌ی گزینه‌ی *Moderate* در قالب", "یک switch در C# روی اسم فیلدها", "پزشک آن را تایپ می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "Each option carries the sentence it adds, so a template is data, not code.", "fa": "هر گزینه جمله‌ای را که اضافه می‌کند با خودش دارد، پس قالب داده است نه کد." }
+        },
+        {
+          "q": { "en": "A template author writes `\"phrse\"` instead of `\"phrase\"`. What happens?", "fa": "نویسنده‌ی قالب به‌جای `\"phrase\"` می‌نویسد `\"phrse\"`. چه می‌شود؟" },
+          "options": {
+            "en": ["The option silently has no sentence", "Reading the JSON fails with an error", "The misspelling is corrected automatically"],
+            "fa": ["گزینه بی‌صدا جمله‌ای ندارد", "خواندن JSON با خطا شکست می‌خورد", "غلط املایی خودکار درست می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "`UnmappedMemberHandling.Disallow` makes an unknown property an error instead of a phrase lost from every report.", "fa": "`UnmappedMemberHandling.Disallow` یک property ناشناخته را خطا می‌کند به‌جای جمله‌ای که از همه‌ی گزارش‌ها گم شود." }
+        },
+        {
+          "q": { "en": "A range has bounds for men and for women, and the patient's sex is `U`. Which bounds apply?", "fa": "یک محدوده برای مرد و زن حد دارد و جنس بیمار `U` است. کدام حدها اعمال می‌شوند؟" },
+          "options": {
+            "en": ["The men's", "None: the number is not flagged", "The common bounds, when the range has them"],
+            "fa": ["حدهای مرد", "هیچ: عدد flag نمی‌خورد", "حدهای مشترک، اگر محدوده آن‌ها را داشته باشد"]
+          },
+          "answer": 2,
+          "why": { "en": "The patient's sex picks the bounds; when there is none for that sex, the common one is used.", "fa": "جنس بیمار حدها را انتخاب می‌کند؛ اگر برای آن جنس حدی نباشد، حد مشترک به کار می‌رود." }
+        }
+      ]
     },
     {
       "id": "formula",
@@ -409,7 +494,36 @@
           "from": "case \"avg\":",
           "lines": 9
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is a hand-written parser used instead of evaluating the formula as code?", "fa": "چرا به‌جای اجرای فرمول به شکل کد، یک parser دست‌نویس استفاده می‌شود؟" },
+          "options": {
+            "en": ["It is faster than compiled code", "C# has no way to evaluate strings", "A formula can only be arithmetic, so a template from anywhere can be imported safely"],
+            "fa": ["از کد کامپایل‌شده سریع‌تر است", "C# راهی برای اجرای رشته ندارد", "فرمول فقط می‌تواند حساب باشد، پس قالب از هر جایی را می‌شود با خیال راحت وارد کرد"]
+          },
+          "answer": 2,
+          "why": { "en": "No `eval`, no reflection: the tree has numbers, field names, operators and six functions, nothing else.", "fa": "نه `eval`، نه reflection: درخت فقط عدد، اسم فیلد، عملگر و شش تابع دارد." }
+        },
+        {
+          "q": { "en": "What is `2 ^ 3 ^ 2`?", "fa": "`2 ^ 3 ^ 2` چند است؟" },
+          "options": {
+            "en": ["64, read left to right", "512, as in mathematics", "An error: chained powers are refused"],
+            "fa": ["۶۴، از چپ به راست", "۵۱۲، مثل ریاضیات", "خطا: توان‌های پشت‌سرهم رد می‌شوند"]
+          },
+          "answer": 1,
+          "why": { "en": "`ParsePower` calls itself on its right, so `^` is right-associative: 2⁹.", "fa": "`ParsePower` خودش را روی سمت راستش صدا می‌زند، پس `^` از راست شریک‌پذیر است: ۲ به توان ۹." }
+        },
+        {
+          "q": { "en": "The weight has not been typed yet. What does the BSA field show?", "fa": "وزن هنوز تایپ نشده. فیلد BSA چه نشان می‌دهد؟" },
+          "options": {
+            "en": ["Nothing: the formula gives null until it can be calculated", "An error message", "Zero"],
+            "fa": ["هیچ: فرمول تا وقتی قابل محاسبه نیست null می‌دهد", "یک پیام خطا", "صفر"]
+          },
+          "answer": 0,
+          "why": { "en": "A half-filled report is normal, so a missing input is null, not an error.", "fa": "گزارش نیمه‌پر حالت عادی است، پس ورودی جاافتاده null است نه خطا." }
+        }
+      ]
     },
     {
       "id": "renderer",
@@ -518,7 +632,36 @@
           "from": "private static string? Flag(Bounds? b, double value) =>",
           "lines": 5
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why does `ReportRenderer.Render` read and write nothing?", "fa": "چرا `ReportRenderer.Render` هیچ چیزی نمی‌خواند و نمی‌نویسد؟" },
+          "options": {
+            "en": ["So the same code serves the editor, the designer's preview and the signature", "Because SQLite allows one reader", "To make it asynchronous"],
+            "fa": ["تا همان کد هم ویرایشگر، هم پیش‌نمایش طراح و هم امضا را سرویس دهد", "چون SQLite یک خواننده اجازه می‌دهد", "برای این‌که async شود"]
+          },
+          "answer": 0,
+          "why": { "en": "Given the template, answers and patient, it returns the text; callers decide where the data comes from.", "fa": "با گرفتن قالب، جواب‌ها و بیمار، متن را برمی‌گرداند؛ صدازننده تصمیم می‌گیرد داده از کجا بیاید." }
+        },
+        {
+          "q": { "en": "Stenosis is set back to *None*, but a gradient typed earlier is still stored. What does the report say about it?", "fa": "تنگی دوباره *None* می‌شود، ولی gradientی که قبلاً تایپ شده هنوز ذخیره است. گزارش درباره‌اش چه می‌گوید؟" },
+          "options": {
+            "en": ["The gradient, flagged as outdated", "Nothing: a hidden field contributes nothing", "The gradient, as before"],
+            "fa": ["gradient، با علامت قدیمی", "هیچ: فیلد پنهان چیزی اضافه نمی‌کند", "gradient، مثل قبل"]
+          },
+          "answer": 1,
+          "why": { "en": "Visibility follows the parent and `showIf`; a hidden number also feeds no formula.", "fa": "دیده شدن از والد و `showIf` پیروی می‌کند؛ عدد پنهان به هیچ فرمولی هم نمی‌رسد." }
+        },
+        {
+          "q": { "en": "A template's phrase is written as \"moderate  stenosis .\". What reaches the report?", "fa": "phrase‌ی یک قالب به شکل «moderate  stenosis .» نوشته شده. چه چیزی به گزارش می‌رسد؟" },
+          "options": {
+            "en": ["Exactly the same text", "Nothing, because the phrase is invalid", "\"Moderate stenosis.\": spaces tidied, first letter capitalised, one full stop"],
+            "fa": ["دقیقاً همان متن", "هیچ، چون phrase نامعتبر است", "«Moderate stenosis.»: فاصله‌ها مرتب، حرف اول بزرگ، یک نقطه"]
+          },
+          "answer": 2,
+          "why": { "en": "The renderer cleans punctuation so template authors can be careless about it.", "fa": "renderer نقطه‌گذاری را مرتب می‌کند تا نویسنده‌های قالب لازم نباشد نگرانش باشند." }
+        }
+      ]
     },
     {
       "id": "designer",
@@ -652,7 +795,36 @@
           "from": "static bool Bad(decimal? v)",
           "lines": 3
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A template is published again with a change. What happens to a report started on the old version?", "fa": "یک قالب با تغییری دوباره منتشر می‌شود. گزارشی که روی نسخه‌ی قبلی شروع شده چه می‌شود؟" },
+          "options": {
+            "en": ["It keeps the version it was started on", "It moves to the new version", "It is closed"],
+            "fa": ["نسخه‌ای را که با آن شروع شده نگه می‌دارد", "به نسخه‌ی تازه منتقل می‌شود", "بسته می‌شود"]
+          },
+          "answer": 0,
+          "why": { "en": "Published versions are frozen, so changing a template never rewrites an old report.", "fa": "نسخه‌های منتشرشده یخ زده‌اند، پس تغییر قالب هیچ‌وقت گزارش قدیمی را بازنویسی نمی‌کند." }
+        },
+        {
+          "q": { "en": "A draft has a formula that depends on itself through another field. What can the designer do with it?", "fa": "یک پیش‌نویس فرمولی دارد که از طریق فیلد دیگری به خودش وابسته است. طراح با آن چه می‌تواند بکند؟" },
+          "options": {
+            "en": ["Publish it; the cycle is broken at run time", "Nothing: the draft cannot even be saved", "Save it and see the problem, but not publish it"],
+            "fa": ["منتشرش کند؛ چرخه موقع اجرا شکسته می‌شود", "هیچ: پیش‌نویس حتی ذخیره هم نمی‌شود", "ذخیره‌اش کند و مشکل را ببیند، ولی منتشرش نکند"]
+          },
+          "answer": 2,
+          "why": { "en": "The validator's problems come back to the designer on save; publishing requires none.", "fa": "مشکل‌های validator موقع ذخیره به طراح برمی‌گردند؛ انتشار هیچ مشکلی را نمی‌پذیرد." }
+        },
+        {
+          "q": { "en": "Why can a template's key never change?", "fa": "چرا کلید یک قالب هیچ‌وقت عوض نمی‌شود؟" },
+          "options": {
+            "en": ["SQLite cannot rename keys", "Orders and exports refer to it", "It is the file name on disk"],
+            "fa": ["SQLite نمی‌تواند کلیدها را تغییر نام دهد", "درخواست‌ها و خروجی‌ها به آن ارجاع می‌دهند", "اسم فایل روی دیسک است"]
+          },
+          "answer": 1,
+          "why": { "en": "ClinicHub codes an exam with the template key, so a changed key would break incoming orders.", "fa": "ClinicHub هر معاینه را با کلید قالب کد می‌کند، پس کلید عوض‌شده درخواست‌های ورودی را خراب می‌کرد." }
+        }
+      ]
     },
     {
       "id": "report-service",
@@ -803,7 +975,33 @@
           "from": "if (report.Status != ReportStatus.Final)",
           "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Two saves of the same report arrive together; one fails on the concurrency token. What does the service do?", "fa": "دو ذخیره‌ی یک گزارش با هم می‌رسند؛ یکی روی concurrency token شکست می‌خورد. سرویس چه می‌کند؟" },
+          "options": {
+            "en": ["Returns 409 to the user", "Overwrites the newer report", "Reloads and applies the same change to the newer report, up to five times"],
+            "fa": ["به کاربر 409 برمی‌گرداند", "گزارش جدیدتر را بازنویسی می‌کند", "دوباره بارگذاری می‌کند و همان تغییر را روی گزارش جدیدتر اعمال می‌کند، تا پنج بار"]
+          },
+          "answer": 2,
+          "why": { "en": "Each save sets only the fields it carries, so applying it again on the newer revision loses nothing.", "fa": "هر ذخیره فقط فیلدهایی را که دارد می‌گذارد، پس اعمال دوباره‌اش روی revision جدیدتر چیزی را گم نمی‌کند." }
+        },
+        {
+          "q": { "en": "A user opens a report of a service they may not work on. What do they get?", "fa": "کاربری گزارشِ سرویسی را باز می‌کند که اجازه‌ی کار روی آن را ندارد. چه می‌گیرد؟" },
+          "options": { "en": ["404, as if it did not exist", "403 with the reason", "The report, read-only"], "fa": ["404، انگار وجود ندارد", "403 با دلیل", "گزارش، فقط‌خواندنی"] },
+          "answer": 0,
+          "why": { "en": "The `/{id}` filter answers 404 so the existence of other services' reports is not revealed.", "fa": "filter‌ی `/{id}` جواب 404 می‌دهد تا وجود گزارش‌های سرویس‌های دیگر لو نرود." }
+        },
+        {
+          "q": { "en": "Why is the rendered text saved at signing (`SignedSnapshotJson`)?", "fa": "چرا متن رندرشده موقع امضا ذخیره می‌شود (`SignedSnapshotJson`)؟" },
+          "options": {
+            "en": ["To make the worklist faster", "So the signed report reads the same even if the rendering code changes later", "Because the answers are deleted after signing"],
+            "fa": ["تا worklist سریع‌تر شود", "تا گزارش امضاشده حتی اگر کد رندر بعداً عوض شود همان‌طور خوانده شود", "چون جواب‌ها بعد از امضا حذف می‌شوند"]
+          },
+          "answer": 1,
+          "why": { "en": "What the physician signed must not change; afterwards only addenda can be added.", "fa": "چیزی که پزشک امضا کرده نباید عوض شود؛ بعد از آن فقط addendum اضافه می‌شود." }
+        }
+      ]
     },
     {
       "id": "live",
@@ -928,7 +1126,36 @@
           "from": "// Clicks save at once; typing waits for a pause.",
           "lines": 2
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why do changes go through the REST API and not through the SignalR hub?", "fa": "چرا تغییرها از REST API می‌گذرند و نه از hub‌ی SignalR؟" },
+          "options": {
+            "en": ["So they are checked and logged in one place", "SignalR cannot carry JSON", "The hub is read-only by design of SignalR"],
+            "fa": ["تا در یک جا چک و ثبت شوند", "SignalR نمی‌تواند JSON ببرد", "hub به‌خاطر طراحی SignalR فقط‌خواندنی است"]
+          },
+          "answer": 0,
+          "why": { "en": "The hub only carries presence, focus and the new report after each save.", "fa": "hub فقط حضور، فیلد فعلی هر نفر و گزارش تازه بعد از هر ذخیره را می‌برد." }
+        },
+        {
+          "q": { "en": "A tab receives the broadcast of its own save. What does it do?", "fa": "یک tab پخش ذخیره‌ی خودش را دریافت می‌کند. چه می‌کند؟" },
+          "options": {
+            "en": ["Applies it again", "Skips it: the broadcast carries the `X-Client-Id` of the tab that made the change", "Reloads the page"],
+            "fa": ["دوباره اعمالش می‌کند", "ردش می‌کند: پخش، `X-Client-Id` tabی را که تغییر را داده دارد", "صفحه را دوباره بارگذاری می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "Each tab sends a random client id; ignoring its own echo avoids redrawing over what it is typing.", "fa": "هر tab یک client id تصادفی می‌فرستد؛ نادیده گرفتن پژواک خودش از رسم دوباره روی چیزی که در حال تایپ است جلوگیری می‌کند." }
+        },
+        {
+          "q": { "en": "Why could ClinicReport not simply run as three API instances for one clinic?", "fa": "چرا ClinicReport نمی‌تواند به‌سادگی با سه نمونه‌ی API برای یک کلینیک اجرا شود؟" },
+          "options": {
+            "en": ["SQLite refuses three connections", "The cookie would be different on each", "Presence is kept in memory; several instances would need a backplane and a shared store"],
+            "fa": ["SQLite سه اتصال را رد می‌کند", "کوکی در هر کدام فرق می‌کرد", "حضور در حافظه نگه داشته می‌شود؛ چند نمونه backplane و یک store مشترک لازم داشتند"]
+          },
+          "answer": 2,
+          "why": { "en": "One API instance serves a clinic; that is what keeping presence in memory assumes.", "fa": "یک نمونه‌ی API یک کلینیک را سرویس می‌دهد؛ نگه داشتن حضور در حافظه همین را فرض می‌کند." }
+        }
+      ]
     },
     {
       "id": "patients",
@@ -940,16 +1167,33 @@
           "id": "endpoints",
           "h": "A minimal register",
           "p": [
-            "Just enough for the app to work on its own: search by MRN or name, add, correct. Reading needs any of view reports, start reports or manage patients (the `patients.read` policy); changing needs `patients.manage`. Connected, patients arrive with ClinicHub's orders instead, and ClinicHub's demographics win."
+            "Just enough for the app to work on its own: search by MRN or name, add, correct. Reading needs any of view reports, start reports or manage patients (the `patients.read` policy); changing needs `patients.manage`. Connected, patients arrive with ClinicHub's orders instead, and ClinicHub's demographics win.",
+            "The search takes an exact MRN or the start of a last or first name and returns at most 50 rows, sorted by name. Last names use SQLite's NOCASE collation, so \"smith\" finds Smith without anything in the query."
           ],
-          "data": { "kind": "endpoints", "only": ["Patients"] },
-          "examples": ["read", "plausible"]
+          "examples": ["read", "plausible"],
+          "data": { "kind": "endpoints", "only": ["Patients"] }
+        },
+        {
+          "id": "checks",
+          "h": "What a patient must have",
+          "p": [
+            "Adding and correcting share one check: an MRN of 1 to 32 characters that no other patient has, first and last names up to 64 characters, a date of birth neither in the future nor more than 125 years back, and a sex of `M`, `F`, `X` or `U`. Every problem is collected and returned together as one validation problem, field by field, so the form can mark them all at once."
+          ]
+        },
+        {
+          "id": "hub",
+          "h": "Connected, ClinicHub's details win",
+          "p": [
+            "Every order from ClinicHub carries the patient. ClinicReport finds them by MRN, or adds them, and then overwrites name, date of birth and sex with ClinicHub's, since ClinicHub's register is the source of truth. A correction made at the clinic reaches the next report without anyone typing it twice."
+          ],
+          "examples": ["demographics"]
         },
         {
           "id": "merge",
           "h": "Two records become one",
           "p": [
-            "When ClinicHub merges two charts it sends the merged MRN with a link to the surviving one. Known only by the old MRN here, the patient takes the new one; known by both, the old one's reports, orders and log entries move to the survivor and the old record is removed."
+            "When ClinicHub merges two charts it sends the merged MRN with a link to the surviving one. Known only by the old MRN here, the patient takes the new one; known by both, the old one's reports, orders and log entries move to the survivor and the old record is removed.",
+            "Known by both MRNs, the move is three bulk updates (`ExecuteUpdateAsync`) on reports, orders and security events, then the old record is removed, all before one `SaveChanges`. Nothing that pointed at the old chart is lost, including who opened its reports. A patient never seen here is simply answered 200."
           ],
           "examples": ["merge"]
         },
@@ -964,16 +1208,33 @@
           "id": "endpoints",
           "h": "یک فهرست حداقلی",
           "p": [
-            "فقط به اندازه‌ای که اپ خودش تنها کار کند: جست‌وجو با MRN یا اسم، اضافه کردن، اصلاح. خواندن یکی از مجوزهای دیدن گزارش، شروع گزارش یا مدیریت بیمار را لازم دارد (policy `patients.read`)؛ تغییر `patients.manage` را. در حالت متصل، بیمارها به‌جایش با درخواست‌های ClinicHub می‌آیند، و مشخصات ClinicHub برنده است."
+            "فقط به اندازه‌ای که اپ خودش تنها کار کند: جست‌وجو با MRN یا اسم، اضافه کردن، اصلاح. خواندن یکی از مجوزهای دیدن گزارش، شروع گزارش یا مدیریت بیمار را لازم دارد (policy `patients.read`)؛ تغییر `patients.manage` را. در حالت متصل، بیمارها به‌جایش با درخواست‌های ClinicHub می‌آیند، و مشخصات ClinicHub برنده است.",
+            "جستجو یک MRN دقیق یا ابتدای نام خانوادگی یا نام را می‌گیرد و حداکثر ۵۰ ردیف مرتب‌شده بر اساس اسم برمی‌گرداند. نام خانوادگی collation‌ی NOCASE در SQLite را دارد، پس «smith» بدون هیچ کاری در کوئری Smith را پیدا می‌کند."
           ],
-          "data": { "kind": "endpoints", "only": ["Patients"] },
-          "examples": ["read", "plausible"]
+          "examples": ["read", "plausible"],
+          "data": { "kind": "endpoints", "only": ["Patients"] }
+        },
+        {
+          "id": "checks",
+          "h": "یک بیمار چه چیزهایی باید داشته باشد",
+          "p": [
+            "اضافه کردن و اصلاح یک چک مشترک دارند: MRNی بین ۱ تا ۳۲ کاراکتر که بیمار دیگری نداشته باشد، نام و نام خانوادگی تا ۶۴ کاراکتر، تاریخ تولدی که نه در آینده باشد و نه بیش از ۱۲۵ سال پیش، و جنس `M`، `F`، `X` یا `U`. همه‌ی مشکل‌ها جمع می‌شوند و با هم به شکل یک validation problem، فیلد به فیلد، برمی‌گردند تا فرم بتواند همه را یک‌جا علامت بزند."
+          ]
+        },
+        {
+          "id": "hub",
+          "h": "در حالت متصل، اطلاعات ClinicHub برنده است",
+          "p": [
+            "هر درخواست از ClinicHub بیمار را با خودش دارد. ClinicReport او را با MRN پیدا می‌کند، یا اضافه‌اش می‌کند، و بعد نام، تاریخ تولد و جنس را با اطلاعات ClinicHub بازنویسی می‌کند، چون دفتر ثبت ClinicHub منبع حقیقت است. اصلاحی که در کلینیک انجام شده بدون این‌که کسی دو بار تایپش کند به گزارش بعدی می‌رسد."
+          ],
+          "examples": ["demographics"]
         },
         {
           "id": "merge",
           "h": "دو پرونده یکی می‌شوند",
           "p": [
-            "وقتی ClinicHub دو پرونده را ادغام می‌کند، MRN ادغام‌شده را با لینکی به پرونده‌ی ماندگار می‌فرستد. اگر این‌جا بیمار فقط با MRN قدیمی شناخته شده باشد، MRN تازه را می‌گیرد؛ اگر با هر دو، گزارش‌ها، درخواست‌ها و ردیف‌های log قدیمی به ماندگار منتقل و پرونده‌ی قدیمی حذف می‌شود."
+            "وقتی ClinicHub دو پرونده را ادغام می‌کند، MRN ادغام‌شده را با لینکی به پرونده‌ی ماندگار می‌فرستد. اگر این‌جا بیمار فقط با MRN قدیمی شناخته شده باشد، MRN تازه را می‌گیرد؛ اگر با هر دو، گزارش‌ها، درخواست‌ها و ردیف‌های log قدیمی به ماندگار منتقل و پرونده‌ی قدیمی حذف می‌شود.",
+            "وقتی هر دو MRN شناخته شده‌اند، انتقال سه به‌روزرسانی دسته‌ای (`ExecuteUpdateAsync`) روی گزارش‌ها، درخواست‌ها و رویدادهای امنیتی است و بعد پرونده‌ی قدیمی حذف می‌شود، همه قبل از یک `SaveChanges`. هیچ چیزی که به پرونده‌ی قدیمی اشاره می‌کرد گم نمی‌شود، حتی این‌که چه کسی گزارش‌هایش را باز کرده. به بیماری که این‌جا هرگز دیده نشده فقط جواب 200 داده می‌شود."
           ],
           "examples": ["merge"]
         },
@@ -1004,8 +1265,44 @@
           "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
           "from": "var old = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == merged);",
           "lines": 14
+        },
+        "demographics": {
+          "title": { "en": "ClinicHub's register is the source of truth", "fa": "دفتر ثبت ClinicHub منبع حقیقت است" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+          "from": "var local = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == mrn)",
+          "lines": 7
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Someone adds a patient with an MRN another patient already has. What happens?", "fa": "کسی بیماری با MRNی اضافه می‌کند که بیمار دیگری از قبل دارد. چه می‌شود؟" },
+          "options": {
+            "en": ["The two records are merged", "A validation problem on `mrn`: another patient has it", "The new patient gets a suffix"],
+            "fa": ["دو پرونده ادغام می‌شوند", "یک validation problem روی `mrn`: بیمار دیگری آن را دارد", "بیمار تازه یک پسوند می‌گیرد"]
+          },
+          "answer": 1,
+          "why": { "en": "The MRN is unique in the table and checked before saving, for adding and correcting alike.", "fa": "MRN در جدول یکتاست و قبل از ذخیره چک می‌شود، هم برای اضافه کردن و هم برای اصلاح." }
+        },
+        {
+          "q": { "en": "ClinicHub merges two charts that are both known here. What happens to the old one's reports?", "fa": "ClinicHub دو پرونده را ادغام می‌کند که هر دو این‌جا شناخته شده‌اند. گزارش‌های پرونده‌ی قدیمی چه می‌شوند؟" },
+          "options": {
+            "en": ["They move to the survivor, with its orders and log entries, and the old record is removed", "They are deleted with the old record", "They stay on the old record, marked inactive"],
+            "fa": ["با درخواست‌ها و ورودی‌های لاگش به پرونده‌ی باقی‌مانده منتقل می‌شوند و پرونده‌ی قدیمی حذف می‌شود", "با پرونده‌ی قدیمی حذف می‌شوند", "روی پرونده‌ی قدیمی، با علامت غیرفعال، می‌مانند"]
+          },
+          "answer": 0,
+          "why": { "en": "Three bulk updates repoint everything at the surviving patient before the old one goes.", "fa": "سه به‌روزرسانی دسته‌ای همه‌چیز را قبل از رفتن پرونده‌ی قدیمی به بیمار باقی‌مانده اشاره می‌دهند." }
+        },
+        {
+          "q": { "en": "Connected, a receptionist here corrects a patient's last name, then a new order arrives. Which name does the patient have?", "fa": "در حالت متصل، پذیرش این‌جا نام خانوادگی بیماری را اصلاح می‌کند و بعد درخواست تازه‌ای می‌رسد. بیمار چه نامی دارد؟" },
+          "options": {
+            "en": ["The one corrected here", "Both, joined", "ClinicHub's, from the order"],
+            "fa": ["همانی که این‌جا اصلاح شده", "هر دو، کنار هم", "نام ClinicHub، از درخواست"]
+          },
+          "answer": 2,
+          "why": { "en": "Every order overwrites the demographics with ClinicHub's, which is the source of truth.", "fa": "هر درخواست اطلاعات هویتی را با اطلاعات ClinicHub، که منبع حقیقت است، بازنویسی می‌کند." }
+        }
+      ]
     },
     {
       "id": "accounts",
@@ -1131,7 +1428,36 @@
           "from": "public static string? PasswordProblem(string? password, string? userName = null) =>",
           "lines": 6
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "An administrator removes a role from a user who is signed in. When does it take effect?", "fa": "مدیری نقشی را از کاربری که وارد شده برمی‌دارد. کی اثر می‌کند؟" },
+          "options": {
+            "en": ["At the user's next sign-in", "On the next request: permissions are read from the database every time", "After 12 hours, when the cookie expires"],
+            "fa": ["در ورود بعدی کاربر", "در درخواست بعدی: مجوزها هر بار از دیتابیس خوانده می‌شوند", "بعد از ۱۲ ساعت، وقتی کوکی منقضی شود"]
+          },
+          "answer": 1,
+          "why": { "en": "The cookie holds only the user id and a security stamp, so nothing stale is trusted.", "fa": "کوکی فقط شناسه‌ی کاربر و یک security stamp دارد، پس به چیز کهنه‌ای اعتماد نمی‌شود." }
+        },
+        {
+          "q": { "en": "Why is the password hashed even for a user name that does not exist?", "fa": "چرا رمز حتی برای نام کاربری‌ای که وجود ندارد hash می‌شود؟" },
+          "options": {
+            "en": ["So the response time does not reveal which names are real", "To keep a record of failed attempts", "Because the hasher needs warming up"],
+            "fa": ["تا زمان جواب لو ندهد کدام نام‌ها واقعی‌اند", "برای نگه داشتن سابقه‌ی تلاش‌های ناموفق", "چون hasher باید گرم شود"]
+          },
+          "answer": 0,
+          "why": { "en": "Skipping the hash for unknown names would make them answer measurably faster.", "fa": "رد شدن از hash برای نام‌های ناشناخته باعث می‌شد آن‌ها به‌طور قابل اندازه‌گیری سریع‌تر جواب بگیرند." }
+        },
+        {
+          "q": { "en": "A new user has not yet chosen their own password. What can they reach?", "fa": "کاربر تازه‌ای هنوز رمز خودش را انتخاب نکرده. به چه چیزی دسترسی دارد؟" },
+          "options": {
+            "en": ["Everything their roles allow", "Read-only pages", "Only `/api/auth` and `/api/settings`"],
+            "fa": ["هر چیزی که نقش‌هایش اجازه می‌دهند", "صفحه‌های فقط‌خواندنی", "فقط `/api/auth` و `/api/settings`"]
+          },
+          "answer": 2,
+          "why": { "en": "The pending-action gate answers every other endpoint until the password is changed.", "fa": "دروازه‌ی کار معوق تا عوض شدن رمز به هر endpoint دیگری جواب رد می‌دهد." }
+        }
+      ]
     },
     {
       "id": "totp",
@@ -1151,9 +1477,10 @@
           "id": "verify",
           "h": "A code works once",
           "p": [
-            "A code is accepted for the current step or one either side (a phone's clock is rarely exact), compared in constant time. The step it matched is saved, and steps at or before it are refused, so a code seen over someone's shoulder cannot be used again."
+            "A code is accepted for the current step or one either side (a phone's clock is rarely exact), compared in constant time. The step it matched is saved, and steps at or before it are refused, so a code seen over someone's shoulder cannot be used again.",
+            "At sign-in the password is checked first. With two-factor on and no code, the answer is a 401 with `twoFactorRequired`, so the page asks for the code; a wrong or reused code is a failed sign-in like a wrong password, and counts towards the five that lock the account."
           ],
-          "examples": ["verify"]
+          "examples": ["verify", "login"]
         },
         {
           "id": "secret",
@@ -1162,6 +1489,14 @@
             "The secret is stored encrypted with ASP.NET Data Protection (the same keys as the cookie, in `/data/keys` in the container). Turning two-factor off needs the password, and is refused when one of the user's roles requires it."
           ],
           "examples": ["protect"]
+        },
+        {
+          "id": "setup",
+          "h": "Turned on only after one good code",
+          "p": [
+            "Setup makes a new secret, stores it encrypted and returns it with the `otpauth://` link, but two-factor is not on yet. Only `enable` with a correct code turns it on, which proves the phone really holds the secret; otherwise a scan that failed would lock the user out at their next sign-in. Setup is refused while two-factor is on: to move to a new phone, turn it off first. A role that requires two-factor sends its users to this setup before any other page."
+          ],
+          "examples": ["enable"]
         }
       ],
       "fa": [
@@ -1177,9 +1512,10 @@
           "id": "verify",
           "h": "یک کد یک بار کار می‌کند",
           "p": [
-            "کد برای گام فعلی یا یک گام این‌ور و آن‌ورش قبول می‌شود (ساعت گوشی کم پیش می‌آید دقیق باشد)، با مقایسه‌ی constant-time. گامی که جور شده ذخیره می‌شود، و گام‌های تا آن رد می‌شوند، پس کدی که کسی از پشت شانه دیده دوباره به کار نمی‌آید."
+            "کد برای گام فعلی یا یک گام این‌ور و آن‌ورش قبول می‌شود (ساعت گوشی کم پیش می‌آید دقیق باشد)، با مقایسه‌ی constant-time. گامی که جور شده ذخیره می‌شود، و گام‌های تا آن رد می‌شوند، پس کدی که کسی از پشت شانه دیده دوباره به کار نمی‌آید.",
+            "در ورود، اول رمز چک می‌شود. اگر ورود دومرحله‌ای روشن باشد و کدی نیامده باشد، جواب یک 401 با `twoFactorRequired` است تا صفحه کد را بخواهد؛ کد اشتباه یا تکراری مثل رمز اشتباه یک ورود ناموفق است و جزو آن پنج تایی حساب می‌شود که حساب را قفل می‌کنند."
           ],
-          "examples": ["verify"]
+          "examples": ["verify", "login"]
         },
         {
           "id": "secret",
@@ -1188,6 +1524,14 @@
             "secret با ASP.NET Data Protection رمزشده ذخیره می‌شود (همان کلیدهای کوکی، در container در `/data/keys`). خاموش کردن دومرحله‌ای رمز عبور لازم دارد، و وقتی یکی از نقش‌های کاربر آن را اجباری کرده رد می‌شود."
           ],
           "examples": ["protect"]
+        },
+        {
+          "id": "setup",
+          "h": "فقط بعد از یک کد درست روشن می‌شود",
+          "p": [
+            "setup یک secret تازه می‌سازد، آن را رمزشده ذخیره می‌کند و با لینک `otpauth://` برمی‌گرداند، ولی هنوز ورود دومرحله‌ای روشن نیست. فقط `enable` با یک کد درست روشنش می‌کند، که ثابت می‌کند گوشی واقعاً secret را دارد؛ وگرنه اسکنی که خراب شده کاربر را در ورود بعدی پشت در می‌گذاشت. تا وقتی ورود دومرحله‌ای روشن است setup رد می‌شود: برای رفتن به گوشی تازه اول باید خاموشش کرد. نقشی که ورود دومرحله‌ای را لازم می‌داند کاربرانش را قبل از هر صفحه‌ی دیگری به همین setup می‌فرستد."
+          ],
+          "examples": ["enable"]
         }
       ],
       "examples": {
@@ -1218,8 +1562,51 @@
           "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
           "from": "var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret!);",
           "lines": 4
+        },
+        "login": {
+          "title": { "en": "Password first, then the code", "fa": "اول رمز، بعد کد" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "if (user.TwoFactorEnabled)",
+          "lines": 10
+        },
+        "enable": {
+          "title": { "en": "On only with a matching code", "fa": "روشن فقط با یک کد جور" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+          "from": "account.MapPost(\"/two-factor/enable\"",
+          "lines": 13
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Someone sees your code over your shoulder and types it 20 seconds after you signed in. What happens?", "fa": "کسی کد شما را از پشت سرتان می‌بیند و ۲۰ ثانیه بعد از ورود شما تایپش می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["It works, the code is still in its 30-second window", "It is refused: steps at or before the last one used are not accepted", "It works once more, then expires"],
+            "fa": ["کار می‌کند، کد هنوز در پنجره‌ی ۳۰ ثانیه‌ای است", "رد می‌شود: stepهای مساوی یا قبل از آخرین step استفاده‌شده قبول نمی‌شوند", "یک بار دیگر کار می‌کند و بعد منقضی می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "The matched step is saved in `TwoFactorLastStep`, so a code works once.", "fa": "step جورشده در `TwoFactorLastStep` ذخیره می‌شود، پس هر کد یک بار کار می‌کند." }
+        },
+        {
+          "q": { "en": "Why is two-factor not turned on as soon as the secret is created?", "fa": "چرا ورود دومرحله‌ای به محض ساخته شدن secret روشن نمی‌شود؟" },
+          "options": {
+            "en": ["A correct code first proves the phone holds the secret, so a failed scan cannot lock the user out", "The secret has to be encrypted first", "The QR code takes time to generate"],
+            "fa": ["یک کد درست اول ثابت می‌کند گوشی secret را دارد، تا اسکن خراب کاربر را پشت در نگذارد", "secret باید اول رمز شود", "ساختن QR code وقت می‌برد"]
+          },
+          "answer": 0,
+          "why": { "en": "`enable` verifies a code against the stored secret before setting `TwoFactorEnabled`.", "fa": "`enable` قبل از گذاشتن `TwoFactorEnabled` یک کد را با secret ذخیره‌شده می‌سنجد." }
+        },
+        {
+          "q": { "en": "A user types five wrong two-factor codes after the right password. What happens?", "fa": "کاربری بعد از رمز درست پنج کد دومرحله‌ای اشتباه وارد می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["Nothing, codes are not counted", "Two-factor is turned off", "The account is locked for 15 minutes, as with wrong passwords"],
+            "fa": ["هیچ، کدها شمرده نمی‌شوند", "ورود دومرحله‌ای خاموش می‌شود", "حساب، مثل رمزهای اشتباه، ۱۵ دقیقه قفل می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "A wrong code goes through the same `Failed` path, which counts towards the lockout.", "fa": "کد اشتباه از همان مسیر `Failed` می‌گذرد که در قفل شدن حساب حساب می‌شود." }
+        }
+      ]
     },
     {
       "id": "permissions",
@@ -1342,7 +1729,36 @@
           "from": "private static async Task<string?> LastAdminProblem(",
           "lines": 12
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A clinic wants an \"Echo typist\" role. What has to change in the code?", "fa": "کلینیکی نقش «Echo typist» می‌خواهد. چه چیزی در کد باید عوض شود؟" },
+          "options": {
+            "en": ["A new policy", "Nothing: roles are built from permissions, and endpoints check permissions", "A new migration"],
+            "fa": ["یک policy تازه", "هیچ: نقش‌ها از مجوزها ساخته می‌شوند و endpointها مجوز را چک می‌کنند", "یک migration تازه"]
+          },
+          "answer": 1,
+          "why": { "en": "No endpoint names a role, so a clinic shapes its own roles from the eight permissions.", "fa": "هیچ endpointی اسم نقش را نمی‌آورد، پس کلینیک نقش‌هایش را از هشت مجوز می‌سازد." }
+        },
+        {
+          "q": { "en": "An endpoint is added without naming any policy. Who can call it?", "fa": "endpointی بدون نام بردن هیچ policyی اضافه می‌شود. چه کسی می‌تواند صدایش بزند؟" },
+          "options": {
+            "en": ["Anyone, signed in or not", "Only administrators", "Any signed-in user, because the fallback policy requires one"],
+            "fa": ["هر کسی، وارد شده یا نه", "فقط مدیرها", "هر کاربر واردشده، چون fallback policy آن را لازم دارد"]
+          },
+          "answer": 2,
+          "why": { "en": "Public endpoints must say `AllowAnonymous` explicitly.", "fa": "endpointهای عمومی باید صریحاً `AllowAnonymous` بگویند." }
+        },
+        {
+          "q": { "en": "An administrator tries to remove `users.manage` from the last active user who has it. What happens?", "fa": "مدیری سعی می‌کند `users.manage` را از آخرین کاربر فعالی که آن را دارد بردارد. چه می‌شود؟" },
+          "options": {
+            "en": ["It is refused, or the installation would be locked for good", "It is allowed; the next start restores it", "It is allowed with a warning"],
+            "fa": ["رد می‌شود، وگرنه نصب برای همیشه قفل می‌شد", "مجاز است؛ شروع بعدی آن را برمی‌گرداند", "با یک هشدار مجاز است"]
+          },
+          "answer": 0,
+          "why": { "en": "`LastAdminProblem` checks that someone active can still manage users.", "fa": "`LastAdminProblem` چک می‌کند که هنوز کسی فعال بتواند کاربرها را مدیریت کند." }
+        }
+      ]
     },
     {
       "id": "audit",
@@ -1354,7 +1770,8 @@
           "id": "two",
           "h": "Two trails",
           "p": [
-            "Every change to a report is in `Changes` (see Every change through one service). Apart from that, `SecurityEvents` records sign-ins and failures, lockouts, account and role changes, signatures, broken glass, and who opened which patient's report, the access log PHIPA and HIPAA ask for. Rows are only ever added."
+            "Every change to a report is in `Changes` (see Every change through one service). Apart from that, `SecurityEvents` records sign-ins and failures, lockouts, account and role changes, signatures, broken glass, and who opened which patient's report, the access log PHIPA and HIPAA ask for. Rows are only ever added.",
+            "`Add` only puts the event in the current DbContext, so it is saved by the caller's own `SaveChanges`, together with the change it describes; `WriteAsync` is for events that stand alone and saves at once. A long detail is cut to 500 characters, and the caller's IP address is kept."
           ],
           "examples": ["add"]
         },
@@ -1370,9 +1787,11 @@
           "id": "endpoint",
           "h": "Reading it",
           "p": [
-            "`audit.view`, 200 rows at a time, filtered by type, user, report or dates, newest first."
+            "`audit.view`, 200 rows at a time, filtered by type, user, report or dates, newest first.",
+            "The next page is asked for with `before`, the id of the last row shown: newer rows written meanwhile do not shift the pages, as an offset would. Each row comes with the names of the user who acted and the user acted upon, and the patient as \"Last, First (MRN)\"."
           ],
-          "data": { "kind": "endpoints", "only": ["Audit"] }
+          "data": { "kind": "endpoints", "only": ["Audit"] },
+          "examples": ["page"]
         },
         {
           "id": "csrf",
@@ -1393,7 +1812,8 @@
           "id": "two",
           "h": "دو رد",
           "p": [
-            "هر تغییر گزارش در `Changes` است (بخش هر تغییر از یک سرویس را ببینید). جدا از آن، `SecurityEvents` ورودها و شکست‌ها، قفل شدن‌ها، تغییرهای حساب و نقش، امضاها، شکستن شیشه، و این‌که چه کسی گزارش کدام بیمار را باز کرده را ثبت می‌کند؛ همان access log که PHIPA و HIPAA می‌خواهند. ردیف‌ها فقط اضافه می‌شوند."
+            "هر تغییر گزارش در `Changes` است (بخش هر تغییر از یک سرویس را ببینید). جدا از آن، `SecurityEvents` ورودها و شکست‌ها، قفل شدن‌ها، تغییرهای حساب و نقش، امضاها، شکستن شیشه، و این‌که چه کسی گزارش کدام بیمار را باز کرده را ثبت می‌کند؛ همان access log که PHIPA و HIPAA می‌خواهند. ردیف‌ها فقط اضافه می‌شوند.",
+            "`Add` فقط رویداد را در DbContext فعلی می‌گذارد، پس با همان `SaveChanges` خود کد صدازننده، همراه با تغییری که توصیف می‌کند، ذخیره می‌شود؛ `WriteAsync` برای رویدادهایی است که تنها هستند و فوراً ذخیره می‌کند. جزئیات طولانی تا ۵۰۰ کاراکتر بریده می‌شود و آدرس IP درخواست‌دهنده نگه داشته می‌شود."
           ],
           "examples": ["add"]
         },
@@ -1409,9 +1829,11 @@
           "id": "endpoint",
           "h": "خواندنش",
           "p": [
-            "`audit.view`، هر بار ۲۰۰ ردیف، با filter نوع، کاربر، گزارش یا تاریخ، تازه‌ترین اول."
+            "`audit.view`، هر بار ۲۰۰ ردیف، با filter نوع، کاربر، گزارش یا تاریخ، تازه‌ترین اول.",
+            "صفحه‌ی بعد با `before`، شناسه‌ی آخرین ردیفی که نشان داده شده، خواسته می‌شود: ردیف‌های تازه‌ای که در این فاصله نوشته شده‌اند صفحه‌ها را جابه‌جا نمی‌کنند، کاری که offset می‌کرد. هر ردیف با اسم کاربری که کار را کرده و کاربری که کار رویش انجام شده، و بیمار به شکل «نام خانوادگی، نام (MRN)» می‌آید."
           ],
-          "data": { "kind": "endpoints", "only": ["Audit"] }
+          "data": { "kind": "endpoints", "only": ["Audit"] },
+          "examples": ["page"]
         },
         {
           "id": "csrf",
@@ -1455,8 +1877,44 @@
           "file": "web/src/api.ts",
           "from": "headers: {",
           "lines": 5
+        },
+        "page": {
+          "title": { "en": "Filters, then 200 rows before an id", "fa": "فیلترها، بعد ۲۰۰ ردیف قبل از یک شناسه" },
+          "lang": "csharp",
+          "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+          "from": "if (before is not null)",
+          "lines": 3
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A physician moves between the tabs of the same report for five minutes. How many `ReportViewed` rows are written?", "fa": "پزشکی پنج دقیقه بین tabهای یک گزارش جابه‌جا می‌شود. چند ردیف `ReportViewed` نوشته می‌شود؟" },
+          "options": {
+            "en": ["One per tab switch", "One: opening again within 10 minutes is not logged again", "None, views are not logged"],
+            "fa": ["برای هر جابه‌جایی یکی", "یکی: باز کردن دوباره در عرض ۱۰ دقیقه دوباره ثبت نمی‌شود", "هیچ، دیدن ثبت نمی‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "`ReportViewedAsync` looks for the same user and report within `ViewDedupWindow` first.", "fa": "`ReportViewedAsync` اول دنبال همان کاربر و گزارش در `ViewDedupWindow` می‌گردد." }
+        },
+        {
+          "q": { "en": "Why is the next page of the log asked for by `before` an id rather than by an offset?", "fa": "چرا صفحه‌ی بعد لاگ با `before` یک شناسه خواسته می‌شود و نه با offset؟" },
+          "options": {
+            "en": ["New rows written meanwhile would shift an offset and repeat rows", "SQLite has no OFFSET", "Ids are encrypted"],
+            "fa": ["ردیف‌های تازه‌ای که در این فاصله نوشته شوند offset را جابه‌جا می‌کردند و ردیف‌ها تکرار می‌شدند", "SQLite دستور OFFSET ندارد", "شناسه‌ها رمز شده‌اند"]
+          },
+          "answer": 0,
+          "why": { "en": "The log grows all the time; `Id < before` always continues exactly where the last page ended.", "fa": "لاگ مدام بزرگ می‌شود؛ `Id < before` همیشه دقیقاً از جایی که صفحه‌ی قبل تمام شد ادامه می‌دهد." }
+        },
+        {
+          "q": { "en": "A page on another site posts a form to `/api/reports/1/sign`. Why does it fail even if a cookie were sent?", "fa": "صفحه‌ای در سایت دیگر فرمی به `/api/reports/1/sign` post می‌کند. چرا حتی اگر کوکی فرستاده شود شکست می‌خورد؟" },
+          "options": {
+            "en": ["Signing needs a GET", "The form has no JSON body", "It cannot add the `X-ClinicReport` header without a CORS preflight, which the API never allows"],
+            "fa": ["امضا GET لازم دارد", "فرم بدنه‌ی JSON ندارد", "بدون CORS preflight نمی‌تواند هدر `X-ClinicReport` را اضافه کند، که API هیچ‌وقت اجازه نمی‌دهد"]
+          },
+          "answer": 2,
+          "why": { "en": "The header check sits on top of SameSite=Strict for every unsafe `/api` call.", "fa": "چک هدر، علاوه بر SameSite=Strict، روی هر فراخوانی ناامن `/api` هست." }
+        }
+      ]
     },
     {
       "id": "clinichub-signin",
@@ -1604,7 +2062,36 @@
           "from": "// The database of the request is the signed-in person's clinic.",
           "lines": 8
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "`ClinicHub:Authority` is empty. What of the ClinicHub sign-in is registered?", "fa": "`ClinicHub:Authority` خالی است. چه بخشی از ورود ClinicHub ثبت می‌شود؟" },
+          "options": {
+            "en": ["Nothing: the app runs with its own accounts", "The OpenID Connect client, unused", "Only the re-checks"],
+            "fa": ["هیچ: اپ با حساب‌های خودش اجرا می‌شود", "client‌ی OpenID Connect، بدون استفاده", "فقط چک‌های دوباره"]
+          },
+          "answer": 0,
+          "why": { "en": "One setting switches the whole connected mode on.", "fa": "یک تنظیم کل حالت متصل را روشن می‌کند." }
+        },
+        {
+          "q": { "en": "Someone had a local account `jlee` before the clinic connected and signs in through ClinicHub as `jlee`. What happens?", "fa": "کسی قبل از اتصال کلینیک حساب محلی `jlee` داشته و حالا با ClinicHub به‌عنوان `jlee` وارد می‌شود. چه می‌شود؟" },
+          "options": {
+            "en": ["A second user is created", "The local account is taken over, with its history", "Sign-in is refused"],
+            "fa": ["کاربر دومی ساخته می‌شود", "حساب محلی، با سابقه‌اش، تصاحب می‌شود", "ورود رد می‌شود"]
+          },
+          "answer": 1,
+          "why": { "en": "Signatures and addenda made before stay linked to the same person.", "fa": "امضاها و addendumهای قبلی به همان شخص وصل می‌مانند." }
+        },
+        {
+          "q": { "en": "Why is the clinic's short name checked before it becomes part of a database file name?", "fa": "چرا اسم کوتاه کلینیک قبل از این‌که بخشی از اسم فایل دیتابیس شود چک می‌شود؟" },
+          "options": {
+            "en": ["SQLite file names must be short", "To keep names sorted", "So nothing like a path or dots can reach the file name"],
+            "fa": ["اسم فایل‌های SQLite باید کوتاه باشد", "برای مرتب ماندن اسم‌ها", "تا چیزی مثل مسیر یا نقطه به اسم فایل نرسد"]
+          },
+          "answer": 2,
+          "why": { "en": "Only lower-case letters, digits and dashes are allowed in `clinicreport-{clinic}.db`.", "fa": "در `clinicreport-{clinic}.db` فقط حروف کوچک، رقم و خط تیره مجاز است." }
+        }
+      ]
     },
     {
       "id": "orders",
@@ -1743,7 +2230,36 @@
           "from": "if (order.Status == ReportOrderStatus.Started)",
           "lines": 3
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "A Bundle orders two exams; one template key is unknown. What is saved?", "fa": "یک Bundle دو معاینه درخواست می‌کند؛ کلید یکی از قالب‌ها ناشناخته است. چه چیزی ذخیره می‌شود؟" },
+          "options": {
+            "en": ["Nothing: the whole Bundle is refused before anything is saved", "The known exam only", "Both, the unknown one as a draft"],
+            "fa": ["هیچ: کل Bundle قبل از ذخیره‌ی هر چیزی رد می‌شود", "فقط معاینه‌ی شناخته‌شده", "هر دو، ناشناخته به شکل پیش‌نویس"]
+          },
+          "answer": 0,
+          "why": { "en": "Keys are checked first; an OperationOutcome names the unknown one.", "fa": "کلیدها اول چک می‌شوند؛ یک OperationOutcome ناشناخته را نام می‌برد." }
+        },
+        {
+          "q": { "en": "ClinicHub retries an order after a timeout. Why is it not saved twice?", "fa": "ClinicHub بعد از timeout یک درخواست را دوباره می‌فرستد. چرا دو بار ذخیره نمی‌شود؟" },
+          "options": {
+            "en": ["ClinicHub never retries", "The order is known by `slug:id`, unique in the table, so the retry finds it", "SQLite rejects identical rows"],
+            "fa": ["ClinicHub هیچ‌وقت دوباره نمی‌فرستد", "درخواست با `slug:id` شناخته می‌شود که در جدول یکتاست، پس تلاش دوباره پیدایش می‌کند", "SQLite ردیف‌های یکسان را رد می‌کند"]
+          },
+          "answer": 1,
+          "why": { "en": "The answer to the retry is the same as to the first send.", "fa": "جواب تلاش دوباره همان جواب ارسال اول است." }
+        },
+        {
+          "q": { "en": "The clinic withdraws an exam after *Start report* was pressed. What is the answer?", "fa": "کلینیک بعد از زدن *Start report* معاینه‌ای را پس می‌گیرد. جواب چیست؟" },
+          "options": {
+            "en": ["The draft report is deleted", "The order is cancelled and the draft kept", "409: the clinic has to speak to the reading physician"],
+            "fa": ["گزارش پیش‌نویس حذف می‌شود", "درخواست لغو می‌شود و پیش‌نویس می‌ماند", "409: کلینیک باید با پزشک گزارش‌کننده صحبت کند"]
+          },
+          "answer": 2,
+          "why": { "en": "Once an exam has started, a withdrawal is a conversation, not an automatic change.", "fa": "وقتی معاینه شروع شده، پس گرفتن یک گفتگوست، نه یک تغییر خودکار." }
+        }
+      ]
     },
     {
       "id": "restricted",
@@ -1861,7 +2377,33 @@
           "from": "export function RestrictedGate(",
           "to": "</section>"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "An order arrives labelled with a confidentiality code other than U, L, M, N or V. How is it treated?", "fa": "درخواستی با کد confidentiality غیر از U، L، M، N یا V می‌رسد. چطور با آن رفتار می‌شود؟" },
+          "options": { "en": ["As unrestricted", "As `R`, restricted", "It is refused"], "fa": ["بدون محدودیت", "به‌عنوان `R`، محدود", "رد می‌شود"] },
+          "answer": 1,
+          "why": { "en": "Any other code of that system is treated as `R`, so an unexpected code fails closed.", "fa": "هر کد دیگری از آن سیستم `R` حساب می‌شود، پس کد غیرمنتظره به سمت بسته شکست می‌خورد." }
+        },
+        {
+          "q": { "en": "Why are closed items still listed on the worklist?", "fa": "چرا موردهای بسته هنوز در worklist فهرست می‌شوند؟" },
+          "options": {
+            "en": ["So they are not lost; the patient shows as \"Restricted\" with no MRN or indication", "Because the filter cannot hide rows", "So anyone can open them without a reason"],
+            "fa": ["تا گم نشوند؛ بیمار به شکل «Restricted» و بدون MRN یا indication نشان داده می‌شود", "چون filter نمی‌تواند ردیف را پنهان کند", "تا هر کسی بدون دلیل بازشان کند"]
+          },
+          "answer": 0,
+          "why": { "en": "The work must still be done; only who it is for is hidden until someone says why.", "fa": "کار باید انجام شود؛ فقط این‌که برای چه کسی است تا وقتی کسی دلیل بیاورد پنهان می‌ماند." }
+        },
+        {
+          "q": { "en": "You open a restricted order with a reason and start its report. What about the report?", "fa": "یک درخواست محدود را با دلیل باز می‌کنید و گزارشش را شروع می‌کنید. گزارش چه می‌شود؟" },
+          "options": {
+            "en": ["It needs a second reason", "It is unrestricted for everyone", "You carry on with it: the opening carries over to its report"],
+            "fa": ["دلیل دوم لازم دارد", "برای همه بدون محدودیت می‌شود", "با آن ادامه می‌دهید: باز شدن به گزارشش منتقل می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "Whoever opens the order carries on with its report, still for that user only.", "fa": "کسی که درخواست را باز می‌کند با گزارشش ادامه می‌دهد، باز هم فقط برای همان کاربر." }
+        }
+      ]
     },
     {
       "id": "results-out",
@@ -1989,13 +2531,42 @@
           "from": "foreach (var r in signed)",
           "lines": 16
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "Why is the result message saved in the same `SaveChanges` as the signature?", "fa": "چرا پیام جواب در همان `SaveChanges` امضا ذخیره می‌شود؟" },
+          "options": {
+            "en": ["Either both happen or neither, so no signed report is left unsent", "SQLite allows one save per request", "To send it faster"],
+            "fa": ["یا هر دو انجام می‌شوند یا هیچ‌کدام، پس هیچ گزارش امضاشده‌ای بی‌ارسال نمی‌ماند", "SQLite در هر درخواست یک ذخیره اجازه می‌دهد", "برای سریع‌تر فرستادن"]
+          },
+          "answer": 0,
+          "why": { "en": "An outbox written with the business change is delivered later by the worker.", "fa": "outboxی که همراه تغییر اصلی نوشته می‌شود بعداً توسط worker تحویل می‌شود." }
+        },
+        {
+          "q": { "en": "An addendum is added to a signed report from an order. What does ClinicHub receive?", "fa": "به یک گزارش امضاشده از یک درخواست، addendum اضافه می‌شود. ClinicHub چه چیزی دریافت می‌کند؟" },
+          "options": {
+            "en": ["Nothing more", "The result again as `amended`, with the addenda appended to the conclusion", "Only the addendum's text"],
+            "fa": ["چیز دیگری نه", "دوباره جواب، به شکل `amended`، با addendumها اضافه‌شده به نتیجه‌گیری", "فقط متن addendum"]
+          },
+          "answer": 1,
+          "why": { "en": "Each addendum queues the result again so the clinic's copy matches.", "fa": "هر addendum جواب را دوباره در صف می‌گذارد تا نسخه‌ی کلینیک جور باشد." }
+        },
+        {
+          "q": { "en": "What does the accounting receive about a signed echo report?", "fa": "حسابداری درباره‌ی یک گزارش اکوی امضاشده چه چیزی دریافت می‌کند؟" },
+          "options": {
+            "en": ["The patient's name and the conclusion", "The whole report as a PDF", "An invoice to OHIP with the template's technical and professional fees, and no health information"],
+            "fa": ["نام بیمار و نتیجه‌گیری", "کل گزارش به شکل PDF", "یک فاکتور به OHIP با هزینه‌ی فنی و حرفه‌ای قالب، بدون اطلاعات سلامت"]
+          },
+          "answer": 2,
+          "why": { "en": "No patient and no findings leave; the id `report:{id}:signed` makes it sent once.", "fa": "نه بیمار و نه یافته‌ها خارج می‌شوند؛ شناسه‌ی `report:{id}:signed` باعث می‌شود یک بار فرستاده شود." }
+        }
+      ]
     },
     {
       "id": "fe-app",
       "group": "frontend",
       "title": { "en": "The pages and the API client", "fa": "صفحه‌ها و API client" },
-      "files": ["web/src/App.tsx", "web/src/api.ts", "web/src/main.tsx"],
+      "files": ["web/src/App.tsx", "web/src/api.ts", "web/src/main.tsx", "web/src/theme.ts"],
       "en": [
         {
           "id": "routes",
@@ -2020,6 +2591,22 @@
             "`api.ts` mirrors the C# records as TypeScript types and sends every call through `request`, which adds the CSRF and client-id headers, turns any error into an `ApiError` with the field errors of a 400, and on a 401 tells the app the session has ended."
           ],
           "examples": ["request"]
+        },
+        {
+          "id": "signedout",
+          "h": "A session that ends anywhere",
+          "p": [
+            "When any call other than `/api/auth/*` answers 401, `request` fires a `clinicreport:signed-out` event on the window, and `App` listens for it and sets the user to nobody, which shows the sign-in page. So a session ended elsewhere (an administrator's change, *sign out everywhere*, ClinicHub refusing the re-check) is noticed by whatever page is open, without each page handling 401 itself. Calls to `/api/auth/*` are left out because a wrong password there is also a 401 and must stay on the sign-in form."
+          ],
+          "examples": ["signedout"]
+        },
+        {
+          "id": "theme",
+          "h": "Dark first, decided before the first paint",
+          "p": [
+            "Echo and ECG rooms are dimmed, so the dark theme is the default; the choice is a per-browser convenience in `localStorage`, and a private window that refuses storage simply does not remember it. `main.tsx` applies it before React renders anything, so the page never flashes in the wrong theme. In the public demo a banner reminds visitors not to enter real patient information."
+          ],
+          "examples": ["theme"]
         }
       ],
       "fa": [
@@ -2046,6 +2633,22 @@
             "`api.ts` recordهای C# را به‌صورت typeهای TypeScript تکرار می‌کند و هر درخواست را از `request` رد می‌کند، که هدرهای CSRF و client-id را اضافه می‌کند، هر خطا را به یک `ApiError` با خطاهای فیلدِ یک 400 تبدیل می‌کند، و با 401 به اپ می‌گوید session تمام شده."
           ],
           "examples": ["request"]
+        },
+        {
+          "id": "signedout",
+          "h": "نشستی که هر جا ممکن است تمام شود",
+          "p": [
+            "وقتی هر فراخوانی به‌جز `/api/auth/*` جواب 401 بدهد، `request` یک رویداد `clinicreport:signed-out` روی window می‌فرستد و `App` به آن گوش می‌دهد و کاربر را خالی می‌کند، که صفحه‌ی ورود را نشان می‌دهد. پس نشستی که جای دیگری تمام شده (تغییر یک مدیر، *sign out everywhere*، رد شدن چک دوباره توسط ClinicHub) را هر صفحه‌ای که باز است می‌فهمد، بی‌آن‌که هر صفحه خودش به 401 رسیدگی کند. فراخوانی‌های `/api/auth/*` کنار گذاشته شده‌اند، چون رمز اشتباه آن‌جا هم 401 است و باید روی فرم ورود بماند."
+          ],
+          "examples": ["signedout"]
+        },
+        {
+          "id": "theme",
+          "h": "اول تیره، تصمیم‌گرفته قبل از اولین رسم",
+          "p": [
+            "اتاق‌های اکو و ECG کم‌نورند، پس تم تیره پیش‌فرض است؛ انتخاب یک راحتی مخصوص هر مرورگر در `localStorage` است، و پنجره‌ی خصوصی‌ای که storage را رد می‌کند فقط آن را به خاطر نمی‌سپارد. `main.tsx` قبل از این‌که React چیزی رسم کند آن را اعمال می‌کند، پس صفحه هیچ‌وقت با تم اشتباه چشمک نمی‌زند. در دموی عمومی یک بنر به بازدیدکننده‌ها یادآوری می‌کند که اطلاعات بیمار واقعی وارد نکنند."
+          ],
+          "examples": ["theme"]
         }
       ],
       "examples": {
@@ -2069,14 +2672,62 @@
           "file": "web/src/api.ts",
           "from": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {",
           "lines": 21
+        },
+        "signedout": {
+          "title": { "en": "Every page hears the session end", "fa": "همه‌ی صفحه‌ها پایان نشست را می‌شنوند" },
+          "lang": "typescript",
+          "file": "web/src/App.tsx",
+          "from": "const onSignedOut = () => setMe(null)",
+          "lines": 3
+        },
+        "theme": {
+          "title": { "en": "Dark unless light was chosen", "fa": "تیره، مگر روشن انتخاب شده باشد" },
+          "lang": "typescript",
+          "file": "web/src/theme.ts",
+          "from": "export function savedTheme(): Theme {",
+          "lines": 7
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "An administrator ends a user's sessions while the user has the worklist open. What does the user see on their next action?", "fa": "مدیری نشست‌های یک کاربر را تمام می‌کند در حالی که او worklist را باز دارد. کاربر در کار بعدی‌اش چه می‌بیند؟" },
+          "options": {
+            "en": ["An error message on the worklist", "The sign-in page, because the 401 fires the signed-out event", "Nothing until they reload"],
+            "fa": ["یک پیام خطا روی worklist", "صفحه‌ی ورود، چون 401 رویداد signed-out را می‌فرستد", "تا وقتی صفحه را دوباره بارگذاری نکند هیچ"]
+          },
+          "answer": 1,
+          "why": { "en": "`App` listens for `clinicreport:signed-out` and sets the user to nobody.", "fa": "`App` به `clinicreport:signed-out` گوش می‌دهد و کاربر را خالی می‌کند." }
+        },
+        {
+          "q": { "en": "Why are 401s from `/api/auth/*` not treated as \"signed out\"?", "fa": "چرا 401های `/api/auth/*` به‌عنوان «خارج شده» حساب نمی‌شوند؟" },
+          "options": {
+            "en": ["A wrong password there is also a 401 and must stay on the sign-in form", "Those endpoints never answer 401", "They are handled by ClinicHub"],
+            "fa": ["رمز اشتباه آن‌جا هم 401 است و باید روی فرم ورود بماند", "آن endpointها هیچ‌وقت 401 نمی‌دهند", "ClinicHub به آن‌ها رسیدگی می‌کند"]
+          },
+          "answer": 0,
+          "why": { "en": "The sign-in page shows the error itself, such as a missing two-factor code.", "fa": "صفحه‌ی ورود خودش خطا را نشان می‌دهد، مثلاً نبود کد دومرحله‌ای." }
+        },
+        {
+          "q": { "en": "A typist without `templates.design` opens `/templates/3` directly. What happens?", "fa": "تایپیستی بدون `templates.design` مستقیم `/templates/3` را باز می‌کند. چه می‌شود؟" },
+          "options": {
+            "en": ["The designer opens read-only", "A 403 page", "The route sends them back to `/templates`"],
+            "fa": ["طراح فقط‌خواندنی باز می‌شود", "یک صفحه‌ی 403", "route او را به `/templates` برمی‌گرداند"]
+          },
+          "answer": 2,
+          "why": { "en": "Routes behind a permission render a `Navigate` instead; the API would refuse the changes anyway.", "fa": "routeهای پشت یک مجوز به‌جایش یک `Navigate` رسم می‌کنند؛ API به هر حال تغییرها را رد می‌کرد." }
+        }
+      ]
     },
     {
       "id": "data-sqlite",
       "group": "data",
       "title": { "en": "SQLite, migrations and the demo", "fa": "SQLite، migrationها و دمو" },
-      "files": ["src/ClinicReport.Api/Data/ClinicReportDbContext.cs", "src/ClinicReport.Api/Data/DatabaseInitializer.cs", "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs", "src/ClinicReport.Api/Program.cs"],
+      "files": [
+        "src/ClinicReport.Api/Data/ClinicReportDbContext.cs",
+        "src/ClinicReport.Api/Data/DatabaseInitializer.cs",
+        "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs",
+        "src/ClinicReport.Api/Program.cs"
+      ],
       "en": [
         {
           "id": "why",
@@ -2214,7 +2865,36 @@
           "from": "// Secrets as files",
           "to": "SetApplicationName(\"ClinicReport\");"
         }
-      }
+      },
+      "quiz": [
+        {
+          "q": { "en": "What is the price of keeping a clinic's reporting in one SQLite file?", "fa": "هزینه‌ی نگه داشتن گزارش‌های یک کلینیک در یک فایل SQLite چیست؟" },
+          "options": {
+            "en": ["One writer at a time, and few types (dates, booleans and money as TEXT and INTEGER)", "No transactions", "A separate server to back up"],
+            "fa": ["یک نویسنده در هر لحظه، و نوع‌های کم (تاریخ، boolean و پول به شکل TEXT و INTEGER)", "بدون تراکنش", "یک سرور جدا برای پشتیبان‌گیری"]
+          },
+          "answer": 0,
+          "why": { "en": "A clinic's typing never comes near the one-writer limit; the backup is a copy of `/data`.", "fa": "تایپ یک کلینیک هیچ‌وقت به حد یک نویسنده نمی‌رسد؛ پشتیبان یک کپی از `/data` است." }
+        },
+        {
+          "q": { "en": "Why do user names use the NOCASE collation?", "fa": "چرا نام‌های کاربری collation‌ی NOCASE دارند؟" },
+          "options": {
+            "en": ["To store them in upper case", "So `Admin` and `admin` are one user, enforced in the database rather than in each query", "Because SQLite requires it for unique indexes"],
+            "fa": ["تا با حروف بزرگ ذخیره شوند", "تا `Admin` و `admin` یک کاربر باشند، در خود دیتابیس و نه در هر کوئری", "چون SQLite برای ایندکس یکتا لازمش دارد"]
+          },
+          "answer": 1,
+          "why": { "en": "The collation also makes last-name searches ignore case.", "fa": "این collation باعث می‌شود جستجوی نام خانوادگی هم به بزرگی و کوچکی حروف حساس نباشد." }
+        },
+        {
+          "q": { "en": "With `Demo:ResetHourUtc` set, what happens at that hour?", "fa": "با تنظیم `Demo:ResetHourUtc`، در آن ساعت چه می‌شود؟" },
+          "options": {
+            "en": ["Only the reports are cleared", "Visitors are signed out but data stays", "The database is deleted and seeded again"],
+            "fa": ["فقط گزارش‌ها پاک می‌شوند", "بازدیدکننده‌ها خارج می‌شوند ولی داده می‌ماند", "دیتابیس حذف و دوباره seed می‌شود"]
+          },
+          "answer": 2,
+          "why": { "en": "Whatever visitors typed into the public demo does not stay.", "fa": "هر چیزی که بازدیدکننده‌ها در دموی عمومی تایپ کرده‌اند نمی‌ماند." }
+        }
+      ]
     }
   ]
 }

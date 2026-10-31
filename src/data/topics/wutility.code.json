@@ -1,0 +1,855 @@
+{
+  "project": "wutility",
+  "repo": "wUtility",
+  "files": {
+    "README.md": 34,
+    "web/README.md": 69,
+    "wUtility.sln": 25,
+    "web/api/Program.cs": 236,
+    "web/api/Properties/launchSettings.json": 14,
+    "web/api/appsettings.json": 13,
+    "web/frontend/proxy.conf.js": 17,
+    "web/tools/DbSetup/Program.cs": 100,
+    "web/deploy/azure/deploy.ps1": 139,
+    "web/db/02-schemasync-target.sql": 30,
+    "wUtility/SimilarityDatabaseForm.xaml.cs": 1762,
+    "wUtility/Utils/DBHelper.cs": 571,
+    "wUtility/MainWindow.xaml.cs": 168,
+    "wUtility/Drug.cs": 318,
+    "wUtility/CommonClass.cs": 662,
+    "wUtility/Utils/CryptographyUtils.cs": 197,
+    "wUtility/Utils/AppSettingsManager.cs": 50,
+    "wService/Service1.cs": 28,
+    "web/api/SchemaReader.cs": 63,
+    "web/api/SqlReaderExtensions.cs": 17,
+    "web/api/Models.cs": 56,
+    "web/api/SchemaDiffer.cs": 55,
+    "web/db/01-schemasync-source.sql": 35,
+    "web/api/ScriptGenerator.cs": 87,
+    "web/api/ScriptExecutor.cs": 47,
+    "web/api/DemoMode.cs": 96,
+    "web/frontend/src/app/services/demo.service.ts": 31,
+    "web/api/ConnectionVault.cs": 67,
+    "web/api/SiteConnectionsService.cs": 107,
+    "web/db/04-dbconfig.sql": 47,
+    "web/frontend/src/app/pages/connections-page/connections-page.component.ts": 98,
+    "web/api/DoctorsService.cs": 113,
+    "web/api/DoctorsModels.cs": 21,
+    "wUtility/DoctorsPriceGroupsForm.xaml.cs": 763,
+    "web/db/03-totalsystem.sql": 58,
+    "web/frontend/src/app/pages/doctor-price-groups-page/doctor-price-groups-page.component.ts": 101,
+    "web/api/DbConfigService.cs": 45,
+    "web/api/ConnectionsModels.cs": 18,
+    "wUtility/Models/Tbl_dbConfigSetting.cs": 34,
+    "web/frontend/src/app/app.routes.ts": 15,
+    "web/frontend/src/app/app.config.ts": 12,
+    "web/frontend/src/app/app.component.html": 10,
+    "web/frontend/src/app/pages/schema-sync-page/schema-sync.service.ts": 51,
+    "web/frontend/src/app/pages/schema-sync-page/schema-sync-page.component.ts": 92,
+    "web/infra/main.bicep": 157
+  },
+  "examples": {
+    "overview/what": {
+      "file": "README.md",
+      "start": 13,
+      "end": 18,
+      "code": "## What it does\n\n- Connects to a source and a destination SQL Server database\n- Detects structural differences: tables, columns, data types, indexes, views, stored procedures, functions\n- Generates and applies the changes needed to bring the destination schema up to date with the source\n- Provides a set of hospital-specific configuration forms used during HIS deployments"
+    },
+    "overview/ported": {
+      "file": "web/README.md",
+      "start": 11,
+      "end": 17,
+      "code": "| Original WPF form | Web equivalent | Notes |\n|---|---|---|\n| `MainWindow` | Top nav bar (Angular) | Menu shell only |\n| `SimilarityDatabaseForm` | `/schema-sync` page | Schema diff + generated T-SQL sync script, review-then-apply |\n| `DoctorsForm` | `/doctors` page | Read-only list from `Doctors` |\n| `DoctorsPriceGroupsForm` | `/doctor-price-groups` page | Full CRUD on `DoctorsPriceGroups`, joined with `Doctors`/`Works` |\n| `DatabasesForm` (top grid) | `/db-config` page | Read-only list from `Tbl_dbConfigSetting` |"
+    },
+    "run/commands": {
+      "file": "web/README.md",
+      "start": 46,
+      "end": 48,
+      "code": "# PowerShell: $env:WUTILITY_API_KEY = \"<random 32+ chars>\"\ncd api && dotnet run                  # :5091\ncd frontend && npm start              # :4300, same WUTILITY_API_KEY in the environment"
+    },
+    "run/key": {
+      "file": "web/api/Program.cs",
+      "start": 14,
+      "end": 20,
+      "code": "var apiKey = builder.Configuration[\"WUTILITY_API_KEY\"];\nif (string.IsNullOrEmpty(apiKey) || apiKey.Length < 32)\n{\n    throw new InvalidOperationException(\n        \"WUTILITY_API_KEY must be set to a random value of at least 32 characters.\");\n}\nvar apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);"
+    },
+    "run/proxy": {
+      "file": "web/frontend/proxy.conf.js",
+      "start": 5,
+      "end": 17,
+      "code": "const apiKey = process.env.WUTILITY_API_KEY;\nif (!apiKey) {\n  throw new Error('WUTILITY_API_KEY must be set before running ng serve (same value as the API).');\n}\n\nmodule.exports = {\n  '/api': {\n    target: 'http://localhost:5091',\n    secure: false,\n    changeOrigin: true,\n    headers: { 'X-Api-Key': apiKey },\n  },\n};"
+    },
+    "run/plan": {
+      "file": "web/tools/DbSetup/Program.cs",
+      "start": 26,
+      "end": 32,
+      "code": "var plan = new (string Script, string Database)[]\n{\n    (\"01-schemasync-source.sql\", prefix is null ? \"SchemaSyncDemo_Source\" : prefix + \"Source\"),\n    (\"02-schemasync-target.sql\", prefix is null ? \"SchemaSyncDemo_Target\" : prefix + \"Target\"),\n    (\"03-totalsystem.sql\",       prefix is null ? \"TotalsystemDemo\"       : prefix + \"Totalsystem\"),\n    (\"04-dbconfig.sql\",          prefix is null ? \"dbConfigDataBasesDemo\" : prefix + \"DbConfig\"),\n};"
+    },
+    "tests/tested": {
+      "file": "web/README.md",
+      "start": 34,
+      "end": 39,
+      "code": "## Testing performed\n\nAll of the above were tested against real SQL Server data on `(local)` (dedicated demo databases — `SchemaSyncDemo_Source/Target`, `TotalsystemDemo`, `dbConfigDataBasesDemo` — never the real hospital databases on the same instance):\n\n- Schema compare correctly detected a missing table, a missing column, and a column type mismatch; the generated script was executed and a re-compare confirmed zero remaining diffs.\n- Doctors → price-groups navigation, add, and edit were exercised end-to-end through the actual browser UI, with real inserts/updates verified in the database."
+    },
+    "tests/smoke": {
+      "file": "web/deploy/azure/deploy.ps1",
+      "start": 130,
+      "end": 138,
+      "code": "Step 'Smoke test'\n$url = \"https://$AppName.azurewebsites.net\"\nInvoke-RestMethod \"$url/healthz\" -TimeoutSec 120 | Out-Null\n$demo = Invoke-RestMethod \"$url/api/demo\" -TimeoutSec 60\nif (-not $demo.enabled) { throw 'Demo mode is not enabled on the deployed app.' }\n# First SQL call may wait for a paused serverless database to resume.\n$compare = Invoke-RestMethod \"$url/api/compare\" -Method Post -ContentType 'application/json' `\n    -Body '{\"sourceConnectionString\":\"\",\"targetConnectionString\":\"\"}' -TimeoutSec 180\nWrite-Host \"healthz ok; demo on ($($demo.sourceDatabase) -> $($demo.targetDatabase)); compare found $($compare.diffs.Count) diff(s).\""
+    },
+    "wpf/sps": {
+      "file": "wUtility/SimilarityDatabaseForm.xaml.cs",
+      "start": 714,
+      "end": 716,
+      "code": "string query = @\"SELECT ROW_NUMBER() OVER(ORDER BY ROUTINE_CATALOG) RowNumber, ROUTINE_CATALOG, ROUTINE_NAME, convert(nvarchar(max),object_definition(o.object_id))AS ROUTINE_DEFINITION\n                FROM INFORMATION_SCHEMA.ROUTINES i\n                inner join sys.procedures o on o.name = i.ROUTINE_NAME"
+    },
+    "wpf/views": {
+      "file": "wUtility/SimilarityDatabaseForm.xaml.cs",
+      "start": 1415,
+      "end": 1417,
+      "code": "discordResult = dataTable1.AsEnumerable().Where(o => !(result.Where\n                      (os => os.q2 == o[\"TABLE_NAME\"].ToString() \n                      )).Any()).ToList();"
+    },
+    "wpf/widen": {
+      "file": "wUtility/SimilarityDatabaseForm.xaml.cs",
+      "start": 1168,
+      "end": 1169,
+      "code": "if (characterMaximumLength == (10).ToString())\n    characterMaximumLength = (50).ToString();"
+    },
+    "wpf/alter": {
+      "file": "wUtility/SimilarityDatabaseForm.xaml.cs",
+      "start": 1192,
+      "end": 1207,
+      "code": "if (dataTable.Rows.Count > 0)\n{\n    dropConstraint = \"Alter Table \" + tableName + \" drop CONSTRAINT \" + dataTable.Rows[0][\"DCName\"].ToString();\n    createConstraint = @\" alter table \" + tableName + @\" add constraint \" + dataTable.Rows[0][\"DCName\"].ToString()\n       + \" default \" + cOLUMN_DEFAULT+' ' + \" for \" + columnName;\n    //@\" CREATE INDEX \"+ dataTable.Rows[0][\"DCName\"].ToString()+\n    //                   @\" ON \"+tableName+\" (\"+columnName+@\") \";\n}\n\nif (!string.IsNullOrEmpty(dropConstraint))\n     dbh.ExecuteQuery(dropConstraint);\n\ndbh.ExecuteQuery(script);\n\nif (!string.IsNullOrEmpty(createConstraint))\n    dbh.ExecuteQuery(createConstraint);"
+    },
+    "legacy-connections/modules": {
+      "file": "wUtility/CommonClass.cs",
+      "start": 140,
+      "end": 150,
+      "code": "static public List<string> ConnectedDatabases\n{\n    get\n    {\n        List<string> mylist = new List<string>(new string[] { \"Totalsystem\", \"Lab\", \"Radio\",\n                                                                \"Drug\" , \"Blood\" , \"OpRoom\",\n                                                                \"Phisio\", \"Food\", \"Den\",\n                                                                 \"Tasisat\" , \"Tajhizat\" , \"MDoc\",\"Requests\"});\n        return mylist;\n    }\n}"
+    },
+    "legacy-connections/conn": {
+      "file": "wUtility/Drug.cs",
+      "start": 69,
+      "end": 86,
+      "code": "/// //// this property for save connectionString\n/// </summary>\npublic string ConnectionString\n{\n    get\n    {\n        string encryptedValue = AppSettingsManager.GetSetting(ConnectionStringName);\n        if (!string.IsNullOrEmpty(ConnectionStringName))\n            return CryptographyUtils.AESCryptography.DecryptStringAES(encryptedValue, \"452654645\");\n        else\n            return null;\n    }\n    set\n    {\n        string encryptedValue = \"\";\n        if (!string.IsNullOrEmpty(value))\n            encryptedValue = CryptographyUtils.AESCryptography.EncryptStringAES(value, \"452654645\");\n        AppSettingsManager.SetSetting(ConnectionStringName, encryptedValue);"
+    },
+    "legacy-connections/service": {
+      "file": "wService/Service1.cs",
+      "start": 20,
+      "end": 26,
+      "code": "protected override void OnStart(string[] args)\n{\n}\n\nprotected override void OnStop()\n{\n}"
+    },
+    "reader/sql": {
+      "file": "web/api/SchemaReader.cs",
+      "start": 18,
+      "end": 36,
+      "code": "const string sql = @\"\n    SELECT\n        c.TABLE_NAME,\n        c.COLUMN_NAME,\n        c.DATA_TYPE,\n        c.CHARACTER_MAXIMUM_LENGTH,\n        c.NUMERIC_PRECISION,\n        c.NUMERIC_SCALE,\n        c.IS_NULLABLE,\n        c.ORDINAL_POSITION,\n        CASE WHEN ic.column_id IS NOT NULL THEN 1 ELSE 0 END AS IsIdentity\n    FROM INFORMATION_SCHEMA.COLUMNS c\n    JOIN INFORMATION_SCHEMA.TABLES t\n        ON t.TABLE_NAME = c.TABLE_NAME AND t.TABLE_SCHEMA = c.TABLE_SCHEMA\n    LEFT JOIN sys.identity_columns ic\n        ON ic.object_id = OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME))\n       AND ic.name = c.COLUMN_NAME\n    WHERE t.TABLE_TYPE = 'BASE TABLE' AND c.TABLE_SCHEMA = 'dbo'\n    ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION\";"
+    },
+    "reader/group": {
+      "file": "web/api/SchemaReader.cs",
+      "start": 57,
+      "end": 59,
+      "code": "var tables = flatRows\n    .GroupBy(row => row.TableName)\n    .Select(g => new TableInfo(g.Key, g.Select(row => row.Column).ToList()));"
+    },
+    "reader/tolist": {
+      "file": "web/api/SqlReaderExtensions.cs",
+      "start": 10,
+      "end": 16,
+      "code": "public static async Task<List<T>> ToListAsync<T>(this SqlDataReader reader, Func<SqlDataReader, T> map)\n{\n    var results = new List<T>();\n    while (await reader.ReadAsync())\n        results.Add(map(reader));\n    return results;\n}"
+    },
+    "reader/type": {
+      "file": "web/api/Models.cs",
+      "start": 15,
+      "end": 32,
+      "code": "public string SqlTypeExpression()\n{\n    var needsLength = DataType is \"varchar\" or \"nvarchar\" or \"char\" or \"nchar\" or \"varbinary\";\n    var needsPrecisionScale = DataType is \"decimal\" or \"numeric\";\n\n    if (needsLength && MaxLength is not null)\n    {\n        // INFORMATION_SCHEMA.COLUMNS.CHARACTER_MAXIMUM_LENGTH is already in\n        // characters for nvarchar/nchar (SQL Server reports it pre-converted),\n        // so no /2 adjustment is needed here.\n        var len = MaxLength == -1 ? \"MAX\" : MaxLength.ToString();\n        return $\"{DataType}({len})\";\n    }\n    if (needsPrecisionScale && Precision is not null)\n    {\n        return $\"{DataType}({Precision},{Scale})\";\n    }\n    return DataType;"
+    },
+    "differ/tables": {
+      "file": "web/api/SchemaDiffer.cs",
+      "start": 12,
+      "end": 22,
+      "code": "var targetTables = target.Tables.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);\n\nforeach (var sourceTable in source.Tables)\n{\n    if (!targetTables.TryGetValue(sourceTable.Name, out var targetTable))\n    {\n        diffs.Add(new DiffEntry(\n            DiffKind.MissingTable, sourceTable.Name, null,\n            $\"Table '{sourceTable.Name}' exists in source but not in target.\"));\n        continue;\n    }"
+    },
+    "differ/columns": {
+      "file": "web/api/SchemaDiffer.cs",
+      "start": 36,
+      "end": 49,
+      "code": "if (!string.Equals(targetColumn.SqlTypeExpression(), sourceColumn.SqlTypeExpression(), StringComparison.OrdinalIgnoreCase))\n{\n    diffs.Add(new DiffEntry(\n        DiffKind.ColumnTypeMismatch, sourceTable.Name, sourceColumn.Name,\n        $\"Column '{sourceTable.Name}.{sourceColumn.Name}' is {targetColumn.SqlTypeExpression()} in target, \" +\n        $\"{sourceColumn.SqlTypeExpression()} in source.\"));\n}\nelse if (targetColumn.IsNullable != sourceColumn.IsNullable)\n{\n    diffs.Add(new DiffEntry(\n        DiffKind.ColumnNullabilityMismatch, sourceTable.Name, sourceColumn.Name,\n        $\"Column '{sourceTable.Name}.{sourceColumn.Name}' nullability differs \" +\n        $\"(target: {(targetColumn.IsNullable ? \"NULL\" : \"NOT NULL\")}, source: {(sourceColumn.IsNullable ? \"NULL\" : \"NOT NULL\")}).\"));\n}"
+    },
+    "differ/source": {
+      "file": "web/db/01-schemasync-source.sql",
+      "start": 10,
+      "end": 16,
+      "code": "CREATE TABLE dbo.Patients (\n    PatientId    int IDENTITY(1,1) NOT NULL PRIMARY KEY,\n    FullName     nvarchar(150) NOT NULL,\n    NationalCode nvarchar(20)  NOT NULL,\n    BirthDate    date          NULL,\n    Phone        nvarchar(20)  NULL\n);"
+    },
+    "differ/target": {
+      "file": "web/db/02-schemasync-target.sql",
+      "start": 11,
+      "end": 16,
+      "code": "CREATE TABLE dbo.Patients (\n    PatientId    int IDENTITY(1,1) NOT NULL PRIMARY KEY,\n    FullName     nvarchar(150) NOT NULL,\n    NationalCode nvarchar(10)  NOT NULL,\n    BirthDate    date          NOT NULL\n);"
+    },
+    "generator/create": {
+      "file": "web/api/ScriptGenerator.cs",
+      "start": 27,
+      "end": 33,
+      "code": "if (missingTable is not null)\n{\n    sb.AppendLine(GenerateCreateTable(sourceTables[table]));\n    sb.AppendLine(\"GO\");\n    sb.AppendLine();\n    continue;\n}"
+    },
+    "generator/add": {
+      "file": "web/api/ScriptGenerator.cs",
+      "start": 35,
+      "end": 42,
+      "code": "foreach (var diff in tableDiffs.Where(d => d.Kind == DiffKind.MissingColumn))\n{\n    var column = sourceTables[table].Columns.First(c => c.Name == diff.ColumnName);\n    sb.AppendLine($\"-- {diff.Description}\");\n    sb.AppendLine($\"ALTER TABLE dbo.[{table}] ADD [{column.Name}] {column.SqlTypeExpression()} NULL;\");\n    sb.AppendLine(\"GO\");\n    sb.AppendLine();\n}"
+    },
+    "generator/nulls": {
+      "file": "web/api/ScriptGenerator.cs",
+      "start": 54,
+      "end": 63,
+      "code": "foreach (var diff in tableDiffs.Where(d => d.Kind == DiffKind.ColumnNullabilityMismatch))\n{\n    var column = sourceTables[table].Columns.First(c => c.Name == diff.ColumnName);\n    sb.AppendLine($\"-- {diff.Description}\");\n    sb.AppendLine($\"-- NOTE: widening to NULL regardless of source's nullability, to avoid failing \" +\n                  $\"on existing rows. Tighten to NOT NULL manually after backfilling if the source requires it.\");\n    sb.AppendLine($\"ALTER TABLE dbo.[{table}] ALTER COLUMN [{column.Name}] {column.SqlTypeExpression()} NULL;\");\n    sb.AppendLine(\"GO\");\n    sb.AppendLine();\n}"
+    },
+    "executor/split": {
+      "file": "web/api/ScriptExecutor.cs",
+      "start": 11,
+      "end": 17,
+      "code": "private static readonly Regex GoSplitter = new(@\"^\\s*GO\\s*$\", RegexOptions.Multiline | RegexOptions.IgnoreCase);\n\n// A batch is executable if it has at least one non-empty, non-comment line —\n// a batch made up entirely of \"-- ...\" lines (like the script's header) is\n// just documentation and should be skipped, not sent to SQL Server as-is.\nprivate static bool HasExecutableContent(string batch) =>\n    batch.Split('\\n').Any(line => line.Trim() is { Length: > 0 } t && !t.StartsWith(\"--\"));"
+    },
+    "executor/loop": {
+      "file": "web/api/ScriptExecutor.cs",
+      "start": 31,
+      "end": 45,
+      "code": "foreach (var batch in batches)\n{\n    try\n    {\n        await using var cmd = new SqlCommand(batch, conn);\n        await cmd.ExecuteNonQueryAsync();\n        executed.Add(batch);\n    }\n    catch (Exception ex)\n    {\n        return new ExecuteResult(false, executed, $\"Failed on batch:\\n{batch}\\n\\nError: {ex.Message}\");\n    }\n}\n\nreturn new ExecuteResult(true, executed, null);"
+    },
+    "executor/execute": {
+      "file": "web/api/Program.cs",
+      "start": 123,
+      "end": 141,
+      "code": "app.MapPost(\"/api/execute\", async (ExecuteRequest req, IServiceProvider sp, SchemaReader reader, SchemaDiffer differ, ScriptGenerator generator, ScriptExecutor executor) =>\n{\n    if (demo.Enabled)\n    {\n        // Only the script the server would generate right now may run. The\n        // client must send back exactly what it was shown, so \"review, then\n        // apply\" still holds, but nothing caller-written ever executes.\n        var dbs = sp.GetRequiredService<DemoDatabases>();\n        var current = await CompareAsync(dbs.Source, dbs.Target, reader, differ, generator);\n        if (!string.Equals(NormalizeScript(req.Script), NormalizeScript(current.Script), StringComparison.Ordinal))\n        {\n            return Results.Conflict(new { error = \"In demo mode only the unmodified generated script can run. Compare again and apply it as shown.\" });\n        }\n        return Results.Ok(await executor.ExecuteAsync(dbs.Target, current.Script));\n    }\n    return Results.Ok(await executor.ExecuteAsync(req.TargetConnectionString, req.Script));\n})\n.WithName(\"ExecuteScript\")\n.RequireRateLimiting(HeavyPolicy);"
+    },
+    "apikey/middleware": {
+      "file": "web/api/Program.cs",
+      "start": 85,
+      "end": 100,
+      "code": "app.Use(async (context, next) =>\n{\n    // In demo mode the browser calls /api directly and can't hold a secret;\n    // the dangerous routes are constrained instead (see DemoMode.cs).\n    if (!demo.Enabled && context.Request.Path.StartsWithSegments(\"/api\"))\n    {\n        var provided = Encoding.UTF8.GetBytes(context.Request.Headers[\"X-Api-Key\"].ToString());\n        // Constant-time comparison, so response timing doesn't leak the key.\n        if (!CryptographicOperations.FixedTimeEquals(provided, apiKeyBytes))\n        {\n            context.Response.StatusCode = StatusCodes.Status401Unauthorized;\n            await context.Response.WriteAsJsonAsync(new { error = \"Missing or invalid X-Api-Key header.\" });\n            return;\n        }\n    }\n    await next();"
+    },
+    "apikey/health": {
+      "file": "web/api/Program.cs",
+      "start": 81,
+      "end": 83,
+      "code": "// Liveness only (App Service health check). Deliberately doesn't touch SQL,\n// so an auto-paused free-tier database doesn't mark the app unhealthy.\napp.MapGet(\"/healthz\", () => Results.Ok(new { status = \"ok\" }));"
+    },
+    "demo/execute": {
+      "file": "web/api/Program.cs",
+      "start": 127,
+      "end": 136,
+      "code": "// Only the script the server would generate right now may run. The\n// client must send back exactly what it was shown, so \"review, then\n// apply\" still holds, but nothing caller-written ever executes.\nvar dbs = sp.GetRequiredService<DemoDatabases>();\nvar current = await CompareAsync(dbs.Source, dbs.Target, reader, differ, generator);\nif (!string.Equals(NormalizeScript(req.Script), NormalizeScript(current.Script), StringComparison.Ordinal))\n{\n    return Results.Conflict(new { error = \"In demo mode only the unmodified generated script can run. Compare again and apply it as shown.\" });\n}\nreturn Results.Ok(await executor.ExecuteAsync(dbs.Target, current.Script));"
+    },
+    "demo/limits": {
+      "file": "web/api/Program.cs",
+      "start": 45,
+      "end": 57,
+      "code": "const string HeavyPolicy = \"heavy\";\nbuilder.Services.AddRateLimiter(options =>\n{\n    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;\n    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>\n        RateLimitPartition.GetFixedWindowLimiter(\n            ctx.Connection.RemoteIpAddress?.ToString() ?? \"unknown\",\n            _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1) }));\n    options.AddPolicy(HeavyPolicy, ctx =>\n        RateLimitPartition.GetFixedWindowLimiter(\n            ctx.Connection.RemoteIpAddress?.ToString() ?? \"unknown\",\n            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));\n});"
+    },
+    "demo/reset": {
+      "file": "web/api/DemoMode.cs",
+      "start": 49,
+      "end": 60,
+      "code": "// The target's starting \"drift\": no Appointments table, Patients.Phone\n// missing, NationalCode too short, BirthDate NOT NULL. One of each diff\n// kind SchemaDiffer reports. Same statements as db/02-schemasync-target.sql.\nprivate const string ResetTargetSql = @\"\n    IF OBJECT_ID('dbo.Appointments') IS NOT NULL DROP TABLE dbo.Appointments;\n    IF OBJECT_ID('dbo.Patients') IS NOT NULL DROP TABLE dbo.Patients;\n    CREATE TABLE dbo.Patients (\n        PatientId    int IDENTITY(1,1) NOT NULL PRIMARY KEY,\n        FullName     nvarchar(150) NOT NULL,\n        NationalCode nvarchar(10)  NOT NULL,\n        BirthDate    date          NOT NULL\n    );\";"
+    },
+    "vault/key": {
+      "file": "web/api/ConnectionVault.cs",
+      "start": 21,
+      "end": 34,
+      "code": "    var envKey = Environment.GetEnvironmentVariable(\"CONNECTION_VAULT_KEY\");\n    if (!string.IsNullOrEmpty(envKey))\n    {\n        _key = Convert.FromBase64String(envKey);\n    }\n    else\n    {\n        _key = RandomNumberGenerator.GetBytes(32);\n        logger.LogWarning(\n            \"CONNECTION_VAULT_KEY is not set — using a random per-process key. \" +\n            \"Stored connections will become undecryptable after this process restarts. \" +\n            \"Set CONNECTION_VAULT_KEY (base64, 32 bytes) for a real deployment.\");\n    }\n}"
+    },
+    "vault/encrypt": {
+      "file": "web/api/ConnectionVault.cs",
+      "start": 36,
+      "end": 51,
+      "code": "public string Encrypt(string plaintext)\n{\n    var nonce = RandomNumberGenerator.GetBytes(NonceSize);\n    var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);\n    var ciphertext = new byte[plaintextBytes.Length];\n    var tag = new byte[TagSize];\n\n    using var aesGcm = new AesGcm(_key, TagSize);\n    aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);\n\n    var payload = new byte[NonceSize + ciphertext.Length + TagSize];\n    Buffer.BlockCopy(nonce, 0, payload, 0, NonceSize);\n    Buffer.BlockCopy(ciphertext, 0, payload, NonceSize, ciphertext.Length);\n    Buffer.BlockCopy(tag, 0, payload, NonceSize + ciphertext.Length, TagSize);\n\n    return Convert.ToBase64String(payload);"
+    },
+    "vault/test": {
+      "file": "web/api/SiteConnectionsService.cs",
+      "start": 58,
+      "end": 84,
+      "code": "public async Task<TestConnectionResult> TestAsync(int id)\n{\n    var encrypted = await GetEncryptedAsync(id);\n    if (encrypted is null) return new TestConnectionResult(false, \"Connection not found.\");\n\n    string plaintext;\n    try\n    {\n        plaintext = _vault.Decrypt(encrypted);\n    }\n    catch (Exception)\n    {\n        // Almost always means the process restarted since this row was\n        // encrypted with a different ephemeral key — see ConnectionVault's\n        // own comment. Not the target database's fault.\n        return new TestConnectionResult(false, \"Could not decrypt this connection (vault key changed since it was saved).\");\n    }\n\n    try\n    {\n        await using var testConn = new SqlConnection(plaintext);\n        await testConn.OpenAsync();\n        return new TestConnectionResult(true, null);\n    }\n    catch (Exception ex)\n    {\n        return new TestConnectionResult(false, ex.Message);"
+    },
+    "doctors/wpf": {
+      "file": "wUtility/DoctorsPriceGroupsForm.xaml.cs",
+      "start": 501,
+      "end": 504,
+      "code": "select Dp.*, D.Name DrName,W.Name WName\nfrom DoctorsPriceGroups Dp \ninner join Doctors D on D.Code = Dp.DrCode\nleft join Works W on W.Code = Dp.WCode\";"
+    },
+    "doctors/web": {
+      "file": "web/api/DoctorsService.cs",
+      "start": 45,
+      "end": 50,
+      "code": "var sql = @\"\n    SELECT Dp.RowGD, Dp.DrCode, Dp.WCode, Dp.CenterSharePrice, Dp.Title, D.Name AS DrName, W.Name AS WName\n    FROM dbo.DoctorsPriceGroups Dp\n    INNER JOIN dbo.Doctors D ON D.Code = Dp.DrCode\n    LEFT JOIN dbo.Works W ON W.Code = Dp.WCode\";\nif (drCode is not null) sql += \" WHERE Dp.DrCode = @DrCode\";"
+    },
+    "doctors/params": {
+      "file": "web/api/DoctorsService.cs",
+      "start": 106,
+      "end": 112,
+      "code": "private static void AddUpsertParams(SqlCommand cmd, UpsertDoctorPriceGroupRequest req)\n{\n    cmd.Parameters.AddWithValue(\"@DrCode\", req.DrCode);\n    cmd.Parameters.AddWithValue(\"@WCode\", (object?)req.WCode ?? DBNull.Value);\n    cmd.Parameters.AddWithValue(\"@CenterSharePrice\", (object?)req.CenterSharePrice ?? DBNull.Value);\n    cmd.Parameters.AddWithValue(\"@Title\", (object?)req.Title ?? DBNull.Value);\n}"
+    },
+    "dbconfig/port": {
+      "file": "web/api/DbConfigService.cs",
+      "start": 10,
+      "end": 12,
+      "code": "// Web port of DatabasesForm.xaml.cs's top grid (Tbl_dbConfigSetting) — see\n// Models/Tbl_dbConfigSetting.cs in the WPF app. Read-only there and read-only\n// here: the original app never writes to this table either."
+    },
+    "dbconfig/rows": {
+      "file": "web/db/04-dbconfig.sql",
+      "start": 30,
+      "end": 35,
+      "code": "INSERT INTO dbo.Tbl_dbConfigSetting\n    (fldMainDataBase, fldDataBaseName, fldDelphiConnectionName, fldPersianDescDataBase, fldIsActive, fldInstanceName, fldSecondInstance)\nVALUES\n    (N'Totalsystem', N'Totalsystem_ShafaHospital', N'ConnTotal1', N'بیمارستان شفا',             1, N'SHAFA-SQL01', NULL),\n    (N'OpRoom',      N'OpRoom_DenaHospital',       N'ConnOR1',    N'اتاق عمل - بیمارستان دنا',  1, N'DENA-SQL01',  N'DENA-SQL02'),\n    (N'Lab',         N'Lab_DenaHospital',          N'ConnLab1',   N'آزمایشگاه - بیمارستان دنا', 0, N'DENA-SQL01',  NULL);"
+    },
+    "dbconfig/modules": {
+      "file": "web/api/ConnectionsModels.cs",
+      "start": 7,
+      "end": 11,
+      "code": "public static readonly string[] All =\n[\n    \"Totalsystem\", \"Lab\", \"Radio\", \"Drug\", \"Blood\", \"OpRoom\",\n    \"Phisio\", \"Food\", \"Den\", \"Tasisat\", \"Tajhizat\", \"MDoc\", \"Requests\"\n];"
+    },
+    "frontend/labels": {
+      "file": "web/frontend/src/app/pages/schema-sync-page/schema-sync.service.ts",
+      "start": 27,
+      "end": 32,
+      "code": "export const DIFF_KIND_LABELS: Record<number, string> = {\n  0: 'جدول موجود نیست',\n  1: 'ستون موجود نیست',\n  2: 'نوع ستون متفاوت است',\n  3: 'nullability متفاوت است'\n};"
+    },
+    "frontend/apply": {
+      "file": "web/frontend/src/app/pages/schema-sync-page/schema-sync-page.component.ts",
+      "start": 70,
+      "end": 84,
+      "code": "applyScript(): void {\n  if (!this.result) return;\n  this.executing = true;\n  this.api.execute(this.targetConnectionString, this.result.script).subscribe({\n    next: (res) => {\n      this.executeResult = res;\n      this.executing = false;\n      if (res.success) this.compare(true);\n    },\n    error: (err) => {\n      this.error = 'اجرای اسکریپت ناموفق بود — ' + errorText(err);\n      this.executing = false;\n    }\n  });\n}"
+    },
+    "frontend/demo": {
+      "file": "web/frontend/src/app/services/demo.service.ts",
+      "start": 22,
+      "end": 25,
+      "code": "this.info$ = this.http.get<DemoInfo>(`${API_BASE}/demo`).pipe(\n  catchError(() => of({ enabled: false, sourceDatabase: null, targetDatabase: null })),\n  shareReplay(1)\n);"
+    },
+    "azure/dbs": {
+      "file": "web/infra/main.bicep",
+      "start": 40,
+      "end": 45,
+      "code": "var databases = [\n  { name: 'SchemaSyncDemo_Source', setting: 'SchemaSyncSource' }\n  { name: 'SchemaSyncDemo_Target', setting: 'SchemaSyncTarget' }\n  { name: 'TotalsystemDemo', setting: 'Totalsystem' }\n  { name: 'dbConfigDataBasesDemo', setting: 'DbConfig' }\n]"
+    },
+    "azure/free": {
+      "file": "web/infra/main.bicep",
+      "start": 98,
+      "end": 103,
+      "code": "useFreeLimit: true\nfreeLimitExhaustionBehavior: 'AutoPause'\nautoPauseDelay: 60\nminCapacity: json('0.5')\nmaxSizeBytes: 34359738368\nrequestedBackupStorageRedundancy: 'Local'"
+    },
+    "azure/conn": {
+      "file": "web/infra/main.bicep",
+      "start": 149,
+      "end": 149,
+      "code": "connectionString: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${d.name};Authentication=Active Directory Managed Identity;Encrypt=True;Connect Timeout=90;'"
+    },
+    "azure/grant": {
+      "file": "web/db/02-schemasync-target.sql",
+      "start": 19,
+      "end": 29,
+      "code": "-- The app applies generated scripts and resets the demo here, so it needs\n-- DDL rights, but only in this database.\nDECLARE @app sysname = N'$(AppIdentity)', @q nvarchar(300);\nIF @app <> N''\nBEGIN\n    SET @q = QUOTENAME(@app);\n    IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @app)\n        EXEC (N'CREATE USER ' + @q + N' FROM EXTERNAL PROVIDER');\n    EXEC (N'ALTER ROLE db_datareader ADD MEMBER ' + @q);\n    EXEC (N'ALTER ROLE db_ddladmin ADD MEMBER ' + @q);\nEND"
+    }
+  },
+  "endpoints": [
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/healthz",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 83
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/compare",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 111
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/execute",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 123
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/demo",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 145
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/demo/reset",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 155
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/doctors",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 164
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/works",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 167
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/doctor-price-groups",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 170
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/doctor-price-groups",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 173
+    },
+    {
+      "area": "Program",
+      "method": "PUT",
+      "path": "/api/doctor-price-groups/{rowGd:int}",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 180
+    },
+    {
+      "area": "Program",
+      "method": "DELETE",
+      "path": "/api/doctor-price-groups/{rowGd:int}",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 187
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/db-config-settings",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 194
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/modules",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 197
+    },
+    {
+      "area": "Program",
+      "method": "GET",
+      "path": "/api/connections",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 200
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/connections",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 209
+    },
+    {
+      "area": "Program",
+      "method": "POST",
+      "path": "/api/connections/{id:int}/test",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 217
+    },
+    {
+      "area": "Program",
+      "method": "DELETE",
+      "path": "/api/connections/{id:int}",
+      "access": "public",
+      "file": "web/api/Program.cs",
+      "line": 221
+    }
+  ],
+  "tables": [
+    {
+      "database": "demo",
+      "table": "Patients",
+      "file": "web/db/01-schemasync-source.sql",
+      "line": 10,
+      "columns": [
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "FullName",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NationalCode",
+          "type": "NVARCHAR(20)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "BirthDate",
+          "type": "DATE",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Phone",
+          "type": "NVARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "Appointments",
+      "file": "web/db/01-schemasync-source.sql",
+      "line": 18,
+      "columns": [
+        {
+          "name": "AppointmentId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DoctorName",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "ScheduledAt",
+          "type": "DATETIME2",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "Patients",
+      "file": "web/db/02-schemasync-target.sql",
+      "line": 11,
+      "columns": [
+        {
+          "name": "PatientId",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "FullName",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "NationalCode",
+          "type": "NVARCHAR(10)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "BirthDate",
+          "type": "DATE",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "Doctors",
+      "file": "web/db/03-totalsystem.sql",
+      "line": 9,
+      "columns": [
+        {
+          "name": "Code",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "fName",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "lName",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "PostNo",
+          "type": "NVARCHAR(20)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "Works",
+      "file": "web/db/03-totalsystem.sql",
+      "line": 17,
+      "columns": [
+        {
+          "name": "Code",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK"
+          ]
+        },
+        {
+          "name": "Name",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "DoctorsPriceGroups",
+      "file": "web/db/03-totalsystem.sql",
+      "line": 22,
+      "columns": [
+        {
+          "name": "RowGD",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "DrCode",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "→ Doctors"
+          ]
+        },
+        {
+          "name": "WCode",
+          "type": "INT",
+          "nullable": true,
+          "notes": [
+            "→ Works"
+          ]
+        },
+        {
+          "name": "CenterSharePrice",
+          "type": "DECIMAL(12,2)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "Title",
+          "type": "NVARCHAR(150)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "Tbl_dbConfigSetting",
+      "file": "web/db/04-dbconfig.sql",
+      "line": 10,
+      "columns": [
+        {
+          "name": "fldID",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "fldMainDataBase",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fldDataBaseName",
+          "type": "NVARCHAR(100)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "fldDelphiConnectionName",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fldPersianDescDataBase",
+          "type": "NVARCHAR(200)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fldIsActive",
+          "type": "BIT",
+          "nullable": false,
+          "notes": [
+            "default 1"
+          ]
+        },
+        {
+          "name": "fldInstanceName",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        },
+        {
+          "name": "fldSecondInstance",
+          "type": "NVARCHAR(100)",
+          "nullable": true,
+          "notes": []
+        }
+      ],
+      "denies": []
+    },
+    {
+      "database": "demo",
+      "table": "SiteConnections",
+      "file": "web/db/04-dbconfig.sql",
+      "line": 21,
+      "columns": [
+        {
+          "name": "Id",
+          "type": "INT",
+          "nullable": false,
+          "notes": [
+            "PK",
+            "identity"
+          ]
+        },
+        {
+          "name": "ModuleName",
+          "type": "NVARCHAR(50)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "DisplayName",
+          "type": "NVARCHAR(150)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "EncryptedConnectionString",
+          "type": "NVARCHAR(MAX)",
+          "nullable": false,
+          "notes": []
+        },
+        {
+          "name": "CreatedAt",
+          "type": "DATETIME2",
+          "nullable": false,
+          "notes": [
+            "default sysutcdatetime()"
+          ]
+        }
+      ],
+      "denies": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "redirect": "/schema-sync",
+      "guards": []
+    },
+    {
+      "path": "/schema-sync",
+      "component": "SchemaSyncPageComponent",
+      "guards": []
+    },
+    {
+      "path": "/doctors",
+      "component": "DoctorsPageComponent",
+      "guards": []
+    },
+    {
+      "path": "/doctor-price-groups",
+      "component": "DoctorPriceGroupsPageComponent",
+      "guards": []
+    },
+    {
+      "path": "/db-config",
+      "component": "DbConfigPageComponent",
+      "guards": []
+    },
+    {
+      "path": "/connections",
+      "component": "ConnectionsPageComponent",
+      "guards": []
+    }
+  ]
+}

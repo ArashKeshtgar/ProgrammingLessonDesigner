@@ -44,6 +44,7 @@
     "web/src/App.tsx": 122,
     "web/src/api.ts": 221,
     "web/src/main.tsx": 21,
+    "web/src/theme.ts": 21,
     "src/ClinicReport.Api/Data/ClinicReportDbContext.cs": 142,
     "src/ClinicReport.Api/Data/DatabaseInitializer.cs": 67,
     "src/ClinicReport.Api/Data/Migrations/20261021033045_OrderConfidentiality.cs": 28
@@ -307,6 +308,12 @@
       "end": 224,
       "code": "var old = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == merged);\nif (old is not null)\n{\n    var keep = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == survivor);\n    if (keep is null)\n        old.Mrn = survivor;\n    else\n    {\n        await db.Reports.Where(r => r.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(r => r.PatientId, keep.Id));\n        await db.ReportOrders.Where(o => o.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(o => o.PatientId, keep.Id));\n        await db.SecurityEvents.Where(e => e.PatientId == old.Id).ExecuteUpdateAsync(u => u.SetProperty(e => e.PatientId, keep.Id));\n        db.Patients.Remove(old);\n    }\n    await db.SaveChangesAsync();"
     },
+    "patients/demographics": {
+      "file": "src/ClinicReport.Api/Endpoints/OrderEndpoints.cs",
+      "start": 74,
+      "end": 80,
+      "code": "var local = await db.Patients.SingleOrDefaultAsync(p => p.Mrn == mrn)\n    ?? db.Patients.Add(new Patient { Mrn = mrn, CreatedAt = now }).Entity;\n// ClinicHub's register is the source of truth for the demographics of its patients.\nlocal.LastName = family;\nlocal.FirstName = given ?? \"\";\nlocal.DateOfBirth = dob;\nlocal.Sex = (string?)patient[\"gender\"] switch { \"male\" => \"M\", \"female\" => \"F\", \"other\" => \"X\", _ => \"U\" };"
+    },
     "accounts/lockout": {
       "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
       "start": 55,
@@ -367,6 +374,18 @@
       "end": 78,
       "code": "var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret!);\nif (Totp.Verify(secret, req.Code, now, user.TwoFactorLastStep) is not { } step)\n    return await Failed(user, \"Wrong two-factor code\", \"That code is wrong or already used.\", twoFactor: true);\nuser.TwoFactorLastStep = step;"
     },
+    "totp/login": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 70,
+      "end": 79,
+      "code": "if (user.TwoFactorEnabled)\n{\n    if (string.IsNullOrWhiteSpace(req.Code))\n        return Results.Problem(\"Enter the 6-digit code from your authenticator app.\", statusCode: StatusCodes.Status401Unauthorized,\n            extensions: new Dictionary<string, object?> { [\"twoFactorRequired\"] = true });\n    var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret!);\n    if (Totp.Verify(secret, req.Code, now, user.TwoFactorLastStep) is not { } step)\n        return await Failed(user, \"Wrong two-factor code\", \"That code is wrong or already used.\", twoFactor: true);\n    user.TwoFactorLastStep = step;\n}"
+    },
+    "totp/enable": {
+      "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
+      "start": 206,
+      "end": 218,
+      "code": "account.MapPost(\"/two-factor/enable\", async (CodeBody body, ClaimsPrincipal principal, ClinicReportDbContext db,\n    IDataProtectionProvider protection, SecurityLog log, TimeProvider clock) =>\n{\n    var user = (await LoadUser(db, principal.RequiredUserId(), tracked: true))!;\n    if (user.TwoFactorEnabled || user.TwoFactorSecret is null)\n        return Results.Problem(\"Start the setup first.\", statusCode: StatusCodes.Status409Conflict);\n    var secret = protection.CreateProtector(TwoFactorPurpose).Unprotect(user.TwoFactorSecret);\n    if (Totp.Verify(secret, body.Code, clock.GetUtcNow(), user.TwoFactorLastStep) is not { } step)\n        return Results.ValidationProblem(new Dictionary<string, string[]> { [\"code\"] = [\"That code doesn't match. Check the phone's clock and try the newest code.\"] });\n    user.TwoFactorEnabled = true;\n    user.TwoFactorLastStep = step;\n    log.Add(SecurityEventTypes.TwoFactorEnabled, user.Id);\n    await db.SaveChangesAsync();"
+    },
     "permissions/catalog": {
       "file": "src/ClinicReport.Api/Auth/Permissions.cs",
       "start": 9,
@@ -420,6 +439,12 @@
       "start": 110,
       "end": 114,
       "code": "headers: {\n  'X-ClinicReport': '1',\n  'X-Client-Id': clientId,\n  ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),\n},"
+    },
+    "audit/page": {
+      "file": "src/ClinicReport.Api/Endpoints/UserEndpoints.cs",
+      "start": 256,
+      "end": 258,
+      "code": "if (before is not null)\n    q = q.Where(e => e.Id < before);\nreturn await q.OrderByDescending(e => e.Id).Take(200)"
     },
     "clinichub-signin/managed": {
       "file": "src/ClinicReport.Api/Endpoints/AuthEndpoints.cs",
@@ -588,6 +613,18 @@
       "start": 106,
       "end": 126,
       "code": "async function request<T>(method: string, url: string, body?: unknown): Promise<T> {\n  const res = await fetch(url, {\n    method,\n    credentials: 'same-origin',\n    headers: {\n      'X-ClinicReport': '1',\n      'X-Client-Id': clientId,\n      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),\n    },\n    body: body !== undefined ? JSON.stringify(body) : undefined,\n  })\n  if (res.status === 204) return undefined as T\n  const text = await res.text()\n  const data = text ? JSON.parse(text) : undefined\n  if (!res.ok) {\n    if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('clinicreport:signed-out'))\n    const message = data?.title && data?.detail ? `${data.title} ${data.detail}` : data?.title ?? data?.detail ?? `Request failed (${res.status})`\n    throw new ApiError(res.status, message, data?.errors ?? {}, data ?? {})\n  }\n  return data as T\n}"
+    },
+    "fe-app/signedout": {
+      "file": "web/src/App.tsx",
+      "start": 38,
+      "end": 40,
+      "code": "const onSignedOut = () => setMe(null)\nwindow.addEventListener('clinicreport:signed-out', onSignedOut)\nreturn () => window.removeEventListener('clinicreport:signed-out', onSignedOut)"
+    },
+    "fe-app/theme": {
+      "file": "web/src/theme.ts",
+      "start": 6,
+      "end": 12,
+      "code": "export function savedTheme(): Theme {\n  try {\n    return localStorage.getItem(KEY) === 'light' ? 'light' : 'dark'\n  } catch {\n    return 'dark'\n  }\n}"
     },
     "data-sqlite/sqlite": {
       "file": "src/ClinicReport.Api/Program.cs",

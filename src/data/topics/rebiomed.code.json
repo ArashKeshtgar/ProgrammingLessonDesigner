@@ -16,6 +16,7 @@
     "routes/auth.ts": 94,
     "middleware/auth.ts": 26,
     "types/express.d.ts": 15,
+    "client/src/utils/setAuthToken.js": 13,
     "middleware/admin.ts": 21,
     "routes/admin.ts": 100,
     "seed/makeAdmin.ts": 33,
@@ -50,9 +51,9 @@
     "client/src/components/Inspections/InspectionReport.js": 104,
     "client/src/App.js": 149,
     "client/src/components/Routing/PrivateRoute.js": 10,
-    "client/src/utils/setAuthToken.js": 13,
     "client/src/store.js": 23,
     "client/src/components/Layout/Navbar.js": 118,
+    "client/src/actions/authActions.js": 50,
     "client/src/reducers/cartReducer.js": 74,
     "client/src/actions/cartActions.js": 25,
     "client/src/components/Checkout/CheckoutForm.js": 177,
@@ -105,6 +106,18 @@
       "end": 23,
       "code": "services:\n  mongo:\n    image: mongo:7\n    ports:\n      - 27017:27017\n    options: >-\n      --health-cmd \"mongosh --quiet --eval 'db.runCommand({ ping: 1 })'\"\n      --health-interval 5s\n      --health-timeout 5s\n      --health-retries 10\nenv:\n  MONGO_URI: mongodb://localhost:27017/rebiomed-ci"
     },
+    "tests/stub": {
+      "file": "test/fulfillment.test.ts",
+      "start": 57,
+      "end": 69,
+      "code": "  stripeOps.refund = async (pi, amount, key) => {\n    if (failRefund) throw new Error('card network down');\n    calls.refund.push([pi, amount, key]);\n    return { id: `re_${calls.refund.length}` };\n  };\n  stripeOps.transfer = async (p, key) => {\n    if (failTransfer) throw new Error('insufficient platform balance');\n    calls.transfer.push([p, key]);\n    return { id: `tr_${calls.transfer.length}` };\n  };\n});\n\nafterEach(() => { Object.assign(stripeOps, original); });"
+    },
+    "tests/env": {
+      "file": "test/setup.ts",
+      "start": 5,
+      "end": 12,
+      "code": "process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mern-store-test';\nprocess.env.PRIVATE_UPLOAD_DIR = path.join(os.tmpdir(), 'rebiomed-test-private-uploads');\n// Tests never reach Stripe (stripeOps is stubbed), but payment routes need a\n// key to be considered configured. Fixed here so CI, with no .env, matches local.\nprocess.env.STRIPE_SECRET_KEY = 'sk_test_dummy_for_tests';\n// Lets tests sign Connect webhook events with Stripe's own test-header helper.\nprocess.env.STRIPE_CONNECT_WEBHOOK_SECRET = 'whsec_test_connect_secret';\nprocess.env.PLATFORM_FEE_BPS = '800';"
+    },
     "auth/sign": {
       "file": "routes/auth.ts",
       "start": 11,
@@ -123,6 +136,18 @@
       "end": 26,
       "code": "export default function auth(req: Request, res: Response, next: NextFunction): void {\n  const authHeader = req.header('Authorization');\n  if (!authHeader) {\n    res.status(401).json({ msg: 'No token, authorization denied' });\n    return;\n  }\n\n  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;\n\n  try {\n    const decoded = jwt.verify(token, keys.jwtSecret) as DecodedToken;\n    req.user = decoded.user;\n    next();\n  } catch (err) {\n    res.status(401).json({ msg: 'Token is not valid' });\n  }\n}"
     },
+    "auth/register": {
+      "file": "routes/auth.ts",
+      "start": 21,
+      "end": 23,
+      "code": "check('name', 'Name is required').not().isEmpty(),\ncheck('email', 'Please include a valid email').isEmail(),\ncheck('password', 'Password must be at least 6 characters').isLength({ min: 6 })"
+    },
+    "auth/login": {
+      "file": "routes/auth.ts",
+      "start": 69,
+      "end": 71,
+      "code": "const user = await User.findOne({ email });\nif (!user || !(await bcrypt.compare(password, user.password))) {\n  return res.status(400).json({ errors: [{ msg: 'Invalid credentials' }] });"
+    },
     "admin/db": {
       "file": "middleware/admin.ts",
       "start": 4,
@@ -140,6 +165,18 @@
       "start": 20,
       "end": 24,
       "code": "const user = await User.findOneAndUpdate({ email }, { isAdmin: !revoke }, { new: true });\nif (!user) {\n  console.error(`No user with email ${email}. Register the account first.`);\n  process.exit(1);\n}"
+    },
+    "admin/errors": {
+      "file": "routes/admin.ts",
+      "start": 14,
+      "end": 20,
+      "code": "const sendError = (res: Response, err: unknown) => {\n  if (err instanceof VerificationError || err instanceof FulfillmentError) {\n    return res.status(err.status).json({ msg: err.message });\n  }\n  console.error((err as Error).message);\n  return res.status(500).send('Server error');\n};"
+    },
+    "admin/queue": {
+      "file": "routes/admin.ts",
+      "start": 27,
+      "end": 34,
+      "code": "const status = typeof req.query.status === 'string' ? req.query.status : 'pending';\nif (!(VERIFICATION_STATUSES as readonly string[]).includes(status)) {\n  return res.status(400).json({ msg: `status must be one of: ${VERIFICATION_STATUSES.join(', ')}` });\n}\nconst orgs = await Organization.find({ verificationStatus: status })\n  .populate('owner', 'name email')\n  .populate('verificationHistory.by', 'name')\n  .sort('createdAt');"
     },
     "files/dir": {
       "file": "config/keys.ts",
@@ -165,6 +202,18 @@
       "end": 72,
       "code": "// storedName is an internal path detail; never send it to clients.\nVerificationDocumentSchema.set('toJSON', {\n  transform: (_doc, ret) => {\n    const { storedName: _hidden, ...visible } = ret;\n    return visible;\n  }\n});"
     },
+    "files/read8": {
+      "file": "routes/organizations.ts",
+      "start": 170,
+      "end": 177,
+      "code": "const handle = await fs.open(file.path, 'r');\nconst head = Buffer.alloc(8);\nawait handle.read(head, 0, 8, 0);\nawait handle.close();\nconst mimeType = detectDocumentType(head);\nif (!mimeType) {\n  await discard();\n  return res.status(400).json({ msg: 'Only PDF, PNG and JPEG files are accepted' });"
+    },
+    "files/limits": {
+      "file": "routes/organizations.ts",
+      "start": 63,
+      "end": 66,
+      "code": "const documentUpload = multer({\n  dest: keys.privateUploadDir,\n  limits: { fileSize: MAX_DOCUMENT_BYTES, files: 1 }\n}).single('document');"
+    },
     "organizations/editable": {
       "file": "routes/organizations.ts",
       "start": 29,
@@ -182,6 +231,18 @@
       "start": 129,
       "end": 138,
       "code": "const norm = (v: unknown) => String(v ?? '').trim();\nconst before = Object.fromEntries(IDENTITY_FIELDS.map(f => [f, norm(org.get(f))]));\norg.set(pickEditable(req.body));\nawait org.save();\n\nconst identityChanged = IDENTITY_FIELDS.some(f => norm(org.get(f)) !== before[f]);\nif (identityChanged && (org.verificationStatus === 'verified' || org.verificationStatus === 'pending')) {\n  await changeVerificationStatus(org, 'unverified', req.user!.id,\n    'Organization details changed after review; request verification again');\n}"
+    },
+    "organizations/validators": {
+      "file": "routes/organizations.ts",
+      "start": 41,
+      "end": 47,
+      "code": "const orgValidators = [\n  check('name', 'Organization name is required').trim().notEmpty(),\n  check('type', `Type must be one of: ${ORGANIZATION_TYPES.join(', ')}`).isIn(ORGANIZATION_TYPES),\n  check('province', 'Province must be a Canadian province/territory code').isIn(PROVINCES),\n  check('city', 'City is required').trim().notEmpty(),\n  check('website', 'Website must be a valid URL').optional({ values: 'falsy' }).isURL()\n];"
+    },
+    "organizations/public": {
+      "file": "routes/organizations.ts",
+      "start": 49,
+      "end": 50,
+      "code": "// Public fields shown next to listings.\nconst PUBLIC_FIELDS = 'name type province city website verificationStatus verifiedAt createdAt';"
     },
     "verification/request": {
       "file": "services/verification.ts",
@@ -201,6 +262,12 @@
       "end": 65,
       "code": "export async function reject(orgId: string, adminId: string, note: unknown): Promise<IOrganization> {\n  const reason = typeof note === 'string' ? note.trim() : '';\n  if (!reason) throw new VerificationError('A reason is required so the seller knows what to fix');"
     },
+    "verification/approve": {
+      "file": "services/verification.ts",
+      "start": 54,
+      "end": 60,
+      "code": "export async function approve(orgId: string, adminId: string): Promise<IOrganization> {\n  const org = await findOrg(orgId);\n  if (org.verificationStatus !== 'pending') {\n    throw new VerificationError('Only organizations awaiting review can be verified', 409);\n  }\n  return changeVerificationStatus(org, 'verified', adminId);\n}"
+    },
     "listings/classes": {
       "file": "config/medical.ts",
       "start": 18,
@@ -219,6 +286,18 @@
       "end": 41,
       "code": "const parseServiceHistory = (raw: unknown): IServiceRecord[] => {\n  if (raw === undefined || raw === '') return [];\n  const list = typeof raw === 'string' ? JSON.parse(raw) : raw;\n  if (!Array.isArray(list)) throw new Error('Service history must be a list');\n  if (list.length > MAX_SERVICE_RECORDS) throw new Error(`At most ${MAX_SERVICE_RECORDS} service records`);\n  return list.map((r, i) => {\n    const date = new Date(r?.date);\n    if (Number.isNaN(date.getTime())) throw new Error(`Service record ${i + 1}: invalid date`);\n    if (date.getTime() > Date.now()) throw new Error(`Service record ${i + 1}: date is in the future`);\n    if (!SERVICE_TYPES.includes(r?.type)) throw new Error(`Service record ${i + 1}: invalid type`);\n    const performedBy = String(r?.performedBy ?? '').trim();\n    if (!performedBy) throw new Error(`Service record ${i + 1}: \"performed by\" is required`);\n    const notes = r?.notes ? String(r.notes).trim() : undefined;\n    return { date, type: r.type, performedBy, notes };\n  });\n};"
     },
+    "listings/validators": {
+      "file": "routes/products.ts",
+      "start": 45,
+      "end": 61,
+      "code": "const listingValidators = [\n  check('title', 'Title is required').trim().notEmpty(),\n  check('description', 'Description is required').trim().notEmpty(),\n  check('price', 'Price must be greater than 0').isFloat({ gt: 0 }),\n  check('stock', 'Quantity must be a whole number').optional({ values: 'falsy' }).isInt({ min: 0 }),\n  check('category', 'Category is required').isMongoId(),\n  check('manufacturer', 'Manufacturer is required').trim().notEmpty(),\n  check('deviceModel', 'Model is required').trim().notEmpty(),\n  check('yearOfManufacture', `Year must be between 1950 and ${currentYear}`)\n    .optional({ values: 'falsy' }).isInt({ min: 1950, max: currentYear }),\n  check('deviceClass', 'Device class must be I, II, III or IV').isIn(DEVICE_CLASSES),\n  check('condition', 'Condition is required').isIn(CONDITIONS),\n  check('usageHours', 'Usage hours must be a whole number').optional({ values: 'falsy' }).isInt({ min: 0 }),\n  check('lastServiceDate', 'Last service date is invalid').optional({ values: 'falsy' }).isISO8601(),\n  check('lastCalibrationDate', 'Last calibration date is invalid').optional({ values: 'falsy' }).isISO8601(),\n  check('province', 'Province must be a Canadian province/territory code').optional({ values: 'falsy' }).isIn(PROVINCES)\n];"
+    },
+    "listings/removed": {
+      "file": "routes/products.ts",
+      "start": 200,
+      "end": 201,
+      "code": "await product.deleteOne();\nawait cancelOpenForProduct(product.id);"
+    },
     "browse/filter": {
       "file": "routes/products.ts",
       "start": 69,
@@ -230,6 +309,18 @@
       "start": 113,
       "end": 116,
       "code": "const product = await Product.findById(req.params.id)\n  .populate('category', 'name')\n  .populate('organization', ORG_PUBLIC_FIELDS);\nif (!product || product.suspended) return res.status(404).json({ msg: 'Product not found' });"
+    },
+    "browse/orgFields": {
+      "file": "routes/products.ts",
+      "start": 21,
+      "end": 21,
+      "code": "const ORG_PUBLIC_FIELDS = 'name type province city verificationStatus';"
+    },
+    "browse/mine": {
+      "file": "routes/products.ts",
+      "start": 99,
+      "end": 101,
+      "code": "const products = await Product.find({ seller: req.user!.id })\n  .populate('category', 'name')\n  .sort('-createdAt');"
     },
     "checkout/server": {
       "file": "services/checkout.ts",
@@ -254,6 +345,12 @@
       "start": 14,
       "end": 24,
       "code": "const cart = await priceCart(req.body.items, req.user!.id);\nconst order = await createPendingOrder(req.user!.id, cart);\n\nconst paymentIntent = await stripe.paymentIntents.create({\n  amount: cart.totalCents,\n  currency: CURRENCY,\n  automatic_payment_methods: { enabled: true },\n  metadata: { orderId: order.id },\n  // Groups the seller transfers made later for this order.\n  transfer_group: `order_${order.id}`\n});"
+    },
+    "checkout/lines": {
+      "file": "services/checkout.ts",
+      "start": 55,
+      "end": 67,
+      "code": "for (const line of lines as CartLine[]) {\n  const id = String(line?.productId ?? '');\n  const qty = Number(line?.quantity);\n  if (!Types.ObjectId.isValid(id)) throw new CheckoutError('Invalid product id');\n  if (!Number.isInteger(qty) || qty < 1) throw new CheckoutError('Invalid quantity');\n  if (line?.offerId !== undefined || offerIds.has(id)) {\n    // An offer covers exactly one unit, bought on its own line.\n    if (qty !== 1 || quantities.has(id)) {\n      throw new CheckoutError('An offer covers one unit; remove other quantities of that item from the cart');\n    }\n    offerIds.set(id, String(line.offerId));\n  }\n  quantities.set(id, (quantities.get(id) ?? 0) + qty);"
     },
     "paid/lock": {
       "file": "services/checkout.ts",
@@ -321,6 +418,12 @@
       "end": 173,
       "code": "// Ruling for the seller on something never shipped (e.g. \"seller isn't\n// answering\") means the order carries on, not that the seller gets paid for\n// equipment the buyer never received.\nconst order = Types.ObjectId.isValid(orderId) ? await Order.findById(orderId) : null;\nconst shipped = !!order?.fulfillments.id(fulfillmentId)?.shippedAt;\nif (!shipped) {\n  return transition(orderId, fulfillmentId,\n    { fulfillment: { status: 'disputed', shippedAt: { $exists: false } } },\n    { status: 'awaiting_shipment', ...resolved },\n    'resume');\n}"
     },
+    "disputes/refund": {
+      "file": "services/fulfillment.ts",
+      "start": 187,
+      "end": 201,
+      "code": "const f = fulfillmentIn(order, fulfillmentId);\ntry {\n  const refund = await ops.refund(order.stripePaymentIntentId!, f.subtotalCents, `refund_${fulfillmentId}`);\n  if (putBackStock) await restock(order, f.organization);\n  return (await Order.findOneAndUpdate(\n    { _id: order._id, 'fulfillments._id': fulfillmentId },\n    { $set: { 'fulfillments.$.refundId': refund.id } },\n    { new: true }\n  ))!;\n} catch (err) {\n  await Order.updateOne(\n    { _id: order._id, 'fulfillments._id': fulfillmentId },\n    { $set: { 'fulfillments.$.status': previousStatus } }\n  );\n  throw new FulfillmentError(`Refund failed: ${(err as Error).message}`, 502);"
+    },
     "connect/express": {
       "file": "services/stripeOps.ts",
       "start": 52,
@@ -344,6 +447,18 @@
       "start": 53,
       "end": 56,
       "code": "} else if (event.type === 'account.updated') {\n  // A seller progressed through (or lost) Stripe onboarding.\n  const org = await Organization.findOne({ stripeAccountId: event.data.object.id });\n  if (org) await syncAccount(org, toAccountState(event.data.object));"
+    },
+    "connect/refresh": {
+      "file": "routes/payouts.ts",
+      "start": 59,
+      "end": 65,
+      "code": "router.post('/refresh', async (req: Request, res: Response) => {\n  try {\n    const { org } = await loadMine(req.user!.id);\n    if (!org) return res.status(404).json({ msg: 'Create your organization first' });\n    if (!org.stripeAccountId) return res.json(payoutState(org));\n    const synced = await syncAccount(org, await stripeOps.retrieveAccount(org.stripeAccountId));\n    res.json(payoutState(synced));"
+    },
+    "connect/release": {
+      "file": "services/fulfillment.ts",
+      "start": 253,
+      "end": 258,
+      "code": "export async function releasePendingPayouts(organizationId: Types.ObjectId | string, ops: Ops = stripeOps): Promise<number> {\n  const orders = await Order.find({\n    fulfillments: {\n      $elemMatch: { organization: organizationId, status: 'delivered', 'payout.status': { $in: ['pending', 'failed'] } }\n    }\n  });"
     },
     "offers/deadlines": {
       "file": "config/medical.ts",
@@ -417,6 +532,12 @@
       "end": 8,
       "code": "const PrivateRoute = ({ children }) => {\n  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);\n  return isAuthenticated ? children : <Navigate to=\"/login\" replace />;\n};"
     },
+    "pages/logout": {
+      "file": "client/src/actions/authActions.js",
+      "start": 46,
+      "end": 50,
+      "code": "export const logoutUser = () => dispatch => {\n  localStorage.removeItem('jwtToken');\n  setAuthToken(false);\n  dispatch(setCurrentUser({}));\n};"
+    },
     "cart/persist": {
       "file": "client/src/store.js",
       "start": 15,
@@ -447,11 +568,35 @@
       "end": 91,
       "code": "<AnimatePresence>\n  {cartCount > 0 && (\n    <motion.span\n      key={cartCount}\n      className=\"badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle\"\n      initial={{ scale: 0 }}\n      animate={{ scale: 1 }}\n      exit={{ scale: 0 }}\n      transition={{ type: 'spring', stiffness: 300, damping: 15 }}\n    >\n      {cartCount}\n    </motion.span>\n  )}\n</AnimatePresence>"
     },
+    "cart/fixed": {
+      "file": "client/src/reducers/cartReducer.js",
+      "start": 21,
+      "end": 22,
+      "code": "// An offer line is fixed at one unit; don't mix list-price units into it.\nif (existing && existing.offerId) return state;"
+    },
+    "cart/done": {
+      "file": "client/src/components/Checkout/CheckoutForm.js",
+      "start": 64,
+      "end": 70,
+      "code": "const order = await dispatch(confirmOrder(orderId));\nif (order.status === 'refunded') {\n  setError('Sorry, an item sold out while you were paying. Your payment has been refunded.');\n  return;\n}\ndispatch(clearCart());\nonSuccess();"
+    },
     "sellers-data/copy": {
       "file": "models/Product.ts",
       "start": 48,
       "end": 56,
       "code": "// Latest completed independent inspection, copied here so browsing can\n// filter and badge on it. The full report lives in the Inspection.\ninspection?: {\n  report: Types.ObjectId;\n  outcome: InspectionOutcome;\n  inspectedAt: Date;\n  validUntil: Date;\n  inspectorName: string;\n};"
+    },
+    "sellers-data/refs": {
+      "file": "models/Product.ts",
+      "start": 72,
+      "end": 76,
+      "code": "category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },\nimageUrl: { type: String, required: true },\nstock: { type: Number, default: 1, min: 0 },\nseller: { type: Schema.Types.ObjectId, ref: 'User', required: true },\norganization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },"
+    },
+    "sellers-data/hideName": {
+      "file": "models/Organization.ts",
+      "start": 66,
+      "end": 72,
+      "code": "// storedName is an internal path detail; never send it to clients.\nVerificationDocumentSchema.set('toJSON', {\n  transform: (_doc, ret) => {\n    const { storedName: _hidden, ...visible } = ret;\n    return visible;\n  }\n});"
     },
     "orders-data/lifecycle": {
       "file": "models/Order.ts",
@@ -464,6 +609,18 @@
       "start": 27,
       "end": 30,
       "code": "// \"<buyer>:<product>\" while the offer is open, removed when it closes. A\n// unique sparse index on it means a buyer can have only one open offer per\n// listing, even if two requests race.\nopenKey?: string;"
+    },
+    "orders-data/payout": {
+      "file": "models/Order.ts",
+      "start": 32,
+      "end": 37,
+      "code": "// not_due    -> buyer has not confirmed delivery yet\n// pending    -> due, waiting to be sent (e.g. seller has not finished Stripe onboarding)\n// processing -> transfer in flight (short-lived lock)\n// paid       -> transferred to the seller's Stripe account\n// failed     -> Stripe refused the transfer; retried on the next release attempt\nexport type PayoutStatus = 'not_due' | 'pending' | 'processing' | 'paid' | 'failed';"
+    },
+    "orders-data/intent": {
+      "file": "models/Order.ts",
+      "start": 138,
+      "end": 138,
+      "code": "stripePaymentIntentId: { type: String, unique: true, sparse: true },"
     }
   },
   "endpoints": [

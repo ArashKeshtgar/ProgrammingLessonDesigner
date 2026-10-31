@@ -1,0 +1,3509 @@
+{
+  "project": "integrationhub",
+  "repo": "IntegrationHub",
+  "scan": {
+    "reactRoutes": "web/src/App.tsx"
+  },
+  "groups": [
+    {
+      "id": "start",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع"
+      }
+    },
+    {
+      "id": "relay",
+      "title": {
+        "en": "The relay",
+        "fa": "relay"
+      }
+    },
+    {
+      "id": "log",
+      "title": {
+        "en": "The message log",
+        "fa": "لاگ پیام‌ها"
+      }
+    },
+    {
+      "id": "events",
+      "title": {
+        "en": "Event feed for Analytics",
+        "fa": "فید رویداد برای Analytics"
+      }
+    },
+    {
+      "id": "hl7",
+      "title": {
+        "en": "HL7 v2 over MLLP",
+        "fa": "HL7 v2 روی MLLP"
+      }
+    },
+    {
+      "id": "admin",
+      "title": {
+        "en": "Operations and admin API",
+        "fa": "عملیات و API مدیریت"
+      }
+    },
+    {
+      "id": "web",
+      "title": {
+        "en": "Admin web (React)",
+        "fa": "وب مدیریت (React)"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "overview",
+      "group": "start",
+      "title": {
+        "en": "What IntegrationHub is",
+        "fa": "IntegrationHub چیست"
+      },
+      "files": [
+        "README.md",
+        "docs/architecture.md",
+        "docs/contracts.md"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "The interface engine of the platform",
+          "p": [
+            "IntegrationHub is the interface engine of the ClinicHub platform. Orders and cancels from ClinicHub to LabFlow and ClinicReport, results back to ClinicHub, e-prescriptions to PharmaFlow and financial documents to FinancePowerApp pass through it, so there is one log of what was sent and what came back. It is also the one place that speaks HL7 v2 over MLLP to the outside world (an external lab's results in, orders out, and an OLIS-style copy of results), and it publishes de-identified events to RabbitMQ for Analytics.",
+            "It is written in Java 21 with Spring Boot 3, because the reference FHIR and HL7 libraries (HAPI) and most hospital interface engines live in Java. PostgreSQL holds its log and queues."
+          ],
+          "examples": [
+            "flow"
+          ]
+        },
+        {
+          "id": "decisions",
+          "h": "A relay, not a new owner",
+          "p": [
+            "The hub is put between the applications **by configuration only**: each sender's base URL points at a hub route, and pointing it back undoes it; no application is rewritten. It owns only its log and its routes. Synchronous calls stay synchronous: the upstream's status and body come back unchanged, and the hub does not retry, because the senders' outboxes already do. The sender's own token goes through, so each receiver's checks keep working; the hub never signs for another application. And the log holds metadata, never bodies."
+          ],
+          "examples": [
+            "decisions"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "موتور ارتباطات پلتفرم",
+          "p": [
+            "IntegrationHub موتور ارتباطات (interface engine) پلتفرم ClinicHub است. درخواست‌ها و لغوها از ClinicHub به LabFlow و ClinicReport، جواب‌ها به ClinicHub، نسخه‌های الکترونیک به PharmaFlow و سندهای مالی به FinancePowerApp از آن می‌گذرند، پس یک لاگ واحد از آن‌چه فرستاده شده و آن‌چه برگشته وجود دارد. همچنین تنها جایی است که با دنیای بیرون HL7 v2 روی MLLP حرف می‌زند (جواب‌های یک آزمایشگاه بیرونی به داخل، درخواست‌ها به بیرون، و یک کپی از جواب‌ها به سبک OLIS) و رویدادهای بی‌نام‌شده را برای Analytics روی RabbitMQ منتشر می‌کند.",
+            "با Java 21 و Spring Boot 3 نوشته شده، چون کتابخانه‌های مرجع FHIR و HL7 (یعنی HAPI) و بیشتر موتورهای ارتباطی بیمارستان‌ها در Java هستند. PostgreSQL لاگ و صف‌های آن را نگه می‌دارد."
+          ],
+          "examples": [
+            "flow"
+          ]
+        },
+        {
+          "id": "decisions",
+          "h": "یک relay، نه مالک تازه",
+          "p": [
+            "hub **فقط با پیکربندی** بین برنامه‌ها قرار می‌گیرد: آدرس پایه‌ی هر فرستنده به یک route در hub اشاره می‌کند و برگرداندن آن تغییر را خنثی می‌کند؛ هیچ برنامه‌ای بازنویسی نمی‌شود. hub فقط مالک لاگ و routeهای خودش است. فراخوانی‌های همزمان همزمان می‌مانند: وضعیت و بدنه‌ی پاسخ upstream بدون تغییر برمی‌گردد و hub دوباره تلاش نمی‌کند، چون outbox فرستنده‌ها از قبل این کار را می‌کند. token خود فرستنده عبور می‌کند تا بررسی‌های هر گیرنده کار کند؛ hub هرگز به‌جای برنامه‌ی دیگری امضا نمی‌کند. و لاگ فقط metadata دارد، هرگز بدنه."
+          ],
+          "examples": [
+            "decisions"
+          ]
+        }
+      ],
+      "examples": {
+        "flow": {
+          "title": {
+            "en": "Who talks to whom",
+            "fa": "چه کسی با چه کسی حرف می‌زند"
+          },
+          "lang": "text",
+          "file": "docs/architecture.md",
+          "from": "flowchart LR",
+          "to": "HUB --- DB[(PostgreSQL: message log)]"
+        },
+        "decisions": {
+          "title": {
+            "en": "The decisions",
+            "fa": "تصمیم‌ها"
+          },
+          "lang": "markdown",
+          "file": "docs/architecture.md",
+          "from": "1. **A relay first, not a new owner.**",
+          "to": "5. **Asynchronous only where"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "How is the hub put between ClinicHub and LabFlow?",
+            "fa": "hub چطور بین ClinicHub و LabFlow قرار می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "LabFlow's code is changed to call the hub",
+              "ClinicHub's LabFlow base URL is pointed at a hub route",
+              "DNS for LabFlow points at the hub"
+            ],
+            "fa": [
+              "کد LabFlow برای صدا زدن hub عوض می‌شود",
+              "آدرس پایه‌ی LabFlow در ClinicHub به یک route از hub اشاره می‌کند",
+              "DNS برنامه‌ی LabFlow به hub اشاره می‌کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "By configuration only: pointing the setting back undoes it.",
+            "fa": "فقط با پیکربندی: برگرداندن تنظیم آن را خنثی می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the hub not retry a failed call?",
+            "fa": "چرا hub فراخوانی ناموفق را دوباره امتحان نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "The senders' outboxes already retry",
+              "Retries are forbidden in FHIR",
+              "It does, three times"
+            ],
+            "fa": [
+              "outbox فرستنده‌ها از قبل دوباره تلاش می‌کنند",
+              "تلاش دوباره در FHIR ممنوع است",
+              "می‌کند، سه بار"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Retrying in two places would duplicate calls; the hub passes the answer back instead.",
+            "fa": "تلاش دوباره در دو جا فراخوانی‌ها را تکراری می‌کرد؛ hub به‌جایش پاسخ را برمی‌گرداند."
+          }
+        },
+        {
+          "q": {
+            "en": "Which token does LabFlow receive for an order through the hub?",
+            "fa": "LabFlow برای درخواستی که از hub می‌گذرد کدام token را می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "A token the hub signs",
+              "None",
+              "ClinicHub's own token, forwarded unchanged"
+            ],
+            "fa": [
+              "tokenی که hub امضا می‌کند",
+              "هیچ",
+              "token خود ClinicHub، بدون تغییر"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The same Authorization header is forwarded, so LabFlow's own checks still apply.",
+            "fa": "همان header به نام Authorization فرستاده می‌شود، پس بررسی‌های خود LabFlow برقرار می‌ماند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "group": "start",
+      "title": {
+        "en": "Run it",
+        "fa": "اجرا"
+      },
+      "files": [
+        "README.md",
+        "compose.yml",
+        "src/main/resources/application.yml",
+        "src/main/resources/application-dev.yml"
+      ],
+      "en": [
+        {
+          "id": "local",
+          "h": "Database, broker, API",
+          "p": [
+            "`docker compose up -d --wait` starts PostgreSQL 16 on port 5433 (not 5432, so it does not clash with a local installation) and RabbitMQ on 5672 with its management UI on 15672. `mvn spring-boot:run` starts the API on 5700, and `/actuator/health` answers without a token. Flyway creates the tables from `db/migration` at start-up. The database settings are `HUB_DB_URL`, `HUB_DB_USER` and `HUB_DB_PASSWORD`."
+          ],
+          "examples": [
+            "readme",
+            "compose"
+          ]
+        },
+        {
+          "id": "routes",
+          "h": "Routes are configuration",
+          "p": [
+            "`hub.routes` in `application.yml` is the routing table: `clinichub` (results, scope `results`), `labflow` and `clinicreport` (orders and cancels: audience the application, scope `orders`, POST and PUT), `pharmaflow` (prescriptions, POST only), `externallab` (orders turned into HL7) and `finance` (documents, one path only). Each upstream is an environment variable with a localhost default, so ControlPanel's compose can point them at container names."
+          ],
+          "examples": [
+            "routes"
+          ]
+        },
+        {
+          "id": "switches",
+          "h": "Everything risky is off by default",
+          "p": [
+            "The event feed needs `HUB_EVENTS_ENABLED=true` and a pseudonym secret of 32+ characters; HL7 needs `HUB_HL7_ENABLED`, a queue key and ClinicHub's client secret, and the application refuses to start when one is missing. The `dev` profile opens the message search to this machine and allows CORS for the admin web on 5701."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "local",
+          "h": "دیتابیس، broker، API",
+          "p": [
+            "`docker compose up -d --wait` برنامه‌ی PostgreSQL 16 را روی port 5433 بالا می‌آورد (نه 5432، تا با نصب محلی تداخل نکند) و RabbitMQ را روی 5672 با رابط مدیریتی روی 15672. `mvn spring-boot:run` برنامه‌ی API را روی 5700 بالا می‌آورد و `/actuator/health` بدون token جواب می‌دهد. Flyway هنگام شروع جدول‌ها را از `db/migration` می‌سازد. تنظیمات دیتابیس `HUB_DB_URL`، `HUB_DB_USER` و `HUB_DB_PASSWORD` هستند."
+          ],
+          "examples": [
+            "readme",
+            "compose"
+          ]
+        },
+        {
+          "id": "routes",
+          "h": "routeها پیکربندی‌اند",
+          "p": [
+            "`hub.routes` در `application.yml` جدول مسیریابی است: `clinichub` (جواب‌ها، scope به نام `results`)، `labflow` و `clinicreport` (درخواست‌ها و لغوها: audience همان برنامه، scope به نام `orders`، POST و PUT)، `pharmaflow` (نسخه‌ها، فقط POST)، `externallab` (درخواست‌هایی که به HL7 تبدیل می‌شوند) و `finance` (سندها، فقط یک مسیر). هر upstream یک متغیر محیطی با پیش‌فرض localhost است، تا compose برنامه‌ی ControlPanel بتواند آن‌ها را به نام containerها اشاره دهد."
+          ],
+          "examples": [
+            "routes"
+          ]
+        },
+        {
+          "id": "switches",
+          "h": "هر چیز پرخطر به‌طور پیش‌فرض خاموش است",
+          "p": [
+            "فید رویداد به `HUB_EVENTS_ENABLED=true` و یک secret برای pseudonym با دست‌کم ۳۲ کاراکتر نیاز دارد؛ HL7 به `HUB_HL7_ENABLED`، یک کلید صف و secret کلاینت ClinicHub نیاز دارد، و اگر یکی نباشد برنامه شروع نمی‌شود. profile به نام `dev` جستجوی پیام‌ها را برای همین ماشین باز می‌کند و CORS را برای وب مدیریت روی 5701 مجاز می‌کند."
+          ]
+        }
+      ],
+      "examples": {
+        "readme": {
+          "title": {
+            "en": "Start it",
+            "fa": "بالا آوردن"
+          },
+          "lang": "shell",
+          "file": "README.md",
+          "from": "docker compose up -d --wait",
+          "to": "curl localhost:5700/actuator/health"
+        },
+        "compose": {
+          "title": {
+            "en": "PostgreSQL on 5433",
+            "fa": "PostgreSQL روی 5433"
+          },
+          "lang": "yaml",
+          "file": "compose.yml",
+          "from": "services:",
+          "to": "\"5433:5432\""
+        },
+        "routes": {
+          "title": {
+            "en": "Two routes",
+            "fa": "دو route"
+          },
+          "lang": "yaml",
+          "file": "src/main/resources/application.yml",
+          "from": "# Results from LabFlow and ClinicReport to ClinicHub",
+          "to": "required-scopes: [orders]"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is PostgreSQL on port 5433?",
+            "fa": "چرا PostgreSQL روی port 5433 است؟"
+          },
+          "options": {
+            "en": [
+              "To avoid clashing with a local PostgreSQL on 5432",
+              "Flyway needs it",
+              "5432 is for RabbitMQ"
+            ],
+            "fa": [
+              "تا با PostgreSQL محلی روی 5432 تداخل نکند",
+              "Flyway لازمش دارد",
+              "5432 مال RabbitMQ است"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The compose comment says so.",
+            "fa": "توضیح compose همین را می‌گوید."
+          }
+        },
+        {
+          "q": {
+            "en": "HL7 is switched on without a queue key. What happens?",
+            "fa": "HL7 بدون کلید صف روشن شده. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Messages are stored unencrypted",
+              "The application does not start",
+              "HL7 silently stays off"
+            ],
+            "fa": [
+              "پیام‌ها رمزنشده ذخیره می‌شوند",
+              "برنامه شروع نمی‌شود",
+              "HL7 بی‌صدا خاموش می‌ماند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "With hub.hl7.enabled=true the settings are validated at start-up.",
+            "fa": "با hub.hl7.enabled=true تنظیمات هنگام شروع اعتبارسنجی می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "How is a new receiving application added?",
+            "fa": "گیرنده‌ی تازه چطور اضافه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "A new controller class",
+              "A row in the message table",
+              "An entry under hub.routes"
+            ],
+            "fa": [
+              "یک کلاس controller تازه",
+              "یک ردیف در جدول message",
+              "یک مورد زیر hub.routes"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "RelayController reads its routes from the settings.",
+            "fa": "RelayController routeهایش را از تنظیمات می‌خواند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": {
+        "en": "Tests",
+        "fa": "تست‌ها"
+      },
+      "files": [
+        "src/test/java/ca/arashkeshtgar/integrationhub/PostgresTestBase.java",
+        "src/test/java/ca/arashkeshtgar/integrationhub/RelayTestBase.java",
+        "src/test/java/ca/arashkeshtgar/integrationhub/RelayTest.java",
+        ".github/workflows/ci.yml"
+      ],
+      "en": [
+        {
+          "id": "real",
+          "h": "Real PostgreSQL and RabbitMQ, WireMock upstreams",
+          "p": [
+            "`mvn -B verify` runs the JUnit 5 tests and the Spotless format check. Tests that need the database extend `PostgresTestBase`, which starts one PostgreSQL 16 container for the run and points Spring at it; the events tests start RabbitMQ the same way, so Docker must be running. WireMock plays the upstreams and ClinicHub's JWKS, and tokens are signed with a key generated for the run, RS256 with `typ: at+jwt`, as OpenIddict does."
+          ],
+          "examples": [
+            "pg"
+          ]
+        },
+        {
+          "id": "markers",
+          "h": "Looking for planted markers",
+          "p": [
+            "The hub promises never to store or log health information, and the tests check it the hard way. Sample bodies carry markers (`Zzyzx`, `Testpatient`, `MARKER-`); the calls are relayed, and then every row of `message` and `message_identifier`, as JSON, and the whole application log captured by `CapturedOutput` are searched for them. The same is done for the contract samples, the HL7 tests and the prescriptions."
+          ],
+          "examples": [
+            "markers"
+          ]
+        },
+        {
+          "id": "ci",
+          "h": "CI",
+          "p": [
+            "GitHub Actions runs `mvn -B verify`, a web job (typecheck, tests, build) and builds both Docker images; the images are not pushed anywhere."
+          ],
+          "examples": [
+            "ci"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "real",
+          "h": "PostgreSQL و RabbitMQ واقعی، upstreamهای WireMock",
+          "p": [
+            "`mvn -B verify` تست‌های JUnit 5 و بررسی قالب Spotless را اجرا می‌کند. تست‌هایی که دیتابیس لازم دارند از `PostgresTestBase` ارث می‌برند که برای کل اجرا یک container از PostgreSQL 16 بالا می‌آورد و Spring را به آن وصل می‌کند؛ تست‌های رویداد RabbitMQ را هم همین‌طور بالا می‌آورند، پس Docker باید در حال اجرا باشد. WireMock نقش upstreamها و JWKS برنامه‌ی ClinicHub را بازی می‌کند و tokenها با کلیدی که برای همان اجرا ساخته شده امضا می‌شوند، RS256 با `typ: at+jwt`، همان‌طور که OpenIddict می‌کند."
+          ],
+          "examples": [
+            "pg"
+          ]
+        },
+        {
+          "id": "markers",
+          "h": "گشتن دنبال نشانه‌های کارگذاشته",
+          "p": [
+            "hub قول می‌دهد هرگز اطلاعات سلامت را ذخیره یا لاگ نکند و تست‌ها این را به سخت‌ترین شکل بررسی می‌کنند. بدنه‌های نمونه نشانه‌هایی دارند (`Zzyzx`، `Testpatient`، `MARKER-`)؛ فراخوانی‌ها relay می‌شوند و بعد همه‌ی ردیف‌های `message` و `message_identifier` به شکل JSON، و کل لاگ برنامه که `CapturedOutput` گرفته، برای پیدا کردن آن‌ها گشته می‌شود. همین کار برای نمونه‌های قرارداد، تست‌های HL7 و نسخه‌ها هم انجام می‌شود."
+          ],
+          "examples": [
+            "markers"
+          ]
+        },
+        {
+          "id": "ci",
+          "h": "CI",
+          "p": [
+            "GitHub Actions دستور `mvn -B verify`، یک job وب (typecheck، تست‌ها و build) را اجرا می‌کند و هر دو image داکر را می‌سازد؛ imageها به هیچ registry فرستاده نمی‌شوند."
+          ],
+          "examples": [
+            "ci"
+          ]
+        }
+      ],
+      "examples": {
+        "pg": {
+          "title": {
+            "en": "One PostgreSQL for the run",
+            "fa": "یک PostgreSQL برای کل اجرا"
+          },
+          "lang": "java",
+          "file": "src/test/java/ca/arashkeshtgar/integrationhub/PostgresTestBase.java",
+          "from": "static final PostgreSQLContainer",
+          "to": "spring.datasource.password"
+        },
+        "markers": {
+          "title": {
+            "en": "No marker anywhere",
+            "fa": "هیچ نشانه‌ای هیچ‌جا"
+          },
+          "lang": "java",
+          "file": "src/test/java/ca/arashkeshtgar/integrationhub/RelayTest.java",
+          "from": "void logsNoBodyAndNoPersonalValuesAnywhere",
+          "to": "assertThat(messages()).hasSize(3);"
+        },
+        "ci": {
+          "title": {
+            "en": "The verify job",
+            "fa": "job به نام verify"
+          },
+          "lang": "yaml",
+          "file": ".github/workflows/ci.yml",
+          "from": "jobs:",
+          "to": "run: mvn -B verify"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "How do the tests show that no body reaches the log?",
+            "fa": "تست‌ها چطور نشان می‌دهند هیچ بدنه‌ای به لاگ نمی‌رسد؟"
+          },
+          "options": {
+            "en": [
+              "By reading the code",
+              "They plant markers in bodies and search every log row and the captured application log",
+              "By disabling logging"
+            ],
+            "fa": [
+              "با خواندن کد",
+              "در بدنه‌ها نشانه می‌گذارند و همه‌ی ردیف‌های لاگ و لاگ برنامه را می‌گردند",
+              "با خاموش کردن لاگ"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "A marker found anywhere fails the test.",
+            "fa": "پیدا شدن نشانه در هر جا تست را fail می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "What plays LabFlow and ClinicHub in the relay tests?",
+            "fa": "در تست‌های relay چه چیزی نقش LabFlow و ClinicHub را بازی می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "WireMock",
+              "The real applications",
+              "Mockito"
+            ],
+            "fa": [
+              "WireMock",
+              "برنامه‌های واقعی",
+              "Mockito"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "WireMock serves the upstream API and the JWKS.",
+            "fa": "WireMock هم API برنامه‌ی upstream و هم JWKS را می‌دهد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why are test tokens signed with typ at+jwt?",
+            "fa": "چرا tokenهای تست با typ at+jwt امضا می‌شوند؟"
+          },
+          "options": {
+            "en": [
+              "It is faster",
+              "WireMock requires it",
+              "That is how ClinicHub's OpenIddict marks access tokens, which the validator must accept"
+            ],
+            "fa": [
+              "سریع‌تر است",
+              "WireMock لازمش دارد",
+              "OpenIddict برنامه‌ی ClinicHub access tokenها را این‌طور علامت می‌زند و validator باید بپذیرد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Testing with the real header found that the default decoder refused it.",
+            "fa": "تست با header واقعی نشان داد decoder پیش‌فرض آن را رد می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "group": "relay",
+      "title": {
+        "en": "One call through the relay",
+        "fa": "یک فراخوانی از درون relay"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/SecurityConfig.java"
+      ],
+      "en": [
+        {
+          "id": "order",
+          "h": "The order of the checks",
+          "p": [
+            "Every call to `/route/{route}/**` lands in `RelayController.relay`. The checks come in a fixed order. The route must exist and allow the path, and the path must have no `.` or `..` segment, even percent-encoded; otherwise 404. The method must be allowed; otherwise 405 with an `Allow` header. Then the token; otherwise 401. Only after that is the body read, up to `max-body-bytes` (32 MB) plus one byte, so a larger body is noticed and answered 413 without being read in full."
+          ],
+          "examples": [
+            "checks"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "Token or key",
+          "p": [
+            "On the finance route only, a call with the development key header and no `Authorization` is passed on unvalidated, because FinancePowerApp checks the key; a call that has a token is always validated. A bad token is 401 with `WWW-Authenticate: Bearer`; keys that cannot be fetched are 503. The body is then summarised for the log, and an order for the external lab leaves here for the HL7 path."
+          ],
+          "examples": [
+            "token"
+          ]
+        },
+        {
+          "id": "refuse",
+          "h": "Refusals are logged too",
+          "p": [
+            "`refuse` answers with a FHIR `OperationOutcome` and calls `finish` like a relayed call, with no upstream status and a short reason. So the log has a row for every call, refused ones included. That is why `SecurityConfig` leaves `/route/**` open to Spring Security and the relay checks tokens itself: a refusal by Spring would never reach the log."
+          ],
+          "examples": [
+            "refuse"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "order",
+          "h": "ترتیب بررسی‌ها",
+          "p": [
+            "هر فراخوانی به `/route/{route}/**` به `RelayController.relay` می‌رسد. بررسی‌ها ترتیب ثابتی دارند. route باید وجود داشته باشد و مسیر را مجاز بداند، و مسیر نباید بخشی به شکل `.` یا `..` داشته باشد، حتی percent-encode شده؛ وگرنه ۴۰۴. متد باید مجاز باشد؛ وگرنه ۴۰۵ با header به نام `Allow`. بعد token؛ وگرنه ۴۰۱. فقط بعد از این‌ها بدنه خوانده می‌شود، تا `max-body-bytes` (۳۲ مگابایت) به‌اضافه‌ی یک بایت، تا بدنه‌ی بزرگ‌تر بدون خواندن کاملش شناخته و با ۴۱۳ جواب داده شود."
+          ],
+          "examples": [
+            "checks"
+          ]
+        },
+        {
+          "id": "token",
+          "h": "token یا کلید",
+          "p": [
+            "فقط روی route مالی، فراخوانی‌ای که header کلید توسعه دارد و `Authorization` ندارد بدون اعتبارسنجی عبور می‌کند، چون FinancePowerApp خودش کلید را بررسی می‌کند؛ فراخوانی‌ای که token دارد همیشه اعتبارسنجی می‌شود. token بد یعنی ۴۰۱ با `WWW-Authenticate: Bearer`؛ کلیدهایی که قابل گرفتن نیستند یعنی ۵۰۳. بعد بدنه برای لاگ خلاصه می‌شود و درخواستِ آزمایشگاه بیرونی از همین‌جا به مسیر HL7 می‌رود."
+          ],
+          "examples": [
+            "token"
+          ]
+        },
+        {
+          "id": "refuse",
+          "h": "ردشده‌ها هم لاگ می‌شوند",
+          "p": [
+            "`refuse` با یک `OperationOutcome` از FHIR جواب می‌دهد و مثل یک فراخوانی relay‌شده `finish` را صدا می‌زند، بدون وضعیت upstream و با یک دلیل کوتاه. پس لاگ برای هر فراخوانی یک ردیف دارد، از جمله ردشده‌ها. به همین دلیل `SecurityConfig` مسیر `/route/**` را برای Spring Security باز می‌گذارد و relay خودش tokenها را بررسی می‌کند: ردی که Spring انجام دهد هرگز به لاگ نمی‌رسید."
+          ],
+          "examples": [
+            "refuse"
+          ]
+        }
+      ],
+      "examples": {
+        "checks": {
+          "title": {
+            "en": "Route, path, method",
+            "fa": "route، مسیر، متد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "HubProperties.Route route = match.matches()",
+          "to": "\"method-not-allowed\");"
+        },
+        "token": {
+          "title": {
+            "en": "Token, then body",
+            "fa": "token، بعد بدنه"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "String authorization = request.getHeader(\"Authorization\");",
+          "to": "if (body.length > properties.maxBodyBytes()) {"
+        },
+        "refuse": {
+          "title": {
+            "en": "A refusal, logged",
+            "fa": "یک رد، لاگ‌شده"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "private void refuse(",
+          "to": "finish(call, started, null, status"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A GET with no token arrives at /route/pharmaflow/fhir. What is answered?",
+            "fa": "یک GET بدون token به /route/pharmaflow/fhir می‌رسد. جواب چیست؟"
+          },
+          "options": {
+            "en": [
+              "401",
+              "405, because the method is checked before the token",
+              "404"
+            ],
+            "fa": [
+              "۴۰۱",
+              "۴۰۵، چون متد قبل از token بررسی می‌شود",
+              "۴۰۴"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "pharmaflow allows POST only, and the method comes before the token.",
+            "fa": "pharmaflow فقط POST را مجاز می‌داند و متد قبل از token است."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does Spring Security permit /route/** instead of checking tokens?",
+            "fa": "چرا Spring Security مسیر /route/** را مجاز می‌گذارد و token را بررسی نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "So a refusal is written to the message log like any other call",
+              "Performance",
+              "Spring cannot read JWTs"
+            ],
+            "fa": [
+              "تا رد شدن هم مثل هر فراخوانی دیگر در لاگ پیام نوشته شود",
+              "کارایی",
+              "Spring نمی‌تواند JWT بخواند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The relay refuses through refuse(), which logs the call.",
+            "fa": "relay از طریق refuse() رد می‌کند که فراخوانی را لاگ می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why read max-body-bytes plus one byte?",
+            "fa": "چرا max-body-bytes به‌اضافه‌ی یک بایت خوانده می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "For the SHA-256",
+              "To find the end of the stream",
+              "To know a body is over the limit without reading all of it"
+            ],
+            "fa": [
+              "برای SHA-256",
+              "برای پیدا کردن انتهای stream",
+              "تا بدون خواندن کل بدنه بفهمد از حد بیشتر است"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "One byte more than allowed is enough to answer 413.",
+            "fa": "یک بایت بیش از حد مجاز برای جواب ۴۱۳ کافی است."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tokens",
+      "group": "relay",
+      "title": {
+        "en": "Checking the sender's token",
+        "fa": "بررسی token فرستنده"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+        "src/main/resources/application.yml"
+      ],
+      "en": [
+        {
+          "id": "decode",
+          "h": "Signature, issuer, expiry",
+          "p": [
+            "`TokenValidator` uses Spring's `NimbusJwtDecoder` against ClinicHub's JWKS (`{issuer}.well-known/jwks` unless `HUB_AUTH_JWKS_URI` is set), RS256 only, with the default validators and the issuer. One thing had to be added: OpenIddict marks access tokens `typ: at+jwt` (RFC 9068), which the default type verifier refuses, so the verifier accepts `JWT`, `at+jwt` and no type. The phase-1 tests found this."
+          ],
+          "examples": [
+            "decoder"
+          ]
+        },
+        {
+          "id": "route",
+          "h": "The route's scope and audience",
+          "p": [
+            "`validate` then applies the route. Every scope in `required-scopes` must be in the token, and when the route lists `allowed-audiences`, the token's audience must contain one of them. So a token ClinicHub signed for LabFlow (audience `labflow`, scope `orders`) cannot be used on the pharmacy route. `scope` is read as OpenIddict writes it, one space-separated string, or as a JSON array. The sender written to the log is `client_id`, else `azp`, else `sub`."
+          ],
+          "examples": [
+            "validate",
+            "scopes"
+          ]
+        },
+        {
+          "id": "forward",
+          "h": "Checked, not changed",
+          "p": [
+            "The token only decides whether to forward. The same `Authorization` header goes to the upstream, so each receiver still checks it for itself, for example that a result comes from the application the order went to."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "decode",
+          "h": "امضا، issuer، انقضا",
+          "p": [
+            "`TokenValidator` از `NimbusJwtDecoder` در Spring در برابر JWKS برنامه‌ی ClinicHub استفاده می‌کند (`{issuer}.well-known/jwks` مگر این‌که `HUB_AUTH_JWKS_URI` تنظیم شده باشد)، فقط با RS256 و با validatorهای پیش‌فرض به‌اضافه‌ی issuer. یک چیز باید اضافه می‌شد: OpenIddict روی access tokenها `typ: at+jwt` (RFC 9068) می‌گذارد که type verifier پیش‌فرض ردش می‌کند، پس verifier حالا `JWT`، `at+jwt` و نبودن type را می‌پذیرد. تست‌های فاز ۱ این را پیدا کردند."
+          ],
+          "examples": [
+            "decoder"
+          ]
+        },
+        {
+          "id": "route",
+          "h": "scope و audience هر route",
+          "p": [
+            "بعد `validate` قواعد route را اعمال می‌کند. هر scope در `required-scopes` باید در token باشد و وقتی route فهرست `allowed-audiences` دارد، audience توکن باید یکی از آن‌ها را داشته باشد. پس tokenی که ClinicHub برای LabFlow امضا کرده (audience به نام `labflow` و scope به نام `orders`) روی route داروخانه به کار نمی‌آید. `scope` همان‌طور خوانده می‌شود که OpenIddict می‌نویسد، یک رشته‌ی جداشده با فاصله، یا به شکل آرایه‌ی JSON. فرستنده‌ای که در لاگ نوشته می‌شود `client_id` است، وگرنه `azp`، وگرنه `sub`."
+          ],
+          "examples": [
+            "validate",
+            "scopes"
+          ]
+        },
+        {
+          "id": "forward",
+          "h": "بررسی‌شده، نه تغییرکرده",
+          "p": [
+            "token فقط تعیین می‌کند فراخوانی فرستاده شود یا نه. همان header به نام `Authorization` به upstream می‌رود، پس هر گیرنده باز هم خودش آن را بررسی می‌کند، مثلاً این‌که جواب از همان برنامه‌ای آمده که درخواست به آن رفته بود."
+          ]
+        }
+      ],
+      "examples": {
+        "decoder": {
+          "title": {
+            "en": "RS256, and at+jwt accepted",
+            "fa": "RS256، و پذیرش at+jwt"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+          "from": "decoder =",
+          "to": "decoder.setJwtValidator"
+        },
+        "validate": {
+          "title": {
+            "en": "Scope and audience per route",
+            "fa": "scope و audience برای هر route"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+          "from": "public Sender validate(String authorization",
+          "to": "return new Sender(clientId(jwt));"
+        },
+        "scopes": {
+          "title": {
+            "en": "A string or an array",
+            "fa": "رشته یا آرایه"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+          "from": "static Set<String> scopes(Jwt jwt)",
+          "to": "return result;"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A valid LabFlow order token is sent to the pharmaflow route. Answer?",
+            "fa": "یک token معتبر درخواست LabFlow به route به نام pharmaflow فرستاده می‌شود. جواب؟"
+          },
+          "options": {
+            "en": [
+              "200",
+              "401: wrong audience and scope",
+              "403"
+            ],
+            "fa": [
+              "۲۰۰",
+              "۴۰۱: audience و scope اشتباه",
+              "۴۰۳"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "pharmaflow needs audience pharmaflow and scope prescriptions; Rejected becomes 401.",
+            "fa": "pharmaflow به audience به نام pharmaflow و scope به نام prescriptions نیاز دارد؛ Rejected به ۴۰۱ تبدیل می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why was at+jwt added to the type verifier?",
+            "fa": "چرا at+jwt به type verifier اضافه شد؟"
+          },
+          "options": {
+            "en": [
+              "ClinicHub's tokens carry it and Spring's default accepts only JWT",
+              "For HS256",
+              "For refresh tokens"
+            ],
+            "fa": [
+              "tokenهای ClinicHub آن را دارند و پیش‌فرض Spring فقط JWT را می‌پذیرد",
+              "برای HS256",
+              "برای refresh token"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "OpenIddict follows RFC 9068 for access tokens.",
+            "fa": "OpenIddict برای access token از RFC 9068 پیروی می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "What does the upstream receive in Authorization?",
+            "fa": "upstream در Authorization چه دریافت می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Nothing",
+              "A hub token",
+              "The sender's header unchanged"
+            ],
+            "fa": [
+              "هیچ",
+              "یک token از hub",
+              "header فرستنده بدون تغییر"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Authorization is in FORWARDED_HEADERS and copied as it came.",
+            "fa": "Authorization در FORWARDED_HEADERS است و همان‌طور که آمده کپی می‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "forward",
+      "group": "relay",
+      "title": {
+        "en": "Forwarding and answering",
+        "fa": "فرستادن و جواب دادن"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+        "src/main/resources/application.yml"
+      ],
+      "en": [
+        {
+          "id": "headers",
+          "h": "What is forwarded",
+          "p": [
+            "Only named headers go upstream: `Authorization`, `Content-Type`, `Accept`, `X-Request-Id`, plus a route's own `forward-headers` (the finance key). An `X-Request-Id` is added when the sender sent none, and `X-Forwarded-For`, `-Proto` and `-Host` tell the upstream where the call came from. The answer's status, body and headers come back unchanged, except hop-by-hop headers and `Content-Length`. Redirects are not followed."
+          ],
+          "examples": [
+            "headers"
+          ]
+        },
+        {
+          "id": "errors",
+          "h": "502, 504, and nothing else of its own",
+          "p": [
+            "When the upstream does not answer within the route's `timeout` the sender gets 504; when it cannot be reached, 502. Any status the upstream did send, 400, 409 or 500, goes back as it is, with its body: a 409 on a cancel is the lab's answer, not an error of the hub."
+          ],
+          "examples": [
+            "errors"
+          ]
+        },
+        {
+          "id": "query",
+          "h": "The cancel's query string",
+          "p": [
+            "A cancel is `PUT .../ServiceRequest?identifier=system|42`. Tomcat refuses a raw `|` in a query by default, so `relaxed-query-chars` lets it in; the JDK client cannot send it, so `query` percent-encodes only the characters a URI cannot carry and leaves existing `%XX` alone. The receiver decodes both forms to the same value."
+          ],
+          "examples": [
+            "yml",
+            "query"
+          ]
+        },
+        {
+          "id": "client",
+          "h": "One HTTP client per route",
+          "p": [
+            "The JDK `HttpClient` is created once per route and kept: HTTP/1.1, the route's own `connect-timeout`, and redirects never followed, so a 3xx from an upstream goes back to the sender as it is instead of being chased by the hub."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "headers",
+          "h": "چه چیزی فرستاده می‌شود",
+          "p": [
+            "فقط headerهای نام‌برده به upstream می‌روند: `Authorization`، `Content-Type`، `Accept`، `X-Request-Id`، به‌اضافه‌ی `forward-headers` خود route (کلید مالی). اگر فرستنده `X-Request-Id` نفرستاده باشد یکی اضافه می‌شود و `X-Forwarded-For`، `-Proto` و `-Host` به upstream می‌گویند فراخوانی از کجا آمده. وضعیت، بدنه و headerهای پاسخ بدون تغییر برمی‌گردند، جز headerهای hop-by-hop و `Content-Length`. redirectها دنبال نمی‌شوند."
+          ],
+          "examples": [
+            "headers"
+          ]
+        },
+        {
+          "id": "errors",
+          "h": "۵۰۲، ۵۰۴، و هیچ چیز دیگری از خودش",
+          "p": [
+            "وقتی upstream در `timeout` route جواب ندهد فرستنده ۵۰۴ می‌گیرد؛ وقتی در دسترس نباشد ۵۰۲. هر وضعیتی که upstream واقعاً فرستاده، ۴۰۰ یا ۴۰۹ یا ۵۰۰، همان‌طور با بدنه‌اش برمی‌گردد: ۴۰۹ روی یک لغو جواب آزمایشگاه است، نه خطای hub."
+          ],
+          "examples": [
+            "errors"
+          ]
+        },
+        {
+          "id": "query",
+          "h": "query string لغو",
+          "p": [
+            "لغو یعنی `PUT .../ServiceRequest?identifier=system|42`. Tomcat به‌طور پیش‌فرض `|` خام را در query رد می‌کند، پس `relaxed-query-chars` اجازه‌اش را می‌دهد؛ client برنامه‌ی JDK نمی‌تواند آن را بفرستد، پس `query` فقط کاراکترهایی را که URI نمی‌تواند حمل کند percent-encode می‌کند و `%XX`های موجود را دست نمی‌زند. گیرنده هر دو شکل را به یک مقدار decode می‌کند."
+          ],
+          "examples": [
+            "yml",
+            "query"
+          ]
+        },
+        {
+          "id": "client",
+          "h": "یک HTTP client برای هر route",
+          "p": [
+            "`HttpClient` برنامه‌ی JDK برای هر route یک بار ساخته و نگه داشته می‌شود: HTTP/1.1، با `connect-timeout` خود route و بدون دنبال کردن redirect، پس یک 3xx از upstream همان‌طور به فرستنده برمی‌گردد و hub دنبالش نمی‌رود."
+          ]
+        }
+      ],
+      "examples": {
+        "headers": {
+          "title": {
+            "en": "Named headers, plus X-Forwarded-*",
+            "fa": "headerهای نام‌برده، به‌اضافه‌ی X-Forwarded-*"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "List<String> headers = new ArrayList<>(FORWARDED_HEADERS);",
+          "to": "X-Forwarded-Host"
+        },
+        "errors": {
+          "title": {
+            "en": "Timeout and unreachable",
+            "fa": "timeout و در دسترس نبودن"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "} catch (HttpTimeoutException e) {",
+          "to": "\"upstream-unreachable\");"
+        },
+        "yml": {
+          "title": {
+            "en": "Tomcat lets the bar in",
+            "fa": "Tomcat اجازه‌ی | را می‌دهد"
+          },
+          "lang": "yaml",
+          "file": "src/main/resources/application.yml",
+          "from": "# The cancel is PUT",
+          "lines": 3
+        },
+        "query": {
+          "title": {
+            "en": "Encode only what must be",
+            "fa": "فقط آن‌چه لازم است encode شود"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "public static String query(String raw) {",
+          "to": "return out.toString();"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "LabFlow answers a cancel with 409. What does ClinicHub get?",
+            "fa": "LabFlow به یک لغو ۴۰۹ می‌دهد. ClinicHub چه می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "502",
+              "The same 409 with LabFlow's body",
+              "200"
+            ],
+            "fa": [
+              "۵۰۲",
+              "همان ۴۰۹ با بدنه‌ی LabFlow",
+              "۲۰۰"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The upstream's status and body are passed back unchanged.",
+            "fa": "وضعیت و بدنه‌ی upstream بدون تغییر برمی‌گردد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does query() leave %XX untouched?",
+            "fa": "چرا query() کاری به %XX ندارد؟"
+          },
+          "options": {
+            "en": [
+              "Re-encoding would change what the sender wrote: %7C would become %257C",
+              "Speed",
+              "Tomcat already decoded it"
+            ],
+            "fa": [
+              "encode دوباره نوشته‌ی فرستنده را عوض می‌کرد: %7C می‌شد %257C",
+              "سرعت",
+              "Tomcat قبلاً decodeاش کرده"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "% is in QUERY_SAFE, so an existing escape passes as written.",
+            "fa": "% در QUERY_SAFE است، پس escape موجود همان‌طور عبور می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "The upstream is down. What does the sender get?",
+            "fa": "upstream از کار افتاده. فرستنده چه می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "504",
+              "500",
+              "502"
+            ],
+            "fa": [
+              "۵۰۴",
+              "۵۰۰",
+              "۵۰۲"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "An IOException on connect is upstream-unreachable, 502; 504 is for a timeout.",
+            "fa": "IOException هنگام اتصال یعنی upstream-unreachable و ۵۰۲؛ ۵۰۴ برای timeout است."
+          }
+        }
+      ]
+    },
+    {
+      "id": "message-log",
+      "group": "log",
+      "title": {
+        "en": "One row per call, metadata only",
+        "fa": "یک ردیف برای هر فراخوانی، فقط metadata"
+      },
+      "files": [
+        "src/main/resources/db/migration/V1__message_log.sql",
+        "src/main/resources/db/migration/V2__message_response_status.sql",
+        "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java"
+      ],
+      "en": [
+        {
+          "id": "schema",
+          "h": "What a row holds",
+          "p": [
+            "`message` has one row per call: route, direction, sender client id, clinic slug, method, path, content type, size, a SHA-256 of the body, the Bundle id, a JSON summary of resource types and counts, the upstream's status, what the sender was told (`response_status`, added in V2), latency and a short error. There is no column for a body at all. The SHA-256 lets two calls be compared without keeping either of them."
+          ],
+          "examples": [
+            "schema"
+          ]
+        },
+        {
+          "id": "tx",
+          "h": "The row, its identifiers and its events together",
+          "p": [
+            "`MessageLog.write` inserts the row, its identifiers, the order links and the events in one transaction, through a `TransactionTemplate`. That fixed a bug of phase 1: the method called its own `@Transactional` method, which Spring's proxy never sees, so a row and its identifiers were not written atomically. If the log cannot be written, the error type is logged and nothing of the call is kept, but the relay itself is not stopped: a result must still reach ClinicHub."
+          ],
+          "examples": [
+            "entry",
+            "write"
+          ]
+        },
+        {
+          "id": "metrics",
+          "h": "Metrics beside the log",
+          "p": [
+            "Each call also counts in `hub.messages{route,status}`, a latency histogram `hub.message.latency{route}`, and `hub.upstream.errors{route,kind}` for timeouts, unreachable upstreams and 5xx answers, all at `/actuator/prometheus`. The route label is only ever a configured route name; anything else is counted as `unknown`, so a caller inventing paths cannot create new series."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "schema",
+          "h": "یک ردیف چه دارد",
+          "p": [
+            "جدول `message` برای هر فراخوانی یک ردیف دارد: route، جهت، client id فرستنده، slug کلینیک، متد، مسیر، نوع محتوا، اندازه، یک SHA-256 از بدنه، شناسه‌ی Bundle، یک خلاصه‌ی JSON از نوع و تعداد منابع، وضعیت upstream، آن‌چه به فرستنده گفته شد (`response_status` که در V2 اضافه شد)، تأخیر و یک خطای کوتاه. اصلاً ستونی برای بدنه وجود ندارد. SHA-256 امکان می‌دهد دو فراخوانی بدون نگه داشتن هیچ‌کدام با هم مقایسه شوند."
+          ],
+          "examples": [
+            "schema"
+          ]
+        },
+        {
+          "id": "tx",
+          "h": "ردیف، شناسه‌ها و رویدادهایش با هم",
+          "p": [
+            "`MessageLog.write` ردیف، شناسه‌هایش، پیوندهای درخواست و رویدادها را در یک transaction و از طریق یک `TransactionTemplate` درج می‌کند. این یک باگ فاز ۱ را درست کرد: متد، متد `@Transactional` خودش را صدا می‌زد که proxy برنامه‌ی Spring هرگز آن را نمی‌بیند، پس ردیف و شناسه‌هایش به‌صورت اتمی نوشته نمی‌شدند. اگر لاگ قابل نوشتن نباشد نوع خطا لاگ می‌شود و هیچ چیز از فراخوانی نگه داشته نمی‌شود، ولی خود relay متوقف نمی‌شود: جواب باید باز هم به ClinicHub برسد."
+          ],
+          "examples": [
+            "entry",
+            "write"
+          ]
+        },
+        {
+          "id": "metrics",
+          "h": "metricها در کنار لاگ",
+          "p": [
+            "هر فراخوانی در `hub.messages{route,status}`، در histogram تأخیر `hub.message.latency{route}` و برای timeout، upstream در دسترس نبودن و جواب 5xx در `hub.upstream.errors{route,kind}` هم شمرده می‌شود، همه در `/actuator/prometheus`. برچسب route همیشه نام یک route تنظیم‌شده است و هر چیز دیگر `unknown` شمرده می‌شود، پس فراخواننده‌ای که مسیر از خودش می‌سازد نمی‌تواند سری تازه بسازد."
+          ]
+        }
+      ],
+      "examples": {
+        "schema": {
+          "title": {
+            "en": "The message table",
+            "fa": "جدول message"
+          },
+          "lang": "sql",
+          "file": "src/main/resources/db/migration/V1__message_log.sql",
+          "from": "CREATE TABLE message (",
+          "to": "CREATE INDEX ix_message_bundle"
+        },
+        "entry": {
+          "title": {
+            "en": "No field for a body",
+            "fa": "بدون فیلدی برای بدنه"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java",
+          "from": "/** Metadata only. There is deliberately no field for a body. */",
+          "lines": 18
+        },
+        "write": {
+          "title": {
+            "en": "All in one transaction, never stopping the relay",
+            "fa": "همه در یک transaction، بدون متوقف کردن relay"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java",
+          "from": "public void write(Entry entry, EventFactory.Result events, Runnable alsoInTransaction) {",
+          "to": "\"message log write failed for route {}: {}\""
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why did calling a @Transactional method on itself not work?",
+            "fa": "چرا صدا زدن یک متد @Transactional روی خود شیء کار نمی‌کرد؟"
+          },
+          "options": {
+            "en": [
+              "Spring applies transactions through a proxy, which a self-call bypasses",
+              "PostgreSQL forbids nested transactions",
+              "JdbcTemplate is not transactional"
+            ],
+            "fa": [
+              "Spring تراکنش را از طریق proxy اعمال می‌کند و فراخوانی درونی آن را دور می‌زند",
+              "PostgreSQL تراکنش تودرتو را ممنوع می‌کند",
+              "JdbcTemplate تراکنشی نیست"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "A TransactionTemplate makes the boundary explicit.",
+            "fa": "TransactionTemplate مرز تراکنش را صریح می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "The database is down while a result is relayed. What happens?",
+            "fa": "هنگام relay یک جواب دیتابیس از کار افتاده. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The result is refused",
+              "The result reaches ClinicHub; the log row is not written and the error is logged",
+              "The hub queues the result"
+            ],
+            "fa": [
+              "جواب رد می‌شود",
+              "جواب به ClinicHub می‌رسد؛ ردیف لاگ نوشته نمی‌شود و خطا لاگ می‌شود",
+              "hub جواب را در صف می‌گذارد"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "write catches RuntimeException: a failing log must not stop a result.",
+            "fa": "write خطای RuntimeException را می‌گیرد: لاگ ناموفق نباید جلوی جواب را بگیرد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why store a SHA-256 of the body?",
+            "fa": "چرا SHA-256 بدنه ذخیره می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "To decrypt it later",
+              "For TLS",
+              "To tell calls apart, or the same, without keeping any body"
+            ],
+            "fa": [
+              "تا بعداً رمزگشایی شود",
+              "برای TLS",
+              "تا فراخوانی‌ها را بدون نگه داشتن بدنه از هم تشخیص دهد یا یکسان بداند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "A hash identifies content without storing it.",
+            "fa": "hash محتوا را بدون ذخیره کردنش شناسایی می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "group": "log",
+      "title": {
+        "en": "Searching the log",
+        "fa": "جستجو در لاگ"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/admin/MessagesController.java",
+        "src/main/resources/db/migration/V1__message_log.sql"
+      ],
+      "en": [
+        {
+          "id": "ident",
+          "h": "By identifier",
+          "p": [
+            "Bodies are not kept, so the log has to be searchable by what matters. `message_identifier` holds the identifiers found in a call: ServiceRequest ids, DiagnosticReport identifiers, prescriptions, and finance documents as `urn:integrationhub:finance:{sourceKey}` with the external id as value. `GET /api/messages?identifier=` takes a value or `system|value`; the last `|` splits them, because a system can be a URN full of colons."
+          ],
+          "examples": [
+            "v1ident",
+            "identifier"
+          ]
+        },
+        {
+          "id": "filters",
+          "h": "Other filters, paging and the timeline",
+          "p": [
+            "`route`, `clinic`, `status` (what the sender was told), `from` and `to` narrow the search further; results are newest first, at most 200 per page, with `offset`. Every value is a SQL parameter, never part of the SQL text. `/api/messages/{id}/timeline` adds what the call caused: its events, its HL7 queue rows and the other calls carrying the same identifier, which is how an order, its result and its cancel are found together."
+          ]
+        },
+        {
+          "id": "who",
+          "h": "Who may search, and what comes back",
+          "p": [
+            "The search needs a ClinicHub token with `integrationhub:messages.view`, the same check as the rest of the admin API. What comes back is the row's metadata and its identifiers, never a body, because there is none to return. A `limit` below 1 or an `offset` below 0 is a 400."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "ident",
+          "h": "بر اساس شناسه",
+          "p": [
+            "بدنه‌ها نگه داشته نمی‌شوند، پس لاگ باید با چیزهایی که اهمیت دارند قابل جستجو باشد. `message_identifier` شناسه‌هایی را که در یک فراخوانی پیدا شده نگه می‌دارد: شناسه‌ی ServiceRequest، شناسه‌های DiagnosticReport، نسخه‌ها، و سندهای مالی به شکل `urn:integrationhub:finance:{sourceKey}` با شناسه‌ی بیرونی به‌عنوان مقدار. `GET /api/messages?identifier=` یک مقدار یا `system|value` می‌گیرد؛ آخرین `|` آن‌ها را جدا می‌کند، چون system می‌تواند یک URN پر از دونقطه باشد."
+          ],
+          "examples": [
+            "v1ident",
+            "identifier"
+          ]
+        },
+        {
+          "id": "filters",
+          "h": "فیلترهای دیگر، صفحه‌بندی و timeline",
+          "p": [
+            "`route`، `clinic`، `status` (آن‌چه به فرستنده گفته شد)، `from` و `to` جستجو را محدودتر می‌کنند؛ نتیجه‌ها از جدید به قدیم‌اند، حداکثر ۲۰۰ در هر صفحه، با `offset`. هر مقدار یک پارامتر SQL است، هرگز بخشی از متن SQL. `/api/messages/{id}/timeline` آن‌چه فراخوانی باعثش شده را اضافه می‌کند: رویدادهایش، ردیف‌های صف HL7 و فراخوانی‌های دیگری که همان شناسه را دارند؛ این‌طور یک درخواست، جوابش و لغوش با هم پیدا می‌شوند."
+          ]
+        },
+        {
+          "id": "who",
+          "h": "چه کسی می‌تواند جستجو کند و چه برمی‌گردد",
+          "p": [
+            "جستجو به token برنامه‌ی ClinicHub با اجازه‌ی `integrationhub:messages.view` نیاز دارد، همان بررسی بقیه‌ی API مدیریت. آن‌چه برمی‌گردد metadata ردیف و شناسه‌های آن است، هرگز بدنه، چون بدنه‌ای برای برگرداندن وجود ندارد. `limit` کمتر از ۱ یا `offset` کمتر از صفر جواب ۴۰۰ می‌گیرد."
+          ]
+        }
+      ],
+      "examples": {
+        "v1ident": {
+          "title": {
+            "en": "Identifiers for searching",
+            "fa": "شناسه‌ها برای جستجو"
+          },
+          "lang": "sql",
+          "file": "src/main/resources/db/migration/V1__message_log.sql",
+          "from": "-- Identifiers found in a message",
+          "to": "CREATE INDEX ix_message_identifier_lookup"
+        },
+        "identifier": {
+          "title": {
+            "en": "A value, or system|value",
+            "fa": "یک مقدار، یا system|value"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/MessagesController.java",
+          "from": "if (identifier != null && !identifier.isBlank()) {",
+          "to": "sql.append(\")\");"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "How is identifier=urn:clinichub:harbourview:service-request|101 split?",
+            "fa": "identifier=urn:clinichub:harbourview:service-request|101 چطور جدا می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "At the last |: system and value",
+              "At the first :",
+              "It is not split"
+            ],
+            "fa": [
+              "در آخرین |: system و value",
+              "در اولین :",
+              "جدا نمی‌شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "lastIndexOf(\"|\") separates system from value.",
+            "fa": "lastIndexOf(\"|\") سیستم را از مقدار جدا می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the hub need message_identifier?",
+            "fa": "چرا hub به message_identifier نیاز دارد؟"
+          },
+          "options": {
+            "en": [
+              "For metrics",
+              "With no bodies kept, identifiers are how the calls about one order are found",
+              "For foreign keys"
+            ],
+            "fa": [
+              "برای metricها",
+              "وقتی بدنه نگه داشته نمی‌شود، شناسه‌ها راه پیدا کردن فراخوانی‌های یک درخواست‌اند",
+              "برای foreign key"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The timeline links calls through shared identifiers.",
+            "fa": "timeline فراخوانی‌ها را از طریق شناسه‌های مشترک به هم وصل می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "What does the status filter match?",
+            "fa": "فیلتر status با چه چیزی مقایسه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "upstream_status",
+              "The method",
+              "response_status: what the sender was told"
+            ],
+            "fa": [
+              "upstream_status",
+              "متد",
+              "response_status: آن‌چه به فرستنده گفته شد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "A refused call has no upstream status, but it has a response status.",
+            "fa": "فراخوانی ردشده وضعیت upstream ندارد، ولی response status دارد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "event-factory",
+      "group": "events",
+      "title": {
+        "en": "Which calls make which events",
+        "fa": "کدام فراخوانی کدام رویداد را می‌سازد"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+        "docs/events.md"
+      ],
+      "en": [
+        {
+          "id": "types",
+          "h": "Events are about answers",
+          "p": [
+            "`EventFactory` turns one relayed call into zero or more events. `order.placed` is made when the application answered at all, `order.accepted` when it answered 2xx, so a refused order is placed but not accepted. A cancel answered 2xx is `order.cancelled`, a 409 is `order.cancel-refused`. A DiagnosticReport final or amended, answered 2xx, is `result.final` or `result.amended`. A call the upstream did not answer makes none: the sender retries, and the retry makes them once. Prescriptions and merges make no event, because a drug says too much about a patient."
+          ],
+          "examples": [
+            "types"
+          ]
+        },
+        {
+          "id": "cancel",
+          "h": "Two shapes of cancel",
+          "p": [
+            "A cancel is either a `PUT .../ServiceRequest?identifier=`, or what ClinicHub really sends: a transaction Bundle POSTed to `/fhir` whose ServiceRequest has status `revoked`. Both lead to `cancel`. The second shape was found in a real run with Analytics, when the hub had not recognised ClinicHub's cancel."
+          ],
+          "examples": [
+            "revoked",
+            "cancel"
+          ]
+        },
+        {
+          "id": "id",
+          "h": "Ids from the content",
+          "p": [
+            "The event id is a name-based UUID of the type, clinic, order and a discriminator such as the body hash. The same call sent twice gives the same id, so a consumer that ignores ids it has seen counts it once."
+          ],
+          "examples": [
+            "id"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "types",
+          "h": "رویدادها درباره‌ی جواب‌ها هستند",
+          "p": [
+            "`EventFactory` یک فراخوانی relay‌شده را به صفر یا چند رویداد تبدیل می‌کند. `order.placed` وقتی ساخته می‌شود که برنامه اصلاً جواب داده باشد و `order.accepted` وقتی جواب 2xx بوده، پس درخواست ردشده ثبت شده ولی پذیرفته نشده. لغوی که 2xx گرفته `order.cancelled` است و ۴۰۹ یعنی `order.cancel-refused`. یک DiagnosticReport نهایی یا اصلاح‌شده که 2xx گرفته `result.final` یا `result.amended` است. فراخوانی‌ای که upstream جوابش را نداده هیچ رویدادی نمی‌سازد: فرستنده دوباره تلاش می‌کند و همان تلاش یک بار آن‌ها را می‌سازد. نسخه‌ها و ادغام بیماران رویدادی نمی‌سازند، چون یک دارو چیز زیادی درباره‌ی بیمار می‌گوید."
+          ],
+          "examples": [
+            "types"
+          ]
+        },
+        {
+          "id": "cancel",
+          "h": "دو شکل لغو",
+          "p": [
+            "لغو یا یک `PUT .../ServiceRequest?identifier=` است، یا همان چیزی که ClinicHub واقعاً می‌فرستد: یک Bundle تراکنشی که به `/fhir` فرستاده می‌شود و ServiceRequest آن وضعیت `revoked` دارد. هر دو به `cancel` می‌رسند. شکل دوم در یک اجرای واقعی با Analytics پیدا شد، وقتی hub لغو ClinicHub را نشناخته بود."
+          ],
+          "examples": [
+            "revoked",
+            "cancel"
+          ]
+        },
+        {
+          "id": "id",
+          "h": "شناسه‌ها از محتوا",
+          "p": [
+            "شناسه‌ی رویداد یک UUID مبتنی بر نام از نوع، کلینیک، درخواست و یک تمایزدهنده مثل hash بدنه است. همان فراخوانی اگر دو بار فرستاده شود همان شناسه را می‌دهد، پس consumerی که شناسه‌های دیده‌شده را نادیده می‌گیرد آن را یک بار می‌شمارد."
+          ],
+          "examples": [
+            "id"
+          ]
+        }
+      ],
+      "examples": {
+        "types": {
+          "title": {
+            "en": "Which call makes which event",
+            "fa": "کدام فراخوانی کدام رویداد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+          "from": "Turns one relayed call into zero or more events.",
+          "to": "<p>Event ids are derived from the content"
+        },
+        "revoked": {
+          "title": {
+            "en": "ClinicHub's cancel inside a Bundle",
+            "fa": "لغو ClinicHub داخل یک Bundle"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+          "from": "// ClinicHub sends a cancel as a transaction Bundle",
+          "lines": 6
+        },
+        "cancel": {
+          "title": {
+            "en": "Cancelled or refused",
+            "fa": "لغوشده یا ردشده"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+          "from": "int status = call.upstreamStatus();",
+          "lines": 5
+        },
+        "id": {
+          "title": {
+            "en": "A UUID of the content",
+            "fa": "یک UUID از محتوا"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+          "from": "String key = type + \"|\" + clinic",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "LabFlow answers an order with 500. Which events are made?",
+            "fa": "LabFlow به یک درخواست ۵۰۰ می‌دهد. کدام رویدادها ساخته می‌شوند؟"
+          },
+          "options": {
+            "en": [
+              "order.placed and order.accepted",
+              "order.placed only",
+              "None"
+            ],
+            "fa": [
+              "order.placed و order.accepted",
+              "فقط order.placed",
+              "هیچ"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "placed needs an answer of any status; accepted needs 2xx.",
+            "fa": "placed به هر جوابی نیاز دارد؛ accepted به 2xx."
+          }
+        },
+        {
+          "q": {
+            "en": "The upstream timed out. Which events?",
+            "fa": "upstream دچار timeout شد. کدام رویدادها؟"
+          },
+          "options": {
+            "en": [
+              "order.placed",
+              "An error event",
+              "None: the sender's retry makes them once"
+            ],
+            "fa": [
+              "order.placed",
+              "یک رویداد خطا",
+              "هیچ: تلاش دوباره‌ی فرستنده یک بار آن‌ها را می‌سازد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "create returns NONE when upstreamStatus is null.",
+            "fa": "create وقتی upstreamStatus خالی است NONE برمی‌گرداند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why derive event ids from the content?",
+            "fa": "چرا شناسه‌ی رویداد از محتوا ساخته می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "A resent call gives the same id, so it is counted once",
+              "Random ids are slow",
+              "RabbitMQ requires it"
+            ],
+            "fa": [
+              "فراخوانی تکراری همان شناسه را می‌دهد، پس یک بار شمرده می‌شود",
+              "شناسه‌ی تصادفی کند است",
+              "RabbitMQ لازمش دارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "UUID.nameUUIDFromBytes of the key is deterministic.",
+            "fa": "UUID.nameUUIDFromBytes روی کلید قطعی است."
+          }
+        }
+      ]
+    },
+    {
+      "id": "pseudonym",
+      "group": "events",
+      "title": {
+        "en": "Pseudonyms and remembered orders",
+        "fa": "pseudonymها و درخواست‌های به‌خاطرسپرده"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/events/Pseudonymizer.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/events/OrderLinks.java",
+        "src/main/resources/db/migration/V3__event_outbox.sql"
+      ],
+      "en": [
+        {
+          "id": "hmac",
+          "h": "An HMAC of clinic and MRN",
+          "p": [
+            "The patient in an event is the hex HMAC-SHA256, under a secret, of `clinic|MRN`. The MRN is read from the Patient identifier with system `urn:clinichub:{clinic}:mrn`; the health card number is never read. Without the secret a pseudonym cannot be reversed or recomputed, and because the clinic is part of the input, one person has different pseudonyms in two clinics. Changing the secret changes every pseudonym, so the same patient becomes a new one in Analytics."
+          ],
+          "examples": [
+            "hmac"
+          ]
+        },
+        {
+          "id": "link",
+          "h": "Results do not carry the patient",
+          "p": [
+            "A result or a cancel names the order but not the patient. So when an order is relayed, the hub remembers per clinic and order the pseudonym, application, test and priority in `order_link` (no MRN, no name) and uses them for the events of later results and cancels. A resent order keeps what it had: `coalesce` never overwrites a value with null. Links are deleted after 365 days; a result later than that, or for an order the hub never saw, has no pseudonym."
+          ],
+          "examples": [
+            "link",
+            "upsert"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "Merges move the pseudonym",
+          "p": [
+            "When a merge Bundle (a Patient replaced by another) is answered 2xx, `OrderLinks.move` gives the merged patient's orders the survivor's pseudonym, so later results carry it. Events already published keep the old one, and nothing in the feed says the two are one person."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "hmac",
+          "h": "یک HMAC از کلینیک و MRN",
+          "p": [
+            "بیمار در هر رویداد، hex حاصل HMAC-SHA256 با یک secret روی `clinic|MRN` است. MRN از شناسه‌ی Patient با system به شکل `urn:clinichub:{clinic}:mrn` خوانده می‌شود؛ شماره‌ی کارت سلامت هرگز خوانده نمی‌شود. بدون secret نمی‌شود pseudonym را برگرداند یا دوباره ساخت، و چون کلینیک جزو ورودی است یک نفر در دو کلینیک دو pseudonym متفاوت دارد. عوض کردن secret همه‌ی pseudonymها را عوض می‌کند، پس همان بیمار در Analytics یک نفر تازه می‌شود."
+          ],
+          "examples": [
+            "hmac"
+          ]
+        },
+        {
+          "id": "link",
+          "h": "جواب‌ها بیمار را با خود ندارند",
+          "p": [
+            "جواب یا لغو، درخواست را نام می‌برد ولی بیمار را نه. پس وقتی درخواستی relay می‌شود، hub برای هر کلینیک و درخواست pseudonym، برنامه، آزمایش و اولویت را در `order_link` به خاطر می‌سپارد (بدون MRN، بدون نام) و برای رویدادهای جواب‌ها و لغوهای بعدی به کار می‌برد. درخواستی که دوباره فرستاده شود آن‌چه داشته را نگه می‌دارد: `coalesce` هرگز مقداری را با null بازنویسی نمی‌کند. پیوندها بعد از ۳۶۵ روز پاک می‌شوند؛ جوابی دیرتر از آن، یا برای درخواستی که hub ندیده، pseudonym ندارد."
+          ],
+          "examples": [
+            "link",
+            "upsert"
+          ]
+        },
+        {
+          "id": "merge",
+          "h": "ادغام، pseudonym را جابه‌جا می‌کند",
+          "p": [
+            "وقتی یک Bundle ادغام (Patientی که با دیگری جایگزین شده) جواب 2xx بگیرد، `OrderLinks.move` به درخواست‌های بیمارِ ادغام‌شده pseudonym بیمار باقی‌مانده را می‌دهد تا جواب‌های بعدی آن را داشته باشند. رویدادهایی که قبلاً منتشر شده‌اند همان قبلی را نگه می‌دارند و هیچ چیز در فید نمی‌گوید این دو یک نفرند."
+          ]
+        }
+      ],
+      "examples": {
+        "hmac": {
+          "title": {
+            "en": "The pseudonym",
+            "fa": "pseudonym"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/Pseudonymizer.java",
+          "from": "public String of(String clinicSlug, String mrn) {",
+          "to": "return HexFormat.of().formatHex(digest);"
+        },
+        "link": {
+          "title": {
+            "en": "What is remembered of an order",
+            "fa": "آن‌چه از یک درخواست به خاطر سپرده می‌شود"
+          },
+          "lang": "sql",
+          "file": "src/main/resources/db/migration/V3__event_outbox.sql",
+          "from": "-- What a later call needs to know about an order",
+          "to": "PRIMARY KEY (clinic_slug, order_id)"
+        },
+        "upsert": {
+          "title": {
+            "en": "A resend keeps what it had",
+            "fa": "ارسال دوباره آن‌چه داشته را نگه می‌دارد"
+          },
+          "lang": "sql",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/OrderLinks.java",
+          "from": "on conflict (clinic_slug, order_id) do update set",
+          "lines": 6
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is the clinic part of the HMAC input?",
+            "fa": "چرا کلینیک جزو ورودی HMAC است؟"
+          },
+          "options": {
+            "en": [
+              "MRNs are per clinic, and pseudonyms cannot be joined across clinics",
+              "To make it longer",
+              "For sorting"
+            ],
+            "fa": [
+              "MRNها برای هر کلینیک‌اند و pseudonymها بین کلینیک‌ها قابل اتصال نیستند",
+              "برای بلندتر شدن",
+              "برای مرتب‌سازی"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "events.md: do not join pseudonyms across clinics; they differ by design.",
+            "fa": "events.md: pseudonymها را بین کلینیک‌ها وصل نکنید؛ عمداً متفاوت‌اند."
+          }
+        },
+        {
+          "q": {
+            "en": "A result arrives for an order relayed 400 days ago. Its pseudonym?",
+            "fa": "جوابی برای درخواستی می‌رسد که ۴۰۰ روز پیش relay شده. pseudonym آن؟"
+          },
+          "options": {
+            "en": [
+              "The order's",
+              "null: the link was deleted after 365 days",
+              "A new one"
+            ],
+            "fa": [
+              "همان pseudonym درخواست",
+              "null: پیوند بعد از ۳۶۵ روز پاک شده",
+              "یک pseudonym تازه"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The publisher purges order_link after order-link-retention-days.",
+            "fa": "publisher جدول order_link را بعد از order-link-retention-days پاک می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why coalesce in the upsert?",
+            "fa": "چرا در upsert از coalesce استفاده می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "PostgreSQL requires it",
+              "To merge patients",
+              "So a resend lacking a field does not erase what was remembered"
+            ],
+            "fa": [
+              "PostgreSQL لازمش دارد",
+              "برای ادغام بیماران",
+              "تا ارسال دوباره‌ای که فیلدی کم دارد آن‌چه به خاطر سپرده شده را پاک نکند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "excluded.x is null, so the old value stays.",
+            "fa": "excluded.x خالی است، پس مقدار قبلی می‌ماند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "outbox",
+      "group": "events",
+      "title": {
+        "en": "The outbox and the publisher",
+        "fa": "outbox و منتشرکننده"
+      },
+      "files": [
+        "src/main/resources/db/migration/V3__event_outbox.sql",
+        "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/events/RabbitConfig.java",
+        "src/main/resources/application.yml"
+      ],
+      "en": [
+        {
+          "id": "tx",
+          "h": "Written with the log row",
+          "p": [
+            "Events are not sent to RabbitMQ during the call. They are inserted into `event_outbox` in the same transaction as the call's log row, so either both exist or neither does, and a broker that is down loses nothing. The relay does not even need the broker: its health indicator is switched off, and the state of the feed is a metric (`hub.events.outbox.pending` and the age of the oldest row)."
+          ],
+          "examples": [
+            "table"
+          ]
+        },
+        {
+          "id": "publish",
+          "h": "Publish, confirm, mark",
+          "p": [
+            "`EventPublisher` takes due rows oldest first with `for update skip locked`, so two hubs would not take the same rows, sends them persistent with the event id as message id, and waits for the broker's publisher confirms. Only then are the rows marked published. On failure each row gets one more attempt, the error type, and a next attempt after 2^(attempts+1) seconds, capped by `max-backoff`. Delivery is at least once: a confirm can be lost after the broker took the message."
+          ],
+          "examples": [
+            "publish",
+            "confirm",
+            "backoff"
+          ]
+        },
+        {
+          "id": "queue",
+          "h": "A queue that waits for Analytics",
+          "p": [
+            "The hub declares the topic exchange `clinical.events` and also the durable queue `analytics.clinical-events` bound with `#`, so events published before Analytics first starts wait there instead of being dropped. Analytics declares the same queue, durable and without arguments."
+          ],
+          "examples": [
+            "rabbit"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "tx",
+          "h": "همراه ردیف لاگ نوشته می‌شود",
+          "p": [
+            "رویدادها در طول فراخوانی به RabbitMQ فرستاده نمی‌شوند. آن‌ها در همان transaction ردیف لاگ فراخوانی در `event_outbox` درج می‌شوند، پس یا هر دو وجود دارند یا هیچ‌کدام، و broker از کار افتاده چیزی را گم نمی‌کند. relay حتی به broker نیاز ندارد: health indicator آن خاموش است و وضعیت فید یک metric است (`hub.events.outbox.pending` و سن قدیمی‌ترین ردیف)."
+          ],
+          "examples": [
+            "table"
+          ]
+        },
+        {
+          "id": "publish",
+          "h": "منتشر کن، تأیید بگیر، علامت بزن",
+          "p": [
+            "`EventPublisher` ردیف‌های سررسیده را از قدیمی به جدید با `for update skip locked` برمی‌دارد، تا دو hub ردیف‌های یکسان را برندارند، آن‌ها را به‌صورت persistent و با شناسه‌ی رویداد به‌عنوان message id می‌فرستد و منتظر publisher confirm برنامه‌ی broker می‌ماند. فقط بعد از آن ردیف‌ها منتشرشده علامت می‌خورند. در صورت شکست هر ردیف یک تلاش بیشتر، نوع خطا و تلاش بعدی پس از 2^(attempts+1) ثانیه می‌گیرد که سقفش `max-backoff` است. تحویل «دست‌کم یک بار» است: ممکن است confirm بعد از گرفتن پیام توسط broker گم شود."
+          ],
+          "examples": [
+            "publish",
+            "confirm",
+            "backoff"
+          ]
+        },
+        {
+          "id": "queue",
+          "h": "صفی که منتظر Analytics می‌ماند",
+          "p": [
+            "hub علاوه بر topic exchange به نام `clinical.events`، صف durable به نام `analytics.clinical-events` را هم declare می‌کند و با `#` bind می‌کند، تا رویدادهایی که قبل از اولین شروع Analytics منتشر شده‌اند آن‌جا منتظر بمانند و دور ریخته نشوند. Analytics همان صف را durable و بدون آرگومان declare می‌کند."
+          ],
+          "examples": [
+            "rabbit"
+          ]
+        }
+      ],
+      "examples": {
+        "table": {
+          "title": {
+            "en": "The outbox table",
+            "fa": "جدول outbox"
+          },
+          "lang": "sql",
+          "file": "src/main/resources/db/migration/V3__event_outbox.sql",
+          "from": "CREATE TABLE event_outbox (",
+          "to": "last_error"
+        },
+        "publish": {
+          "title": {
+            "en": "Due rows, oldest first, locked",
+            "fa": "ردیف‌های سررسیده، قدیمی اول، قفل‌شده"
+          },
+          "lang": "sql",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+          "from": "select id, event_type, payload::text, attempts from event_outbox",
+          "lines": 3
+        },
+        "confirm": {
+          "title": {
+            "en": "Wait for the confirms",
+            "fa": "منتظر confirmها"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+          "from": "rabbit.invoke(",
+          "to": "ops.waitForConfirmsOrDie(CONFIRM_TIMEOUT_MS);"
+        },
+        "backoff": {
+          "title": {
+            "en": "A growing pause",
+            "fa": "مکثی که بزرگ می‌شود"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+          "from": "Duration backoff(int attempts) {",
+          "lines": 4
+        },
+        "rabbit": {
+          "title": {
+            "en": "Exchange, queue, binding",
+            "fa": "exchange، صف، binding"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/RabbitConfig.java",
+          "from": "TopicExchange clinicalEventsExchange",
+          "to": "BindingBuilder.bind"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "RabbitMQ is down during an order. Does the sender get its answer?",
+            "fa": "هنگام یک درخواست RabbitMQ از کار افتاده. فرستنده جوابش را می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "No, 503",
+              "Yes; the events wait in the outbox and are published later",
+              "Yes, but the events are lost"
+            ],
+            "fa": [
+              "نه، ۵۰۳",
+              "بله؛ رویدادها در outbox منتظر می‌مانند و بعداً منتشر می‌شوند",
+              "بله، ولی رویدادها گم می‌شوند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The outbox test relays with the broker down and sees the events published after it starts.",
+            "fa": "تست outbox با broker خاموش relay می‌کند و می‌بیند رویدادها بعد از روشن شدنش منتشر می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why are rows marked published only after the confirm?",
+            "fa": "چرا ردیف‌ها فقط بعد از confirm منتشرشده علامت می‌خورند؟"
+          },
+          "options": {
+            "en": [
+              "So a message the broker did not take is sent again",
+              "Confirms are faster",
+              "For metrics"
+            ],
+            "fa": [
+              "تا پیامی که broker نگرفته دوباره فرستاده شود",
+              "confirm سریع‌تر است",
+              "برای metricها"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Without a confirm the row stays due and is retried.",
+            "fa": "بدون confirm ردیف سررسیده می‌ماند و دوباره تلاش می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the hub declare Analytics' queue?",
+            "fa": "چرا hub صف Analytics را declare می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Analytics cannot declare queues",
+              "For speed",
+              "So events published before Analytics first starts are kept"
+            ],
+            "fa": [
+              "Analytics نمی‌تواند صف declare کند",
+              "برای سرعت",
+              "تا رویدادهای منتشرشده پیش از اولین شروع Analytics نگه داشته شوند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "A topic exchange drops messages no queue is bound for.",
+            "fa": "topic exchange پیام‌هایی را که صفی برایشان bind نشده دور می‌ریزد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "mllp",
+      "group": "hl7",
+      "title": {
+        "en": "MLLP: frames on a socket",
+        "fa": "MLLP: قاب‌ها روی socket"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Mllp.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpServer.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpSockets.java"
+      ],
+      "en": [
+        {
+          "id": "frame",
+          "h": "VT, the message, FS CR",
+          "p": [
+            "HL7 v2 travels over MLLP: a message between a start byte VT (0x0B) and an end FS CR (0x1C 0x0D). `Mllp.read` skips stray bytes before the start, such as a CR or LF after the last frame, returns null at a clean end of stream, and throws a `FrameException` for a frame bigger than `max-message-bytes` (1 MiB), a start byte inside a message, or an end that is not FS CR. `write` wraps a message the same way."
+          ],
+          "examples": [
+            "frame"
+          ]
+        },
+        {
+          "id": "server",
+          "h": "One virtual thread per connection",
+          "p": [
+            "`MllpServer` listens on 2575 and gives each connection a virtual thread. A connection can carry many messages; each is answered with its ACK before the next is read. An idle connection is closed quietly after `read-timeout` (30 s); a framing error closes it with a warning that names only the problem; a failed TLS handshake logs only the exception type. Since phase 8 the listener can speak TLS and ask for or require the lab's certificate."
+          ],
+          "examples": [
+            "serve"
+          ]
+        },
+        {
+          "id": "logged",
+          "h": "Every attempt is a log row",
+          "p": [
+            "HL7 traffic lands in the same message log as the relay: each attempt to hand a result to ClinicHub is a row with route `hl7` and method `MLLP` for the first try or `RETRY` for the worker's, with metadata only, so route health and the alerts see HL7 like any other route."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "frame",
+          "h": "VT، پیام، FS CR",
+          "p": [
+            "HL7 v2 روی MLLP حرکت می‌کند: پیامی بین بایت شروع VT (0x0B) و پایان FS CR (0x1C 0x0D). `Mllp.read` بایت‌های سرگردان قبل از شروع را، مثل CR یا LF بعد از آخرین قاب، رد می‌کند، در پایان تمیز stream مقدار null برمی‌گرداند و برای قابی بزرگ‌تر از `max-message-bytes` (۱ مبی‌بایت)، بایت شروع وسط پیام یا پایانی که FS CR نباشد `FrameException` می‌دهد. `write` پیام را به همین شکل بسته‌بندی می‌کند."
+          ],
+          "examples": [
+            "frame"
+          ]
+        },
+        {
+          "id": "server",
+          "h": "یک virtual thread برای هر اتصال",
+          "p": [
+            "`MllpServer` روی 2575 گوش می‌دهد و به هر اتصال یک virtual thread می‌دهد. هر اتصال می‌تواند چند پیام حمل کند؛ هر پیام قبل از خوانده شدن پیام بعدی با ACK خودش جواب داده می‌شود. اتصال بیکار بعد از `read-timeout` (۳۰ ثانیه) بی‌صدا بسته می‌شود؛ خطای قاب‌بندی اتصال را با هشداری می‌بندد که فقط مشکل را نام می‌برد؛ handshake ناموفق TLS فقط نوع exception را لاگ می‌کند. از فاز ۸ listener می‌تواند TLS حرف بزند و گواهی آزمایشگاه را بخواهد یا الزامی کند."
+          ],
+          "examples": [
+            "serve"
+          ]
+        },
+        {
+          "id": "logged",
+          "h": "هر تلاش یک ردیف لاگ است",
+          "p": [
+            "ترافیک HL7 در همان لاگ پیام‌های relay ثبت می‌شود: هر تلاش برای دادن یک جواب به ClinicHub یک ردیف با route به نام `hl7` و متد `MLLP` برای تلاش اول یا `RETRY` برای تلاش worker است، فقط با metadata؛ پس سلامت routeها و هشدارها HL7 را هم مثل هر route دیگری می‌بینند."
+          ]
+        }
+      ],
+      "examples": {
+        "frame": {
+          "title": {
+            "en": "Reading one frame",
+            "fa": "خواندن یک قاب"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Mllp.java",
+          "from": "public static byte[] read(InputStream in, int maxBytes)",
+          "to": "out.write(b);"
+        },
+        "serve": {
+          "title": {
+            "en": "Many messages, each answered in turn",
+            "fa": "چند پیام، هر کدام به نوبت جواب داده می‌شود"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpServer.java",
+          "from": "private void serve(Socket socket) {",
+          "to": "Mllp.write(out, inbound.handle(frame));"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Bytes arrive before the VT start byte. What happens?",
+            "fa": "بایت‌هایی قبل از بایت شروع VT می‌رسند. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The connection is closed",
+              "They are skipped",
+              "They are prepended to the message"
+            ],
+            "fa": [
+              "اتصال بسته می‌شود",
+              "رد می‌شوند",
+              "به ابتدای پیام اضافه می‌شوند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "read loops until it sees VT.",
+            "fa": "read تا دیدن VT می‌چرخد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is each message answered before the next is read?",
+            "fa": "چرا هر پیام قبل از خواندن پیام بعدی جواب داده می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The ACK tells the lab what happened to that message",
+              "MLLP forbids pipelining",
+              "To save memory"
+            ],
+            "fa": [
+              "ACK به آزمایشگاه می‌گوید سر همان پیام چه آمد",
+              "MLLP ارسال پشت‌سرهم را ممنوع می‌کند",
+              "برای صرفه‌جویی در حافظه"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "One ACK per message, in order, is the lab’s only signal.",
+            "fa": "یک ACK برای هر پیام، به ترتیب، تنها علامت آزمایشگاه است."
+          }
+        },
+        {
+          "q": {
+            "en": "A 2 MiB message arrives. Result?",
+            "fa": "پیامی ۲ مبی‌بایتی می‌رسد. نتیجه؟"
+          },
+          "options": {
+            "en": [
+              "It is split",
+              "It is stored in two rows",
+              "A FrameException; the connection closes without an answer"
+            ],
+            "fa": [
+              "تکه می‌شود",
+              "در دو ردیف ذخیره می‌شود",
+              "FrameException؛ اتصال بدون جواب بسته می‌شود"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "A test checks that an oversized message closes the connection and is not answered.",
+            "fa": "یک تست بررسی می‌کند که پیام بیش از حد اتصال را می‌بندد و جواب نمی‌گیرد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "oru",
+      "group": "hl7",
+      "title": {
+        "en": "ORU^R01 to FHIR",
+        "fa": "از ORU^R01 تا FHIR"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Message.java",
+        "docs/architecture.md"
+      ],
+      "en": [
+        {
+          "id": "map",
+          "h": "Segment by segment",
+          "p": [
+            "`OruToFhir` turns one ORU^R01 into the transaction Bundle ClinicHub already takes from LabFlow: one DiagnosticReport per OBR, with its OBXs as Observations. OBR-25 gives the status: F final, C amended, X cancelled; other statuses are accepted and not forwarded, because ClinicHub's results contract is final, amended, cancelled. Bundle and resource ids are derived from the sender and the message control id, so a resend gives the same ids. The hub has its own small parser, `Hl7Message`, instead of HAPI's, because HAPI needs a structure per HL7 version and labs mix versions."
+          ],
+          "examples": [
+            "table"
+          ]
+        },
+        {
+          "id": "placer",
+          "h": "Which order a result answers",
+          "p": [
+            "The placer order number in ORC-2 (or OBR-2) names ClinicHub's order, in one of two forms: `101^harbourview` (order id, then clinic) or the whole identifier `urn:clinichub:harbourview:service-request|101`. Both are checked against strict patterns and become `basedOn`. Without one, or with anything else, the message is refused with AR: a result that cannot be tied to an order is never forwarded."
+          ],
+          "examples": [
+            "placer"
+          ]
+        },
+        {
+          "id": "pid",
+          "h": "PID is never read",
+          "p": [
+            "The patient segments are not read at all. ClinicHub knows the patient from the order, so nothing that names a patient is forwarded or kept. Likewise a value the mapping cannot express, an unknown value type or a number that is not a number, refuses the whole message instead of sending it with a hole."
+          ],
+          "examples": [
+            "never"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "map",
+          "h": "segment به segment",
+          "p": [
+            "`OruToFhir` یک ORU^R01 را به همان Bundle تراکنشی تبدیل می‌کند که ClinicHub از قبل از LabFlow می‌گیرد: یک DiagnosticReport برای هر OBR و OBXهایش به شکل Observation. OBR-25 وضعیت را می‌دهد: F نهایی، C اصلاح‌شده، X لغوشده؛ وضعیت‌های دیگر پذیرفته ولی فرستاده نمی‌شوند، چون قرارداد جواب ClinicHub فقط نهایی، اصلاح‌شده و لغوشده است. شناسه‌ی Bundle و منابع از فرستنده و message control id ساخته می‌شوند، پس ارسال دوباره همان شناسه‌ها را می‌دهد. hub به‌جای parser کتابخانه‌ی HAPI یک parser کوچک خودش، `Hl7Message`، را دارد، چون HAPI برای هر نسخه‌ی HL7 یک ساختار لازم دارد و آزمایشگاه‌ها نسخه‌ها را قاطی می‌کنند."
+          ],
+          "examples": [
+            "table"
+          ]
+        },
+        {
+          "id": "placer",
+          "h": "جواب به کدام درخواست است",
+          "p": [
+            "شماره‌ی درخواست placer در ORC-2 (یا OBR-2) درخواست ClinicHub را به یکی از دو شکل نام می‌برد: `101^harbourview` (شناسه‌ی درخواست، بعد کلینیک) یا کل شناسه `urn:clinichub:harbourview:service-request|101`. هر دو با الگوهای سخت‌گیر سنجیده می‌شوند و `basedOn` می‌شوند. بدون آن، یا با هر چیز دیگری، پیام با AR رد می‌شود: جوابی که به درخواستی وصل نشود هرگز فرستاده نمی‌شود."
+          ],
+          "examples": [
+            "placer"
+          ]
+        },
+        {
+          "id": "pid",
+          "h": "PID هرگز خوانده نمی‌شود",
+          "p": [
+            "segmentهای بیمار اصلاً خوانده نمی‌شوند. ClinicHub بیمار را از روی درخواست می‌شناسد، پس هیچ چیزی که بیماری را نام ببرد فرستاده یا نگه داشته نمی‌شود. به همین ترتیب مقداری که نگاشت نمی‌تواند بیانش کند، یک نوع مقدار ناشناخته یا عددی که عدد نیست، به‌جای فرستادن پیام با جای خالی کل پیام را رد می‌کند."
+          ],
+          "examples": [
+            "never"
+          ]
+        }
+      ],
+      "examples": {
+        "table": {
+          "title": {
+            "en": "HL7 v2 to FHIR R4",
+            "fa": "از HL7 v2 تا FHIR R4"
+          },
+          "lang": "markdown",
+          "file": "docs/architecture.md",
+          "from": "| HL7 v2 | FHIR R4 |",
+          "to": "**not read**. No patient is named"
+        },
+        "placer": {
+          "title": {
+            "en": "The placer order number",
+            "fa": "شماره‌ی درخواست placer"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java",
+          "from": "Reference placerOrder(Segment source, Segment obr)",
+          "to": "is not a ClinicHub order"
+        },
+        "never": {
+          "title": {
+            "en": "Never read",
+            "fa": "هرگز خوانده نمی‌شود"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java",
+          "from": "<li>PID and every other segment",
+          "lines": 3
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A preliminary result (OBR-25 P) arrives. What happens?",
+            "fa": "یک جواب مقدماتی (OBR-25 برابر P) می‌رسد. چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It is forwarded as preliminary",
+              "It is accepted with AA and not forwarded",
+              "It is refused with AR"
+            ],
+            "fa": [
+              "به‌عنوان مقدماتی فرستاده می‌شود",
+              "با AA پذیرفته و فرستاده نمی‌شود",
+              "با AR رد می‌شود"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Nothing to forward is accepted, not refused: the lab did nothing wrong.",
+            "fa": "چیزی برای فرستادن نیست، پس پذیرفته می‌شود نه رد: آزمایشگاه خطایی نکرده."
+          }
+        },
+        {
+          "q": {
+            "en": "Why are Bundle ids derived from sender and control id?",
+            "fa": "چرا شناسه‌ی Bundle از فرستنده و control id ساخته می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "A resend of the same message gives the same ids",
+              "FHIR requires it",
+              "For encryption"
+            ],
+            "fa": [
+              "ارسال دوباره‌ی همان پیام همان شناسه‌ها را می‌دهد",
+              "FHIR لازمش دارد",
+              "برای رمزگذاری"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Stable ids let ClinicHub recognise a second copy.",
+            "fa": "شناسه‌ی ثابت به ClinicHub امکان می‌دهد نسخه‌ی دوم را بشناسد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is PID never read?",
+            "fa": "چرا PID هرگز خوانده نمی‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It is often empty",
+              "The parser cannot read it",
+              "ClinicHub knows the patient from the order, so nothing naming one needs to pass"
+            ],
+            "fa": [
+              "اغلب خالی است",
+              "parser نمی‌تواند بخواندش",
+              "ClinicHub بیمار را از درخواست می‌شناسد، پس لازم نیست چیزی که بیمار را نام می‌برد عبور کند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "basedOn ties the result to the order, which ClinicHub already links to the patient.",
+            "fa": "basedOn جواب را به درخواستی وصل می‌کند که ClinicHub از قبل به بیمار وصل کرده."
+          }
+        }
+      ]
+    },
+    {
+      "id": "store-forward",
+      "group": "hl7",
+      "title": {
+        "en": "Store and forward, and the ACK",
+        "fa": "ذخیره و ارسال، و ACK"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/ClinicHubClient.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/PayloadCipher.java",
+        "src/main/resources/db/migration/V4__hl7_queues.sql",
+        "src/test/java/ca/arashkeshtgar/integrationhub/Hl7InboundTest.java"
+      ],
+      "en": [
+        {
+          "id": "ack",
+          "h": "AA, AE, AR",
+          "p": [
+            "The ACK is the lab's only signal, so it says where the result is. **AA**: ClinicHub has it, or there was nothing to forward. **AE**: the hub has stored it and keeps trying; do not resend. **AR**: refused for good. The mapped Bundle is written to `hl7_inbound` and handed to ClinicHub at once. The insert is keyed on sender and message control id: a resend while the first copy is PENDING or DELIVERED inserts nothing and is answered from the stored status; only a FAILED or REJECTED row is taken again."
+          ],
+          "examples": [
+            "insert"
+          ]
+        },
+        {
+          "id": "retry",
+          "h": "Which answers are retried",
+          "p": [
+            "The hub signs in to ClinicHub as the client `integrationhub` (client credentials, scope `results`), caching the token until 30 seconds before it expires. A 2xx is delivered. A 401 drops the token and retries; 408, 425, 429, 5xx and no answer are retried after 10 s, 20 s, 40 s and so on up to 30 minutes, 12 attempts, and then the row is FAILED. Any other 4xx is REJECTED and not retried."
+          ],
+          "examples": [
+            "outcomes"
+          ]
+        },
+        {
+          "id": "cipher",
+          "h": "Encrypted while it waits",
+          "p": [
+            "The queued Bundle is health information, so it is encrypted with AES-256-GCM under `HUB_HL7_QUEUE_KEY`, with a fresh 12-byte IV each time and the row id as associated data: a payload copied into another row does not decrypt. The column is set to null when the row is delivered. The test checks that the stored bytes contain no `DiagnosticReport`, test name or clinic."
+          ],
+          "examples": [
+            "cipher",
+            "test"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "ack",
+          "h": "AA، AE، AR",
+          "p": [
+            "ACK تنها علامتی است که آزمایشگاه دارد، پس می‌گوید جواب کجاست. **AA**: ClinicHub آن را دارد، یا چیزی برای فرستادن نبود. **AE**: hub آن را ذخیره کرده و تلاش را ادامه می‌دهد؛ دوباره نفرستید. **AR**: برای همیشه رد شد. Bundle نگاشته‌شده در `hl7_inbound` نوشته و فوراً به ClinicHub داده می‌شود. درج بر اساس فرستنده و message control id کلید می‌خورد: ارسال دوباره وقتی نسخه‌ی اول PENDING یا DELIVERED است چیزی درج نمی‌کند و از روی وضعیت ذخیره‌شده جواب می‌گیرد؛ فقط ردیف FAILED یا REJECTED دوباره پذیرفته می‌شود."
+          ],
+          "examples": [
+            "insert"
+          ]
+        },
+        {
+          "id": "retry",
+          "h": "کدام جواب‌ها دوباره تلاش می‌شوند",
+          "p": [
+            "hub به‌عنوان client به نام `integrationhub` در ClinicHub وارد می‌شود (client credentials، scope به نام `results`) و token را تا ۳۰ ثانیه قبل از انقضا cache می‌کند. 2xx یعنی تحویل شد. ۴۰۱ token را دور می‌ریزد و دوباره تلاش می‌کند؛ ۴۰۸، ۴۲۵، ۴۲۹، 5xx و بی‌جوابی بعد از ۱۰ ثانیه، ۲۰ ثانیه، ۴۰ ثانیه و همین‌طور تا ۳۰ دقیقه دوباره تلاش می‌شوند، تا ۱۲ بار، و بعد ردیف FAILED می‌شود. هر 4xx دیگر REJECTED است و دوباره تلاش نمی‌شود."
+          ],
+          "examples": [
+            "outcomes"
+          ]
+        },
+        {
+          "id": "cipher",
+          "h": "رمزشده تا وقتی منتظر است",
+          "p": [
+            "Bundle در صف اطلاعات سلامت است، پس با AES-256-GCM زیر `HUB_HL7_QUEUE_KEY` رمز می‌شود، هر بار با یک IV دوازده‌بایتی تازه و با شناسه‌ی ردیف به‌عنوان associated data: payloadی که به ردیف دیگری کپی شود رمزگشایی نمی‌شود. ستون وقتی ردیف تحویل شد null می‌شود. تست بررسی می‌کند که بایت‌های ذخیره‌شده هیچ `DiagnosticReport`، نام آزمایش یا کلینیکی نداشته باشند."
+          ],
+          "examples": [
+            "cipher",
+            "test"
+          ]
+        }
+      ],
+      "examples": {
+        "insert": {
+          "title": {
+            "en": "Stored once per sender and message",
+            "fa": "یک بار برای هر فرستنده و پیام"
+          },
+          "lang": "sql",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+          "from": "insert into hl7_inbound (id, received_at",
+          "to": "where hl7_inbound.status in ('FAILED', 'REJECTED')"
+        },
+        "outcomes": {
+          "title": {
+            "en": "ClinicHub's answer decides",
+            "fa": "جواب ClinicHub تصمیم می‌گیرد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/ClinicHubClient.java",
+          "from": "if (status >= 200 && status < 300) {",
+          "to": "clinichub-refused"
+        },
+        "cipher": {
+          "title": {
+            "en": "AES-GCM bound to the row",
+            "fa": "AES-GCM وابسته به ردیف"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/PayloadCipher.java",
+          "from": "public byte[] encrypt(byte[] plain, String rowId)",
+          "to": "return ByteBuffer.allocate"
+        },
+        "test": {
+          "title": {
+            "en": "Nothing readable at rest",
+            "fa": "هیچ چیز خوانا در حالت ذخیره"
+          },
+          "lang": "java",
+          "file": "src/test/java/ca/arashkeshtgar/integrationhub/Hl7InboundTest.java",
+          "from": "assertThat(new String(payload, StandardCharsets.ISO_8859_1))",
+          "lines": 5
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "ClinicHub answers 503. What does the lab get?",
+            "fa": "ClinicHub جواب ۵۰۳ می‌دهد. آزمایشگاه چه می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "AA",
+              "AE: stored, the hub keeps trying",
+              "AR"
+            ],
+            "fa": [
+              "AA",
+              "AE: ذخیره شده و hub تلاش را ادامه می‌دهد",
+              "AR"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "5xx is a RETRY outcome, answered AE.",
+            "fa": "5xx نتیجه‌ی RETRY است که با AE جواب داده می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "ClinicHub answers 403 (no such order for this client). Is it retried?",
+            "fa": "ClinicHub جواب ۴۰۳ می‌دهد (چنین درخواستی برای این client نیست). دوباره تلاش می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Yes, 12 times",
+              "Once after 10 s",
+              "No: it is REJECTED and the lab gets AR"
+            ],
+            "fa": [
+              "بله، ۱۲ بار",
+              "یک بار بعد از ۱۰ ثانیه",
+              "نه: REJECTED می‌شود و آزمایشگاه AR می‌گیرد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "A 4xx other than 401, 408, 425 and 429 will not get better by waiting.",
+            "fa": "یک 4xx غیر از ۴۰۱، ۴۰۸، ۴۲۵ و ۴۲۹ با صبر بهتر نمی‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why bind the row id into the encryption?",
+            "fa": "چرا شناسه‌ی ردیف به رمزگذاری گره خورده؟"
+          },
+          "options": {
+            "en": [
+              "So a payload copied into another row does not decrypt",
+              "Speed",
+              "To make the IV"
+            ],
+            "fa": [
+              "تا payloadی که به ردیف دیگری کپی شود رمزگشایی نشود",
+              "سرعت",
+              "برای ساختن IV"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The row id is authenticated as AAD; a mismatch fails the GCM tag.",
+            "fa": "شناسه‌ی ردیف به‌عنوان AAD احراز می‌شود؛ ناهمخوانی tag برنامه‌ی GCM را fail می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "orders-out",
+      "group": "hl7",
+      "title": {
+        "en": "Orders to an external lab (ORM^O01)",
+        "fa": "درخواست به آزمایشگاه بیرونی (ORM^O01)"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Orders.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/FhirToOrm.java",
+        "src/main/resources/application.yml"
+      ],
+      "en": [
+        {
+          "id": "route",
+          "h": "A route without an HTTP upstream",
+          "p": [
+            "The `externallab` route has `hl7-order: true` and no upstream. ClinicHub posts the same order Bundle and the same kind of token as for LabFlow (audience `externallab`, scope `orders`); the hub checks it like any route, turns the Bundle into one ORM^O01 with `FhirToOrm` and sends it over MLLP to `hub.hl7.lab`. The lab's ACK is the answer, in the same call: AA or CA is 200 with a transaction-response; AE or AR is 422 for an order, which ClinicHub retries, and 409 for a cancellation, which ClinicHub treats as the lab's answer; no ACK is 502; no lab set up is 503; a body that is not an order is 400."
+          ],
+          "examples": [
+            "yml",
+            "send"
+          ]
+        },
+        {
+          "id": "ack",
+          "h": "Reading the ACK",
+          "p": [
+            "`deliver` opens one connection per message, writes the frame and reads one frame back. MSA-1 decides: AA or CA is accepted; AE, AR, CE or CR is refused; anything else is `bad-ack`; an I/O error is `lab-unreachable`. Nothing is queued in the hub: ClinicHub's outbox retries."
+          ],
+          "examples": [
+            "ack"
+          ]
+        },
+        {
+          "id": "identity",
+          "h": "Here the patient does go out",
+          "p": [
+            "Unlike everything else, this message carries the patient's name, birth date, sex, MRN and health card number, because a lab cannot run an order without them. The hub builds it in memory, sends it and drops it; the log holds metadata only, and the tests check that no name, number or note reaches it."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "route",
+          "h": "routeی بدون upstream از نوع HTTP",
+          "p": [
+            "route به نام `externallab` مقدار `hl7-order: true` دارد و upstream ندارد. ClinicHub همان Bundle درخواست و همان نوع token را می‌فرستد که برای LabFlow (audience به نام `externallab`، scope به نام `orders`)؛ hub مثل هر route آن را بررسی می‌کند، Bundle را با `FhirToOrm` به یک ORM^O01 تبدیل می‌کند و روی MLLP به `hub.hl7.lab` می‌فرستد. ACK آزمایشگاه جواب همان فراخوانی است: AA یا CA یعنی ۲۰۰ با یک transaction-response؛ AE یا AR برای درخواست ۴۲۲ است که ClinicHub دوباره تلاشش می‌کند، و برای لغو ۴۰۹ که ClinicHub آن را جواب آزمایشگاه می‌داند؛ نبودن ACK یعنی ۵۰۲؛ آزمایشگاه تنظیم‌نشده یعنی ۵۰۳؛ بدنه‌ای که درخواست نیست یعنی ۴۰۰."
+          ],
+          "examples": [
+            "yml",
+            "send"
+          ]
+        },
+        {
+          "id": "ack",
+          "h": "خواندن ACK",
+          "p": [
+            "`deliver` برای هر پیام یک اتصال باز می‌کند، قاب را می‌نویسد و یک قاب برمی‌خواند. MSA-1 تصمیم می‌گیرد: AA یا CA یعنی پذیرفته؛ AE، AR، CE یا CR یعنی رد؛ هر چیز دیگر `bad-ack` است؛ خطای I/O یعنی `lab-unreachable`. هیچ چیز در hub صف نمی‌شود: outbox برنامه‌ی ClinicHub دوباره تلاش می‌کند."
+          ],
+          "examples": [
+            "ack"
+          ]
+        },
+        {
+          "id": "identity",
+          "h": "این‌جا بیمار واقعاً بیرون می‌رود",
+          "p": [
+            "برخلاف همه چیز دیگر، این پیام نام، تاریخ تولد، جنس، MRN و شماره‌ی کارت سلامت بیمار را دارد، چون آزمایشگاه بدون آن‌ها نمی‌تواند درخواستی را انجام دهد. hub آن را در حافظه می‌سازد، می‌فرستد و دور می‌ریزد؛ لاگ فقط metadata دارد و تست‌ها بررسی می‌کنند که هیچ نام، شماره یا یادداشتی به آن نرسد."
+          ]
+        }
+      ],
+      "examples": {
+        "yml": {
+          "title": {
+            "en": "The externallab route",
+            "fa": "route به نام externallab"
+          },
+          "lang": "yaml",
+          "file": "src/main/resources/application.yml",
+          "from": "externallab:",
+          "lines": 5
+        },
+        "send": {
+          "title": {
+            "en": "The lab's ACK as the answer",
+            "fa": "ACK آزمایشگاه به‌عنوان جواب"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+          "from": "A route for an external laboratory: the order Bundle is sent as an ORM^O01",
+          "lines": 5
+        },
+        "ack": {
+          "title": {
+            "en": "One frame out, one frame back",
+            "fa": "یک قاب رفت، یک قاب برگشت"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Orders.java",
+          "from": "Mllp.write(socket.getOutputStream(), message);",
+          "to": ": \"bad-ack\";"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "The lab answers AR to a cancellation. What does ClinicHub get?",
+            "fa": "آزمایشگاه به یک لغو AR می‌دهد. ClinicHub چه می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "422",
+              "409, treated as the lab's answer",
+              "502"
+            ],
+            "fa": [
+              "۴۲۲",
+              "۴۰۹، که جواب آزمایشگاه حساب می‌شود",
+              "۵۰۲"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "REFUSED is 409 for a cancel and 422 for an order.",
+            "fa": "REFUSED برای لغو ۴۰۹ و برای درخواست ۴۲۲ است."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the hub not queue orders to the lab?",
+            "fa": "چرا hub درخواست‌های آزمایشگاه را صف نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "ClinicHub's outbox already retries them",
+              "MLLP cannot queue",
+              "Orders are too large"
+            ],
+            "fa": [
+              "outbox برنامه‌ی ClinicHub از قبل دوباره تلاششان می‌کند",
+              "MLLP نمی‌تواند صف کند",
+              "درخواست‌ها خیلی بزرگ‌اند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Synchronous routes stay synchronous; the sender owns the retry.",
+            "fa": "routeهای همزمان همزمان می‌مانند؛ تلاش دوباره کار فرستنده است."
+          }
+        },
+        {
+          "q": {
+            "en": "Which message carries the patient's name?",
+            "fa": "کدام پیام نام بیمار را دارد؟"
+          },
+          "options": {
+            "en": [
+              "The event to Analytics",
+              "The OLIS copy",
+              "The ORM^O01 order to the lab"
+            ],
+            "fa": [
+              "رویداد به Analytics",
+              "کپی OLIS",
+              "درخواست ORM^O01 به آزمایشگاه"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "An order needs the patient; events and the OLIS copy carry a pseudonym only.",
+            "fa": "درخواست به بیمار نیاز دارد؛ رویدادها و کپی OLIS فقط pseudonym دارند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-access",
+      "group": "admin",
+      "title": {
+        "en": "Who may read the log",
+        "fa": "چه کسی می‌تواند لاگ را بخواند"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/SecurityConfig.java",
+        "src/main/resources/application-dev.yml"
+      ],
+      "en": [
+        {
+          "id": "filter",
+          "h": "A filter that grants an authority",
+          "p": [
+            "The relay, health and info are open to Spring Security; `/api/messages`, `/api/admin/**` and `/actuator/prometheus` need the authority `HUB_ADMIN`, and everything else is 401. Only `AdminAccessFilter` grants `HUB_ADMIN`, after checking a ClinicHub token for the permission `integrationhub:messages.view`, and the audience when one is set. So a path the filter somehow misses stays closed: it fails closed."
+          ],
+          "examples": [
+            "chain"
+          ]
+        },
+        {
+          "id": "perms",
+          "h": "Two permissions, two spellings",
+          "p": [
+            "Writes under `/api/admin`, a replay or the lab code map, also need `integrationhub:messages.replay`. ClinicHub hands an application its permissions without the prefix (`messages.view`), so `has` accepts both spellings; until phase 6 it accepted only the prefixed one, which no ClinicHub token carries. Refusals are a small JSON body with `error`: 401 without a token, 403 without the permission."
+          ],
+          "examples": [
+            "has",
+            "replaying"
+          ]
+        },
+        {
+          "id": "local",
+          "h": "Local access in development",
+          "p": [
+            "With the `dev` profile a call from this machine needs no token, but not one that carries `X-Forwarded-For`, `Forwarded` or `X-Real-IP`: behind a proxy every call arrives from a local address, so a forwarded call is never trusted as local."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "cors",
+          "h": "CORS for the admin web only",
+          "p": [
+            "CORS is registered for `/api/**` only, for the origins in `hub.admin.cors-origins`, with GET, POST, PUT and OPTIONS. The relay routes get none, because the applications call them from servers. A CORS preflight carries no token, so the filter lets OPTIONS through and Spring's CORS filter answers it."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "filter",
+          "h": "filterی که یک authority می‌دهد",
+          "p": [
+            "relay، health و info برای Spring Security بازند؛ `/api/messages`، `/api/admin/**` و `/actuator/prometheus` به authority به نام `HUB_ADMIN` نیاز دارند و هر چیز دیگر ۴۰۱ است. فقط `AdminAccessFilter` مقدار `HUB_ADMIN` را می‌دهد، بعد از بررسی این‌که token برنامه‌ی ClinicHub اجازه‌ی `integrationhub:messages.view` را دارد، و در صورت تنظیم، audience را. پس مسیری که filter به هر دلیلی جا بیندازد بسته می‌ماند: در حالت شکست بسته است."
+          ],
+          "examples": [
+            "chain"
+          ]
+        },
+        {
+          "id": "perms",
+          "h": "دو اجازه، دو املا",
+          "p": [
+            "نوشتن زیر `/api/admin`، یعنی replay یا نقشه‌ی کدهای آزمایشگاه، علاوه بر آن به `integrationhub:messages.replay` نیاز دارد. ClinicHub اجازه‌های هر برنامه را بدون پیشوند می‌دهد (`messages.view`)، پس `has` هر دو املا را می‌پذیرد؛ تا فاز ۶ فقط شکل پیشونددار را می‌پذیرفت که هیچ token برنامه‌ی ClinicHub آن را ندارد. ردها یک بدنه‌ی JSON کوچک با `error` هستند: ۴۰۱ بدون token و ۴۰۳ بدون اجازه."
+          ],
+          "examples": [
+            "has",
+            "replaying"
+          ]
+        },
+        {
+          "id": "local",
+          "h": "دسترسی محلی در توسعه",
+          "p": [
+            "با profile به نام `dev` فراخوانی از همین ماشین token لازم ندارد، ولی نه فراخوانی‌ای که `X-Forwarded-For`، `Forwarded` یا `X-Real-IP` دارد: پشت یک proxy هر فراخوانی از آدرس محلی می‌رسد، پس فراخوانی forward‌شده هرگز محلی حساب نمی‌شود."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "cors",
+          "h": "CORS فقط برای وب مدیریت",
+          "p": [
+            "CORS فقط برای `/api/**` و برای originهای `hub.admin.cors-origins` با GET، POST، PUT و OPTIONS ثبت شده است. routeهای relay هیچ CORSی ندارند، چون برنامه‌ها آن‌ها را از سرور صدا می‌زنند. preflight برنامه‌ی CORS هیچ tokenی ندارد، پس filter درخواست OPTIONS را عبور می‌دهد و filter برنامه‌ی CORS در Spring جوابش را می‌دهد."
+          ]
+        }
+      ],
+      "examples": {
+        "chain": {
+          "title": {
+            "en": "Who needs what",
+            "fa": "چه کسی چه می‌خواهد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/SecurityConfig.java",
+          "from": ".authorizeHttpRequests(",
+          "to": ".authenticated())"
+        },
+        "has": {
+          "title": {
+            "en": "With or without the prefix",
+            "fa": "با پیشوند یا بدون آن"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+          "from": "static boolean has(Set<String> granted, String wanted)",
+          "lines": 7
+        },
+        "replaying": {
+          "title": {
+            "en": "Writes need the replay permission",
+            "fa": "نوشتن به اجازه‌ی replay نیاز دارد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+          "from": "boolean replaying =",
+          "lines": 9
+        },
+        "local": {
+          "title": {
+            "en": "Local, and not forwarded",
+            "fa": "محلی، و forward‌نشده"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+          "from": "private static boolean isLocal(HttpServletRequest request)",
+          "to": "return InetAddress.getByName"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A new admin path is added and guards() forgets it. Is it open?",
+            "fa": "مسیر مدیریتی تازه‌ای اضافه می‌شود و guards() آن را جا می‌اندازد. باز است؟"
+          },
+          "options": {
+            "en": [
+              "Yes",
+              "No: nothing else grants HUB_ADMIN, so it answers 401 or 403",
+              "Only for GET"
+            ],
+            "fa": [
+              "بله",
+              "نه: هیچ چیز دیگری HUB_ADMIN نمی‌دهد، پس ۴۰۱ یا ۴۰۳ جواب می‌دهد",
+              "فقط برای GET"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The security configuration requires an authority only the filter grants.",
+            "fa": "پیکربندی امنیت authorityیی را لازم دارد که فقط filter می‌دهد."
+          }
+        },
+        {
+          "q": {
+            "en": "A token has messages.view without the prefix. Can it read the log?",
+            "fa": "tokenی messages.view بدون پیشوند دارد. می‌تواند لاگ را بخواند؟"
+          },
+          "options": {
+            "en": [
+              "Yes: both spellings are accepted",
+              "No, the prefix is required",
+              "Only with the dev profile"
+            ],
+            "fa": [
+              "بله: هر دو املا پذیرفته می‌شود",
+              "نه، پیشوند لازم است",
+              "فقط با profile به نام dev"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "has strips the integrationhub: prefix when comparing.",
+            "fa": "has هنگام مقایسه پیشوند integrationhub: را برمی‌دارد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is a call with X-Forwarded-For never treated as local?",
+            "fa": "چرا فراخوانی دارای X-Forwarded-For هرگز محلی حساب نمی‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The header is malformed",
+              "CORS forbids it",
+              "Behind a proxy every call arrives from a local address"
+            ],
+            "fa": [
+              "header بدشکل است",
+              "CORS ممنوعش می‌کند",
+              "پشت proxy هر فراخوانی از آدرس محلی می‌رسد"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The remote address would be the proxy, not the caller.",
+            "fa": "آدرس راه دور همان proxy می‌بود، نه فراخواننده."
+          }
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "group": "admin",
+      "title": {
+        "en": "Route health and alerts",
+        "fa": "سلامت routeها و هشدارها"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/admin/AlertMonitor.java",
+        "src/main/resources/db/migration/V5__admin.sql"
+      ],
+      "en": [
+        {
+          "id": "routes",
+          "h": "Read from the log, not probed",
+          "p": [
+            "`RouteHealth` sends no probe. It reads the message log: per route, calls and failures in 15 minutes and in 24 hours, p95 latency, last answered, last failure. A call failed when the hub answered 5xx; it succeeded when the upstream answered below 500, so a 409 from the pharmacy is an answer. A route is `down` when it meets the alert rule, `degraded` with a failure in 15 minutes, `ok` with calls, and `idle` with none: a route nobody calls is not proven healthy."
+          ],
+          "examples": [
+            "status",
+            "failing"
+          ]
+        },
+        {
+          "id": "alerts",
+          "h": "Open, resolve, tell",
+          "p": [
+            "Every 30 seconds `AlertMonitor` opens or resolves two kinds of alert: `route-down` (at least 3 failed calls and none answered below 500 in 5 minutes) and `hl7-dead-letters` (HL7 rows given up or refused and not replayed). A unique index allows one open row per kind and subject. Each opening and resolution is logged and, when set, sent to the webhook and by e-mail; a channel that fails is tried again next round, so a message may arrive twice rather than not at all. An alert opened and resolved between two rounds is marked as told without sending anything. The detail is a fixed phrase with counts, never content."
+          ],
+          "examples": [
+            "unique",
+            "notify"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "routes",
+          "h": "از لاگ خوانده می‌شود، نه با probe",
+          "p": [
+            "`RouteHealth` هیچ probeی نمی‌فرستد. لاگ پیام‌ها را می‌خواند: برای هر route تعداد فراخوانی‌ها و شکست‌ها در ۱۵ دقیقه و ۲۴ ساعت، تأخیر p95، آخرین پاسخ‌گرفته و آخرین شکست. فراخوانی وقتی شکست خورده که hub جواب 5xx داده باشد؛ وقتی موفق است که upstream زیر ۵۰۰ جواب داده باشد، پس ۴۰۹ از داروخانه یک جواب است. route وقتی قاعده‌ی هشدار برقرار باشد `down` است، با یک شکست در ۱۵ دقیقه `degraded`، با فراخوانی `ok` و بدون فراخوانی `idle`: routeی که کسی صدایش نمی‌زند سالم بودنش ثابت نشده."
+          ],
+          "examples": [
+            "status",
+            "failing"
+          ]
+        },
+        {
+          "id": "alerts",
+          "h": "باز کن، ببند، خبر بده",
+          "p": [
+            "`AlertMonitor` هر ۳۰ ثانیه دو نوع هشدار را باز یا بسته می‌کند: `route-down` (دست‌کم ۳ فراخوانی ناموفق و هیچ جوابی زیر ۵۰۰ در ۵ دقیقه) و `hl7-dead-letters` (ردیف‌های HL7 که رها یا رد شده‌اند و replay نشده‌اند). یک unique index برای هر نوع و موضوع فقط یک ردیف باز اجازه می‌دهد. هر باز شدن و بسته شدن لاگ می‌شود و، اگر تنظیم شده باشد، به webhook و با ایمیل فرستاده می‌شود؛ کانالی که شکست بخورد دور بعد دوباره امتحان می‌شود، پس ممکن است پیامی دو بار برسد ولی گم نشود. هشداری که بین دو دور باز و بسته شده بدون فرستادن چیزی خبرداده علامت می‌خورد. جزئیات یک عبارت ثابت با شمارش‌هاست، هرگز محتوا."
+          ],
+          "examples": [
+            "unique",
+            "notify"
+          ]
+        }
+      ],
+      "examples": {
+        "status": {
+          "title": {
+            "en": "down, degraded, ok, idle",
+            "fa": "down، degraded، ok، idle"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java",
+          "from": "String status =",
+          "lines": 2
+        },
+        "failing": {
+          "title": {
+            "en": "The route-down rule",
+            "fa": "قاعده‌ی route-down"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java",
+          "from": "public List<String> failing() {",
+          "to": "return down;"
+        },
+        "unique": {
+          "title": {
+            "en": "One open alert per kind and subject",
+            "fa": "یک هشدار باز برای هر نوع و موضوع"
+          },
+          "lang": "sql",
+          "file": "src/main/resources/db/migration/V5__admin.sql",
+          "from": "CREATE UNIQUE INDEX uq_alert_open",
+          "lines": 1
+        },
+        "notify": {
+          "title": {
+            "en": "Opened and resolved in between: nothing to tell",
+            "fa": "باز و بسته شده در این فاصله: چیزی برای گفتن نیست"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AlertMonitor.java",
+          "from": "// Opened and resolved between two rounds",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "The pharmacy answered 409 to five cancels. Is the route failing?",
+            "fa": "داروخانه به پنج لغو ۴۰۹ داده. route در حال شکست است؟"
+          },
+          "options": {
+            "en": [
+              "Yes, five failures",
+              "No: an answer below 500 is a success",
+              "It is degraded"
+            ],
+            "fa": [
+              "بله، پنج شکست",
+              "نه: جواب زیر ۵۰۰ موفقیت است",
+              "degraded است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Only 5xx from the hub counts as a failure.",
+            "fa": "فقط 5xx از hub شکست حساب می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is a route with no calls 'idle' and not 'ok'?",
+            "fa": "چرا routeی بدون فراخوانی 'idle' است نه 'ok'؟"
+          },
+          "options": {
+            "en": [
+              "Nothing proves it works: there is no probe",
+              "Idle routes are switched off",
+              "It saves queries"
+            ],
+            "fa": [
+              "هیچ چیز کار کردنش را ثابت نمی‌کند: probe وجود ندارد",
+              "routeهای بیکار خاموش‌اند",
+              "در queryها صرفه‌جویی می‌کند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Health comes from real traffic only.",
+            "fa": "سلامت فقط از ترافیک واقعی می‌آید."
+          }
+        },
+        {
+          "q": {
+            "en": "Why may an alert e-mail arrive twice?",
+            "fa": "چرا ممکن است ایمیل هشدار دو بار برسد؟"
+          },
+          "options": {
+            "en": [
+              "A bug",
+              "SMTP retries",
+              "When one channel fails, both are tried again next round"
+            ],
+            "fa": [
+              "یک باگ",
+              "SMTP دوباره تلاش می‌کند",
+              "وقتی یک کانال شکست بخورد، دور بعد هر دو دوباره امتحان می‌شوند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "tell is true only when every channel took it; otherwise the alert stays untold.",
+            "fa": "tell فقط وقتی true است که همه‌ی کانال‌ها گرفته باشند؛ وگرنه هشدار خبرداده‌نشده می‌ماند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "dead-letters",
+      "group": "admin",
+      "title": {
+        "en": "Dead letters and replay",
+        "fa": "نامه‌های مرده و replay"
+      },
+      "files": [
+        "src/main/java/ca/arashkeshtgar/integrationhub/admin/DeadLetters.java",
+        "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+        "src/main/resources/db/migration/V5__admin.sql",
+        "src/main/resources/application.yml"
+      ],
+      "en": [
+        {
+          "id": "keep",
+          "h": "Kept for a replay window",
+          "p": [
+            "Before phase 6, a given-up HL7 message lost its payload at once. Now a row that is FAILED or REJECTED keeps its encrypted payload for `replay-window-days` (7) after `failed_at`; then the payload is dropped and the row stays as metadata until the retention period. Setting the window to 0 keeps the old behaviour. The architecture notes say plainly what this trades: encrypted health information stays in the hub's database seven days longer."
+          ],
+          "examples": [
+            "keep",
+            "yml"
+          ]
+        },
+        {
+          "id": "replay",
+          "h": "Back to PENDING",
+          "p": [
+            "`replay` is one UPDATE: back to PENDING with no attempts, recording the replay count, time and person (the sign-in subject, an account id, not a name), and only where the status is a failed one and the payload still exists. If no row changed it says why: 404 for no such row, 409 when the window has passed or the row is not in a failed state. The retry worker takes it within its interval. Replay is for HL7 queue rows only: a relayed FHIR call is not stored, and the sender's outbox retries it."
+          ],
+          "examples": [
+            "replay"
+          ]
+        },
+        {
+          "id": "alert",
+          "h": "An alert until it is dealt with",
+          "p": [
+            "While such rows exist, `hl7-dead-letters` stays open for that queue; it clears when they are replayed or removed by the retention period, so a message nobody replays keeps its alert. Each replay is counted in `hub.replays{queue}` and logged by row id and subject, never by content."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "keep",
+          "h": "نگه‌داری برای یک بازه‌ی replay",
+          "p": [
+            "پیش از فاز ۶، پیام HL7 رهاشده فوراً payloadش را از دست می‌داد. حالا ردیفی که FAILED یا REJECTED است payload رمزشده‌اش را تا `replay-window-days` (۷ روز) بعد از `failed_at` نگه می‌دارد؛ بعد payload دور ریخته می‌شود و ردیف تا پایان دوره‌ی نگه‌داری فقط به شکل metadata می‌ماند. صفر گذاشتن این بازه رفتار قدیمی را نگه می‌دارد. یادداشت‌های معماری بی‌پرده می‌گویند این چه هزینه‌ای دارد: اطلاعات سلامت رمزشده هفت روز بیشتر در دیتابیس hub می‌ماند."
+          ],
+          "examples": [
+            "keep",
+            "yml"
+          ]
+        },
+        {
+          "id": "replay",
+          "h": "بازگشت به PENDING",
+          "p": [
+            "`replay` یک UPDATE است: بازگشت به PENDING بدون تلاش قبلی، با ثبت تعداد replay، زمان و شخص (subject ورود، یعنی شناسه‌ی حساب، نه نام)، و فقط جایی که وضعیت ناموفق است و payload هنوز وجود دارد. اگر هیچ ردیفی عوض نشود دلیلش را می‌گوید: ۴۰۴ برای ردیف ناموجود، ۴۰۹ وقتی بازه گذشته یا ردیف در وضعیت ناموفق نیست. worker تلاش دوباره آن را در بازه‌ی خودش برمی‌دارد. replay فقط برای ردیف‌های صف HL7 است: فراخوانی FHIR که relay شده ذخیره نمی‌شود و outbox فرستنده دوباره تلاشش می‌کند."
+          ],
+          "examples": [
+            "replay"
+          ]
+        },
+        {
+          "id": "alert",
+          "h": "یک هشدار تا وقتی رسیدگی شود",
+          "p": [
+            "تا وقتی چنین ردیف‌هایی هست هشدار `hl7-dead-letters` برای آن صف باز می‌ماند؛ وقتی replay شوند یا دوره‌ی نگه‌داری پاکشان کند بسته می‌شود، پس پیامی که کسی replayش نکند هشدارش را نگه می‌دارد. هر replay در `hub.replays{queue}` شمرده و با شناسه‌ی ردیف و subject لاگ می‌شود، هرگز با محتوا."
+          ]
+        }
+      ],
+      "examples": {
+        "keep": {
+          "title": {
+            "en": "A refusal keeps its payload for the window",
+            "fa": "رد شدن، payload را برای بازه نگه می‌دارد"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+          "from": "case REJECTED -> {",
+          "to": "outcome = Outcome.REJECTED;"
+        },
+        "yml": {
+          "title": {
+            "en": "The replay window",
+            "fa": "بازه‌ی replay"
+          },
+          "lang": "yaml",
+          "file": "src/main/resources/application.yml",
+          "from": "# A message the hub gave up on, or ClinicHub refused",
+          "lines": 3
+        },
+        "replay": {
+          "title": {
+            "en": "One guarded UPDATE",
+            "fa": "یک UPDATE محافظت‌شده"
+          },
+          "lang": "java",
+          "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/DeadLetters.java",
+          "from": "String statuses = \"inbound\".equals(queue)",
+          "to": "+ \" and payload is not null\","
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A message failed 9 days ago, with the default window. Can it be replayed?",
+            "fa": "پیامی ۹ روز پیش شکست خورده، با بازه‌ی پیش‌فرض. قابل replay است؟"
+          },
+          "options": {
+            "en": [
+              "Yes",
+              "No: its payload was dropped after 7 days; 409",
+              "Only by an administrator"
+            ],
+            "fa": [
+              "بله",
+              "نه: payloadش بعد از ۷ روز دور ریخته شده؛ ۴۰۹",
+              "فقط توسط مدیر"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "replay requires payload is not null.",
+            "fa": "replay به payload is not null نیاز دارد."
+          }
+        },
+        {
+          "q": {
+            "en": "Why are the status and payload conditions inside the UPDATE?",
+            "fa": "چرا شرط‌های وضعیت و payload داخل خود UPDATE هستند؟"
+          },
+          "options": {
+            "en": [
+              "So a row is changed only if it can really be replayed, in one statement",
+              "Speed",
+              "Flyway requires it"
+            ],
+            "fa": [
+              "تا ردیف فقط وقتی واقعاً قابل replay است، در یک دستور، عوض شود",
+              "سرعت",
+              "Flyway لازمش دارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Check and change happen together, with no gap between them.",
+            "fa": "بررسی و تغییر با هم انجام می‌شوند، بدون فاصله‌ای بینشان."
+          }
+        },
+        {
+          "q": {
+            "en": "Why can a relayed FHIR order not be replayed?",
+            "fa": "چرا یک درخواست FHIR که relay شده قابل replay نیست؟"
+          },
+          "options": {
+            "en": [
+              "It is encrypted with another key",
+              "It is too large",
+              "The hub never stored its body; the sender's outbox retries it"
+            ],
+            "fa": [
+              "با کلید دیگری رمز شده",
+              "خیلی بزرگ است",
+              "hub هرگز بدنه‌اش را ذخیره نکرده؛ outbox فرستنده دوباره تلاشش می‌کند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The log holds metadata only, by design.",
+            "fa": "لاگ عمداً فقط metadata دارد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "group": "web",
+      "title": {
+        "en": "The admin web",
+        "fa": "وب مدیریت"
+      },
+      "files": [
+        "web/src/App.tsx",
+        "web/src/config.ts",
+        "web/src/pages/DeadLetters.tsx",
+        "web/nginx.conf.template"
+      ],
+      "en": [
+        {
+          "id": "signin",
+          "h": "Signed in at ClinicHub, then asked the hub",
+          "p": [
+            "The admin web (React, Vite, TypeScript, port 5701) signs in at ClinicHub with the authorization code flow and PKCE, as the public client `integrationhub-admin`, keeping the token for the tab. Then `Signed` asks the hub `/api/admin/me` who this is, whether they may replay and whether HL7 is on. Without the permission it shows the error and says which permission to ask for, instead of the pages."
+          ],
+          "examples": [
+            "signed"
+          ]
+        },
+        {
+          "id": "pages",
+          "h": "Pages",
+          "p": [
+            "Overview (routes, queues, open alerts) is the index page; then Messages and one message's facts and timeline, Dead letters, Alerts and Lab codes. No page shows a body: the hub keeps none."
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "confirm",
+          "h": "Replay behind a second click",
+          "p": [
+            "On Dead letters the Replay button appears only for a row that is still replayable and a user who may replay, and it asks once more before it posts. Otherwise the row says why not: no longer kept, or no permission to replay. The API checks the same again."
+          ],
+          "examples": [
+            "confirm"
+          ]
+        },
+        {
+          "id": "nginx",
+          "h": "Only the API is proxied",
+          "p": [
+            "The nginx image proxies `/api/` to the hub, so the page calls its own origin and needs no CORS in the platform compose. The relay (`/route`) and the metrics are not reachable through it. Header buffers are raised because on localhost the browser sends ClinicHub's large cookies to every port."
+          ],
+          "examples": [
+            "nginx"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "signin",
+          "h": "ورود در ClinicHub، بعد پرسیدن از hub",
+          "p": [
+            "وب مدیریت (React، Vite و TypeScript، روی port 5701) با جریان authorization code و PKCE، به‌عنوان client عمومی `integrationhub-admin`، در ClinicHub وارد می‌شود و token را برای همان tab نگه می‌دارد. بعد `Signed` از hub با `/api/admin/me` می‌پرسد این کاربر کیست، اجازه‌ی replay دارد یا نه و HL7 روشن است یا نه. بدون اجازه، به‌جای صفحه‌ها خطا را نشان می‌دهد و می‌گوید چه اجازه‌ای باید درخواست شود."
+          ],
+          "examples": [
+            "signed"
+          ]
+        },
+        {
+          "id": "pages",
+          "h": "صفحه‌ها",
+          "p": [
+            "Overview (routeها، صف‌ها و هشدارهای باز) صفحه‌ی index است؛ بعد Messages و جزئیات و timeline یک پیام، Dead letters، Alerts و Lab codes. هیچ صفحه‌ای بدنه نشان نمی‌دهد: hub هیچ بدنه‌ای نگه نمی‌دارد."
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "confirm",
+          "h": "replay پشت کلیک دوم",
+          "p": [
+            "در Dead letters دکمه‌ی Replay فقط برای ردیفی که هنوز قابل replay است و کاربری که اجازه‌ی replay دارد ظاهر می‌شود و قبل از فرستادن یک بار دیگر می‌پرسد. در غیر این صورت ردیف می‌گوید چرا نه: دیگر نگه داشته نمی‌شود، یا اجازه‌ی replay نیست. API همین را دوباره بررسی می‌کند."
+          ],
+          "examples": [
+            "confirm"
+          ]
+        },
+        {
+          "id": "nginx",
+          "h": "فقط API از proxy می‌گذرد",
+          "p": [
+            "image مربوط به nginx مسیر `/api/` را به hub proxy می‌کند، پس صفحه origin خودش را صدا می‌زند و در compose پلتفرم به CORS نیاز ندارد. relay (`/route`) و metricها از این راه در دسترس نیستند. بافرهای header بزرگ‌تر شده‌اند، چون روی localhost مرورگر cookieهای بزرگ ClinicHub را به همه‌ی portها می‌فرستد."
+          ],
+          "examples": [
+            "nginx"
+          ]
+        }
+      ],
+      "examples": {
+        "signed": {
+          "title": {
+            "en": "Ask the hub who this is",
+            "fa": "از hub بپرس این کیست"
+          },
+          "lang": "tsx",
+          "file": "web/src/App.tsx",
+          "from": "function Signed() {",
+          "lines": 3
+        },
+        "confirm": {
+          "title": {
+            "en": "Not kept, no permission, or confirm",
+            "fa": "نگه‌داری‌نشده، بدون اجازه، یا تأیید"
+          },
+          "lang": "tsx",
+          "file": "web/src/pages/DeadLetters.tsx",
+          "from": "{!l.replayable && <span",
+          "to": "Replay this message?"
+        },
+        "nginx": {
+          "title": {
+            "en": "Only /api/ goes to the hub",
+            "fa": "فقط /api/ به hub می‌رود"
+          },
+          "lang": "nginx",
+          "file": "web/nginx.conf.template",
+          "from": "# Only the admin API and the message log are proxied",
+          "to": "proxy_set_header X-Forwarded-For"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "What decides whether the Replay button appears?",
+            "fa": "چه چیزی تعیین می‌کند دکمه‌ی Replay ظاهر شود؟"
+          },
+          "options": {
+            "en": [
+              "The row is replayable and /api/admin/me says the user may replay",
+              "Any signed-in user",
+              "The URL"
+            ],
+            "fa": [
+              "ردیف قابل replay باشد و /api/admin/me بگوید کاربر اجازه‌ی replay دارد",
+              "هر کاربر واردشده",
+              "آدرس صفحه"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "l.replayable && me.canReplay gate the button.",
+            "fa": "l.replayable && me.canReplay دکمه را کنترل می‌کنند."
+          }
+        },
+        {
+          "q": {
+            "en": "Can the relay be reached through the admin web's nginx?",
+            "fa": "آیا relay از طریق nginx وب مدیریت در دسترس است؟"
+          },
+          "options": {
+            "en": [
+              "Yes",
+              "No: only /api/ is proxied",
+              "Only for GET"
+            ],
+            "fa": [
+              "بله",
+              "نه: فقط /api/ از proxy می‌گذرد",
+              "فقط برای GET"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "There is no location for /route in the template.",
+            "fa": "در template هیچ location برای /route نیست."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does the web not show message bodies?",
+            "fa": "چرا وب بدنه‌ی پیام‌ها را نشان نمی‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "A setting hides them",
+              "They are encrypted in the browser",
+              "The hub never stores any body"
+            ],
+            "fa": [
+              "یک تنظیم پنهانشان می‌کند",
+              "در مرورگر رمز شده‌اند",
+              "hub هرگز هیچ بدنه‌ای ذخیره نمی‌کند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "No payload viewer, by design: there is nothing to view.",
+            "fa": "نمایشگر payload عمداً وجود ندارد: چیزی برای دیدن نیست."
+          }
+        }
+      ]
+    }
+  ]
+}

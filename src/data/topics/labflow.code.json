@@ -29,6 +29,7 @@
     "database/054_analytics_dw_view.sql": 22,
     "docs/data-model.md": 89,
     "database/020_seed_reference.sql": 114,
+    "src/LabFlow.Api/Domain/HealthCard.cs": 38,
     "database/053_finance.sql": 16,
     "etl/README.md": 115,
     "etl/builder/BuildPackage.cs": 333,
@@ -49,6 +50,12 @@
       "end": 39,
       "code": "\"connected-per-clinic\": {\n  \"commandName\": \"Project\",\n  \"dotnetRunMessages\": true,\n  \"launchBrowser\": false,\n  \"applicationUrl\": \"http://localhost:5180\",\n  \"environmentVariables\": {\n    \"ASPNETCORE_ENVIRONMENT\": \"Development\",\n    \"ClinicHub__Authority\": \"http://localhost:5301/\",\n    \"ClinicHub__ClientSecret\": \"dev-only-labflow-secret\",\n    \"ClinicHub__RequireHttpsMetadata\": \"false\",\n    \"ClinicHub__FinanceUrl\": \"http://localhost:5400\",\n    \"ClinicHub__DatabasePattern\": \"Server=.;Database=LabFlow_{clinic};Trusted_Connection=True;TrustServerCertificate=True\"\n  }\n},"
     },
+    "run/guard": {
+      "file": "database/deploy.ps1",
+      "start": 35,
+      "end": 39,
+      "code": "$schemaExists = & sqlcmd -S $Server -E -d $Database -h -1 -W -Q \"SET NOCOUNT ON; SELECT COUNT(*) FROM sys.schemas WHERE name = 'lab'\"\nif ($schemaExists.Trim() -eq '1') {\n    Write-Host \"$Database already has a schema. Use -Recreate to rebuild.\" -ForegroundColor Yellow\n    return\n}"
+    },
     "tests/sqlfact": {
       "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
       "start": 26,
@@ -60,6 +67,18 @@
       "start": 70,
       "end": 73,
       "code": "builder.UseSetting(\"ClinicHub:Authority\", \"https://hub.test/\");\nbuilder.UseSetting(\"ClinicHub:ClientSecret\", \"test-secret\");\nbuilder.UseSetting(\"ClinicHub:RecheckMinutes\", \"0\");\nbuilder.UseSetting(\"ClinicHub:SendSeconds\", \"0\");"
+    },
+    "tests/weekday": {
+      "file": "tests/LabFlow.Api.Tests/SlotCalculatorTests.cs",
+      "start": 24,
+      "end": 31,
+      "code": "public void Weekday_has_slots_from_open_to_last_full_slot_before_close()\n{\n    var slots = SlotCalculator.GetSlots(new DateOnly(2026, 9, 28), Hours, false, NoneBooked, LongAgo);\n\n    Assert.Equal(54, slots.Count);   // 9 hours x 6 slots\n    Assert.Equal(new TimeOnly(7, 0), slots[0].LocalTime);\n    Assert.Equal(new TimeOnly(15, 50), slots[^1].LocalTime);\n}"
+    },
+    "tests/decides": {
+      "file": "tests/LabFlow.Api.Tests/ConnectedTests.cs",
+      "start": 262,
+      "end": 273,
+      "code": "public async Task ClinicHub_decides_at_each_check()\n{\n    factory.TokenEndpoint = () => ConnectedFactory.Granted(\"frontdesk\");\n    var c = await factory.SignInAsync(\"9\", \"Sam Okafor\", \"harbourview\", \"frontdesk\");\n    Assert.Equal(HttpStatusCode.OK, (await c.GetAsync(\"/api/reception/patients?q=zz\")).StatusCode);\n\n    factory.TokenEndpoint = () => ConnectedFactory.Granted(\"results.view\");\n    Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync(\"/api/reception/patients?q=zz\")).StatusCode);\n\n    factory.TokenEndpoint = null;\n    Assert.Equal(HttpStatusCode.Unauthorized, (await c.GetAsync(\"/api/reception/patients?q=zz\")).StatusCode);\n}"
     },
     "sign-in/register": {
       "file": "src/LabFlow.Api/Program.cs",
@@ -85,6 +104,12 @@
       "end": 89,
       "code": "public static string[] ForRole(string role) => role switch\n{\n    \"Admin\" => All,\n    \"Reception\" or \"Collector\" => [FrontDesk],\n    \"Technologist\" or \"Pathologist\" => [ResultsView, ResultsEnter],\n    \"Practitioner\" => [ResultsView],\n    _ => [],\n};"
     },
+    "sign-in/settings": {
+      "file": "src/LabFlow.Api/Program.cs",
+      "start": 89,
+      "end": 93,
+      "code": "app.MapGet(\"/api/auth/settings\", (IServiceProvider services) => new\n{\n    signIn = connected ? \"clinichub\" : \"demo\",\n    perClinicDatabase = connected && services.GetRequiredService<LabDatabases>().PerClinic,\n});"
+    },
     "clinichub/oidc": {
       "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
       "start": 242,
@@ -108,6 +133,12 @@
       "start": 420,
       "end": 429,
       "code": "public static IApplicationBuilder UseCsrfHeaderCheck(this IApplicationBuilder app) => app.Use(async (ctx, next) =>\n{\n    var unsafeMethod = !(HttpMethods.IsGet(ctx.Request.Method) || HttpMethods.IsHead(ctx.Request.Method) || HttpMethods.IsOptions(ctx.Request.Method));\n    if (unsafeMethod && ctx.Request.Path.StartsWithSegments(\"/api\") && !ctx.Request.Headers.ContainsKey(CsrfHeader))\n    {\n        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;\n        await ctx.Response.WriteAsJsonAsync(new { title = $\"Missing {CsrfHeader} header.\" });\n        return;\n    }\n    await next();"
+    },
+    "clinichub/local": {
+      "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
+      "start": 301,
+      "end": 306,
+      "code": "var externalId = $\"clinichub:{sub}\";\nvar user = await db.AppUsers.SingleOrDefaultAsync(u => u.ExternalId == externalId);\nif (user is null)\n    // ClinicHub keeps no e-mail address; sec.AppUser needs a unique one, so this placeholder never receives mail.\n    db.AppUsers.Add(user = new AppUser { ExternalId = externalId, Email = $\"clinichub-{sub}@users.invalid\", IsActive = true });\nuser.DisplayName = hub.FindFirstValue(\"name\") ?? hub.FindFirstValue(\"preferred_username\") ?? externalId;"
     },
     "databases/connection": {
       "file": "src/LabFlow.Api/Auth/ClinicHubConnection.cs",
@@ -139,6 +170,12 @@
       "end": 131,
       "code": "await using (var check = new SqlCommand(\"SELECT COUNT(*) FROM sys.schemas WHERE name = 'lab'\", db))\n    if ((int)(await check.ExecuteScalarAsync())! == 1)\n    {\n        // Built before: only the upgrade scripts, which are safe to run again.\n        await RunScriptsAsync(db, name, UpgradeScripts());\n        return;\n    }\n// Schema, sequences and reference data. Not the database itself (made above), the synthetic patients, or the\n// warehouse and legacy-test mapping, which belong to migrating the original lab's data, not to a new clinic.\nawait RunScriptsAsync(db, name, Scripts(f => !f.StartsWith(\"001_\") && !f.Contains(\"_seed_demo\") && !f.Contains(\"_etl_\") && !f.Contains(\"_legacy_\")));"
     },
+    "databases/noclinic": {
+      "file": "src/LabFlow.Api/Program.cs",
+      "start": 64,
+      "end": 68,
+      "code": "catch (NoClinicException ex) when (!ctx.Response.HasStarted)\n{\n    ctx.Response.StatusCode = StatusCodes.Status400BadRequest;\n    await ctx.Response.WriteAsJsonAsync(new { title = ex.Message });\n}"
+    },
     "restricted/filter": {
       "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
       "start": 46,
@@ -163,6 +200,12 @@
       "end": 30,
       "code": "<label>Why do you need to open it?\n  <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} maxLength={300} />\n</label>\n{error && <div className=\"alert\" role=\"alert\">{error}</div>}\n<div className=\"actions\">\n  <button type=\"button\" className=\"btn ghost\" onClick={onCancel}>Not now</button>\n  <button type=\"button\" className=\"btn primary\" disabled={busy || reason.trim().length < 10} onClick={submit}>{action}</button>\n</div>\n<p className=\"muted\">At least 10 characters. The access lasts one hour.</p>"
     },
+    "restricted/code": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 197,
+      "end": 203,
+      "code": "public static string? Confidentiality(JsonNode? resource)\n{\n    var codes = resource?[\"meta\"]?[\"security\"]?.AsArray().Where(c => (string?)c?[\"system\"] == ConfidentialitySystem)\n        .Select(c => (string?)c![\"code\"]).Where(c => !string.IsNullOrEmpty(c)).ToList() ?? [];\n    if (codes.Count == 0 || codes.All(c => c is \"U\" or \"L\" or \"M\" or \"N\"))\n        return null;\n    return codes.Contains(\"V\") ? \"V\" : \"R\";"
+    },
     "audit/log": {
       "file": "src/LabFlow.Api/Auth/AuditLogger.cs",
       "start": 13,
@@ -181,6 +224,18 @@
       "end": 523,
       "code": "CREATE TRIGGER audit.TR_AccessLog_AppendOnly ON audit.AccessLog\nINSTEAD OF UPDATE, DELETE\nAS\n    THROW 50001, 'audit.AccessLog is append-only.', 1;"
     },
+    "audit/daysheet": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 57,
+      "end": 58,
+      "code": "audit.Log(\"View\", \"AppointmentDaySheet\", $\"{locationId}:{date:yyyy-MM-dd}\", null, new { count = rows.Count });\nawait db.SaveChangesAsync(ct);"
+    },
+    "audit/action": {
+      "file": "database/056_audit_restricted_override.sql",
+      "start": 4,
+      "end": 9,
+      "code": "IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_AccessLog_Action' AND definition LIKE N'%RestrictedOverride%')\nBEGIN\n    ALTER TABLE audit.AccessLog DROP CONSTRAINT CK_AccessLog_Action;\n    ALTER TABLE audit.AccessLog ADD CONSTRAINT CK_AccessLog_Action CHECK (Action IN\n        ('View','Create','Update','Delete','Print','Export','Email','Login','LoginFailed','AiGenerate','RestrictedOverride'));\nEND"
+    },
     "slots/slots": {
       "file": "src/LabFlow.Api/Domain/SlotCalculator.cs",
       "start": 27,
@@ -192,6 +247,12 @@
       "start": 53,
       "end": 56,
       "code": "/// <summary>UTC range covering one local calendar day.</summary>\npublic static (DateTime FromUtc, DateTime ToUtc) DayRangeUtc(DateOnly date) =>\n    (TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), Toronto),\n     TimeZoneInfo.ConvertTimeToUtc(date.AddDays(1).ToDateTime(TimeOnly.MinValue), Toronto));"
+    },
+    "slots/booked": {
+      "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
+      "start": 71,
+      "end": 76,
+      "code": "var booked = await db.Appointments\n    .Where(a => a.LocationId == locationId && a.StartUtc >= fromUtc && a.StartUtc < toUtc\n                && a.Status != AppointmentStatus.Cancelled)\n    .GroupBy(a => a.StartUtc)\n    .Select(g => new { g.Key, Count = g.Count() })\n    .ToDictionaryAsync(x => x.Key, x => x.Count, ct);"
     },
     "booking/lock": {
       "file": "src/LabFlow.Api/Endpoints/BookingEndpoints.cs",
@@ -246,6 +307,12 @@
       "start": 304,
       "end": 306,
       "code": "// Tubes to draw: specimen types of the ordered tests and of panel members.\nvar tubes = r.Items\n    .SelectMany(i => i.Test.Members.Select(m => m.Member.SpecimenTypeCode).Append(i.Test.SpecimenTypeCode))"
+    },
+    "reception/search": {
+      "file": "src/LabFlow.Api/Endpoints/ReceptionEndpoints.cs",
+      "start": 84,
+      "end": 88,
+      "code": "query = hcn.Length == 10 && hcn.All(char.IsAsciiDigit)\n    ? query.Where(p => p.HealthCardNumber == hcn)\n    : q.StartsWith(\"LF\", StringComparison.OrdinalIgnoreCase)\n        ? query.Where(p => p.Mrn == q.ToUpperInvariant())\n        : NameSearch(query, q);"
     },
     "results/range": {
       "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
@@ -313,6 +380,18 @@
       "end": 262,
       "code": "var line = await db.RequisitionItems.SingleOrDefaultAsync(i => i.RequisitionId == requisitionId && i.TestId == item.TestId, ct);\nif (line is not null && line.Status != \"Cancelled\"\n    && (line.Status is not (\"Ordered\" or \"Collected\") || await db.Results.AnyAsync(r => r.RequisitionItemId == line.RequisitionItemId, ct)))\n    return Outcome($\"Results have been entered for {(await db.Tests.SingleAsync(t => t.TestId == item.TestId, ct)).NameEn}; call the lab to cancel.\",\n        StatusCodes.Status409Conflict, \"business-rule\");"
     },
+    "cancel/column": {
+      "file": "database/052_order_cancellation.sql",
+      "start": 6,
+      "end": 9,
+      "code": "IF COL_LENGTH(N'lab.ElectronicOrderItem', N'CancelledAt') IS NULL\nALTER TABLE lab.ElectronicOrderItem ADD\n    CancelledAt  datetime2(0)  NULL,\n    CancelReason nvarchar(200) NULL;"
+    },
+    "cancel/apply": {
+      "file": "src/LabFlow.Api/Endpoints/OrderEndpoints.cs",
+      "start": 267,
+      "end": 285,
+      "code": "foreach (var (order, item, reason) in done)\n{\n    item.CancelledAt = now;\n    item.CancelReason = reason ?? \"Cancelled by the ordering clinic\";\n    if (order.RequisitionId is { } requisitionId)\n    {\n        var requisition = await db.Requisitions.Include(r => r.Items).SingleAsync(r => r.RequisitionId == requisitionId, ct);\n        var line = requisition.Items.SingleOrDefault(i => i.TestId == item.TestId);\n        if (line is not null)\n        {\n            line.Status = \"Cancelled\";\n            line.CancelReason = item.CancelReason;\n        }\n        if (requisition.Items.All(i => i.Status == \"Cancelled\"))\n            requisition.Status = \"Cancelled\";\n        requisition.UpdatedAt = now;\n    }\n    else if (order.Items.All(i => i.CancelledAt is not null))\n        order.Status = \"Cancelled\";"
+    },
     "results-out/queue": {
       "file": "src/LabFlow.Api/Endpoints/ResultEndpoints.cs",
       "start": 189,
@@ -367,6 +446,18 @@
       "end": 118,
       "code": "// X-LabFlow: required on changes when signed in with a cookie (connected to ClinicHub); harmless otherwise.\nconst headers: Record<string, string> = { 'X-LabFlow': '1' }\nconst user = getDemoUser()\nif (user) headers['X-Demo-User'] = user\nconst clinic = bookingClinic()\nif (clinic) headers['X-LabFlow-Clinic'] = clinic\nif (body !== undefined) headers['Content-Type'] = 'application/json'"
     },
+    "fe-app/clinic": {
+      "file": "web/src/api.ts",
+      "start": 81,
+      "end": 89,
+      "code": "export function bookingClinic(): string {\n  const fromLink = new URLSearchParams(window.location.search).get('clinic')\n  try {\n    if (fromLink) sessionStorage.setItem(CLINIC_KEY, fromLink)\n    return fromLink ?? sessionStorage.getItem(CLINIC_KEY) ?? ''\n  } catch {\n    return fromLink ?? ''\n  }\n}"
+    },
+    "fe-app/restricted": {
+      "file": "web/src/api.ts",
+      "start": 99,
+      "end": 99,
+      "code": "export const isRestricted = (e: unknown): e is ApiError => e instanceof ApiError && e.status === 403 && e.data.code === 'restricted'"
+    },
     "scripts/conventions": {
       "file": "database/010_schema.sql",
       "start": 3,
@@ -390,6 +481,54 @@
       "start": 176,
       "end": 179,
       "code": "ValidFrom                 datetime2(0)  GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,\nValidTo                   datetime2(0)  GENERATED ALWAYS AS ROW END   HIDDEN NOT NULL,\nPERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),\nCONSTRAINT CK_Patient_HealthCard CHECK (HealthCardNumber IS NULL OR HealthCardNumber NOT LIKE '%[^0-9]%'),"
+    },
+    "scripts/index": {
+      "file": "database/051_outbound_messages.sql",
+      "start": 20,
+      "end": 21,
+      "code": "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OutboundMessage_Pending')\nCREATE INDEX IX_OutboundMessage_Pending ON lab.OutboundMessage (NextAttemptAt) WHERE SentAt IS NULL;"
+    },
+    "data-catalog/checks": {
+      "file": "database/010_schema.sql",
+      "start": 88,
+      "end": 90,
+      "code": "CONSTRAINT CK_Test_Loinc CHECK (LoincCode IS NULL OR (LoincCode LIKE '%[0-9]-[0-9]' AND LoincCode NOT LIKE '%[^0-9-]%')),\nCONSTRAINT CK_Test_NumericUnit CHECK (ResultType <> 'Numeric' OR UnitCode IS NOT NULL),\nCONSTRAINT CK_Test_UninsuredPrice CHECK (IsOhipInsured = 1 OR UninsuredPrice IS NOT NULL)"
+    },
+    "data-catalog/panels": {
+      "file": "database/020_seed_reference.sql",
+      "start": 77,
+      "end": 83,
+      "code": "INSERT ref.PanelMember (PanelTestId, MemberTestId, SortOrder)\nSELECT p.TestId, m.TestId, v.SortOrder\nFROM (VALUES ('LIPID','CHOL',1), ('LIPID','TRIG',2), ('LIPID','HDL',3), ('LIPID','LDLC',4),\n             ('LYTES','NA',1),   ('LYTES','K',2),\n             ('CBC','WBC',1),    ('CBC','HGB',2),    ('CBC','PLT',3)) v(Panel, Member, SortOrder)\nJOIN ref.Test p ON p.Code = v.Panel\nJOIN ref.Test m ON m.Code = v.Member;"
+    },
+    "data-people/hcn": {
+      "file": "database/010_schema.sql",
+      "start": 184,
+      "end": 184,
+      "code": "CREATE UNIQUE INDEX UX_Patient_HealthCard ON core.Patient (HealthCardNumber) WHERE HealthCardNumber IS NOT NULL;"
+    },
+    "data-people/applink": {
+      "file": "database/010_schema.sql",
+      "start": 226,
+      "end": 227,
+      "code": "CONSTRAINT CK_AppUser_PatientLink      CHECK (Role <> 'Patient'      OR PatientId IS NOT NULL),\nCONSTRAINT CK_AppUser_PractitionerLink CHECK (Role <> 'Practitioner' OR PractitionerId IS NOT NULL)"
+    },
+    "data-people/luhn": {
+      "file": "src/LabFlow.Api/Domain/HealthCard.cs",
+      "start": 16,
+      "end": 32,
+      "code": "public static bool IsValidNumber(string? number)\n{\n    if (number is null || number.Length != 10 || !number.All(char.IsAsciiDigit))\n        return false;\n\n    var sum = 0;\n    for (var i = 0; i < 10; i++)\n    {\n        var digit = number[9 - i] - '0';\n        if (i % 2 == 1)\n        {\n            digit *= 2;\n            if (digit > 9) digit -= 9;\n        }\n        sum += digit;\n    }\n    return sum % 10 == 0;"
+    },
+    "data-lab/review": {
+      "file": "database/010_schema.sql",
+      "start": 414,
+      "end": 415,
+      "code": "CONSTRAINT CK_ResultInterpretation_Review CHECK (Status NOT IN ('Approved','Rejected')\n                                                 OR (ReviewedByUserId IS NOT NULL AND ReviewedAt IS NOT NULL))"
+    },
+    "data-lab/total": {
+      "file": "database/010_schema.sql",
+      "start": 489,
+      "end": 489,
+      "code": "Total            AS (Subtotal + Tax) PERSISTED,"
     },
     "etl/package": {
       "file": "etl/builder/BuildPackage.cs",
@@ -426,6 +565,12 @@
       "start": 20,
       "end": 21,
       "code": "GRANT SELECT ON dw.vw_AnalyticsMonthly TO analytics_dw_reader;\nGRANT SELECT ON dw.DimTest (TestKey, LoincCode, LabFlowCode, TestName, Section, IsPanel) TO analytics_dw_reader;"
+    },
+    "dw/merge": {
+      "file": "database/040_etl_dw.sql",
+      "start": 478,
+      "end": 484,
+      "code": "    OR ISNULL(f.ValueSi, -1) <> ISNULL(s.ValueSi, -1) OR f.IsAbnormal <> s.IsAbnormal OR f.IsCritical <> s.IsCritical\n    OR ISNULL(f.ResultDateKey, 0) <> ISNULL(s.ResultDateKey, 0) OR f.PayerKey <> s.PayerKey)\nTHEN UPDATE SET\n    TestKey = s.TestKey, PanelTestKey = s.PanelTestKey, PatientKey = s.PatientKey, PayerKey = s.PayerKey,\n    VisitDateKey = s.VisitDateKey, ResultDateKey = s.ResultDateKey, AgeYears = s.AgeYears, AgeBand = s.AgeBand,\n    HasAnswer = s.HasAnswer, ValueText = s.ValueText, ValueNumeric = s.ValueNumeric, ValueSi = s.ValueSi,\n    IsAbnormal = s.IsAbnormal, IsCritical = s.IsCritical, TurnaroundDays = s.TurnaroundDays, UpdatedRunId = @RunId"
     }
   },
   "endpoints": [

@@ -1,0 +1,394 @@
+{
+  "project": "languagelessondesigner",
+  "repo": "LanguageLessonDesigner",
+  "files": {
+    "src/App.vue": 29,
+    "index.html": 31,
+    "package.json": 28,
+    "vite.config.ts": 190,
+    "server/merge.test.mjs": 40,
+    "server/merge.mjs": 77,
+    "src/router/index.ts": 61,
+    "src/types/unit.ts": 146,
+    "src/lib/units.ts": 58,
+    "src/lib/drafts.ts": 49,
+    "src/views/LessonListView.vue": 117,
+    "src/views/LessonView.vue": 76,
+    "src/lib/shades.ts": 43,
+    "src/lib/mark.ts": 5,
+    "src/lib/skills.ts": 17,
+    "src/views/LessonEditView.vue": 523,
+    "scripts/generate_pdf.py": 86,
+    "src/lib/review/cards.ts": 125,
+    "src/lib/review/srs.ts": 255,
+    "src/views/ReviewSessionView.vue": 196,
+    "src/lib/speak.ts": 44,
+    "src/views/ReviewView.vue": 170,
+    "server/sync.mjs": 92,
+    "src/lib/review/sync.ts": 98,
+    "src/lib/proverbs.ts": 55,
+    "src/types/proverbs.ts": 41,
+    "src/views/ProverbsView.vue": 85,
+    "src/lib/context.ts": 110,
+    "src/components/ctx/CtxGate.vue": 33
+  },
+  "examples": {
+    "about/tabs": {
+      "file": "src/App.vue",
+      "start": 11,
+      "end": 27,
+      "code": "<nav class=\"topbar\">\n  <div class=\"topbar-in\">\n    <span class=\"brand\">{{ brand }}</span>\n    <RouterLink to=\"/\" class=\"tab\" :class=\"{ on: section === 'lessons' }\">\n      <b>درس‌ها</b><small>Lessons</small>\n    </RouterLink>\n    <RouterLink to=\"/review\" class=\"tab\" :class=\"{ on: section === 'review' }\">\n      <b>مرور</b><small>Review</small>\n    </RouterLink>\n    <RouterLink to=\"/context\" class=\"tab\" :class=\"{ on: section === 'context' }\">\n      <b>کانتکست</b><small>Context</small>\n    </RouterLink>\n    <RouterLink to=\"/proverbs\" class=\"tab\" :class=\"{ on: section === 'proverbs' }\">\n      <b>ضرب‌المثل</b><small>Proverbs</small>\n    </RouterLink>\n  </div>\n</nav>"
+    },
+    "about/ctxhead": {
+      "file": "index.html",
+      "start": 18,
+      "end": 24,
+      "code": "if (location.hostname.startsWith('ctx.')) {\n  document.getElementById('manifest').href = '/manifest-ctx.json'\n  document.getElementById('touch-icon').href = '/ctx-apple-touch-icon.png'\n  document.getElementById('app-title').content = 'Context'\n  document.getElementById('theme').content = '#22303d'\n  document.title = 'Context'\n}"
+    },
+    "run/scripts": {
+      "file": "package.json",
+      "start": 6,
+      "end": 13,
+      "code": "\"scripts\": {\n  \"dev\": \"vite\",\n  \"build\": \"vue-tsc -b && vite build\",\n  \"preview\": \"vite preview\",\n  \"build:pages\": \"vue-tsc -b && vite build --base=/LanguageLessonDesigner/\",\n  \"deploy\": \"npm run build:pages && gh-pages -d dist\",\n  \"sync\": \"node server/sync.mjs\",\n  \"test\": \"node --test server/\""
+    },
+    "run/proxy": {
+      "file": "vite.config.ts",
+      "start": 179,
+      "end": 190,
+      "code": "export default defineConfig({\n  plugins: [vue(), lessonApiPlugin(), contextApiPlugin()],\n  server: {\n    // Review sync: `npm run sync` starts server/sync.mjs on :8787 (key in server/data/key).\n    proxy: { '/api/sync': 'http://127.0.0.1:8787' },\n    watch: {\n      // PDFs aren't part of the module graph — writing one (e.g. from the\n      // publish API above) shouldn't trigger a full page reload.\n      ignored: ['**/public/pdf/**'],\n    },\n  },\n})"
+    },
+    "tests/reset": {
+      "file": "server/merge.test.mjs",
+      "start": 23,
+      "end": 31,
+      "code": "test('reset drops older cards and all day logs; a stale device cannot bring them back', () => {\n  let d = mergeUpload(emptyDoc(), { dev: 'phone', cards: { a: card(10) }, days: { 100: { n: 1, r: 0, ok: 1 } } })\n  d = mergeUpload(d, { dev: 'pc01', resetAt: 50, cards: { b: card(60) } })\n  assert.deepEqual(Object.keys(d.cards), ['b'])\n  assert.deepEqual(d.days, {})\n  d = mergeUpload(d, { dev: 'phone', resetAt: 0, cards: { a: card(10) }, days: { 100: { n: 1, r: 0, ok: 1 } } })\n  assert.deepEqual(Object.keys(d.cards), ['b'])\n  assert.deepEqual(d.days, {})\n})"
+    },
+    "tests/days": {
+      "file": "server/merge.test.mjs",
+      "start": 15,
+      "end": 21,
+      "code": "test('days: each device keeps its own log; re-sends are harmless', () => {\n  let d = mergeUpload(emptyDoc(), { dev: 'phone', days: { 100: { n: 3, r: 2, ok: 4 } } })\n  d = mergeUpload(d, { dev: 'pc01', days: { 100: { n: 5, r: 0, ok: 5, fin: true } } })\n  d = mergeUpload(d, { dev: 'phone', days: { 100: { n: 3, r: 2, ok: 4 } } })\n  assert.deepEqual(d.days.phone[100], { n: 3, r: 2, ok: 4 })\n  assert.deepEqual(d.days.pc01[100], { n: 5, r: 0, ok: 5, fin: true })\n})"
+    },
+    "routes/routes": {
+      "file": "src/router/index.ts",
+      "start": 12,
+      "end": 30,
+      "code": "const router = createRouter({\n  history: createWebHashHistory(),\n  routes: [\n    { path: '/', name: 'lessons', component: LessonListView, meta: { section: 'lessons' } },\n    { path: '/lesson/:id', name: 'lesson', component: LessonView, meta: { section: 'lessons' } },\n    { path: '/lesson/:id/edit', name: 'lesson-edit', component: LessonEditView, meta: { section: 'lessons' } },\n    { path: '/context', name: 'context', component: () => import('../views/ContextHomeView.vue'), meta: { section: 'context' } },\n    { path: '/context/p/:key', name: 'context-pack', component: () => import('../views/ContextPackView.vue'), meta: { section: 'context' } },\n    { path: '/context/gaps', component: () => import('../views/ContextListView.vue'), meta: { section: 'context', list: 'gaps' } },\n    { path: '/context/bugs', component: () => import('../views/ContextListView.vue'), meta: { section: 'context', list: 'bugs' } },\n    { path: '/context/work', component: () => import('../views/ContextListView.vue'), meta: { section: 'context', list: 'work' } },\n    { path: '/context/recruit', component: () => import('../views/ContextRecruitView.vue'), meta: { section: 'context' } },\n    // Proverbs: public data, bundled as its own lazy chunk (src/data/proverbs.json from the proverb engine).\n    { path: '/proverbs', name: 'proverbs', component: () => import('../views/ProverbsView.vue'), meta: { section: 'proverbs' } },\n    // Review: spaced-repetition plan over lessons + proverbs; progress in localStorage.\n    { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue'), meta: { section: 'review' } },\n    { path: '/review/session', component: () => import('../views/ReviewSessionView.vue'), meta: { section: 'review' } },\n    { path: '/proverbs/practice', component: () => import('../views/ProverbsPracticeView.vue'), meta: { section: 'proverbs' } },\n  ],"
+    },
+    "routes/ctxstart": {
+      "file": "src/router/index.ts",
+      "start": 41,
+      "end": 43,
+      "code": "router.beforeEach((to, from) => {\n  if (from === START_LOCATION && to.path === '/' && location.hostname.startsWith('ctx.')) return '/context'\n})"
+    },
+    "unit/unit": {
+      "file": "src/types/unit.ts",
+      "start": 117,
+      "end": 137,
+      "code": "export interface Unit {\n  _id: string\n  n: number\n  hue: Hue\n  tag: string\n  en: string\n  fa: string\n  src: [string, string][]\n  books?: Record<string, number[]>\n  chain?: { prev?: string; now?: string; next?: string }\n  story: string\n  dialog: Dialog\n  grammar: Grammar\n  colls: Colls\n  vocab: Vocab\n  cert?: Cert\n  listen: Listen\n  prod: Prod\n  plan?: Record<string, number>\n  take: string\n  quiz: QuizItem[]"
+    },
+    "unit/glob": {
+      "file": "src/lib/units.ts",
+      "start": 4,
+      "end": 8,
+      "code": "const modules = import.meta.glob<{ default: Unit }>('../data/units/u*.json', { eager: true })\n\nconst units: Unit[] = Object.values(modules)\n  .map((m) => m.default)\n  .sort((a, b) => a.n - b.n)"
+    },
+    "drafts/drafts": {
+      "file": "src/lib/drafts.ts",
+      "start": 3,
+      "end": 12,
+      "code": "const KEY_PREFIX = 'lld:draft:'\n\nexport function loadDraft(id: string): Unit | null {\n  try {\n    const raw = localStorage.getItem(KEY_PREFIX + id)\n    return raw ? (JSON.parse(raw) as Unit) : null\n  } catch {\n    return null\n  }\n}"
+    },
+    "drafts/list": {
+      "file": "src/lib/units.ts",
+      "start": 10,
+      "end": 22,
+      "code": "export function listUnits(): UnitIndexEntry[] {\n  const fromFiles = units.map((u) => {\n    const draft = loadDraft(u._id)\n    const active = draft || u\n    return { id: u._id, n: active.n, tag: active.tag, en: active.en, fa: active.fa }\n  })\n  const fileIds = new Set(units.map((u) => u._id))\n  const draftOnly = listDraftIds()\n    .filter((id) => !fileIds.has(id))\n    .map((id) => loadDraft(id))\n    .filter((d): d is Unit => !!d)\n    .map((d) => ({ id: d._id, n: d.n, tag: d.tag, en: d.en, fa: d.fa }))\n  return [...fromFiles, ...draftOnly].sort((a, b) => a.n - b.n)"
+    },
+    "drafts/create": {
+      "file": "src/views/LessonListView.vue",
+      "start": 14,
+      "end": 27,
+      "code": "function createLesson() {\n  const id = window.prompt('شناسه‌ی درس جدید (مثلاً u416):')?.trim()\n  if (!id) return\n  if (!/^u[a-z0-9]+$/i.test(id)) {\n    window.alert('شناسه باید با u شروع بشه و فقط حرف/عدد باشه، مثل u416.')\n    return\n  }\n  if (getUnit(id)) {\n    window.alert('این شناسه از قبل استفاده شده.')\n    return\n  }\n  const maxN = Math.max(0, ...allUnits().map((u) => u.n))\n  saveDraft(id, blankUnit(id, maxN + 1))\n  router.push(`/lesson/${id}/edit`)"
+    },
+    "render/sections": {
+      "file": "src/views/LessonView.vue",
+      "start": 57,
+      "end": 70,
+      "code": "<HeroBlock :unit=\"unit\" />\n<StorySection :story=\"unit.story\" />\n<DialogSection :dialog=\"unit.dialog\" />\n<GrammarSection :grammar=\"unit.grammar\" />\n<CollocationsSection :colls=\"unit.colls\" />\n<VocabSection :vocab=\"unit.vocab\" />\n<CertSection v-if=\"unit.cert\" :cert=\"unit.cert\" />\n<ListenSection :listen=\"unit.listen\" />\n<ProdSection :prod=\"unit.prod\" />\n<div class=\"take\">\n  <b>جمله‌ی مصاحبه:</b>\n  <div class=\"en\">{{ unit.take }}</div>\n</div>\n<QuizSection :quiz=\"unit.quiz\" :n=\"unit.n\" />"
+    },
+    "render/hue": {
+      "file": "src/views/LessonView.vue",
+      "start": 22,
+      "end": 32,
+      "code": "const rootStyle = computed(() => {\n  if (!unit.value) return {}\n  const c = shades(unit.value.hue)\n  return {\n    '--hero': c.hero,\n    '--hero-sub': c.sub,\n    '--hero-txt': c.txt,\n    '--chip': c.chip,\n    '--chip-ink': c.chipInk,\n  }\n})"
+    },
+    "render/mark": {
+      "file": "src/lib/mark.ts",
+      "start": 2,
+      "end": 5,
+      "code": "export function mark(s: string): string {\n  if (!s) return ''\n  return s.replace(/\\[\\[([gcwx]):(.+?)\\]\\]/g, (_m, k, txt) => `<b class=\"${k}\">${txt}</b>`)\n}"
+    },
+    "edit/watch": {
+      "file": "src/views/LessonEditView.vue",
+      "start": 183,
+      "end": 190,
+      "code": "watch(\n  unit,\n  () => {\n    saveDraft(id, JSON.parse(JSON.stringify(unit)))\n    draftActive.value = true\n  },\n  { deep: true },\n)"
+    },
+    "edit/stale": {
+      "file": "src/views/LessonEditView.vue",
+      "start": 25,
+      "end": 28,
+      "code": "const fileVersion = getOriginalUnit(id)\nif (fileVersion && hasDraft(id) && JSON.stringify(loadDraft(id)) === JSON.stringify(fileVersion)) {\n  clearDraft(id)\n}"
+    },
+    "edit/publish": {
+      "file": "src/views/LessonEditView.vue",
+      "start": 153,
+      "end": 161,
+      "code": "async function publish() {\n  publishing.value = true\n  publishError.value = ''\n  publishMsg.value = ''\n  try {\n    const res = await fetch(`/api/save-lesson/${id}`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(unit),"
+    },
+    "publish/guard": {
+      "file": "vite.config.ts",
+      "start": 115,
+      "end": 124,
+      "code": "// CSRF guard: any website open while `vite dev` runs could otherwise\n// POST here (a text/plain \"simple request\" needs no CORS preflight)\n// and overwrite a lesson — which is rendered with v-html — and run\n// the PDF script. Only the edit form's own same-origin JSON fetch passes.\nif (!isTrustedOrigin(req.headers.origin, req.headers.host) ||\n    !(req.headers['content-type'] || '').startsWith('application/json')) {\n  res.statusCode = 403\n  res.end(JSON.stringify({ ok: false, error: 'forbidden' }))\n  return\n}"
+    },
+    "publish/origin": {
+      "file": "vite.config.ts",
+      "start": 13,
+      "end": 22,
+      "code": "function isTrustedOrigin(origin: string | undefined, host: string | undefined): boolean {\n  if (!origin || !host) return false\n  try {\n    const u = new URL(origin)\n    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)\n    return loopback && u.host === host\n  } catch {\n    return false\n  }\n}"
+    },
+    "publish/ladder": {
+      "file": "scripts/generate_pdf.py",
+      "start": 47,
+      "end": 52,
+      "code": "for fs in unit_mod.LADDER:\n    open(probe + \".html\", \"w\", encoding=\"utf-8\").write(unit_mod.page(U, fs, quiz=False, name=name))\n    n = unit_mod.build.to_pdf(probe + \".html\", probe + \".pdf\")\n    if 0 < n <= (U.get(\"want\") or unit_mod.WANT):\n        chosen_fs = fs\n        break"
+    },
+    "cards/ids": {
+      "file": "src/lib/review/cards.ts",
+      "start": 79,
+      "end": 87,
+      "code": "for (const q of u.quiz) {\n  if (q.old) continue\n  out.push({\n    ...base, id: `${u._id}:q:${plain(q.q)}`, kind: 'quiz', order: order(),\n    front: q.q, hint: q.qfa || q.fa,\n    answer: q.a, answerFa: q.afa, options: q.op ? shuffle(q.op) : undefined,\n    typed: !q.op, speak: q.op || !q.q.includes('______') ? undefined : plain(q.q.replace('______', q.a)),\n  })\n}"
+    },
+    "cards/filter": {
+      "file": "src/lib/review/cards.ts",
+      "start": 104,
+      "end": 112,
+      "code": "// Draft-tagged units (e.g. u06, an older copy of u201) stay out of review.\nexport function allCards(): Card[] {\n  if (!cache) {\n    cache = [\n      ...allUnits().filter((u) => !/draft/i.test(u.tag)).flatMap(unitCards),\n      ...proverbCards(),\n    ]\n  }\n  return cache"
+    },
+    "srs/grade": {
+      "file": "src/lib/review/srs.ts",
+      "start": 82,
+      "end": 102,
+      "code": "export function grade(id: string, g: Grade, wasNew: boolean): void {\n  const d = today()\n  const s = store.cards[id] || { due: d, ivl: 0, ease: 2.5, reps: 0, lapses: 0, seen: d }\n  const fuzz = (n: number) => (n < 3 ? n : Math.round(n * (0.95 + Math.random() * 0.1)))\n  if (g === 0) {\n    s.lapses += s.reps > 0 ? 1 : 0\n    s.reps = 0\n    s.ivl = 1\n    s.ease = Math.max(1.3, s.ease - 0.2)\n  } else {\n    if (g === 1) {\n      s.ivl = Math.max(1, Math.round(s.ivl * 1.2))\n      s.ease = Math.max(1.3, s.ease - 0.15)\n    } else if (s.reps === 0) s.ivl = g === 3 ? 4 : 1\n    else if (s.reps === 1) s.ivl = g === 3 ? 6 : 3\n    else s.ivl = Math.round(s.ivl * s.ease * (g === 3 ? 1.3 : 1))\n    if (g === 3) s.ease += 0.15\n    s.ivl = Math.min(365, fuzz(Math.max(1, s.ivl)))\n    s.reps++\n  }\n  s.due = d + s.ivl"
+    },
+    "srs/plan": {
+      "file": "src/lib/review/srs.ts",
+      "start": 115,
+      "end": 126,
+      "code": "export function plan(): Plan {\n  const d = today()\n  const st = store.settings\n  const cards = cardsFor(st)\n  const due = cards.filter((c) => store.cards[c.id] && store.cards[c.id].due <= d)\n    .sort((a, b) => store.cards[a.id].due - store.cards[b.id].due)\n    .slice(0, st.maxReviews)\n  const introduced = (src: 'pv' | 'lesson') => Object.entries(store.cards)\n    .filter(([id, s]) => s.seen === d && (src === 'pv') === id.startsWith('pv:')).length\n  const unseen = cards.filter((c) => !store.cards[c.id]).sort((a, b) => a.order - b.order)\n  const lessonNew = unseen.filter((c) => c.src !== 'pv').slice(0, Math.max(0, st.newLessons - introduced('lesson')))\n  const pvNew = unseen.filter((c) => c.src === 'pv').slice(0, Math.max(0, st.newProverbs - introduced('pv')))"
+    },
+    "session/mode": {
+      "file": "src/views/ReviewSessionView.vue",
+      "start": 54,
+      "end": 61,
+      "code": "const mode = computed<'choice' | 'typed' | 'recall'>(() => {\n  const it = cur.value\n  if (!it) return 'recall'\n  const s = store.cards[it.c.id]\n  if (it.c.options && (it.c.kind !== 'word' || !s || s.reps < 2)) return 'choice'\n  if (it.c.typed) return 'typed'\n  return 'recall'\n})"
+    },
+    "session/check": {
+      "file": "src/views/ReviewSessionView.vue",
+      "start": 74,
+      "end": 80,
+      "code": "function check() {\n  // Answers are often fragments (\"is waiting\"), so a full sentence that contains them counts.\n  const t = ` ${normA(typedAns.value)} `\n  const a = normA(cur.value.c.answer)\n  verdict.value = !!a && t.trim() !== '' && t.includes(a.startsWith(\"'\") ? `${a} ` : ` ${a} `) // 'm finishing ⊂ I'm finishing\n  reveal.value = true\n  sayAnswer()"
+    },
+    "session/voice": {
+      "file": "src/lib/speak.ts",
+      "start": 5,
+      "end": 15,
+      "code": "function pickVoice(lang: string): SpeechSynthesisVoice | undefined {\n  const voices = speechSynthesis.getVoices()\n  const want = new RegExp(lang.replace('-', '[-_]'), 'i')\n  return (\n    voices.find((v) => want.test(v.lang) && /Natural|Online/i.test(v.name)) ||\n    voices.find((v) => want.test(v.lang)) ||\n    voices.find((v) => /Aria|Jenny|Guy|Natural/i.test(v.name)) ||\n    voices.find((v) => /^en/i.test(v.lang)) ||\n    voices[0]\n  )\n}"
+    },
+    "progress/streak": {
+      "file": "src/lib/review/srs.ts",
+      "start": 146,
+      "end": 154,
+      "code": "export function streak(): number {\n  const d = today()\n  // A day counts when you hit the goal, or finished everything planned (a light day).\n  const done = (x: number) => { const l = dayTotal(x); return !!l.fin || l.n + l.r >= store.settings.goal }\n  let k = done(d) ? d : d - 1 // today still counts as \"open\" until midnight\n  let n = 0\n  while (done(k)) { n++; k-- }\n  return n\n}"
+    },
+    "progress/ics": {
+      "file": "src/lib/review/srs.ts",
+      "start": 241,
+      "end": 254,
+      "code": "export function reminderIcs(url: string): string {\n  const [h, m] = store.settings.remind.split(':').map(Number)\n  const d = new Date()\n  const p = (n: number) => String(n).padStart(2, '0')\n  const date = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`\n  const t = `${p(h)}${p(m)}00`\n  return [\n    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Arash Workbench//Review//EN', 'BEGIN:VEVENT',\n    `UID:review-${date}@workbench`, `DTSTAMP:${date}T000000Z`,\n    `DTSTART:${date}T${t}`, 'DURATION:PT15M', 'RRULE:FREQ=DAILY',\n    'SUMMARY:English review (10 min)', `URL:${url}`, `DESCRIPTION:${url}`,\n    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:English review', 'TRIGGER:PT0M', 'END:VALARM',\n    'END:VEVENT', 'END:VCALENDAR',\n  ].join('\\r\\n')"
+    },
+    "syncserver/key": {
+      "file": "server/sync.mjs",
+      "start": 24,
+      "end": 34,
+      "code": "function loadKey() {\n  if (process.env.SYNC_KEY) return process.env.SYNC_KEY\n  const f = join(DATA, 'key')\n  if (!existsSync(f)) {\n    writeFileSync(f, randomBytes(24).toString('base64url') + '\\n', { mode: 0o600 })\n    console.log(`generated a sync key in ${f}`)\n  }\n  return readFileSync(f, 'utf8').trim()\n}\nconst KEY_HASH = createHash('sha256').update(loadKey()).digest()\nconst keyOk = (k) => typeof k === 'string' && timingSafeEqual(createHash('sha256').update(k).digest(), KEY_HASH)"
+    },
+    "syncserver/fails": {
+      "file": "server/sync.mjs",
+      "start": 44,
+      "end": 54,
+      "code": "// Wrong keys: 10 per 10 minutes per client address, then 429.\nconst fails = new Map()\nfunction blocked(ip) {\n  const f = fails.get(ip)\n  return !!f && f.n >= 10 && Date.now() - f.t < 600000\n}\nfunction failed(ip) {\n  const f = fails.get(ip)\n  if (!f || Date.now() - f.t > 600000) fails.set(ip, { n: 1, t: Date.now() })\n  else f.n++\n}"
+    },
+    "syncserver/save": {
+      "file": "server/sync.mjs",
+      "start": 38,
+      "end": 42,
+      "code": "function save() {\n  const tmp = FILE + '.tmp'\n  writeFileSync(tmp, JSON.stringify(doc))\n  renameSync(tmp, FILE) // atomic: a crash mid-write never leaves half a file\n}"
+    },
+    "merge/cards": {
+      "file": "server/merge.mjs",
+      "start": 33,
+      "end": 42,
+      "code": "export function mergeUpload(doc, up) {\n  const out = structuredClone(doc)\n  if (!up || typeof up !== 'object') return out\n  const upReset = num(up.resetAt)\n  if (upReset > out.resetAt) {\n    out.resetAt = upReset\n    for (const [id, c] of Object.entries(out.cards)) if ((c.t || 0) < upReset) delete out.cards[id]\n    out.days = {}\n  }\n  const stale = upReset < out.resetAt // this device hasn't heard of the latest reset yet"
+    },
+    "merge/days": {
+      "file": "server/merge.mjs",
+      "start": 57,
+      "end": 67,
+      "code": "if (!stale && isDev(up.dev) && up.days && typeof up.days === 'object') {\n  const mine = out.days[up.dev] || (out.days[up.dev] = {})\n  for (const [day, raw] of Object.entries(up.days)) {\n    if (!/^\\d{1,7}$/.test(day)) continue\n    const l = cleanDay(raw)\n    if (!l) continue\n    const h = mine[day]\n    // counters only grow on the device that owns them; max() makes re-sends harmless\n    mine[day] = h\n      ? { n: Math.max(h.n, l.n), r: Math.max(h.r, l.r), ok: Math.max(h.ok, l.ok), ...(h.fin || l.fin ? { fin: true } : {}) }\n      : l"
+    },
+    "merge/apply": {
+      "file": "src/lib/review/srs.ts",
+      "start": 218,
+      "end": 227,
+      "code": "export function applyDoc(doc: SyncDoc): void {\n  if (doc.resetAt > store.resetAt) {\n    store.resetAt = doc.resetAt\n    for (const [id, c] of Object.entries(store.cards)) if ((c.t || 0) < doc.resetAt) delete store.cards[id]\n    store.days = {}\n  }\n  for (const [id, c] of Object.entries(doc.cards || {})) {\n    const have = store.cards[id]\n    if (!have || (c.t || 0) > (have.t || 0)) store.cards[id] = c\n  }"
+    },
+    "syncclient/connect": {
+      "file": "src/lib/review/sync.ts",
+      "start": 56,
+      "end": 64,
+      "code": "export async function connect(key: string): Promise<boolean> {\n  sync.key = key.trim()\n  const ok = await syncNow()\n  try {\n    if (ok) localStorage.setItem(KEY, sync.key)\n  } catch { /* storage unavailable: works until the app closes */ }\n  if (!ok) sync.key = ''\n  return ok\n}"
+    },
+    "syncclient/debounce": {
+      "file": "src/lib/review/sync.ts",
+      "start": 76,
+      "end": 81,
+      "code": "let timer: ReturnType<typeof setTimeout> | undefined\nwatch(store, () => {\n  if (!sync.key) return\n  clearTimeout(timer)\n  timer = setTimeout(() => { if (sig() !== lastSig) syncNow() }, 3000)\n}, { deep: true })"
+    },
+    "syncclient/hidden": {
+      "file": "src/lib/review/sync.ts",
+      "start": 85,
+      "end": 95,
+      "code": "document.addEventListener('visibilitychange', () => {\n  if (document.visibilityState === 'hidden' && sync.key && sig() !== lastSig) {\n    clearTimeout(timer)\n    fetch(SYNC_URL, {\n      method: 'POST', keepalive: true,\n      headers: { 'Content-Type': 'application/json', 'X-Sync-Key': sync.key },\n      // keepalive bodies are capped at 64 KB: only cards answered since the last good sync\n      body: JSON.stringify({ ...uploadPayload(), cards: changedSince(sync.last - 60000) }),\n    }).catch(() => { /* next start retries */ })\n  } else if (document.visibilityState === 'visible' && sync.key) syncNow()\n})"
+    },
+    "proverbs/norm": {
+      "file": "src/lib/proverbs.ts",
+      "start": 11,
+      "end": 17,
+      "code": "export function norm(s: string | undefined): string {\n  return (s || '')\n    .replace(/[ً-ْ]/g, '')\n    .replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/‌/g, ' ')\n    .replace(/[آأإ]/g, 'ا').replace(/ة/g, 'ه')\n    .toLowerCase()\n}"
+    },
+    "proverbs/matches": {
+      "file": "src/lib/proverbs.ts",
+      "start": 23,
+      "end": 28,
+      "code": "// Every word must start a word in the text — so «آب» doesn't match «کتاب».\nexport function matches(p: Proverb, q: string): boolean {\n  const words = norm(q).replace(/[^\\p{L}\\p{N}\\s]/gu, ' ').split(/\\s+/).filter(Boolean)\n  const h = hay.get(p.n) || ''\n  return words.every((w) => h.includes(' ' + w))\n}"
+    },
+    "proverbs/url": {
+      "file": "src/views/ProverbsView.vue",
+      "start": 30,
+      "end": 37,
+      "code": "watch([q, w, t, daily], () => {\n  const query: Record<string, string> = {}\n  if (q.value.trim()) query.q = q.value.trim()\n  if (w.value) query.w = w.value\n  if (t.value) query.t = t.value\n  if (daily.value) query.daily = '1'\n  router.replace({ query })\n})"
+    },
+    "context/engine": {
+      "file": "vite.config.ts",
+      "start": 28,
+      "end": 29,
+      "code": "const CONTEXT_ENGINE =\n  process.env.CONTEXT_ENGINE_DIR || 'C:/Users/akesh/Downloads/SmartLedgerAI-JobPrep/Context/engine'"
+    },
+    "context/load": {
+      "file": "src/lib/context.ts",
+      "start": 16,
+      "end": 32,
+      "code": "export async function loadContext(force = false): Promise<void> {\n  if (ctx.value && !force) return\n  ctxLoading.value = true\n  ctxError.value = ''\n  try {\n    const res = await fetch('/api/context', { cache: 'no-store' })\n    const isJson = (res.headers.get('content-type') || '').includes('json')\n    if (!import.meta.env.DEV && (res.status === 404 || !isJson)) {\n      ctxError.value = 'local-only'\n      return\n    }\n    const data = await res.json()\n    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)\n    ctx.value = data as ContextData\n  } catch (e) {\n    ctxError.value = e instanceof Error ? e.message : String(e)\n  } finally {"
+    },
+    "context/local": {
+      "file": "vite.config.ts",
+      "start": 43,
+      "end": 50,
+      "code": "function isLocalRead(req: { headers: Record<string, string | string[] | undefined> }): boolean {\n  const host = req.headers.host as string | undefined\n  const origin = req.headers.origin as string | undefined\n  const site = req.headers['sec-fetch-site'] as string | undefined\n  if (!isLoopbackHost(host)) return false\n  if (origin && !isTrustedOrigin(origin, host)) return false\n  return !site || site === 'same-origin' || site === 'none'\n}"
+    },
+    "tags/resolve": {
+      "file": "src/lib/context.ts",
+      "start": 53,
+      "end": 59,
+      "code": "let m = s.match(/^([BbWw]):?\\s*0*(\\d+)$/)\nif (m) {\n  const k = m[1].toUpperCase()\n  const n = Number(m[2])\n  const row = (k === 'B' ? d.bugs : d.work).find((x) => x.n === n)\n  return row ? { kind: k, route: `/context/${k === 'B' ? 'bugs' : 'work'}?at=${row.tag.slice(1)}`, label: row.fa } : null\n}"
+    },
+    "tags/jump": {
+      "file": "src/lib/context.ts",
+      "start": 100,
+      "end": 110,
+      "code": "export function jumpTo(at: unknown): void {\n  if (typeof at !== 'string' || !at) return\n  requestAnimationFrame(() => {\n    const el = document.getElementById(at)\n    if (!el) return\n    el.scrollIntoView({ behavior: 'smooth', block: 'center' })\n    el.classList.remove('flash')\n    void el.offsetWidth\n    el.classList.add('flash')\n  })\n}"
+    }
+  },
+  "endpoints": [],
+  "tables": [],
+  "routes": [
+    {
+      "path": "/",
+      "component": "LessonListView",
+      "guards": []
+    },
+    {
+      "path": "/lesson/:id",
+      "component": "LessonView",
+      "guards": []
+    },
+    {
+      "path": "/lesson/:id/edit",
+      "component": "LessonEditView",
+      "guards": []
+    },
+    {
+      "path": "/context",
+      "component": "ContextHomeView",
+      "guards": []
+    },
+    {
+      "path": "/context/p/:key",
+      "component": "ContextPackView",
+      "guards": []
+    },
+    {
+      "path": "/context/gaps",
+      "component": "ContextListView",
+      "guards": []
+    },
+    {
+      "path": "/context/bugs",
+      "component": "ContextListView",
+      "guards": []
+    },
+    {
+      "path": "/context/work",
+      "component": "ContextListView",
+      "guards": []
+    },
+    {
+      "path": "/context/recruit",
+      "component": "ContextRecruitView",
+      "guards": []
+    },
+    {
+      "path": "/proverbs",
+      "component": "ProverbsView",
+      "guards": []
+    },
+    {
+      "path": "/review",
+      "component": "ReviewView",
+      "guards": []
+    },
+    {
+      "path": "/review/session",
+      "component": "ReviewSessionView",
+      "guards": []
+    },
+    {
+      "path": "/proverbs/practice",
+      "component": "ProverbsPracticeView",
+      "guards": []
+    }
+  ]
+}

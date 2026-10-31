@@ -1,0 +1,2979 @@
+{
+  "project": "languagelessondesigner",
+  "repo": "LanguageLessonDesigner",
+  "scan": {
+    "vueRoutes": "src/router/index.ts"
+  },
+  "groups": [
+    {
+      "id": "start",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع"
+      }
+    },
+    {
+      "id": "lessons",
+      "title": {
+        "en": "Lessons",
+        "fa": "درس‌ها"
+      }
+    },
+    {
+      "id": "review",
+      "title": {
+        "en": "Daily review",
+        "fa": "مرور روزانه"
+      }
+    },
+    {
+      "id": "sync",
+      "title": {
+        "en": "Syncing devices",
+        "fa": "همگام‌سازی دستگاه‌ها"
+      }
+    },
+    {
+      "id": "proverbs",
+      "title": {
+        "en": "Proverbs",
+        "fa": "ضرب‌المثل‌ها"
+      }
+    },
+    {
+      "id": "context",
+      "title": {
+        "en": "Context (private)",
+        "fa": "کانتکست (خصوصی)"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "about",
+      "group": "start",
+      "title": {
+        "en": "What it is",
+        "fa": "این پروژه چیست"
+      },
+      "files": [
+        "src/App.vue",
+        "index.html",
+        "package.json"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "English lessons, review, proverbs, context",
+          "p": [
+            "English Lessons is a Vue 3 + TypeScript app, built with Vite, for learning the English of work in Canada and the US. Its top bar has four sections: **Lessons** (units of grammar, collocations, words, listening and production, each with a printable PDF), **Review** (a daily spaced-repetition plan over the lessons and the proverbs), **Context** (the owner's private notes, only on the PC or the private site) and **Proverbs** (Persian proverbs with their American equivalents).",
+            "The page is Persian and right to left (`lang=\"fa\" dir=\"rtl\"` in `index.html`); the English inside it is marked with its own class. The tab that is lit comes from the route's `meta.section`, so a lesson page and its edit form both light up Lessons."
+          ],
+          "examples": [
+            "tabs"
+          ]
+        },
+        {
+          "id": "data",
+          "h": "No database",
+          "p": [
+            "There is no database. The lessons are JSON files in `src/data/units/`, bundled into the build; the proverbs are one JSON file written by a separate proverb engine; review progress lives in the browser's localStorage and, once a key is set, is synced through a tiny Node server (`server/sync.mjs`). Context comes only from an API that the public build never has. So the public site is a static folder that any web server can serve."
+          ]
+        },
+        {
+          "id": "two",
+          "h": "One build, two sites",
+          "p": [
+            "On the VPS Caddy serves the same `lessons-web` container under `english.<domain>` (public) and `ctx.<domain>` (behind basic auth, the owner's phone app). A small script in `index.html` checks the host name before Vue starts and swaps the home-screen manifest, the icon, the title and the theme colour, so the phone gets two different home-screen apps from one build. It runs before Vue on purpose: the browser reads the manifest link early, and a later change would come too late for \"Add to Home Screen\"."
+          ],
+          "examples": [
+            "ctxhead"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "درس انگلیسی، مرور، ضرب‌المثل، کانتکست",
+          "p": [
+            "English Lessons یک اپ Vue 3 و TypeScript است که با Vite ساخته می‌شود، برای یاد گرفتن انگلیسیِ محیط کار در کانادا و آمریکا. نوار بالایش چهار بخش دارد: **درس‌ها** (یونیت‌هایی از گرامر، کالوکیشن، واژه، شنیدن و تولید، هر کدام با یک PDF قابل چاپ)، **مرور** (برنامه‌ی روزانه‌ی spaced repetition روی درس‌ها و ضرب‌المثل‌ها)، **کانتکست** (یادداشت‌های خصوصی صاحب پروژه، فقط روی PC یا سایت خصوصی) و **ضرب‌المثل‌ها** (ضرب‌المثل‌های فارسی با معادل آمریکایی‌شان).",
+            "صفحه فارسی و راست‌به‌چپ است (`lang=\"fa\" dir=\"rtl\"` در `index.html`)؛ متن انگلیسی داخلش با کلاس خودش مشخص می‌شود. تبی که روشن است از `meta.section` همان route می‌آید، پس هم صفحه‌ی درس و هم فرم ویرایشش تب درس‌ها را روشن می‌کنند."
+          ],
+          "examples": [
+            "tabs"
+          ]
+        },
+        {
+          "id": "data",
+          "h": "بدون دیتابیس",
+          "p": [
+            "دیتابیسی در کار نیست. درس‌ها فایل‌های JSON در `src/data/units/` هستند که داخل build بسته‌بندی می‌شوند؛ ضرب‌المثل‌ها یک فایل JSON است که یک موتور جداگانه‌ی ضرب‌المثل می‌نویسدش؛ پیشرفت مرور در localStorage مرورگر است و وقتی کلید وارد شود از طریق یک سرور خیلی کوچک Node (`server/sync.mjs`) همگام می‌شود. کانتکست فقط از یک API می‌آید که build عمومی هرگز ندارد. پس سایت عمومی یک پوشه‌ی static است که هر وب‌سروری می‌تواند سرو کند."
+          ]
+        },
+        {
+          "id": "two",
+          "h": "یک build، دو سایت",
+          "p": [
+            "روی VPS، Caddy همان کانتینر `lessons-web` را زیر `english.<domain>` (عمومی) و `ctx.<domain>` (پشت basic auth، اپ گوشی صاحب پروژه) سرو می‌کند. یک اسکریپت کوچک در `index.html` قبل از شروع Vue اسم host را نگاه می‌کند و manifest صفحه‌ی خانه، آیکون، عنوان و رنگ تم را عوض می‌کند، پس گوشی از یک build دو اپ متفاوت روی صفحه‌ی خانه می‌گیرد. عمداً قبل از Vue اجرا می‌شود: مرورگر لینک manifest را زود می‌خواند و تغییر بعدی برای «Add to Home Screen» دیر است."
+          ],
+          "examples": [
+            "ctxhead"
+          ]
+        }
+      ],
+      "examples": {
+        "tabs": {
+          "title": {
+            "en": "The four tabs",
+            "fa": "چهار تب"
+          },
+          "lang": "xml",
+          "file": "src/App.vue",
+          "from": "<nav class=\"topbar\">",
+          "to": "</nav>"
+        },
+        "ctxhead": {
+          "title": {
+            "en": "Another app on ctx.<domain>",
+            "fa": "اپ دیگری روی ctx.<domain>"
+          },
+          "lang": "javascript",
+          "file": "index.html",
+          "from": "if (location.hostname.startsWith('ctx.'))",
+          "lines": 7
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does `index.html` switch the manifest before Vue loads, instead of in `App.vue`?",
+            "fa": "چرا `index.html` قبل از بار شدن Vue manifest را عوض می‌کند، نه در `App.vue`؟"
+          },
+          "options": {
+            "en": [
+              "To block visitors who are not the owner",
+              "So the browser sees the right manifest and icon for the home-screen app",
+              "Because Vue cannot read `location.hostname`"
+            ],
+            "fa": [
+              "برای این‌که بازدیدکننده‌هایی که صاحب پروژه نیستند را بلاک کند",
+              "تا مرورگر manifest و آیکون درست را برای اپ صفحه‌ی خانه ببیند",
+              "چون Vue نمی‌تواند `location.hostname` را بخواند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The browser reads the manifest link early; switching it first gives `ctx.<domain>` its own name and icon. Access control is Caddy's basic auth, not this script.",
+            "fa": "مرورگر لینک manifest را زود می‌خواند؛ عوض کردنش در اول کار به `ctx.<domain>` اسم و آیکون خودش را می‌دهد. کنترل دسترسی کار basic auth در Caddy است، نه این اسکریپت."
+          }
+        },
+        {
+          "q": {
+            "en": "Where do the lessons come from when the public site runs?",
+            "fa": "وقتی سایت عمومی اجرا می‌شود درس‌ها از کجا می‌آیند؟"
+          },
+          "options": {
+            "en": [
+              "JSON files bundled into the build",
+              "A SQL Server database behind an API",
+              "Only from localStorage"
+            ],
+            "fa": [
+              "فایل‌های JSON که داخل build بسته‌بندی شده‌اند",
+              "یک دیتابیس SQL Server پشت یک API",
+              "فقط از localStorage"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The units are JSON files in `src/data/units/` that Vite bundles; localStorage only holds drafts and review progress.",
+            "fa": "یونیت‌ها فایل‌های JSON در `src/data/units/` هستند که Vite بسته‌بندی‌شان می‌کند؛ localStorage فقط draftها و پیشرفت مرور را نگه می‌دارد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "group": "start",
+      "title": {
+        "en": "How to run it",
+        "fa": "اجرا کردن"
+      },
+      "files": [
+        "package.json",
+        "vite.config.ts"
+      ],
+      "en": [
+        {
+          "id": "dev",
+          "h": "npm run dev",
+          "p": [
+            "`npm install`, then `npm run dev` starts Vite. Only the dev server has the two local APIs: `/api/save-lesson/<id>` (the edit form's publish) and `/api/context` (the private Context data). They are Vite plugins registered in `configureServer`, so they exist nowhere else: not in `vite preview`, not in the nginx image. That is why editing is a PC-only job, and why the published site can be read-only without any extra rule."
+          ],
+          "examples": [
+            "scripts"
+          ]
+        },
+        {
+          "id": "build",
+          "h": "Building",
+          "p": [
+            "`npm run build` runs `vue-tsc -b` first, so a type error stops the build, then `vite build` writes `dist/`. `build:pages` builds with `--base=/LanguageLessonDesigner/` for GitHub Pages, and `deploy` pushes `dist/` there with `gh-pages`. On the VPS Control Panel's `deploy/lessons/web.Dockerfile` runs `npm ci` and `npm run build` and serves `dist/` with nginx; because the router uses hash history, nginx needs no fallback rule."
+          ]
+        },
+        {
+          "id": "sync",
+          "h": "The sync server and the watcher",
+          "p": [
+            "`npm run sync` starts the review-sync server on port 8787, and the dev server's proxy sends `/api/sync` to it, so the Review page behaves on the PC as it does behind Caddy on the server, same relative URL and all. The `public/pdf/**` folder is left out of Vite's file watcher: publishing writes a new PDF there, and a watched folder would reload the page in the middle of the publish request."
+          ],
+          "examples": [
+            "proxy"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "dev",
+          "h": "npm run dev",
+          "p": [
+            "`npm install` و بعد `npm run dev`، Vite را راه می‌اندازد. فقط سرور dev دو API محلی دارد: `/api/save-lesson/<id>` (انتشار فرم ویرایش) و `/api/context` (داده‌ی خصوصی کانتکست). این‌ها pluginهای Vite هستند که در `configureServer` ثبت می‌شوند، پس هیچ جای دیگری وجود ندارند: نه در `vite preview` و نه در image مربوط به nginx. برای همین ویرایش فقط کار PC است و سایت منتشرشده بدون هیچ قاعده‌ی اضافه‌ای فقط‌خواندنی می‌ماند."
+          ],
+          "examples": [
+            "scripts"
+          ]
+        },
+        {
+          "id": "build",
+          "h": "build",
+          "p": [
+            "`npm run build` اول `vue-tsc -b` را اجرا می‌کند، پس یک خطای type جلوی build را می‌گیرد، و بعد `vite build` پوشه‌ی `dist/` را می‌نویسد. `build:pages` با `--base=/LanguageLessonDesigner/` برای GitHub Pages می‌سازد و `deploy` پوشه‌ی `dist/` را با `gh-pages` آن‌جا می‌فرستد. روی VPS فایل `deploy/lessons/web.Dockerfile` در کنترل پنل `npm ci` و `npm run build` را اجرا می‌کند و `dist/` را با nginx سرو می‌کند؛ چون router از hash history استفاده می‌کند، nginx قاعده‌ی fallback لازم ندارد."
+          ]
+        },
+        {
+          "id": "sync",
+          "h": "سرور sync و watcher",
+          "p": [
+            "`npm run sync` سرور همگام‌سازی مرور را روی پورت 8787 بالا می‌آورد و proxy سرور dev درخواست‌های `/api/sync` را به آن می‌فرستد، پس صفحه‌ی مرور روی PC همان‌طور رفتار می‌کند که پشت Caddy روی سرور، با همان URL نسبی. پوشه‌ی `public/pdf/**` از watcher فایل‌های Vite کنار گذاشته شده: انتشار یک PDF تازه آن‌جا می‌نویسد و پوشه‌ای که watch شود صفحه را وسط درخواست انتشار reload می‌کرد."
+          ],
+          "examples": [
+            "proxy"
+          ]
+        }
+      ],
+      "examples": {
+        "scripts": {
+          "title": {
+            "en": "The npm scripts",
+            "fa": "اسکریپت‌های npm"
+          },
+          "lang": "json",
+          "file": "package.json",
+          "from": "\"scripts\": {",
+          "to": "\"test\": \"node --test server/\""
+        },
+        "proxy": {
+          "title": {
+            "en": "Plugins, proxy and watcher",
+            "fa": "pluginها، proxy و watcher"
+          },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "export default defineConfig({",
+          "lines": 12
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does \"publish\" on the edit form fail on `english.<domain>`?",
+            "fa": "چرا «انتشار» در فرم ویرایش روی `english.<domain>` کار نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Caddy refuses every POST",
+              "nginx has no permission to write files",
+              "The save API is a Vite dev-server plugin, absent from the static build"
+            ],
+            "fa": [
+              "Caddy همه‌ی POSTها را رد می‌کند",
+              "nginx اجازه‌ی نوشتن فایل ندارد",
+              "API ذخیره یک plugin سرور dev در Vite است و در build static نیست"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The plugins are registered in `configureServer`, which only runs under `vite dev`; the built site has no server code at all.",
+            "fa": "pluginها در `configureServer` ثبت می‌شوند که فقط زیر `vite dev` اجرا می‌شود؛ سایت build‌شده اصلاً کد سرور ندارد."
+          }
+        },
+        {
+          "q": {
+            "en": "What does `npm run build` do when there is a TypeScript type error?",
+            "fa": "وقتی یک خطای type در TypeScript هست `npm run build` چه می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "It stops, because `vue-tsc -b` runs first and fails",
+              "It writes `dist/` with a warning",
+              "Nothing: only the dev server checks types"
+            ],
+            "fa": [
+              "متوقف می‌شود، چون `vue-tsc -b` اول اجرا می‌شود و fail می‌شود",
+              "`dist/` را با یک هشدار می‌نویسد",
+              "هیچ: فقط سرور dev typeها را چک می‌کند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The script is `vue-tsc -b && vite build`; `&&` runs the Vite build only when the type check passed.",
+            "fa": "اسکریپت `vue-tsc -b && vite build` است؛ `&&` فقط وقتی type check موفق بود build را اجرا می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is `public/pdf/**` excluded from the watcher?",
+            "fa": "چرا `public/pdf/**` از watcher کنار گذاشته شده؟"
+          },
+          "options": {
+            "en": [
+              "PDFs are too big to bundle",
+              "A freshly written PDF would make the dev server reload the page",
+              "The PDFs contain personal data"
+            ],
+            "fa": [
+              "PDFها برای bundle شدن خیلی بزرگ‌اند",
+              "یک PDF تازه‌نوشته‌شده باعث می‌شد سرور dev صفحه را reload کند",
+              "PDFها داده‌ی شخصی دارند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "PDFs are not part of the module graph; watching them would only trigger reloads while a publish is still answering.",
+            "fa": "PDFها بخشی از module graph نیستند؛ watch کردنشان فقط وقتی انتشار هنوز جواب نداده reload راه می‌انداخت."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "group": "start",
+      "title": {
+        "en": "Tests",
+        "fa": "تست‌ها"
+      },
+      "files": [
+        "server/merge.test.mjs",
+        "server/merge.mjs"
+      ],
+      "en": [
+        {
+          "id": "runner",
+          "h": "node --test",
+          "p": [
+            "`npm test` runs `node --test server/`: Node's own test runner with `node:assert/strict`, nothing to install. It finds `server/merge.test.mjs`, which tests the merge rules of the review-sync server. Those rules are kept in `merge.mjs` as pure functions (the stored document and one upload go in, a new document comes out, the input untouched) precisely so they can be tested without starting a server or writing files."
+          ]
+        },
+        {
+          "id": "cases",
+          "h": "What is tested",
+          "list": [
+            "cards: the newest answer wins, whichever device sends it;",
+            "days: each device keeps its own log, and sending the same day again changes nothing;",
+            "reset: older cards and every day log are dropped, and a device that missed the reset cannot bring them back;",
+            "settings: the last write wins, and junk (a device id like `../x`, a card that is a string, a 400-character id, a day that is not a number) is ignored."
+          ],
+          "examples": [
+            "reset",
+            "days"
+          ]
+        },
+        {
+          "id": "why",
+          "h": "Why these",
+          "p": [
+            "These are the rules where a mistake loses data silently: a phone that was offline for a week would otherwise overwrite newer answers from the PC, or restore cards after \"start over\". The front end has no unit tests; `vue-tsc` in the build is its check."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "runner",
+          "h": "node --test",
+          "p": [
+            "`npm test` دستور `node --test server/` را اجرا می‌کند: test runner خود Node با `node:assert/strict`، بدون نصب چیزی. فایل `server/merge.test.mjs` را پیدا می‌کند که قانون‌های merge سرور همگام‌سازی مرور را تست می‌کند. این قانون‌ها عمداً در `merge.mjs` به‌صورت تابع خالص نگه داشته شده‌اند (سند ذخیره‌شده و یک آپلود وارد می‌شوند، یک سند تازه بیرون می‌آید و ورودی دست نمی‌خورد) تا بشود بدون راه انداختن سرور یا نوشتن فایل تستشان کرد."
+          ]
+        },
+        {
+          "id": "cases",
+          "h": "چه چیزی تست می‌شود",
+          "list": [
+            "کارت‌ها: جدیدترین جواب برنده است، هر دستگاهی که بفرستدش؛",
+            "روزها: هر دستگاه لاگ خودش را دارد و فرستادن دوباره‌ی همان روز چیزی را عوض نمی‌کند؛",
+            "reset: کارت‌های قدیمی‌تر و همه‌ی لاگ‌های روزانه حذف می‌شوند و دستگاهی که reset را ندیده نمی‌تواند برشان گرداند؛",
+            "تنظیمات: آخرین نوشتن برنده است و داده‌ی بی‌ربط (شناسه‌ی دستگاهی مثل `../x`، کارتی که رشته است، شناسه‌ی ۴۰۰ حرفی، روزی که عدد نیست) نادیده گرفته می‌شود."
+          ],
+          "examples": [
+            "reset",
+            "days"
+          ]
+        },
+        {
+          "id": "why",
+          "h": "چرا همین‌ها",
+          "p": [
+            "این‌ها همان قانون‌هایی هستند که اشتباه در آن‌ها بی‌صدا داده را از بین می‌برد: گوشی‌ای که یک هفته آفلاین بوده وگرنه جواب‌های جدیدتر PC را بازنویسی می‌کرد، یا کارت‌ها را بعد از «از اول» برمی‌گرداند. front end تست واحد ندارد؛ `vue-tsc` در build چک آن است."
+          ]
+        }
+      ],
+      "examples": {
+        "reset": {
+          "title": {
+            "en": "A stale device after a reset",
+            "fa": "دستگاه عقب‌مانده بعد از reset"
+          },
+          "lang": "javascript",
+          "file": "server/merge.test.mjs",
+          "from": "test('reset drops older cards",
+          "lines": 9
+        },
+        "days": {
+          "title": {
+            "en": "Day logs per device",
+            "fa": "لاگ روزانه برای هر دستگاه"
+          },
+          "lang": "javascript",
+          "file": "server/merge.test.mjs",
+          "from": "test('days: each device",
+          "lines": 7
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why are the merge rules written as pure functions in their own file?",
+            "fa": "چرا قانون‌های merge به‌صورت تابع خالص در فایل جداگانه نوشته شده‌اند؟"
+          },
+          "options": {
+            "en": [
+              "`node:http` requires it",
+              "So they can be tested without a server or files",
+              "They run faster in production that way"
+            ],
+            "fa": [
+              "`node:http` این را لازم دارد",
+              "تا بشود بدون سرور یا فایل تستشان کرد",
+              "این‌طوری در production سریع‌تر اجرا می‌شوند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "A function from (doc, upload) to a new doc can be called directly from a test; `sync.mjs` only adds HTTP and the file around it.",
+            "fa": "تابعی که از (سند، آپلود) یک سند تازه می‌سازد مستقیماً از تست صدا زده می‌شود؛ `sync.mjs` فقط HTTP و فایل را دورش اضافه می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "After a reset at time 50, the phone (which never heard of it) sends card `a` answered at 10 and a day log. What does the test expect?",
+            "fa": "بعد از یک reset در زمان 50، گوشی (که خبر ندارد) کارت `a` با جواب در زمان 10 و یک لاگ روزانه می‌فرستد. تست چه انتظاری دارد؟"
+          },
+          "options": {
+            "en": [
+              "Card `a` comes back, the day log is dropped",
+              "Everything is reset again",
+              "Neither card `a` nor the day log is accepted"
+            ],
+            "fa": [
+              "کارت `a` برمی‌گردد و لاگ روزانه حذف می‌شود",
+              "همه چیز دوباره reset می‌شود",
+              "نه کارت `a` قبول می‌شود نه لاگ روزانه"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Card `a` was answered before the reset, so it is dropped; a device behind the latest reset has its day logs ignored.",
+            "fa": "کارت `a` قبل از reset جواب داده شده، پس حذف می‌شود؛ لاگ روزانه‌ی دستگاهی که از آخرین reset عقب است نادیده گرفته می‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "routes",
+      "group": "start",
+      "title": {
+        "en": "The router",
+        "fa": "router"
+      },
+      "files": [
+        "src/router/index.ts"
+      ],
+      "en": [
+        {
+          "id": "hash",
+          "h": "Hash history and lazy sections",
+          "p": [
+            "The router uses `createWebHashHistory`: addresses look like `#/lesson/u201`. The part after `#` never reaches the server, so a deep link works on GitHub Pages, on nginx without a rewrite rule, and on both domains. The lesson views are imported directly; Context, Proverbs and Review are `() => import(...)` lazy chunks, so opening the lesson list does not download the proverb data or the review code."
+          ],
+          "examples": [
+            "routes"
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "meta",
+          "h": "meta.section",
+          "p": [
+            "Each route carries `meta.section`, which the top bar uses to light its tab and `afterEach` uses for the browser tab title (a lesson shows its English title, \"(edit)\" on the form). The three Context lists share one view, and `meta.list` tells it which list to show."
+          ]
+        },
+        {
+          "id": "ctx",
+          "h": "Opening on Context",
+          "p": [
+            "On `ctx.<domain>` the first navigation to `/` is sent to `/context`, but only when `from` is `START_LOCATION`: the redirect happens once when the app opens, so the Lessons tab still works afterwards. `scrollBehavior` does not jump to the top when the address has `?at=`, because those links scroll to their own row, and jumping first would cancel that smooth scroll half-way."
+          ],
+          "examples": [
+            "ctxstart"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "hash",
+          "h": "hash history و بخش‌های lazy",
+          "p": [
+            "router از `createWebHashHistory` استفاده می‌کند: آدرس‌ها مثل `#/lesson/u201` هستند. بخش بعد از `#` هرگز به سرور نمی‌رسد، پس لینک مستقیم روی GitHub Pages، روی nginx بدون قاعده‌ی rewrite و روی هر دو دامنه کار می‌کند. صفحه‌های درس مستقیم import می‌شوند؛ کانتکست، ضرب‌المثل‌ها و مرور chunkهای lazy با `() => import(...)` هستند، پس باز کردن فهرست درس‌ها داده‌ی ضرب‌المثل‌ها یا کد مرور را دانلود نمی‌کند."
+          ],
+          "examples": [
+            "routes"
+          ],
+          "data": {
+            "kind": "routes"
+          }
+        },
+        {
+          "id": "meta",
+          "h": "meta.section",
+          "p": [
+            "هر route یک `meta.section` دارد که نوار بالا برای روشن کردن تبش و `afterEach` برای عنوان تب مرورگر از آن استفاده می‌کنند (درس عنوان انگلیسی‌اش را نشان می‌دهد و فرم ویرایش «(edit)» را). سه فهرست کانتکست یک view مشترک دارند و `meta.list` به آن می‌گوید کدام فهرست را نشان دهد."
+          ]
+        },
+        {
+          "id": "ctx",
+          "h": "باز شدن روی کانتکست",
+          "p": [
+            "روی `ctx.<domain>` اولین رفتن به `/` به `/context` فرستاده می‌شود، اما فقط وقتی `from` همان `START_LOCATION` است: این redirect یک بار و هنگام باز شدن اپ اتفاق می‌افتد، پس تب درس‌ها بعدش هنوز کار می‌کند. `scrollBehavior` وقتی آدرس `?at=` دارد به بالای صفحه نمی‌پرد، چون این لینک‌ها خودشان به ردیفشان scroll می‌کنند و پریدن به بالا آن scroll نرم را نیمه‌کاره قطع می‌کرد."
+          ],
+          "examples": [
+            "ctxstart"
+          ]
+        }
+      ],
+      "examples": {
+        "routes": {
+          "title": {
+            "en": "The routes",
+            "fa": "routeها"
+          },
+          "lang": "typescript",
+          "file": "src/router/index.ts",
+          "from": "const router = createRouter({",
+          "to": "  ],"
+        },
+        "ctxstart": {
+          "title": {
+            "en": "Context first, once",
+            "fa": "اول کانتکست، فقط یک بار"
+          },
+          "lang": "typescript",
+          "file": "src/router/index.ts",
+          "from": "router.beforeEach((to, from) => {",
+          "lines": 3
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does the app use hash history?",
+            "fa": "چرا اپ از hash history استفاده می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Deep links work on any static host without a rewrite rule",
+              "Search engines index hash URLs better",
+              "It hides the address from Caddy's logs"
+            ],
+            "fa": [
+              "لینک مستقیم روی هر host استاتیک بدون قاعده‌ی rewrite کار می‌کند",
+              "موتورهای جست‌وجو URLهای hash را بهتر index می‌کنند",
+              "آدرس را از لاگ‌های Caddy پنهان می‌کند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The browser never sends the part after `#`, so the server always just serves `index.html`.",
+            "fa": "مرورگر بخش بعد از `#` را هرگز نمی‌فرستد، پس سرور همیشه فقط `index.html` را می‌دهد."
+          }
+        },
+        {
+          "q": {
+            "en": "What would happen on `ctx.<domain>` if the guard did not check `from === START_LOCATION`?",
+            "fa": "اگر guard روی `ctx.<domain>` شرط `from === START_LOCATION` را چک نمی‌کرد چه می‌شد؟"
+          },
+          "options": {
+            "en": [
+              "Nothing different",
+              "Clicking the Lessons tab would always send you back to Context",
+              "The site would ask for the password again"
+            ],
+            "fa": [
+              "هیچ فرقی نمی‌کرد",
+              "کلیک روی تب درس‌ها همیشه دوباره به کانتکست برمی‌گرداند",
+              "سایت دوباره رمز می‌خواست"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The Lessons tab links to `/`; only the very first navigation should be redirected.",
+            "fa": "تب درس‌ها به `/` لینک دارد؛ فقط اولین navigation باید redirect شود."
+          }
+        },
+        {
+          "q": {
+            "en": "What do the lazy `() => import(...)` routes save?",
+            "fa": "routeهای lazy با `() => import(...)` چه چیزی را صرفه‌جویی می‌کنند؟"
+          },
+          "options": {
+            "en": [
+              "Server memory",
+              "Nothing; they only change the URL",
+              "Downloading the review, proverbs and context code until you open them"
+            ],
+            "fa": [
+              "حافظه‌ی سرور",
+              "هیچ؛ فقط URL را عوض می‌کنند",
+              "دانلود کد مرور، ضرب‌المثل‌ها و کانتکست تا وقتی بازشان کنی"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Each lazy view is its own chunk; the proverb data, for one, is only imported by the proverb views.",
+            "fa": "هر view lazy یک chunk جداست؛ مثلاً داده‌ی ضرب‌المثل‌ها فقط توسط viewهای ضرب‌المثل import می‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "unit",
+      "group": "lessons",
+      "title": {
+        "en": "A lesson as JSON",
+        "fa": "درس به‌صورت JSON"
+      },
+      "files": [
+        "src/types/unit.ts",
+        "src/lib/units.ts"
+      ],
+      "en": [
+        {
+          "id": "shape",
+          "h": "The Unit type",
+          "p": [
+            "A lesson (\"unit\") is one JSON file, `src/data/units/u<id>.json`, with the shape of `Unit` in `src/types/unit.ts`: its number `n` (its place in the course), a `hue` that colours it, English and Persian titles, its sources, then one field per section: story, dialog, grammar, collocations, vocabulary, an optional certification part, listening, production, an interview sentence (`take`) and the quiz.",
+            "Many rows are tuples, `[english, persian, ...]` rather than objects: the compact form the original Python engine reads too, which keeps a lesson file short enough to write by hand."
+          ],
+          "examples": [
+            "unit"
+          ]
+        },
+        {
+          "id": "load",
+          "h": "Bundled with import.meta.glob",
+          "p": [
+            "`units.ts` reads every `u*.json` with `import.meta.glob(..., { eager: true })`: Vite bundles the files at build time, so there is no fetch and no list to keep up to date; a new file is simply there after the next build, or at once under `npm run dev`. `_index.json` does not match `u*`. The units are sorted by `n`, which is also the order of the previous/next links."
+          ],
+          "examples": [
+            "glob"
+          ]
+        },
+        {
+          "id": "engine",
+          "h": "Shared with the PDF engine",
+          "p": [
+            "The same JSON is the input of the Python engine that makes the PDF (`scripts/generate_pdf.py`), so the web page and the printed booklet always show the same lesson. Several web helpers are ports of that engine: `mark()` from `unit.py`, `shades()` from `gen.py`'s colour maths, and the fixed skill colours `SK`."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "shape",
+          "h": "type مربوط به Unit",
+          "p": [
+            "یک درس («یونیت») یک فایل JSON است، `src/data/units/u<id>.json`، به شکل `Unit` در `src/types/unit.ts`: شماره‌اش `n` (جایش در دوره)، یک `hue` که رنگش را تعیین می‌کند، عنوان انگلیسی و فارسی، منابعش، و بعد یک فیلد برای هر بخش: داستان، دیالوگ، گرامر، کالوکیشن، واژه، بخش اختیاری مدرک، شنیدن، تولید، یک جمله‌ی مصاحبه (`take`) و کوئیز.",
+            "خیلی از ردیف‌ها tuple هستند، یعنی `[english, persian, ...]` به جای object: همان شکل فشرده‌ای که موتور اصلی Python هم می‌خواند و فایل درس را آن‌قدر کوتاه نگه می‌دارد که بشود با دست نوشتش."
+          ],
+          "examples": [
+            "unit"
+          ]
+        },
+        {
+          "id": "load",
+          "h": "بسته‌بندی با import.meta.glob",
+          "p": [
+            "`units.ts` همه‌ی `u*.json`ها را با `import.meta.glob(..., { eager: true })` می‌خواند: Vite فایل‌ها را هنگام build بسته‌بندی می‌کند، پس نه fetch در کار است و نه فهرستی که باید به‌روز نگه داشته شود؛ یک فایل تازه بعد از build بعدی، یا زیر `npm run dev` همان لحظه، سر جایش است. `_index.json` با الگوی `u*` جور نیست. یونیت‌ها بر اساس `n` مرتب می‌شوند که ترتیب لینک‌های قبلی و بعدی هم همان است."
+          ],
+          "examples": [
+            "glob"
+          ]
+        },
+        {
+          "id": "engine",
+          "h": "مشترک با موتور PDF",
+          "p": [
+            "همین JSON ورودی موتور Python است که PDF را می‌سازد (`scripts/generate_pdf.py`)، پس صفحه‌ی وب و جزوه‌ی چاپی همیشه همان درس را نشان می‌دهند. چند helper وب ترجمه‌ی همان موتورند: `mark()` از `unit.py`، `shades()` از ریاضی رنگ در `gen.py`، و رنگ‌های ثابت مهارت‌ها در `SK`."
+          ]
+        }
+      ],
+      "examples": {
+        "unit": {
+          "title": {
+            "en": "Unit",
+            "fa": "Unit"
+          },
+          "lang": "typescript",
+          "file": "src/types/unit.ts",
+          "from": "export interface Unit {",
+          "to": "quiz: QuizItem[]"
+        },
+        "glob": {
+          "title": {
+            "en": "Every u*.json, at build time",
+            "fa": "همه‌ی u*.jsonها، هنگام build"
+          },
+          "lang": "typescript",
+          "file": "src/lib/units.ts",
+          "from": "const modules = import.meta.glob",
+          "lines": 5
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does adding a lesson need no change to a list of files?",
+            "fa": "چرا اضافه کردن یک درس هیچ تغییری در فهرست فایل‌ها لازم ندارد؟"
+          },
+          "options": {
+            "en": [
+              "`import.meta.glob` picks up every `u*.json` at build time",
+              "The app fetches the folder listing at run time",
+              "`_index.json` is regenerated automatically"
+            ],
+            "fa": [
+              "`import.meta.glob` هنگام build همه‌ی `u*.json`ها را برمی‌دارد",
+              "اپ در زمان اجرا فهرست پوشه را fetch می‌کند",
+              "`_index.json` خودکار دوباره ساخته می‌شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The glob pattern is resolved by Vite; the files become part of the bundle.",
+            "fa": "الگوی glob را Vite حل می‌کند؛ فایل‌ها بخشی از bundle می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "What decides a lesson's place in the list?",
+            "fa": "جای یک درس در فهرست را چه چیزی تعیین می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Its file name",
+              "Its field `n`",
+              "The date the file was written"
+            ],
+            "fa": [
+              "اسم فایلش",
+              "فیلد `n` آن",
+              "تاریخ نوشته شدن فایل"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Units are sorted by `n`; the id only names the file.",
+            "fa": "یونیت‌ها بر اساس `n` مرتب می‌شوند؛ شناسه فقط اسم فایل است."
+          }
+        }
+      ]
+    },
+    {
+      "id": "drafts",
+      "group": "lessons",
+      "title": {
+        "en": "Drafts in the browser",
+        "fa": "draft در مرورگر"
+      },
+      "files": [
+        "src/lib/drafts.ts",
+        "src/lib/units.ts",
+        "src/views/LessonListView.vue"
+      ],
+      "en": [
+        {
+          "id": "local",
+          "h": "localStorage, carefully",
+          "p": [
+            "An edit is first saved as a draft in this browser: `localStorage` under `lld:draft:<id>`. Every access is wrapped in try/catch, because localStorage can be missing or full (private mode, blocked storage); then a draft simply does not survive a reload, and nothing else breaks. A bad JSON value reads as \"no draft\" for the same reason."
+          ],
+          "examples": [
+            "drafts"
+          ]
+        },
+        {
+          "id": "wins",
+          "h": "The draft wins",
+          "p": [
+            "`getUnit()` returns the draft when there is one, otherwise the file. `listUnits()` lists the files (with the draft's title and number when one was edited) plus lessons that exist only as drafts, all sorted by `n`. So the page, the list and the navigation show what you are working on, not what is on disk."
+          ],
+          "examples": [
+            "list"
+          ]
+        },
+        {
+          "id": "create",
+          "h": "A new lesson",
+          "p": [
+            "\"New lesson\" asks for an id, checks it (`u` followed by letters or digits, the same rule the save API applies, and not already taken), saves a blank unit as a draft with the next number, and opens its edit form. There is no file until it is published. A draft lives in one browser only: publishing writes the file and clears it."
+          ],
+          "examples": [
+            "create"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "local",
+          "h": "localStorage، با احتیاط",
+          "p": [
+            "هر ویرایش اول به‌صورت draft در همین مرورگر ذخیره می‌شود: در `localStorage` زیر کلید `lld:draft:<id>`. هر دسترسی داخل try/catch است، چون localStorage ممکن است نباشد یا پر باشد (حالت خصوصی، storage بسته)؛ آن‌وقت draft فقط بعد از reload نمی‌ماند و چیز دیگری خراب نمی‌شود. یک مقدار JSON خراب هم به همین دلیل «draft ندارد» خوانده می‌شود."
+          ],
+          "examples": [
+            "drafts"
+          ]
+        },
+        {
+          "id": "wins",
+          "h": "draft برنده است",
+          "p": [
+            "`getUnit()` اگر draft باشد آن را برمی‌گرداند، وگرنه فایل را. `listUnits()` فایل‌ها را فهرست می‌کند (با عنوان و شماره‌ی draft اگر ویرایش شده باشند) به‌اضافه‌ی درس‌هایی که فقط به‌صورت draft وجود دارند، همه مرتب بر اساس `n`. پس صفحه، فهرست و لینک‌های جابه‌جایی چیزی را نشان می‌دهند که رویش کار می‌کنی، نه چیزی که روی دیسک است."
+          ],
+          "examples": [
+            "list"
+          ]
+        },
+        {
+          "id": "create",
+          "h": "درس جدید",
+          "p": [
+            "«درس جدید» یک شناسه می‌پرسد، چکش می‌کند (`u` و بعد حرف یا عدد، همان قاعده‌ای که API ذخیره اعمال می‌کند، و تکراری نباشد)، یک یونیت خالی با شماره‌ی بعدی را به‌صورت draft ذخیره می‌کند و فرم ویرایشش را باز می‌کند. تا وقتی منتشر نشود فایلی وجود ندارد. draft فقط در یک مرورگر زندگی می‌کند: انتشار فایل را می‌نویسد و draft را پاک می‌کند."
+          ],
+          "examples": [
+            "create"
+          ]
+        }
+      ],
+      "examples": {
+        "drafts": {
+          "title": {
+            "en": "Reading a draft",
+            "fa": "خواندن draft"
+          },
+          "lang": "typescript",
+          "file": "src/lib/drafts.ts",
+          "from": "const KEY_PREFIX = 'lld:draft:'",
+          "lines": 10
+        },
+        "list": {
+          "title": {
+            "en": "Files plus drafts",
+            "fa": "فایل‌ها به‌اضافه‌ی draftها"
+          },
+          "lang": "typescript",
+          "file": "src/lib/units.ts",
+          "from": "export function listUnits()",
+          "to": "return [...fromFiles, ...draftOnly]"
+        },
+        "create": {
+          "title": {
+            "en": "Creating a lesson",
+            "fa": "ساختن یک درس"
+          },
+          "lang": "typescript",
+          "file": "src/views/LessonListView.vue",
+          "from": "function createLesson()",
+          "to": "router.push(`/lesson/${id}/edit`)"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Private browsing blocks localStorage. What happens when you edit a lesson?",
+            "fa": "در حالت خصوصی localStorage بسته است. وقتی درسی را ویرایش می‌کنی چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The edit form crashes",
+              "The edit works but the draft is lost on reload",
+              "The edit is sent to the server instead"
+            ],
+            "fa": [
+              "فرم ویرایش crash می‌کند",
+              "ویرایش کار می‌کند ولی draft با reload از بین می‌رود",
+              "ویرایش به جایش به سرور فرستاده می‌شود"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Every localStorage call is in try/catch; a failed save is simply ignored.",
+            "fa": "هر صدا زدن localStorage داخل try/catch است؛ ذخیره‌ی ناموفق فقط نادیده گرفته می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "You open a lesson that has a draft in this browser. What does the lesson page show?",
+            "fa": "درسی را باز می‌کنی که در این مرورگر draft دارد. صفحه‌ی درس چه نشان می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "The file on disk",
+              "A choice between the two",
+              "The draft"
+            ],
+            "fa": [
+              "فایل روی دیسک",
+              "انتخابی بین این دو",
+              "draft را"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "`getUnit()` returns the draft first; \"reset to file\" on the edit form throws it away.",
+            "fa": "`getUnit()` اول draft را برمی‌گرداند؛ «برگشت به فایل» در فرم ویرایش آن را دور می‌اندازد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "render",
+      "group": "lessons",
+      "title": {
+        "en": "The lesson page",
+        "fa": "صفحه‌ی درس"
+      },
+      "files": [
+        "src/views/LessonView.vue",
+        "src/lib/shades.ts",
+        "src/lib/mark.ts",
+        "src/lib/skills.ts"
+      ],
+      "en": [
+        {
+          "id": "page",
+          "h": "One component per section",
+          "p": [
+            "`LessonView` takes the id from the route, gets the unit (draft or file) and renders one component per section in a fixed order; the certification section only when the unit has `cert`. Above them are links to the previous and next lesson in list order, the PDF at `<BASE_URL>pdf/<id>.pdf` (the base keeps it working under GitHub Pages' sub-folder), print, and edit. An unknown id shows \"lesson not found\" and a link back."
+          ],
+          "examples": [
+            "sections"
+          ]
+        },
+        {
+          "id": "colour",
+          "h": "A colour per lesson",
+          "p": [
+            "Each lesson has its own colour from `hue`, `[h, s, l]`. `shades()` derives five tones (hero, sub, text, chip, chip ink) with the same HLS maths as the Python engine, and the page sets them as CSS variables on its root element. Every section's CSS just uses `var(--hero)` and the rest, without knowing which lesson it is in; the skill colours (`SK`, grammar blue, collocation green...) stay the same in every lesson."
+          ],
+          "examples": [
+            "hue"
+          ]
+        },
+        {
+          "id": "mark",
+          "h": "Inline marks and v-html",
+          "p": [
+            "Lesson text carries marks: `[[g:…]]` grammar, `[[c:…]]` collocation, `[[w:…]]` word, `[[x:…]]` certification term. `mark()` turns each into `<b class=\"g\">…</b>`, and the components render the result with `v-html`. That is why the save API refuses cross-site requests: whoever can write a lesson file can put HTML into the page. The same marks are stripped before text is read aloud."
+          ],
+          "examples": [
+            "mark"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "page",
+          "h": "یک component برای هر بخش",
+          "p": [
+            "`LessonView` شناسه را از route می‌گیرد، یونیت را (draft یا فایل) می‌گیرد و برای هر بخش یک component با ترتیب ثابت نشان می‌دهد؛ بخش مدرک فقط وقتی یونیت `cert` دارد. بالای آن‌ها لینک درس قبلی و بعدی به ترتیب فهرست است، PDF در `<BASE_URL>pdf/<id>.pdf` (این base باعث می‌شود زیر زیرپوشه‌ی GitHub Pages هم کار کند)، چاپ و ویرایش. شناسه‌ی ناشناخته «درس پیدا نشد» و یک لینک برگشت نشان می‌دهد."
+          ],
+          "examples": [
+            "sections"
+          ]
+        },
+        {
+          "id": "colour",
+          "h": "یک رنگ برای هر درس",
+          "p": [
+            "هر درس رنگ خودش را از `hue` یعنی `[h, s, l]` دارد. `shades()` پنج تُن (hero، sub، متن، chip و جوهر chip) را با همان ریاضی HLS موتور Python می‌سازد و صفحه آن‌ها را به‌عنوان متغیرهای CSS روی عنصر ریشه‌اش می‌گذارد. CSS هر بخش فقط از `var(--hero)` و بقیه استفاده می‌کند، بدون این‌که بداند در کدام درس است؛ رنگ مهارت‌ها (`SK`، گرامر آبی، کالوکیشن سبز...) در همه‌ی درس‌ها یکی است."
+          ],
+          "examples": [
+            "hue"
+          ]
+        },
+        {
+          "id": "mark",
+          "h": "علامت‌های داخل متن و v-html",
+          "p": [
+            "متن درس علامت دارد: `[[g:…]]` گرامر، `[[c:…]]` کالوکیشن، `[[w:…]]` واژه، `[[x:…]]` اصطلاح مدرک. `mark()` هر کدام را به `<b class=\"g\">…</b>` تبدیل می‌کند و componentها نتیجه را با `v-html` نشان می‌دهند. برای همین API ذخیره درخواست‌های cross-site را رد می‌کند: هر کس بتواند فایل درس بنویسد می‌تواند HTML در صفحه بگذارد. همین علامت‌ها قبل از خواندن متن با صدا حذف می‌شوند."
+          ],
+          "examples": [
+            "mark"
+          ]
+        }
+      ],
+      "examples": {
+        "sections": {
+          "title": {
+            "en": "The sections in order",
+            "fa": "بخش‌ها به ترتیب"
+          },
+          "lang": "xml",
+          "file": "src/views/LessonView.vue",
+          "from": "<HeroBlock :unit=\"unit\" />",
+          "to": "<QuizSection"
+        },
+        "hue": {
+          "title": {
+            "en": "Colours as CSS variables",
+            "fa": "رنگ‌ها به‌صورت متغیر CSS"
+          },
+          "lang": "typescript",
+          "file": "src/views/LessonView.vue",
+          "from": "const rootStyle = computed(() => {",
+          "lines": 11
+        },
+        "mark": {
+          "title": {
+            "en": "mark()",
+            "fa": "mark()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/mark.ts",
+          "from": "export function mark",
+          "lines": 4
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why are the lesson colours set as CSS variables on the page's root?",
+            "fa": "چرا رنگ‌های درس به‌صورت متغیر CSS روی ریشه‌ی صفحه گذاشته می‌شوند؟"
+          },
+          "options": {
+            "en": [
+              "So every section's CSS can use them without knowing the lesson",
+              "Because Vue cannot bind inline styles",
+              "So the PDF engine can read them"
+            ],
+            "fa": [
+              "تا CSS هر بخش بدون دانستن درس از آن‌ها استفاده کند",
+              "چون Vue نمی‌تواند style درون‌خطی bind کند",
+              "تا موتور PDF آن‌ها را بخواند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The variables cascade to every child, so one place sets the lesson's palette.",
+            "fa": "متغیرها به همه‌ی فرزندان می‌رسند، پس پالت درس فقط در یک جا تعیین می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "What makes writing a lesson file a security concern?",
+            "fa": "چه چیزی نوشتن فایل درس را مسئله‌ی امنیتی می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Lessons are stored in SQL",
+              "Marked text is rendered with `v-html`",
+              "The PDF is public"
+            ],
+            "fa": [
+              "درس‌ها در SQL ذخیره می‌شوند",
+              "متن علامت‌خورده با `v-html` نمایش داده می‌شود",
+              "PDF عمومی است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "`v-html` inserts HTML as is, so the save API only accepts the edit form's own same-origin request.",
+            "fa": "`v-html` HTML را همان‌طور که هست وارد می‌کند، پس API ذخیره فقط درخواست same-origin خود فرم ویرایش را قبول می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "group": "lessons",
+      "title": {
+        "en": "The edit form",
+        "fa": "فرم ویرایش"
+      },
+      "files": [
+        "src/views/LessonEditView.vue"
+      ],
+      "en": [
+        {
+          "id": "form",
+          "h": "A form over a copy",
+          "p": [
+            "`/lesson/:id/edit` is one long form over a deep copy of the unit (`reactive(JSON.parse(JSON.stringify(original)))`), with add and remove buttons for every list: dialog lines, grammar rows, collocation groups, vocabulary sets, quiz items. Working on a copy means the bundled unit itself is never mutated. A deep `watch` saves the whole unit as a draft on every change, so nothing typed is lost on a reload.",
+            "Older lessons keep their words in a flat `vocab.chips`, which the form cannot show. `liftLegacyVocab()` moves them into one set before the watcher is registered, so merely opening a lesson does not create a draft."
+          ],
+          "examples": [
+            "watch"
+          ]
+        },
+        {
+          "id": "stale",
+          "h": "A stale draft",
+          "p": [
+            "Publishing writes the JSON file; the dev server sees the change and reloads the page, possibly before the fetch's answer arrives, so the code that clears the draft never runs. The draft would then stay behind as a duplicate, with an \"unsaved changes\" flag. So when the form opens, a draft identical to the file is cleared."
+          ],
+          "examples": [
+            "stale"
+          ]
+        },
+        {
+          "id": "publish",
+          "h": "Publish, reset, download",
+          "p": [
+            "\"Publish\" POSTs the unit as JSON to `/api/save-lesson/<id>`; on success the draft is cleared, otherwise the error is shown (only `npm run dev` has that API). \"Reset to file\" throws the draft away and reloads the file's version; \"download\" saves the JSON, for copying into the repo by hand from a machine without the dev server."
+          ],
+          "examples": [
+            "publish"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "form",
+          "h": "فرمی روی یک کپی",
+          "p": [
+            "`/lesson/:id/edit` یک فرم بلند روی یک کپی عمیق از یونیت است (`reactive(JSON.parse(JSON.stringify(original)))`)، با دکمه‌ی اضافه و حذف برای هر فهرست: خط‌های دیالوگ، ردیف‌های گرامر، گروه‌های کالوکیشن، مجموعه‌های واژه، سؤال‌های کوئیز. کار روی کپی یعنی خود یونیت bundle‌شده هرگز تغییر نمی‌کند. یک `watch` عمیق با هر تغییر کل یونیت را به‌صورت draft ذخیره می‌کند، پس هیچ چیز تایپ‌شده‌ای با reload از بین نمی‌رود.",
+            "درس‌های قدیمی‌تر واژه‌هایشان را در یک `vocab.chips` تخت نگه می‌دارند که فرم نمی‌تواند نشانش دهد. `liftLegacyVocab()` قبل از ثبت watcher آن‌ها را به یک مجموعه منتقل می‌کند، تا صرفِ باز کردن یک درس draft نسازد."
+          ],
+          "examples": [
+            "watch"
+          ]
+        },
+        {
+          "id": "stale",
+          "h": "draft کهنه",
+          "p": [
+            "انتشار فایل JSON را می‌نویسد؛ سرور dev تغییر را می‌بیند و صفحه را reload می‌کند، شاید قبل از رسیدن جواب fetch، پس کدی که draft را پاک می‌کند هرگز اجرا نمی‌شود. آن‌وقت draft به‌صورت یک کپی تکراری با پرچم «تغییرات ذخیره‌نشده» باقی می‌ماند. برای همین وقتی فرم باز می‌شود، draftی که عین فایل است پاک می‌شود."
+          ],
+          "examples": [
+            "stale"
+          ]
+        },
+        {
+          "id": "publish",
+          "h": "انتشار، برگشت، دانلود",
+          "p": [
+            "«انتشار» یونیت را به‌صورت JSON با POST به `/api/save-lesson/<id>` می‌فرستد؛ اگر موفق بود draft پاک می‌شود، وگرنه خطا نشان داده می‌شود (فقط `npm run dev` آن API را دارد). «برگشت به فایل» draft را دور می‌اندازد و نسخه‌ی فایل را دوباره بار می‌کند؛ «دانلود» JSON را ذخیره می‌کند تا از کامپیوتری که سرور dev ندارد با دست در repo کپی شود."
+          ],
+          "examples": [
+            "publish"
+          ]
+        }
+      ],
+      "examples": {
+        "watch": {
+          "title": {
+            "en": "Every change becomes the draft",
+            "fa": "هر تغییر draft می‌شود"
+          },
+          "lang": "typescript",
+          "file": "src/views/LessonEditView.vue",
+          "from": "watch(",
+          "lines": 8
+        },
+        "stale": {
+          "title": {
+            "en": "Clearing a draft equal to the file",
+            "fa": "پاک کردن draft برابر با فایل"
+          },
+          "lang": "typescript",
+          "file": "src/views/LessonEditView.vue",
+          "from": "const fileVersion = getOriginalUnit(id)",
+          "lines": 4
+        },
+        "publish": {
+          "title": {
+            "en": "publish()",
+            "fa": "publish()"
+          },
+          "lang": "typescript",
+          "file": "src/views/LessonEditView.vue",
+          "from": "async function publish()",
+          "to": "body: JSON.stringify(unit),"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is the old flat `vocab.chips` lifted before the watcher is registered?",
+            "fa": "چرا `vocab.chips` تخت قدیمی قبل از ثبت watcher منتقل می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The watcher would crash on it",
+              "Otherwise just opening an old lesson would create a draft",
+              "Vue only allows changes before `watch`"
+            ],
+            "fa": [
+              "watcher روی آن crash می‌کرد",
+              "وگرنه فقط باز کردن یک درس قدیمی draft می‌ساخت",
+              "Vue فقط قبل از `watch` اجازه‌ی تغییر می‌دهد"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "The deep watch saves on any change; a change made before it exists is not seen.",
+            "fa": "watch عمیق با هر تغییری ذخیره می‌کند؛ تغییری که قبل از وجودش انجام شود دیده نمی‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "After a publish the page reloaded before the answer came. What does the form do next time it opens?",
+            "fa": "بعد از انتشار، صفحه قبل از رسیدن جواب reload شد. فرم دفعه‌ی بعد که باز شود چه می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Clears the draft, since it equals the file",
+              "Publishes again",
+              "Shows the draft as unsaved changes forever"
+            ],
+            "fa": [
+              "draft را پاک می‌کند، چون عین فایل است",
+              "دوباره منتشر می‌کند",
+              "draft را برای همیشه به‌عنوان تغییر ذخیره‌نشده نشان می‌دهد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "It compares the draft with the file's JSON and clears an identical one.",
+            "fa": "draft را با JSON فایل مقایسه می‌کند و اگر یکی بودند پاکش می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "group": "lessons",
+      "title": {
+        "en": "Saving a lesson and its PDF",
+        "fa": "ذخیره‌ی درس و PDF آن"
+      },
+      "files": [
+        "vite.config.ts",
+        "scripts/generate_pdf.py"
+      ],
+      "en": [
+        {
+          "id": "api",
+          "h": "The save API",
+          "p": [
+            "The save API is a Vite plugin, `lessonApiPlugin`. It takes POST only, checks the id against `^u[a-z0-9]+$` (so it can never be `../something`), parses the body, writes `src/data/units/<id>.json` pretty-printed, then runs `python scripts/generate_pdf.py <id>`. The answer says whether the PDF was made; when Python fails, it says `savedFile: true`, so the form knows the JSON is safe even though the PDF is not."
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "Only its own page may call it",
+          "p": [
+            "While `vite dev` runs, any website open in the same browser could POST to localhost. A `text/plain` POST is a \"simple request\" with no CORS preflight, so CORS alone would not stop it from overwriting a lesson and running the PDF script. The guard demands an `Origin` that is this dev server itself on a loopback host, and a JSON content type, which a cross-site page can only send after a preflight that fails."
+          ],
+          "examples": [
+            "guard",
+            "origin"
+          ]
+        },
+        {
+          "id": "pdf",
+          "h": "Making the PDF",
+          "p": [
+            "The script loads the Python lesson engine, which lives outside this repo (`LESSON_ENGINE_DIR`), and renders through headless Chrome. It tries the font sizes of the engine's `LADDER`, largest first, rendering without the quiz, and keeps the first size that fits the wanted number of pages; then it renders the full lesson at that size into `public/pdf/`. The probe files go to the temp folder, never under `public/`, which the dev server watches."
+          ],
+          "examples": [
+            "ladder"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "api",
+          "h": "API ذخیره",
+          "p": [
+            "API ذخیره یک plugin در Vite است، `lessonApiPlugin`. فقط POST قبول می‌کند، شناسه را با `^u[a-z0-9]+$` چک می‌کند (پس هرگز نمی‌تواند `../something` باشد)، body را parse می‌کند، `src/data/units/<id>.json` را مرتب‌شده می‌نویسد و بعد `python scripts/generate_pdf.py <id>` را اجرا می‌کند. جواب می‌گوید PDF ساخته شد یا نه؛ وقتی Python شکست بخورد `savedFile: true` می‌گوید، تا فرم بداند JSON امن ذخیره شده حتی اگر PDF نه."
+          ]
+        },
+        {
+          "id": "csrf",
+          "h": "فقط صفحه‌ی خودش می‌تواند صدایش بزند",
+          "p": [
+            "وقتی `vite dev` در حال اجراست، هر وب‌سایتی که در همان مرورگر باز است می‌تواند به localhost درخواست POST بفرستد. یک POST با `text/plain` یک «simple request» است و preflight مربوط به CORS ندارد، پس CORS به‌تنهایی جلوی بازنویسی درس و اجرای اسکریپت PDF را نمی‌گرفت. guard یک `Origin` می‌خواهد که خود همین سرور dev روی یک host loopback باشد، و content type از نوع JSON، که یک صفحه‌ی cross-site فقط بعد از یک preflight ناموفق می‌تواند بفرستد."
+          ],
+          "examples": [
+            "guard",
+            "origin"
+          ]
+        },
+        {
+          "id": "pdf",
+          "h": "ساختن PDF",
+          "p": [
+            "اسکریپت موتور Python درس را بار می‌کند که بیرون از این repo است (`LESSON_ENGINE_DIR`) و با Chrome بدون رابط (headless) رندر می‌کند. اندازه‌های فونت `LADDER` موتور را از بزرگ به کوچک امتحان می‌کند، بدون کوئیز رندر می‌گیرد، و اولین اندازه‌ای را نگه می‌دارد که در تعداد صفحه‌ی خواسته‌شده جا شود؛ بعد کل درس را با همان اندازه در `public/pdf/` رندر می‌کند. فایل‌های آزمایشی به پوشه‌ی temp می‌روند، هرگز زیر `public/` که سرور dev آن را watch می‌کند."
+          ],
+          "examples": [
+            "ladder"
+          ]
+        }
+      ],
+      "examples": {
+        "guard": {
+          "title": {
+            "en": "The CSRF guard",
+            "fa": "guard مربوط به CSRF"
+          },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "// CSRF guard: any website open",
+          "lines": 10
+        },
+        "origin": {
+          "title": {
+            "en": "isTrustedOrigin",
+            "fa": "isTrustedOrigin"
+          },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "function isTrustedOrigin",
+          "lines": 10
+        },
+        "ladder": {
+          "title": {
+            "en": "The font-size ladder",
+            "fa": "نردبان اندازه‌ی فونت"
+          },
+          "lang": "python",
+          "file": "scripts/generate_pdf.py",
+          "from": "for fs in unit_mod.LADDER:",
+          "lines": 6
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is checking CORS not enough to protect the save API?",
+            "fa": "چرا چک کردن CORS برای محافظت از API ذخیره کافی نیست؟"
+          },
+          "options": {
+            "en": [
+              "CORS does not apply to localhost",
+              "Vite turns CORS off",
+              "A `text/plain` POST is a simple request and is sent without a preflight"
+            ],
+            "fa": [
+              "CORS روی localhost اعمال نمی‌شود",
+              "Vite CORS را خاموش می‌کند",
+              "یک POST با `text/plain` یک simple request است و بدون preflight فرستاده می‌شود"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "CORS only stops the attacker reading the answer; the write would already have happened. Hence the Origin and content-type checks.",
+            "fa": "CORS فقط جلوی خواندن جواب را می‌گیرد؛ نوشتن قبلاً انجام شده. برای همین Origin و content type چک می‌شوند."
+          }
+        },
+        {
+          "q": {
+            "en": "How does the PDF script choose the font size?",
+            "fa": "اسکریپت PDF اندازه‌ی فونت را چطور انتخاب می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "The first size of the ladder whose quiz-less render fits the wanted pages",
+              "Always the smallest size",
+              "The size stored in the lesson JSON"
+            ],
+            "fa": [
+              "اولین اندازه‌ی نردبان که رندرِ بدون کوئیزش در صفحه‌های خواسته‌شده جا شود",
+              "همیشه کوچک‌ترین اندازه",
+              "اندازه‌ای که در JSON درس ذخیره شده"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "It probes from largest to smallest and falls back to the smallest only when nothing fits.",
+            "fa": "از بزرگ به کوچک امتحان می‌کند و فقط وقتی هیچ کدام جا نشود سراغ کوچک‌ترین می‌رود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why can the lesson id not be used to write outside `src/data/units/`?",
+            "fa": "چرا نمی‌شود با شناسه‌ی درس بیرون از `src/data/units/` نوشت؟"
+          },
+          "options": {
+            "en": [
+              "The folder is read-only",
+              "The id must match `^u[a-z0-9]+$`, so no `/` or `.`",
+              "Node refuses paths with `..`"
+            ],
+            "fa": [
+              "پوشه فقط‌خواندنی است",
+              "شناسه باید با `^u[a-z0-9]+$` جور باشد، پس `/` یا `.` ندارد",
+              "Node مسیرهای دارای `..` را رد می‌کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Without dots or slashes the joined path always stays inside the units folder.",
+            "fa": "بدون نقطه و اسلش، مسیر ساخته‌شده همیشه داخل پوشه‌ی یونیت‌ها می‌ماند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "group": "review",
+      "title": {
+        "en": "Cards from the lessons",
+        "fa": "کارت‌ها از درس‌ها"
+      },
+      "files": [
+        "src/lib/review/cards.ts"
+      ],
+      "en": [
+        {
+          "id": "kinds",
+          "h": "Five kinds of card",
+          "p": [
+            "Review works on flashcards made from everything reviewable: each word chip (Persian front, English answer, multiple choice among three other words of the same lesson when it has enough), each collocation row (the wrong form as the other option), each grammar error to correct (typed), each quiz question that is not marked `old`, and each proverb. A card carries what the session needs: front, a Persian hint, the answer, options, whether it is typed, and the English to read aloud."
+          ]
+        },
+        {
+          "id": "ids",
+          "h": "Ids from the text",
+          "p": [
+            "A card's id is built from its own text, not its position: `u201:w:<word>`, `u201:q:<question without marks>`, `pv:<n>`. Reordering a lesson or adding a word in the middle keeps every progress record attached to the right card; only changing the text itself starts a new card, which is right, since it is a new thing to learn. The `order` (lesson number × 1000 + position) is used only to introduce new cards in curriculum order."
+          ],
+          "examples": [
+            "ids"
+          ]
+        },
+        {
+          "id": "filter",
+          "h": "Which cards count",
+          "p": [
+            "Units tagged as draft (such as u06, an older copy of u201) stay out of review. The full list is built once and cached. `cardsFor()` applies the settings: lessons on or off, proverbs on or off, and proverbs only when Americans say them every day (`amer: 'daily'`)."
+          ],
+          "examples": [
+            "filter"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "kinds",
+          "h": "پنج نوع کارت",
+          "p": [
+            "مرور روی فلش‌کارت‌هایی کار می‌کند که از هر چیز قابل مروری ساخته می‌شوند: هر chip واژه (روی کارت فارسی، جواب انگلیسی، چندگزینه‌ای میان سه واژه‌ی دیگر همان درس اگر به‌اندازه‌ی کافی باشد)، هر ردیف کالوکیشن (شکل غلط به‌عنوان گزینه‌ی دیگر)، هر خطای گرامری برای درست کردن (تایپی)، هر سؤال کوئیز که `old` نیست، و هر ضرب‌المثل. کارت هر چیزی را که جلسه لازم دارد همراه دارد: رو، راهنمای فارسی، جواب، گزینه‌ها، تایپی بودن، و انگلیسی‌ای که باید با صدا خوانده شود."
+          ]
+        },
+        {
+          "id": "ids",
+          "h": "شناسه از روی متن",
+          "p": [
+            "شناسه‌ی کارت از متن خودش ساخته می‌شود، نه از جایگاهش: `u201:w:<word>`، `u201:q:<سؤال بدون علامت>`، `pv:<n>`. جابه‌جا کردن درس یا اضافه کردن یک واژه در وسط، همه‌ی سابقه‌ی پیشرفت را به کارت درست وصل نگه می‌دارد؛ فقط عوض کردن خود متن کارت تازه می‌سازد، که درست است چون چیز تازه‌ای برای یاد گرفتن است. `order` (شماره‌ی درس × 1000 به‌اضافه‌ی جایگاه) فقط برای معرفی کارت‌های تازه به ترتیب دوره به کار می‌رود."
+          ],
+          "examples": [
+            "ids"
+          ]
+        },
+        {
+          "id": "filter",
+          "h": "کدام کارت‌ها حساب می‌شوند",
+          "p": [
+            "یونیت‌هایی که برچسب draft دارند (مثل u06، کپی قدیمی‌تر u201) از مرور بیرون می‌مانند. کل فهرست یک بار ساخته و cache می‌شود. `cardsFor()` تنظیمات را اعمال می‌کند: درس‌ها روشن یا خاموش، ضرب‌المثل‌ها روشن یا خاموش، و فقط ضرب‌المثل‌هایی که آمریکایی‌ها هر روز می‌گویند (`amer: 'daily'`)."
+          ],
+          "examples": [
+            "filter"
+          ]
+        }
+      ],
+      "examples": {
+        "ids": {
+          "title": {
+            "en": "Quiz cards and their ids",
+            "fa": "کارت‌های کوئیز و شناسه‌شان"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/cards.ts",
+          "from": "for (const q of u.quiz) {",
+          "lines": 9
+        },
+        "filter": {
+          "title": {
+            "en": "Draft units stay out",
+            "fa": "یونیت‌های draft بیرون می‌مانند"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/cards.ts",
+          "from": "// Draft-tagged units",
+          "to": "return cache"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "A word is moved to another position in its lesson. What happens to its review progress?",
+            "fa": "یک واژه به جای دیگری در درسش منتقل می‌شود. پیشرفت مرورش چه می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "It is lost",
+              "It is kept, because the id comes from the word itself",
+              "It moves to the word now at its old position"
+            ],
+            "fa": [
+              "از بین می‌رود",
+              "می‌ماند، چون شناسه از خود واژه می‌آید",
+              "به واژه‌ای که الان در جای قبلی‌اش است منتقل می‌شود"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Ids like `u201:w:<word>` don't depend on order; only `order` changes.",
+            "fa": "شناسه‌هایی مثل `u201:w:<word>` به ترتیب وابسته نیستند؛ فقط `order` عوض می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "Why are units tagged draft left out of review?",
+            "fa": "چرا یونیت‌هایی که برچسب draft دارند از مرور بیرون گذاشته می‌شوند؟"
+          },
+          "options": {
+            "en": [
+              "They are older copies of other lessons and would repeat their cards",
+              "They have no quiz",
+              "Their JSON cannot be parsed"
+            ],
+            "fa": [
+              "کپی‌های قدیمی‌تر درس‌های دیگرند و کارت‌هایشان را تکرار می‌کردند",
+              "کوئیز ندارند",
+              "JSONشان parse نمی‌شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "u06 is an older copy of u201: its cards would appear twice under different ids.",
+            "fa": "u06 کپی قدیمی‌تر u201 است: کارت‌هایش با شناسه‌های دیگر دو بار ظاهر می‌شدند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "srs",
+      "group": "review",
+      "title": {
+        "en": "Spaced repetition",
+        "fa": "spaced repetition"
+      },
+      "files": [
+        "src/lib/review/srs.ts"
+      ],
+      "en": [
+        {
+          "id": "state",
+          "h": "A card's state",
+          "p": [
+            "Each card's progress is a `CardState`: due day, interval, ease, successful reviews in a row, lapses, the day first seen, and `t`, the time of the last answer (which decides between devices). Days are local day numbers: `today()` subtracts the timezone offset, so the day changes at local midnight, not at UTC. Everything is one reactive `store`, written back to localStorage (`review.v1`) by a deep watch."
+          ]
+        },
+        {
+          "id": "grade",
+          "h": "Grading: an SM-2 variant",
+          "p": [
+            "`grade()` is an SM-2 variant like Anki's classic scheduler. **Again** resets the run, sets the interval to one day and lowers ease (never below 1.3). **Hard** grows the interval by 1.2. Otherwise a new card gets 1 day (4 if Easy), the second review 3 days (6), then interval × ease, × 1.3 more for Easy. Intervals of three days or more get ±5% fuzz, so cards learned together do not stay due together forever; nothing goes past 365 days."
+          ],
+          "examples": [
+            "grade"
+          ]
+        },
+        {
+          "id": "plan",
+          "h": "Today's plan",
+          "p": [
+            "`plan()` is today's work: every due card, oldest first, up to `maxReviews` (80), then new cards in curriculum order up to the day's allowance per source (8 lesson cards and 3 proverbs by default), minus those already introduced today. Proverbs are interleaved among the lesson cards instead of all coming at the end."
+          ],
+          "examples": [
+            "plan"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "state",
+          "h": "وضعیت هر کارت",
+          "p": [
+            "پیشرفت هر کارت یک `CardState` است: روز سررسید، فاصله، ease، تعداد مرورهای موفق پشت سر هم، دفعه‌های فراموشی، روز اولین دیدن، و `t` یعنی زمان آخرین جواب (که بین دستگاه‌ها تصمیم می‌گیرد). روزها شماره‌ی روز محلی هستند: `today()` اختلاف منطقه‌ی زمانی را کم می‌کند، پس روز در نیمه‌شب محلی عوض می‌شود نه در UTC. همه‌ی این‌ها یک `store` واکنشی است که یک watch عمیق آن را در localStorage (`review.v1`) می‌نویسد."
+          ]
+        },
+        {
+          "id": "grade",
+          "h": "نمره دادن: نسخه‌ای از SM-2",
+          "p": [
+            "`grade()` نسخه‌ای از SM-2 است، مثل scheduler کلاسیک Anki. **Again** رشته‌ی موفقیت را صفر می‌کند، فاصله را یک روز می‌گذارد و ease را کم می‌کند (هرگز کمتر از 1.3). **Hard** فاصله را 1.2 برابر می‌کند. در غیر این صورت کارت تازه 1 روز می‌گیرد (اگر Easy باشد 4)، مرور دوم 3 روز (6)، و بعد فاصله × ease، و برای Easy باز × 1.3. فاصله‌های سه روز و بیشتر ±5% نوسان می‌گیرند تا کارت‌هایی که با هم یاد گرفته شده‌اند تا ابد با هم سررسید نشوند؛ هیچ فاصله‌ای از 365 روز بیشتر نمی‌شود."
+          ],
+          "examples": [
+            "grade"
+          ]
+        },
+        {
+          "id": "plan",
+          "h": "برنامه‌ی امروز",
+          "p": [
+            "`plan()` کار امروز است: هر کارت سررسیدشده، قدیمی‌ترین اول، تا سقف `maxReviews` (80)، و بعد کارت‌های تازه به ترتیب دوره تا سهمیه‌ی روزانه‌ی هر منبع (به‌طور پیش‌فرض 8 کارت درس و 3 ضرب‌المثل)، منهای آن‌هایی که امروز معرفی شده‌اند. ضرب‌المثل‌ها لابه‌لای کارت‌های درس می‌آیند، نه همه در آخر."
+          ],
+          "examples": [
+            "plan"
+          ]
+        }
+      ],
+      "examples": {
+        "grade": {
+          "title": {
+            "en": "grade()",
+            "fa": "grade()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/srs.ts",
+          "from": "export function grade(",
+          "to": "s.due = d + s.ivl"
+        },
+        "plan": {
+          "title": {
+            "en": "plan()",
+            "fa": "plan()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/srs.ts",
+          "from": "export function plan(): Plan {",
+          "lines": 12
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why do longer intervals get a small random fuzz?",
+            "fa": "چرا فاصله‌های بلندتر یک نوسان تصادفی کوچک می‌گیرند؟"
+          },
+          "options": {
+            "en": [
+              "To make the app feel less predictable",
+              "Because days are counted in UTC",
+              "So cards learned on the same day spread out instead of always coming due together"
+            ],
+            "fa": [
+              "تا اپ کمتر قابل پیش‌بینی به نظر برسد",
+              "چون روزها در UTC شمرده می‌شوند",
+              "تا کارت‌هایی که یک روز یاد گرفته شده‌اند پخش شوند و همیشه با هم سررسید نشوند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Without fuzz a batch learned together would grow identical intervals and return as one heavy day.",
+            "fa": "بدون نوسان، دسته‌ای که با هم یاد گرفته شده فاصله‌های یکسان می‌گرفت و به‌صورت یک روز سنگین برمی‌گشت."
+          }
+        },
+        {
+          "q": {
+            "en": "You already met 8 new lesson cards today and open review again. How many new lesson cards does the plan add?",
+            "fa": "امروز 8 کارت تازه‌ی درس دیده‌ای و دوباره مرور را باز می‌کنی. برنامه چند کارت تازه‌ی درس اضافه می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "None, with the default allowance of 8",
+              "Another 8",
+              "As many as are due"
+            ],
+            "fa": [
+              "هیچ، با سهمیه‌ی پیش‌فرض 8",
+              "8 تای دیگر",
+              "به تعداد کارت‌های سررسید"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The allowance subtracts cards whose `seen` is today.",
+            "fa": "سهمیه کارت‌هایی را که `seen` آن‌ها امروز است کم می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "What does \"Again\" do to a card?",
+            "fa": "«Again» با کارت چه می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Removes it from review",
+              "Resets its run, interval 1 day, lower ease",
+              "Doubles its interval"
+            ],
+            "fa": [
+              "از مرور حذفش می‌کند",
+              "رشته‌ی موفقیتش را صفر، فاصله را 1 روز و ease را کمتر می‌کند",
+              "فاصله‌اش را دو برابر می‌کند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "It counts as a lapse when the card had been learned, and the card is due tomorrow.",
+            "fa": "اگر کارت قبلاً یاد گرفته شده بود یک lapse حساب می‌شود و کارت فردا سررسید است."
+          }
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "group": "review",
+      "title": {
+        "en": "A review session",
+        "fa": "یک جلسه‌ی مرور"
+      },
+      "files": [
+        "src/views/ReviewSessionView.vue",
+        "src/lib/speak.ts"
+      ],
+      "en": [
+        {
+          "id": "queue",
+          "h": "Graded by the first answer",
+          "p": [
+            "A session starts from `plan()`: the due cards shuffled, new cards spread among them by `mix` rather than all at the end. A card is graded by its first answer only; if you miss it, it comes back a few cards later until you get it, without being graded again. Anki and Duolingo work the same way, and it keeps one bad moment from counting twice against a card."
+          ]
+        },
+        {
+          "id": "mode",
+          "h": "How a card asks",
+          "p": [
+            "New words are multiple choice (recognise) until two good reviews, then recall; cards marked `typed` ask you to type; the rest show the answer on request and you grade yourself. A typed answer passes when the normalised answer appears inside it as whole words, since answers are often fragments (\"is waiting\") and a full sentence that contains them should count."
+          ],
+          "examples": [
+            "mode",
+            "check"
+          ]
+        },
+        {
+          "id": "voice",
+          "h": "Read aloud",
+          "p": [
+            "After each answer the English is read aloud with the browser's own `speechSynthesis`, so no server and no audio files. `pickVoice` prefers a \"Natural\" or \"Online\" voice of the wanted language (Canadian English for lessons, US English for proverbs), then any voice of that language, then a few known names, then any English voice. The lesson marks and HTML are stripped first."
+          ],
+          "examples": [
+            "voice"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "queue",
+          "h": "نمره با اولین جواب",
+          "p": [
+            "جلسه از `plan()` شروع می‌شود: کارت‌های سررسید به‌هم‌ریخته، و کارت‌های تازه که `mix` لابه‌لایشان پخش می‌کند نه همه در آخر. هر کارت فقط با اولین جوابش نمره می‌گیرد؛ اگر اشتباه کنی چند کارت بعد برمی‌گردد تا درستش کنی، بدون این‌که دوباره نمره بگیرد. Anki و Duolingo هم همین‌طور کار می‌کنند و این نمی‌گذارد یک لحظه‌ی بد دو بار علیه کارت حساب شود."
+          ]
+        },
+        {
+          "id": "mode",
+          "h": "کارت چطور می‌پرسد",
+          "p": [
+            "واژه‌های تازه تا دو مرور موفق چندگزینه‌ای هستند (تشخیص) و بعد یادآوری؛ کارت‌هایی که `typed` دارند می‌خواهند تایپ کنی؛ بقیه جواب را با درخواست نشان می‌دهند و خودت نمره می‌دهی. جواب تایپی وقتی قبول است که جواب نرمال‌شده به‌صورت کلمه‌های کامل داخلش باشد، چون جواب‌ها اغلب تکه‌ای از جمله‌اند («is waiting») و جمله‌ی کاملی که آن‌ها را دارد باید حساب شود."
+          ],
+          "examples": [
+            "mode",
+            "check"
+          ]
+        },
+        {
+          "id": "voice",
+          "h": "خواندن با صدا",
+          "p": [
+            "بعد از هر جواب، متن انگلیسی با `speechSynthesis` خود مرورگر خوانده می‌شود، پس نه سرور لازم است نه فایل صوتی. `pickVoice` صدای «Natural» یا «Online» زبان خواسته‌شده را ترجیح می‌دهد (انگلیسی کانادایی برای درس‌ها، انگلیسی آمریکایی برای ضرب‌المثل‌ها)، بعد هر صدای آن زبان، بعد چند اسم شناخته‌شده و بعد هر صدای انگلیسی. علامت‌های درس و HTML اول حذف می‌شوند."
+          ],
+          "examples": [
+            "voice"
+          ]
+        }
+      ],
+      "examples": {
+        "mode": {
+          "title": {
+            "en": "Choice, typed or recall",
+            "fa": "چندگزینه‌ای، تایپی یا یادآوری"
+          },
+          "lang": "typescript",
+          "file": "src/views/ReviewSessionView.vue",
+          "from": "const mode = computed",
+          "lines": 8
+        },
+        "check": {
+          "title": {
+            "en": "Checking a typed answer",
+            "fa": "چک کردن جواب تایپی"
+          },
+          "lang": "typescript",
+          "file": "src/views/ReviewSessionView.vue",
+          "from": "function check() {",
+          "lines": 7
+        },
+        "voice": {
+          "title": {
+            "en": "Choosing a voice",
+            "fa": "انتخاب صدا"
+          },
+          "lang": "typescript",
+          "file": "src/lib/speak.ts",
+          "from": "function pickVoice",
+          "lines": 11
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "You miss a card, then get it right when it comes back in the same session. What grade is stored?",
+            "fa": "کارتی را اشتباه جواب می‌دهی و وقتی در همان جلسه برمی‌گردد درست جواب می‌دهی. چه نمره‌ای ذخیره می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "The second, correct answer",
+              "An average of the two",
+              "The first answer only"
+            ],
+            "fa": [
+              "جواب دوم و درست",
+              "میانگین دو جواب",
+              "فقط جواب اول"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Only the first answer grades; the retry just makes you see it again.",
+            "fa": "فقط جواب اول نمره می‌دهد؛ تکرار فقط باعث می‌شود دوباره ببینی‌اش."
+          }
+        },
+        {
+          "q": {
+            "en": "The answer is \"is waiting\" and you type \"She is waiting for the bus\". Is it accepted?",
+            "fa": "جواب «is waiting» است و تو «She is waiting for the bus» تایپ می‌کنی. قبول می‌شود؟"
+          },
+          "options": {
+            "en": [
+              "Yes, the answer appears inside it as whole words",
+              "No, it must match exactly",
+              "Only if you choose it from options"
+            ],
+            "fa": [
+              "بله، جواب به‌صورت کلمه‌های کامل داخلش هست",
+              "نه، باید دقیقاً یکی باشد",
+              "فقط اگر از گزینه‌ها انتخابش کنی"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "`check()` normalises both and looks for the answer surrounded by spaces inside the typed text.",
+            "fa": "`check()` هر دو را نرمال می‌کند و جواب را با فاصله‌ی دو طرف داخل متن تایپی پیدا می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "progress",
+      "group": "review",
+      "title": {
+        "en": "Streak, forecast, reminder",
+        "fa": "رکورد، پیش‌بینی، یادآوری"
+      },
+      "files": [
+        "src/lib/review/srs.ts",
+        "src/views/ReviewView.vue"
+      ],
+      "en": [
+        {
+          "id": "streak",
+          "h": "The streak",
+          "p": [
+            "`streak()` counts days back from today on which the goal (15 cards by default) was reached or the planned work was finished (`fin`, a light day). Today counts as open until midnight: if today is not done yet the count starts from yesterday, so the streak does not look broken in the morning. Each day's total adds up the day logs of every synced device (`dayTotal`), so a session on the phone and one on the PC count together."
+          ],
+          "examples": [
+            "streak"
+          ]
+        },
+        {
+          "id": "forecast",
+          "h": "What is coming",
+          "p": [
+            "`forecast(7)` counts the cards due on each of the next seven days (overdue ones on day 0), and `progressBySource()` shows per lesson how many cards were seen and how many are mature, an interval of 21 days or more, Anki's definition. The Review page draws the last 28 days as a small heat strip from the same day totals."
+          ]
+        },
+        {
+          "id": "remind",
+          "h": "A reminder without a push server",
+          "p": [
+            "There is no push server, so the reminder is a calendar file: `reminderIcs()` builds a daily repeating event at the chosen time, with an alarm and the review link; the iPhone Calendar alerts even when the app is closed. Backup and restore download and read the store as JSON; \"start over\" empties it and sets `resetAt`, which also clears the other devices at their next sync."
+          ],
+          "examples": [
+            "ics"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "streak",
+          "h": "رکورد روزهای پشت سر هم",
+          "p": [
+            "`streak()` روزهایی را از امروز به عقب می‌شمارد که در آن‌ها هدف (به‌طور پیش‌فرض 15 کارت) رسیده یا کار برنامه‌ریزی‌شده تمام شده (`fin`، یک روز سبک). امروز تا نیمه‌شب «باز» حساب می‌شود: اگر امروز هنوز تمام نشده شمارش از دیروز شروع می‌شود، پس رکورد صبح‌ها شکسته به نظر نمی‌رسد. جمع هر روز لاگ روزانه‌ی همه‌ی دستگاه‌های همگام را جمع می‌زند (`dayTotal`)، پس یک جلسه روی گوشی و یکی روی PC با هم حساب می‌شوند."
+          ],
+          "examples": [
+            "streak"
+          ]
+        },
+        {
+          "id": "forecast",
+          "h": "آن‌چه در راه است",
+          "p": [
+            "`forecast(7)` کارت‌های سررسید هر یک از هفت روز آینده را می‌شمارد (عقب‌افتاده‌ها در روز 0)، و `progressBySource()` برای هر درس نشان می‌دهد چند کارت دیده شده و چندتا پخته‌اند، یعنی فاصله‌ی 21 روز یا بیشتر، تعریف Anki. صفحه‌ی مرور 28 روز گذشته را به‌صورت یک نوار گرمایی کوچک از همین جمع‌های روزانه می‌کشد."
+          ]
+        },
+        {
+          "id": "remind",
+          "h": "یادآوری بدون سرور push",
+          "p": [
+            "سرور push در کار نیست، پس یادآوری یک فایل تقویم است: `reminderIcs()` یک رویداد روزانه‌ی تکراری در ساعت انتخاب‌شده می‌سازد، با هشدار و لینک مرور؛ تقویم iPhone حتی وقتی اپ بسته است هشدار می‌دهد. پشتیبان‌گیری و بازیابی، store را به‌صورت JSON دانلود می‌کنند و می‌خوانند؛ «از اول» آن را خالی می‌کند و `resetAt` را می‌گذارد که دستگاه‌های دیگر را هم در همگام‌سازی بعدی پاک می‌کند."
+          ],
+          "examples": [
+            "ics"
+          ]
+        }
+      ],
+      "examples": {
+        "streak": {
+          "title": {
+            "en": "streak()",
+            "fa": "streak()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/srs.ts",
+          "from": "export function streak()",
+          "lines": 9
+        },
+        "ics": {
+          "title": {
+            "en": "A daily calendar event",
+            "fa": "یک رویداد روزانه‌ی تقویم"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/srs.ts",
+          "from": "export function reminderIcs",
+          "to": "].join('\\r\\n')"
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "At 8 in the morning you haven't reviewed yet. Why does your streak still show yesterday's number?",
+            "fa": "ساعت 8 صبح است و هنوز مرور نکرده‌ای. چرا رکوردت هنوز عدد دیروز را نشان می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "The streak is only computed at midnight",
+              "Today counts as open: the count starts from yesterday when today isn't done",
+              "The phone has not synced yet"
+            ],
+            "fa": [
+              "رکورد فقط نیمه‌شب حساب می‌شود",
+              "امروز باز حساب می‌شود: وقتی امروز تمام نشده شمارش از دیروز شروع می‌شود",
+              "گوشی هنوز همگام نشده"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "`streak()` starts at today only when today is already done, otherwise at yesterday.",
+            "fa": "`streak()` فقط وقتی از امروز شروع می‌کند که امروز تمام شده باشد، وگرنه از دیروز."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is the daily reminder a downloaded `.ics` file?",
+            "fa": "چرا یادآوری روزانه یک فایل `.ics` دانلودی است؟"
+          },
+          "options": {
+            "en": [
+              "A calendar alarm works on the iPhone without any push server",
+              "Browsers forbid notifications",
+              "So the reminder syncs between devices"
+            ],
+            "fa": [
+              "هشدار تقویم روی iPhone بدون هیچ سرور push کار می‌کند",
+              "مرورگرها notification را ممنوع می‌کنند",
+              "تا یادآوری بین دستگاه‌ها همگام شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The app has no server that could push; Calendar alerts even when the app is closed.",
+            "fa": "اپ سروری ندارد که push کند؛ تقویم حتی وقتی اپ بسته است هشدار می‌دهد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "syncserver",
+      "group": "sync",
+      "title": {
+        "en": "The sync server",
+        "fa": "سرور همگام‌سازی"
+      },
+      "files": [
+        "server/sync.mjs"
+      ],
+      "en": [
+        {
+          "id": "what",
+          "h": "One owner, one document",
+          "p": [
+            "`server/sync.mjs` is the whole server: zero dependencies (`node:http`), one owner, one JSON document. `GET /api/sync/health` answers without auth, for the container's health check; `GET /api/sync` returns the stored progress; `POST /api/sync` merges one device's upload and answers with the result, so each device gets everyone's progress in the same round trip. In Control Panel's image it runs as `node` with `DATA_DIR=/data` on port 8080, in the `lessons-sync-data` volume, which the nightly backup archives."
+          ]
+        },
+        {
+          "id": "key",
+          "h": "The key",
+          "p": [
+            "Auth is a shared key in an `X-Sync-Key` header, not `Authorization`, because the `ctx.<domain>` copy sits behind Caddy basic auth, which already uses that header. The key comes from `SYNC_KEY` or is generated once into `DATA_DIR/key` (mode 600). It is compared as SHA-256 hashes with `timingSafeEqual`: both sides are always 32 bytes, so the time taken reveals nothing about how much of a guess was right."
+          ],
+          "examples": [
+            "key"
+          ]
+        },
+        {
+          "id": "limits",
+          "h": "Limits and a safe save",
+          "p": [
+            "After 10 wrong keys in ten minutes from one address (the first of `X-Forwarded-For`, which Caddy sets) it answers 429, and every wrong key waits 400 ms first. Bodies must be JSON and at most 2 MB. The document is written to a temp file and renamed over the old one, so a crash mid-write never leaves half a file."
+          ],
+          "examples": [
+            "fails",
+            "save"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "what",
+          "h": "یک صاحب، یک سند",
+          "p": [
+            "`server/sync.mjs` کل سرور است: بدون وابستگی (`node:http`)، یک صاحب، یک سند JSON. `GET /api/sync/health` بدون احراز هویت جواب می‌دهد، برای health check کانتینر؛ `GET /api/sync` پیشرفت ذخیره‌شده را برمی‌گرداند؛ `POST /api/sync` آپلود یک دستگاه را merge می‌کند و با نتیجه جواب می‌دهد، پس هر دستگاه در همان رفت‌وبرگشت پیشرفت همه را می‌گیرد. در image کنترل پنل با کاربر `node` و `DATA_DIR=/data` روی پورت 8080 اجرا می‌شود، در volume `lessons-sync-data` که backup شبانه آرشیوش می‌کند."
+          ]
+        },
+        {
+          "id": "key",
+          "h": "کلید",
+          "p": [
+            "احراز هویت یک کلید مشترک در هدر `X-Sync-Key` است، نه `Authorization`، چون نسخه‌ی `ctx.<domain>` پشت basic auth در Caddy است که همین هدر را استفاده می‌کند. کلید از `SYNC_KEY` می‌آید یا یک بار در `DATA_DIR/key` (با mode 600) ساخته می‌شود. به‌صورت hash مربوط به SHA-256 با `timingSafeEqual` مقایسه می‌شود: دو طرف همیشه 32 بایت‌اند، پس زمان مقایسه چیزی درباره‌ی این‌که چه مقدار از حدس درست بوده لو نمی‌دهد."
+          ],
+          "examples": [
+            "key"
+          ]
+        },
+        {
+          "id": "limits",
+          "h": "محدودیت‌ها و ذخیره‌ی امن",
+          "p": [
+            "بعد از 10 کلید اشتباه در ده دقیقه از یک آدرس (اولین آدرس در `X-Forwarded-For` که Caddy می‌گذارد) جواب 429 می‌دهد، و هر کلید اشتباه اول 400 میلی‌ثانیه صبر می‌کند. body باید JSON و حداکثر 2 MB باشد. سند در یک فایل موقت نوشته می‌شود و روی فایل قبلی rename می‌شود، پس crash در وسط نوشتن هرگز نصف فایل باقی نمی‌گذارد."
+          ],
+          "examples": [
+            "fails",
+            "save"
+          ]
+        }
+      ],
+      "examples": {
+        "key": {
+          "title": {
+            "en": "The key and its check",
+            "fa": "کلید و چک کردنش"
+          },
+          "lang": "javascript",
+          "file": "server/sync.mjs",
+          "from": "function loadKey()",
+          "to": "const keyOk"
+        },
+        "fails": {
+          "title": {
+            "en": "Wrong keys",
+            "fa": "کلیدهای اشتباه"
+          },
+          "lang": "javascript",
+          "file": "server/sync.mjs",
+          "from": "// Wrong keys: 10 per 10 minutes",
+          "lines": 11
+        },
+        "save": {
+          "title": {
+            "en": "An atomic save",
+            "fa": "ذخیره‌ی اتمی"
+          },
+          "lang": "javascript",
+          "file": "server/sync.mjs",
+          "from": "function save() {",
+          "lines": 5
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is the key sent in `X-Sync-Key` rather than `Authorization`?",
+            "fa": "چرا کلید در `X-Sync-Key` فرستاده می‌شود نه در `Authorization`؟"
+          },
+          "options": {
+            "en": [
+              "`Authorization` is not allowed on POST",
+              "Node cannot read `Authorization`",
+              "On `ctx.<domain>` Caddy's basic auth already uses `Authorization`"
+            ],
+            "fa": [
+              "`Authorization` روی POST مجاز نیست",
+              "Node نمی‌تواند `Authorization` را بخواند",
+              "روی `ctx.<domain>` basic auth در Caddy از قبل `Authorization` را استفاده می‌کند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Two credentials can't share one header; the app's key needs its own.",
+            "fa": "دو اعتبارنامه نمی‌توانند یک هدر را با هم استفاده کنند؛ کلید اپ هدر خودش را لازم دارد."
+          }
+        },
+        {
+          "q": {
+            "en": "What does writing to `progress.json.tmp` and renaming protect against?",
+            "fa": "نوشتن در `progress.json.tmp` و rename کردن در برابر چه چیزی محافظت می‌کند؟"
+          },
+          "options": {
+            "en": [
+              "A half-written file after a crash",
+              "Two devices uploading at the same moment",
+              "Someone reading the file"
+            ],
+            "fa": [
+              "فایل نیمه‌نوشته بعد از crash",
+              "آپلود هم‌زمان دو دستگاه",
+              "کسی که فایل را بخواند"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "A rename replaces the file in one step; the old or the new version is there, never a mix.",
+            "fa": "rename فایل را در یک قدم جایگزین می‌کند؛ یا نسخه‌ی قدیم هست یا نسخه‌ی جدید، هرگز ترکیبی از هر دو."
+          }
+        },
+        {
+          "q": {
+            "en": "Why compare SHA-256 hashes with `timingSafeEqual` instead of `===` on the keys?",
+            "fa": "چرا hashهای SHA-256 با `timingSafeEqual` مقایسه می‌شوند نه کلیدها با `===`؟"
+          },
+          "options": {
+            "en": [
+              "It is faster",
+              "The comparison takes the same time however much of a guess is right",
+              "Hashes are shorter to store"
+            ],
+            "fa": [
+              "سریع‌تر است",
+              "مقایسه هر قدر هم که حدس درست باشد همان زمان را می‌برد",
+              "hashها برای ذخیره کوتاه‌ترند"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "`===` stops at the first difference, which a patient attacker could time; equal-length hashes compared in constant time leak nothing.",
+            "fa": "`===` در اولین تفاوت می‌ایستد که یک مهاجم صبور می‌تواند زمانش را بسنجد؛ hashهای هم‌طول که در زمان ثابت مقایسه شوند چیزی لو نمی‌دهند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge",
+      "group": "sync",
+      "title": {
+        "en": "The merge rules",
+        "fa": "قانون‌های merge"
+      },
+      "files": [
+        "server/merge.mjs",
+        "src/lib/review/srs.ts"
+      ],
+      "en": [
+        {
+          "id": "rules",
+          "h": "Order does not matter",
+          "p": [
+            "Phone and PC each keep a full copy and send it; the server merges by rules under which the order of uploads does not matter:"
+          ],
+          "list": [
+            "cards: per card, the newest answer (`t`) wins;",
+            "day logs: each device owns its own (`days[dev][day]`), and counters merge with `max()`, so sending the same day twice is harmless;",
+            "settings: the last write by `settingsT` wins;",
+            "`resetAt`: \"start over\" on any device drops every card answered before it and every day log, everywhere."
+          ],
+          "examples": [
+            "cards"
+          ]
+        },
+        {
+          "id": "stale",
+          "h": "A device behind the reset; clean input",
+          "p": [
+            "A device that has not heard of the latest reset (`upReset < out.resetAt`) may still send cards, and only those answered after the reset survive, but its day logs are ignored, so it cannot bring the old streak back. Every value is cleaned before it is stored: numbers clamped to ranges, card ids at most 300 characters, device ids 4-64 safe characters, at most 20,000 cards."
+          ],
+          "examples": [
+            "days"
+          ]
+        },
+        {
+          "id": "client",
+          "h": "The same rules in the browser",
+          "p": [
+            "The browser applies the server's answer by the same rules from its side (`applyDoc`): newer cards replace older ones, other devices' day logs go into `remote` (used for the totals and the streak), and settings arriving from the server set `settingsSig` first, so the settings watcher does not stamp them as a new local change and send them back as the newest."
+          ],
+          "examples": [
+            "apply"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "rules",
+          "h": "ترتیب مهم نیست",
+          "p": [
+            "گوشی و PC هر کدام یک کپی کامل نگه می‌دارند و می‌فرستند؛ سرور با قانون‌هایی merge می‌کند که در آن‌ها ترتیب آپلودها اهمیتی ندارد:"
+          ],
+          "list": [
+            "کارت‌ها: برای هر کارت، جدیدترین جواب (`t`) برنده است؛",
+            "لاگ روزانه: هر دستگاه مال خودش را دارد (`days[dev][day]`) و شمارنده‌ها با `max()` merge می‌شوند، پس فرستادن دوباره‌ی یک روز بی‌ضرر است؛",
+            "تنظیمات: آخرین نوشتن بر اساس `settingsT` برنده است؛",
+            "`resetAt`: «از اول» روی هر دستگاهی، هر کارتی را که قبلش جواب داده شده و همه‌ی لاگ‌های روزانه را همه جا حذف می‌کند."
+          ],
+          "examples": [
+            "cards"
+          ]
+        },
+        {
+          "id": "stale",
+          "h": "دستگاه عقب از reset؛ ورودی تمیز",
+          "p": [
+            "دستگاهی که از آخرین reset خبر ندارد (`upReset < out.resetAt`) هنوز می‌تواند کارت بفرستد و فقط آن‌هایی که بعد از reset جواب داده شده‌اند می‌مانند، اما لاگ‌های روزانه‌اش نادیده گرفته می‌شود، پس نمی‌تواند رکورد قدیمی را برگرداند. هر مقدار قبل از ذخیره تمیز می‌شود: عددها در بازه‌ای محدود می‌شوند، شناسه‌ی کارت حداکثر 300 حرف، شناسه‌ی دستگاه 4 تا 64 حرف امن، و حداکثر 20,000 کارت."
+          ],
+          "examples": [
+            "days"
+          ]
+        },
+        {
+          "id": "client",
+          "h": "همان قانون‌ها در مرورگر",
+          "p": [
+            "مرورگر جواب سرور را با همان قانون‌ها از طرف خودش اعمال می‌کند (`applyDoc`): کارت‌های جدیدتر جای قدیمی‌ترها را می‌گیرند، لاگ روزانه‌ی دستگاه‌های دیگر در `remote` می‌رود (برای جمع‌ها و رکورد)، و تنظیماتی که از سرور می‌آیند اول `settingsSig` را می‌گذارند، تا watcher تنظیمات آن‌ها را به‌عنوان تغییر محلی تازه زمان‌گذاری نکند و دوباره به‌عنوان جدیدترین برنگرداند."
+          ],
+          "examples": [
+            "apply"
+          ]
+        }
+      ],
+      "examples": {
+        "cards": {
+          "title": {
+            "en": "Reset and cards",
+            "fa": "reset و کارت‌ها"
+          },
+          "lang": "javascript",
+          "file": "server/merge.mjs",
+          "from": "export function mergeUpload(doc, up) {",
+          "to": "const stale = upReset < out.resetAt"
+        },
+        "days": {
+          "title": {
+            "en": "Day logs, merged with max()",
+            "fa": "لاگ روزانه، merge با max()"
+          },
+          "lang": "javascript",
+          "file": "server/merge.mjs",
+          "from": "if (!stale && isDev(up.dev)",
+          "to": "        : l"
+        },
+        "apply": {
+          "title": {
+            "en": "applyDoc() in the browser",
+            "fa": "applyDoc() در مرورگر"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/srs.ts",
+          "from": "export function applyDoc(doc: SyncDoc)",
+          "lines": 10
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why are day-log counters merged with `max()` rather than added?",
+            "fa": "چرا شمارنده‌های لاگ روزانه با `max()` merge می‌شوند نه با جمع؟"
+          },
+          "options": {
+            "en": [
+              "Adding would overflow",
+              "A device resends its whole day; adding would count it twice",
+              "max() is faster"
+            ],
+            "fa": [
+              "جمع کردن سرریز می‌کرد",
+              "دستگاه کل روزش را دوباره می‌فرستد؛ جمع آن را دو بار می‌شمرد",
+              "max() سریع‌تر است"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Counters only grow on the device that owns them, so the larger value is always the latest.",
+            "fa": "شمارنده‌ها فقط روی دستگاهی که مالکشان است بزرگ می‌شوند، پس مقدار بزرگ‌تر همیشه جدیدترین است."
+          }
+        },
+        {
+          "q": {
+            "en": "Why does applying the server's settings set `settingsSig` first?",
+            "fa": "چرا اعمال تنظیمات سرور اول `settingsSig` را می‌گذارد؟"
+          },
+          "options": {
+            "en": [
+              "So the watcher does not treat them as a new local change with a newer timestamp",
+              "To encrypt them",
+              "Because the server requires a signature"
+            ],
+            "fa": [
+              "تا watcher آن‌ها را تغییر محلی تازه با زمان جدیدتر حساب نکند",
+              "برای رمزنگاری‌شان",
+              "چون سرور امضا لازم دارد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "Otherwise every received setting would get `settingsT = now` and be sent back, ping-ponging between devices.",
+            "fa": "وگرنه هر تنظیم دریافتی `settingsT = now` می‌گرفت و برگردانده می‌شد و بین دستگاه‌ها رفت‌وبرگشت می‌کرد."
+          }
+        }
+      ]
+    },
+    {
+      "id": "syncclient",
+      "group": "sync",
+      "title": {
+        "en": "Syncing from the browser",
+        "fa": "همگام‌سازی از مرورگر"
+      },
+      "files": [
+        "src/lib/review/sync.ts"
+      ],
+      "en": [
+        {
+          "id": "key",
+          "h": "Connecting a device",
+          "p": [
+            "Sync is off until a key is entered on the Review page. `connect()` tries a sync with it and keeps the key in localStorage only if the server accepted it, so a mistyped key is never remembered. Without a key nothing is sent at all. The URL is relative (`api/sync`), so the same build works under any base path and on both domains, and under `npm run dev` the proxy sends it to the local sync server."
+          ],
+          "examples": [
+            "connect"
+          ]
+        },
+        {
+          "id": "when",
+          "h": "When it syncs",
+          "p": [
+            "On start, three seconds after the last change (debounced), when the app goes to the background, when it comes back, and when the connection returns. A signature of the last confirmed upload prevents ping-pong: applying the server's answer changes the store and so fires the watcher, but an upload is sent only if the payload differs from what the server last confirmed."
+          ],
+          "examples": [
+            "debounce"
+          ]
+        },
+        {
+          "id": "hidden",
+          "h": "Leaving the app",
+          "p": [
+            "Going to the background on a phone may end the page, so that upload uses `fetch(..., { keepalive: true })`, which finishes after the page is gone. keepalive bodies are capped at 64 KB, so it sends only the cards answered since the last good sync, with a one-minute margin; the full state goes at the next start. Errors are shown in Persian: wrong key (401), too many tries (429), server unreachable."
+          ],
+          "examples": [
+            "hidden"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "key",
+          "h": "وصل کردن یک دستگاه",
+          "p": [
+            "همگام‌سازی تا وقتی کلید در صفحه‌ی مرور وارد نشود خاموش است. `connect()` با آن یک همگام‌سازی امتحان می‌کند و فقط اگر سرور قبولش کرد کلید را در localStorage نگه می‌دارد، پس کلید غلط‌تایپ‌شده هرگز به خاطر سپرده نمی‌شود. بدون کلید اصلاً چیزی فرستاده نمی‌شود. URL نسبی است (`api/sync`)، پس همان build زیر هر base path و روی هر دو دامنه کار می‌کند، و زیر `npm run dev` proxy آن را به سرور sync محلی می‌فرستد."
+          ],
+          "examples": [
+            "connect"
+          ]
+        },
+        {
+          "id": "when",
+          "h": "کی همگام می‌شود",
+          "p": [
+            "هنگام شروع، سه ثانیه بعد از آخرین تغییر (debounce)، وقتی اپ به پس‌زمینه می‌رود، وقتی برمی‌گردد و وقتی اتصال برمی‌گردد. امضای آخرین آپلود تأییدشده جلوی رفت‌وبرگشت بی‌پایان را می‌گیرد: اعمال جواب سرور store را عوض می‌کند و watcher را راه می‌اندازد، ولی آپلود فقط وقتی فرستاده می‌شود که payload با آن‌چه سرور آخرین بار تأیید کرده فرق داشته باشد."
+          ],
+          "examples": [
+            "debounce"
+          ]
+        },
+        {
+          "id": "hidden",
+          "h": "ترک کردن اپ",
+          "p": [
+            "رفتن به پس‌زمینه روی گوشی ممکن است صفحه را تمام کند، پس آن آپلود از `fetch(..., { keepalive: true })` استفاده می‌کند که بعد از رفتن صفحه هم تمام می‌شود. body در keepalive حداکثر 64 KB است، پس فقط کارت‌هایی را می‌فرستد که از آخرین همگام‌سازی موفق جواب داده شده‌اند، با یک دقیقه حاشیه؛ وضعیت کامل در شروع بعدی می‌رود. خطاها فارسی نشان داده می‌شوند: کلید اشتباه (401)، تلاش‌های زیاد (429)، در دسترس نبودن سرور."
+          ],
+          "examples": [
+            "hidden"
+          ]
+        }
+      ],
+      "examples": {
+        "connect": {
+          "title": {
+            "en": "connect()",
+            "fa": "connect()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/sync.ts",
+          "from": "export async function connect",
+          "lines": 9
+        },
+        "debounce": {
+          "title": {
+            "en": "Three seconds after a change",
+            "fa": "سه ثانیه بعد از تغییر"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/sync.ts",
+          "from": "let timer: ReturnType",
+          "lines": 6
+        },
+        "hidden": {
+          "title": {
+            "en": "Sending on the way out",
+            "fa": "فرستادن هنگام رفتن"
+          },
+          "lang": "typescript",
+          "file": "src/lib/review/sync.ts",
+          "from": "document.addEventListener('visibilitychange'",
+          "lines": 11
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does the background upload send only recently answered cards?",
+            "fa": "چرا آپلود پس‌زمینه فقط کارت‌هایی را که اخیراً جواب داده شده‌اند می‌فرستد؟"
+          },
+          "options": {
+            "en": [
+              "The server rejects full uploads",
+              "Older cards are already lost",
+              "A keepalive request body is capped at 64 KB"
+            ],
+            "fa": [
+              "سرور آپلودهای کامل را رد می‌کند",
+              "کارت‌های قدیمی‌تر از قبل از دست رفته‌اند",
+              "body درخواست keepalive حداکثر 64 KB است"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The full state could exceed the cap; the rest is sent at the next normal sync.",
+            "fa": "وضعیت کامل ممکن بود از سقف بیشتر شود؛ بقیه در همگام‌سازی عادی بعدی فرستاده می‌شود."
+          }
+        },
+        {
+          "q": {
+            "en": "What stops the browser from uploading again right after applying the server's answer?",
+            "fa": "چه چیزی جلوی آپلود دوباره‌ی مرورگر را درست بعد از اعمال جواب سرور می‌گیرد؟"
+          },
+          "options": {
+            "en": [
+              "The signature of the last confirmed payload: unchanged means no upload",
+              "A server-side lock",
+              "The three-second timer alone"
+            ],
+            "fa": [
+              "امضای آخرین payload تأییدشده: اگر عوض نشده آپلودی نیست",
+              "یک قفل سمت سرور",
+              "فقط تایمر سه‌ثانیه‌ای"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The timer still fires, but `sig() !== lastSig` is false, so nothing is sent.",
+            "fa": "تایمر هنوز اجرا می‌شود، اما `sig() !== lastSig` نادرست است، پس چیزی فرستاده نمی‌شود."
+          }
+        }
+      ]
+    },
+    {
+      "id": "proverbs",
+      "group": "proverbs",
+      "title": {
+        "en": "Proverbs",
+        "fa": "ضرب‌المثل‌ها"
+      },
+      "files": [
+        "src/lib/proverbs.ts",
+        "src/types/proverbs.ts",
+        "src/views/ProverbsView.vue"
+      ],
+      "en": [
+        {
+          "id": "data",
+          "h": "Bundled, but lazily",
+          "p": [
+            "`src/data/proverbs.json` is written by a separate proverb engine (`python prov.py export`) and holds no personal data, so it is bundled; only the proverb views import it, so it becomes its own lazy chunk. Each proverb has the Persian, its meaning, the American equivalent, how close the match is (`exact`, `close`, `loose`, `none`), how current it is in the US (`daily`, `known`, `dated`, `uk`), situations and a theme."
+          ]
+        },
+        {
+          "id": "search",
+          "h": "Searching Persian",
+          "p": [
+            "Search normalises Persian and Arabic letter forms the same way as the engine's `registry.norm()`: Arabic ي and ك become ی and ک, alef forms become ا, the zero-width non-joiner becomes a space, and diacritics are removed. Each word of the query must start a word of the text, so «آب» does not match «کتاب». A tag such as `#M7` jumps straight to that proverb."
+          ],
+          "examples": [
+            "norm",
+            "matches"
+          ]
+        },
+        {
+          "id": "url",
+          "h": "Filters in the URL",
+          "p": [
+            "The filters (situation, theme, daily only, query) live in the URL, kept current with `router.replace`, so a link reopens the same view and the back button is not filled with one entry per keystroke. The proverb of the day is the day number modulo the count; \"known\" marks are a per-browser convenience in localStorage, unlike review progress, which syncs."
+          ],
+          "examples": [
+            "url"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "data",
+          "h": "bundle‌شده، اما lazy",
+          "p": [
+            "`src/data/proverbs.json` را یک موتور جداگانه‌ی ضرب‌المثل می‌نویسد (`python prov.py export`) و داده‌ی شخصی ندارد، پس bundle می‌شود؛ فقط viewهای ضرب‌المثل importش می‌کنند، پس chunk lazy خودش را می‌گیرد. هر ضرب‌المثل متن فارسی، معنی، معادل آمریکایی، میزان نزدیکی معادل (`exact`، `close`، `loose`، `none`)، میزان رایج بودنش در آمریکا (`daily`، `known`، `dated`، `uk`)، موقعیت‌ها و یک موضوع دارد."
+          ]
+        },
+        {
+          "id": "search",
+          "h": "جست‌وجوی فارسی",
+          "p": [
+            "جست‌وجو شکل‌های حروف فارسی و عربی را همان‌طور نرمال می‌کند که `registry.norm()` موتور: ي و ك عربی ی و ک می‌شوند، شکل‌های الف ا می‌شوند، نیم‌فاصله فاصله می‌شود و اعراب حذف می‌شوند. هر کلمه‌ی جست‌وجو باید ابتدای یک کلمه از متن باشد، پس «آب» با «کتاب» جور نمی‌شود. برچسبی مثل `#M7` مستقیم به همان ضرب‌المثل می‌رود."
+          ],
+          "examples": [
+            "norm",
+            "matches"
+          ]
+        },
+        {
+          "id": "url",
+          "h": "فیلترها در URL",
+          "p": [
+            "فیلترها (موقعیت، موضوع، فقط روزمره، متن جست‌وجو) در URL هستند و با `router.replace` به‌روز می‌مانند، پس یک لینک همان نما را دوباره باز می‌کند و دکمه‌ی back برای هر حرف تایپ‌شده یک مدخل نمی‌گیرد. ضرب‌المثل روز، شماره‌ی روز به پیمانه‌ی تعداد است؛ علامت «بلدم» فقط راحتی همان مرورگر است و در localStorage می‌ماند، برخلاف پیشرفت مرور که همگام می‌شود."
+          ],
+          "examples": [
+            "url"
+          ]
+        }
+      ],
+      "examples": {
+        "norm": {
+          "title": {
+            "en": "norm()",
+            "fa": "norm()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/proverbs.ts",
+          "from": "export function norm",
+          "lines": 7
+        },
+        "matches": {
+          "title": {
+            "en": "Words must start a word",
+            "fa": "کلمه باید ابتدای کلمه باشد"
+          },
+          "lang": "typescript",
+          "file": "src/lib/proverbs.ts",
+          "from": "// Every word must start a word",
+          "lines": 6
+        },
+        "url": {
+          "title": {
+            "en": "Filters kept in the URL",
+            "fa": "فیلترها در URL"
+          },
+          "lang": "typescript",
+          "file": "src/views/ProverbsView.vue",
+          "from": "watch([q, w, t, daily]",
+          "lines": 8
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does searching «آب» not find a proverb containing «کتاب»?",
+            "fa": "چرا جست‌وجوی «آب» ضرب‌المثلی را که «کتاب» دارد پیدا نمی‌کند؟"
+          },
+          "options": {
+            "en": [
+              "Each query word must start a word of the text",
+              "The search is exact-match only",
+              "Persian text is not searched"
+            ],
+            "fa": [
+              "هر کلمه‌ی جست‌وجو باید ابتدای یک کلمه از متن باشد",
+              "جست‌وجو فقط تطابق کامل است",
+              "متن فارسی جست‌وجو نمی‌شود"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The text is kept with a leading space before every word, and the match is `' ' + word`.",
+            "fa": "متن با یک فاصله قبل از هر کلمه نگه داشته می‌شود و تطابق با `' ' + word` است."
+          }
+        },
+        {
+          "q": {
+            "en": "Why is the filter state kept with `router.replace` rather than `router.push`?",
+            "fa": "چرا وضعیت فیلتر با `router.replace` نگه داشته می‌شود نه `router.push`؟"
+          },
+          "options": {
+            "en": [
+              "push does not support queries",
+              "replace is required for hash history",
+              "So typing does not add a history entry per change"
+            ],
+            "fa": [
+              "push از query پشتیبانی نمی‌کند",
+              "hash history به replace نیاز دارد",
+              "تا تایپ کردن برای هر تغییر یک مدخل تاریخچه اضافه نکند"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "The URL still holds the view for sharing, but Back leaves the page instead of undoing letters.",
+            "fa": "URL هنوز نما را برای اشتراک نگه می‌دارد، ولی Back از صفحه بیرون می‌رود نه این‌که حرف‌ها را یکی‌یکی برگرداند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "context",
+      "group": "context",
+      "title": {
+        "en": "Private data: Context",
+        "fa": "داده‌ی خصوصی: کانتکست"
+      },
+      "files": [
+        "src/lib/context.ts",
+        "vite.config.ts",
+        "src/components/ctx/CtxGate.vue"
+      ],
+      "en": [
+        {
+          "id": "private",
+          "h": "Never in a build",
+          "p": [
+            "Context shows the owner's notes: facts, projects, gaps, work, bugs, recruiters. Its JSON holds personal data, so it is never copied into `src/`, `public/` or a build. It always comes from `/api/context`: in dev the Vite plugin reads it from the context engine's folder (`CONTEXT_ENGINE_DIR`); on the VPS only `ctx.<domain>` answers it, behind basic auth, from a copy pushed by `push-context.ps1`. Anywhere else (GitHub Pages, `english.<domain>`, where Caddy answers 404) the section says it is local-only."
+          ],
+          "examples": [
+            "engine",
+            "load"
+          ]
+        },
+        {
+          "id": "guard",
+          "h": "Guarding the dev read",
+          "p": [
+            "The dev read is guarded too. The `Host` must be loopback, which stops DNS rebinding (a hostile site's name pointed at 127.0.0.1), since this middleware runs before Vite's own host check; and a cross-site request, told by `Origin` or `Sec-Fetch-Site`, is refused. Rebuild (POST) runs `python ctx.py export` and needs the trusted origin as well; the button is offered only in dev (`import.meta.env.DEV`)."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "gate",
+          "h": "CtxGate",
+          "p": [
+            "`loadContext()` loads once and keeps the data in a ref shared by every Context page. `CtxGate` wraps each of them and shows loading, the local-only note, or the error with the command to run (`python ctx.py export` on the PC, `push-context.ps1 -Export` for the server)."
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "private",
+          "h": "هرگز در build",
+          "p": [
+            "کانتکست یادداشت‌های صاحب پروژه را نشان می‌دهد: factها، پروژه‌ها، شکاف‌ها، کارها، باگ‌ها، ریکروترها. JSON آن داده‌ی شخصی دارد، پس هرگز در `src/`، `public/` یا یک build کپی نمی‌شود. همیشه از `/api/context` می‌آید: در dev، plugin مربوط به Vite آن را از پوشه‌ی موتور کانتکست (`CONTEXT_ENGINE_DIR`) می‌خواند؛ روی VPS فقط `ctx.<domain>` جوابش را می‌دهد، پشت basic auth، از کپی‌ای که `push-context.ps1` فرستاده. هر جای دیگر (GitHub Pages، `english.<domain>` که Caddy آن‌جا 404 می‌دهد) بخش می‌گوید فقط محلی است."
+          ],
+          "examples": [
+            "engine",
+            "load"
+          ]
+        },
+        {
+          "id": "guard",
+          "h": "محافظت از خواندن در dev",
+          "p": [
+            "خواندن در dev هم محافظت می‌شود. `Host` باید loopback باشد که جلوی DNS rebinding را می‌گیرد (اسم یک سایت مهاجم که به 127.0.0.1 اشاره کند)، چون این middleware قبل از چک host خود Vite اجرا می‌شود؛ و درخواست cross-site، که از `Origin` یا `Sec-Fetch-Site` شناخته می‌شود، رد می‌شود. بازسازی (POST) دستور `python ctx.py export` را اجرا می‌کند و آن هم origin مورد اعتماد لازم دارد؛ دکمه‌اش فقط در dev نشان داده می‌شود (`import.meta.env.DEV`)."
+          ],
+          "examples": [
+            "local"
+          ]
+        },
+        {
+          "id": "gate",
+          "h": "CtxGate",
+          "p": [
+            "`loadContext()` یک بار بار می‌کند و داده را در یک ref نگه می‌دارد که همه‌ی صفحه‌های کانتکست با هم استفاده می‌کنند. `CtxGate` دور هر کدام از آن‌ها پیچیده می‌شود و در حال بارگذاری، یادداشت «فقط محلی»، یا خطا را با دستوری که باید اجرا شود نشان می‌دهد (`python ctx.py export` روی PC، `push-context.ps1 -Export` برای سرور)."
+          ]
+        }
+      ],
+      "examples": {
+        "engine": {
+          "title": {
+            "en": "Outside the repo",
+            "fa": "بیرون از repo"
+          },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "const CONTEXT_ENGINE =",
+          "lines": 2
+        },
+        "load": {
+          "title": {
+            "en": "loadContext()",
+            "fa": "loadContext()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/context.ts",
+          "from": "export async function loadContext",
+          "to": "  } finally {"
+        },
+        "local": {
+          "title": {
+            "en": "isLocalRead()",
+            "fa": "isLocalRead()"
+          },
+          "lang": "typescript",
+          "file": "vite.config.ts",
+          "from": "function isLocalRead(",
+          "lines": 8
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why is the dev server's Host check needed even though it listens on localhost?",
+            "fa": "چرا چک کردن Host در سرور dev لازم است، با این‌که روی localhost گوش می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "DNS rebinding can make a hostile site's name point at 127.0.0.1",
+              "Vite refuses requests without a Host",
+              "Caddy sends a different Host"
+            ],
+            "fa": [
+              "DNS rebinding می‌تواند اسم یک سایت مهاجم را به 127.0.0.1 اشاره دهد",
+              "Vite درخواست بدون Host را رد می‌کند",
+              "Caddy یک Host دیگر می‌فرستد"
+            ]
+          },
+          "answer": 0,
+          "why": {
+            "en": "The browser would then treat the attacker's page as same-origin with the API; a loopback Host rules that out.",
+            "fa": "آن‌وقت مرورگر صفحه‌ی مهاجم را با API هم‌منشأ حساب می‌کرد؛ Host loopback این را منتفی می‌کند."
+          }
+        },
+        {
+          "q": {
+            "en": "What does the Context tab show on `english.<domain>`?",
+            "fa": "تب کانتکست روی `english.<domain>` چه نشان می‌دهد؟"
+          },
+          "options": {
+            "en": [
+              "The owner's notes, read-only",
+              "A note that it is local-only",
+              "A basic-auth prompt"
+            ],
+            "fa": [
+              "یادداشت‌های صاحب پروژه، فقط‌خواندنی",
+              "یادداشتی که می‌گوید فقط محلی است",
+              "پنجره‌ی رمز basic auth"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "Caddy answers `/api/context` with 404 there, and the app treats that as local-only.",
+            "fa": "Caddy آن‌جا به `/api/context` جواب 404 می‌دهد و اپ این را «فقط محلی» حساب می‌کند."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tags",
+      "group": "context",
+      "title": {
+        "en": "Tags and jump links",
+        "fa": "برچسب‌ها و لینک پرش"
+      },
+      "files": [
+        "src/lib/context.ts"
+      ],
+      "en": [
+        {
+          "id": "forms",
+          "h": "One tag, many forms",
+          "p": [
+            "Context notes point at each other with tags, in the same forms the Python engine accepts: `#B7` or `B07` a bug, `#W3` work, `#R:<id>` a recruiter item, `#P:rebiomed` a pack (a project), `#F:<fact id>` a fact, `#G:<slug>` a gap, `#I:<pack>.<part>` a part of a pack's implementation. Without a prefix the value is tried as a pack, then a fact, then a gap. `resolveTag` returns the route and label, or `null` for a tag that points nowhere, so a stale tag shows as plain text instead of a broken link."
+          ],
+          "examples": [
+            "resolve"
+          ]
+        },
+        {
+          "id": "jump",
+          "h": "?at= and jumpTo",
+          "p": [
+            "The routes carry `?at=<row id>`. `jumpTo` finds that element with `getElementById`, because ids such as fact ids contain dots, which a CSS selector would read as classes; it scrolls the row to the centre and restarts a flash animation by removing the class, forcing a reflow with `offsetWidth`, and adding it again. Because those links scroll by themselves, the router's `scrollBehavior` leaves them alone. The same `jumpTo` serves the proverbs page (`?at=M038`), so one link format works across the app."
+          ],
+          "examples": [
+            "jump"
+          ]
+        }
+      ],
+      "fa": [
+        {
+          "id": "forms",
+          "h": "یک برچسب، چند شکل",
+          "p": [
+            "یادداشت‌های کانتکست با برچسب به هم اشاره می‌کنند، با همان شکل‌هایی که موتور Python قبول می‌کند: `#B7` یا `B07` یک باگ، `#W3` یک کار، `#R:<id>` یک مورد ریکروتر، `#P:rebiomed` یک pack (یک پروژه)، `#F:<fact id>` یک fact، `#G:<slug>` یک شکاف، `#I:<pack>.<part>` بخشی از پیاده‌سازی یک pack. بدون پیشوند، مقدار اول به‌عنوان pack، بعد fact و بعد شکاف امتحان می‌شود. `resolveTag` route و برچسب را برمی‌گرداند، یا برای برچسبی که به جایی اشاره نمی‌کند `null`، پس برچسب کهنه به‌صورت متن ساده نشان داده می‌شود نه لینک خراب."
+          ],
+          "examples": [
+            "resolve"
+          ]
+        },
+        {
+          "id": "jump",
+          "h": "?at= و jumpTo",
+          "p": [
+            "routeها `?at=<row id>` دارند. `jumpTo` آن عنصر را با `getElementById` پیدا می‌کند، چون شناسه‌هایی مثل شناسه‌ی fact نقطه دارند و یک CSS selector آن‌ها را کلاس می‌خواند؛ ردیف را به وسط صفحه scroll می‌کند و انیمیشن چشمک را دوباره شروع می‌کند: کلاس را برمی‌دارد، با `offsetWidth` یک reflow اجباری می‌سازد و کلاس را دوباره می‌گذارد. چون این لینک‌ها خودشان scroll می‌کنند، `scrollBehavior` در router کاری به‌شان ندارد. همین `jumpTo` در صفحه‌ی ضرب‌المثل‌ها هم به کار می‌رود (`?at=M038`)، پس یک شکل لینک در کل اپ کار می‌کند."
+          ],
+          "examples": [
+            "jump"
+          ]
+        }
+      ],
+      "examples": {
+        "resolve": {
+          "title": {
+            "en": "Bugs and work",
+            "fa": "باگ‌ها و کارها"
+          },
+          "lang": "typescript",
+          "file": "src/lib/context.ts",
+          "from": "let m = s.match(/^([BbWw])",
+          "lines": 7
+        },
+        "jump": {
+          "title": {
+            "en": "jumpTo()",
+            "fa": "jumpTo()"
+          },
+          "lang": "typescript",
+          "file": "src/lib/context.ts",
+          "from": "export function jumpTo",
+          "lines": 11
+        }
+      },
+      "quiz": [
+        {
+          "q": {
+            "en": "Why does `jumpTo` use `getElementById` instead of `querySelector('#' + id)`?",
+            "fa": "چرا `jumpTo` از `getElementById` استفاده می‌کند نه `querySelector('#' + id)`؟"
+          },
+          "options": {
+            "en": [
+              "It is the only method that scrolls",
+              "Ids contain dots, which a CSS selector reads as classes",
+              "querySelector is not available in Vue"
+            ],
+            "fa": [
+              "تنها متدی است که scroll می‌کند",
+              "شناسه‌ها نقطه دارند که CSS selector آن‌ها را کلاس می‌خواند",
+              "querySelector در Vue در دسترس نیست"
+            ]
+          },
+          "answer": 1,
+          "why": {
+            "en": "`#proj.x.y` as a selector means id `proj` with classes `x` and `y`.",
+            "fa": "`#proj.x.y` به‌عنوان selector یعنی شناسه‌ی `proj` با کلاس‌های `x` و `y`."
+          }
+        },
+        {
+          "q": {
+            "en": "What does `resolveTag` return for a tag that points to a bug that no longer exists?",
+            "fa": "`resolveTag` برای برچسبی که به باگی اشاره می‌کند که دیگر وجود ندارد چه برمی‌گرداند؟"
+          },
+          "options": {
+            "en": [
+              "A route to the bug list",
+              "An error",
+              "`null`, so it is shown as plain text"
+            ],
+            "fa": [
+              "یک route به فهرست باگ‌ها",
+              "یک خطا",
+              "`null`، پس به‌صورت متن ساده نشان داده می‌شود"
+            ]
+          },
+          "answer": 2,
+          "why": {
+            "en": "Only a row that is found gives a route; otherwise the result is null.",
+            "fa": "فقط ردیفی که پیدا شود route می‌دهد؛ وگرنه نتیجه null است."
+          }
+        }
+      ]
+    }
+  ]
+}

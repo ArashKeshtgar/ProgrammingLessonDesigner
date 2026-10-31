@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import DocSections from '../../components/projects/DocSections.vue'
 import SystemMap, { type MapNode } from '../../components/projects/SystemMap.vue'
 import { STRINGS, type DocLang } from '../../projects/i18n'
+import { isRead, readCount } from '../../projects/progress'
 import {
   doc,
   linksFrom,
@@ -129,11 +130,16 @@ const nameOf = (id: string) => projectById(id)!.name
     <template v-if="topics">
       <h2>{{ t.contents }}</h2>
       <p>{{ t.contentsIntro }}</p>
+      <p class="doc-progress">
+        <progress :value="readCount(project.id, topics.pages)" :max="topics.pages.length"></progress>
+        {{ t.readOf(readCount(project.id, topics.pages), topics.pages.length) }}
+      </p>
       <section v-for="g in topics.groups" :key="g.id" class="contents-group">
         <h3>{{ g.title[lang] }}</h3>
         <ol>
           <li v-for="topic in topics.pages.filter((x) => x.group === g.id)" :key="topic.id">
             <RouterLink :to="`/projects/${lang}/${project.id}/${topic.id}`">{{ topic.title[lang] }}</RouterLink>
+            <span v-if="isRead(`${project.id}/${topic.id}`)" class="read-mark" :title="t.isRead">✓</span>
           </li>
         </ol>
       </section>

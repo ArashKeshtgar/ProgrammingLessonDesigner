@@ -1,0 +1,453 @@
+{
+  "project": "integrationhub",
+  "repo": "IntegrationHub",
+  "files": {
+    "README.md": 89,
+    "docs/architecture.md": 645,
+    "docs/contracts.md": 246,
+    "compose.yml": 35,
+    "src/main/resources/application.yml": 162,
+    "src/main/resources/application-dev.yml": 11,
+    "src/test/java/ca/arashkeshtgar/integrationhub/PostgresTestBase.java": 28,
+    "src/test/java/ca/arashkeshtgar/integrationhub/RelayTestBase.java": 173,
+    "src/test/java/ca/arashkeshtgar/integrationhub/RelayTest.java": 391,
+    ".github/workflows/ci.yml": 43,
+    "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java": 538,
+    "src/main/java/ca/arashkeshtgar/integrationhub/SecurityConfig.java": 68,
+    "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java": 121,
+    "src/main/resources/db/migration/V1__message_log.sql": 34,
+    "src/main/resources/db/migration/V2__message_response_status.sql": 4,
+    "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java": 148,
+    "src/main/java/ca/arashkeshtgar/integrationhub/admin/MessagesController.java": 374,
+    "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java": 333,
+    "docs/events.md": 99,
+    "src/main/java/ca/arashkeshtgar/integrationhub/events/Pseudonymizer.java": 34,
+    "src/main/java/ca/arashkeshtgar/integrationhub/events/OrderLinks.java": 84,
+    "src/main/resources/db/migration/V3__event_outbox.sql": 31,
+    "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java": 164,
+    "src/main/java/ca/arashkeshtgar/integrationhub/events/RabbitConfig.java": 35,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Mllp.java": 67,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpServer.java": 104,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpSockets.java": 135,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java": 496,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Message.java": 274,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java": 425,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/ClinicHubClient.java": 139,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/PayloadCipher.java": 55,
+    "src/main/resources/db/migration/V4__hl7_queues.sql": 41,
+    "src/test/java/ca/arashkeshtgar/integrationhub/Hl7InboundTest.java": 351,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Orders.java": 114,
+    "src/main/java/ca/arashkeshtgar/integrationhub/hl7/FhirToOrm.java": 257,
+    "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java": 161,
+    "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java": 129,
+    "src/main/java/ca/arashkeshtgar/integrationhub/admin/AlertMonitor.java": 244,
+    "src/main/resources/db/migration/V5__admin.sql": 33,
+    "src/main/java/ca/arashkeshtgar/integrationhub/admin/DeadLetters.java": 150,
+    "web/src/App.tsx": 86,
+    "web/src/config.ts": 9,
+    "web/src/pages/DeadLetters.tsx": 115,
+    "web/nginx.conf.template": 19
+  },
+  "examples": {
+    "overview/flow": {
+      "file": "docs/architecture.md",
+      "start": 13,
+      "end": 21,
+      "code": "flowchart LR\n    CH[ClinicHub] -->|orders, cancels| HUB\n    LF[LabFlow] -->|results| HUB\n    CR[ClinicReport] -->|results| HUB\n    CH & LF & CR & PF[PharmaFlow] -->|financial documents| HUB\n    HUB[IntegrationHub] --> CH & LF & CR & FIN[FinancePowerApp]\n    HUB -->|de-identified events| MQ[(RabbitMQ)] --> AN[Analytics]\n    EXT[External lab / OLIS sim] <-->|HL7 v2 over MLLP| HUB\n    HUB --- DB[(PostgreSQL: message log)]"
+    },
+    "overview/decisions": {
+      "file": "docs/architecture.md",
+      "start": 26,
+      "end": 39,
+      "code": "1. **A relay first, not a new owner.** ClinicHub owns patients and orders; LabFlow and ClinicReport own results;\n   FinancePowerApp owns the books. The hub owns only its message log and its routes.\n2. **Synchronous routes stay synchronous.** ClinicHub stores the ids from the transaction-response, and a `409` on a\n   cancel is an answer. The hub returns the upstream's status and body unchanged, `502` if the upstream refused the\n   connection, `504` on timeout. It does not retry: the senders' outboxes already do.\n3. **The sender's token goes through.** The hub validates it (ClinicHub's JWKS, issuer, expiry, an audience and scope\n   allowed on that route) and forwards the same `Authorization` header, so each receiver's own checks — \"a result only\n   from the app the order went to\" — keep working. The hub never signs on behalf of another application.\n4. **No health information in the log by default.** The log records metadata: route, sender (client id), clinic,\n   resource types and counts, Bundle id, identifiers of ServiceRequests/DiagnosticReports, status, latency, size, a\n   SHA-256 of the body. Storing bodies is a setting (`hub.payloads.store`), off by default; when on, bodies are\n   encrypted (AES-GCM, key from configuration), kept for `hub.payloads.retentionDays` (default 30), and every view of\n   a body is written to an access log (PHIPA).\n5. **Asynchronous only where the outside world is asynchronous:** HL7 v2 (MLLP, ACKs) and the event feed to Analytics."
+    },
+    "run/readme": {
+      "file": "README.md",
+      "start": 19,
+      "end": 21,
+      "code": "docker compose up -d --wait      # PostgreSQL 16 on :5433, RabbitMQ on :5672 (UI :15672)\nmvn spring-boot:run              # API on :5700\ncurl localhost:5700/actuator/health"
+    },
+    "run/compose": {
+      "file": "compose.yml",
+      "start": 3,
+      "end": 11,
+      "code": "services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      POSTGRES_DB: integrationhub\n      POSTGRES_USER: integrationhub\n      POSTGRES_PASSWORD: integrationhub\n    ports:\n      - \"5433:5432\""
+    },
+    "run/routes": {
+      "file": "src/main/resources/application.yml",
+      "start": 122,
+      "end": 132,
+      "code": "# Results from LabFlow and ClinicReport to ClinicHub: /route/clinichub/fhir\nclinichub:\n  upstream: ${HUB_ROUTE_CLINICHUB_UPSTREAM:http://localhost:5300}\n  timeout: 30s\n  connect-timeout: 5s\n  required-scopes: [results]\n# Orders and cancels from ClinicHub: /route/labflow/fhir\nlabflow:\n  upstream: ${HUB_ROUTE_LABFLOW_UPSTREAM:http://localhost:5180}\n  allowed-audiences: [labflow]\n  required-scopes: [orders]"
+    },
+    "tests/pg": {
+      "file": "src/test/java/ca/arashkeshtgar/integrationhub/PostgresTestBase.java",
+      "start": 16,
+      "end": 26,
+      "code": "static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(\"postgres:16-alpine\");\n\nstatic {\n  POSTGRES.start();\n}\n\n@DynamicPropertySource\nstatic void database(DynamicPropertyRegistry registry) {\n  registry.add(\"spring.datasource.url\", POSTGRES::getJdbcUrl);\n  registry.add(\"spring.datasource.username\", POSTGRES::getUsername);\n  registry.add(\"spring.datasource.password\", POSTGRES::getPassword);"
+    },
+    "tests/markers": {
+      "file": "src/test/java/ca/arashkeshtgar/integrationhub/RelayTest.java",
+      "start": 364,
+      "end": 384,
+      "code": "void logsNoBodyAndNoPersonalValuesAnywhere(CapturedOutput output) throws Exception {\n  CLINICHUB.stubFor(post(\"/fhir\").willReturn(aResponse().withStatus(200).withBody(\"{}\")));\n  String badDate =\n      \"{\\\"resourceType\\\":\\\"Patient\\\",\\\"birthDate\\\":\\\"MARKER-BAD-DATE\\\",\\\"name\\\":[{\\\"family\\\":\\\"Zzyzx\\\"}]}\";\n\n  postBundle(\"clinichub\", validToken(), BUNDLE);\n  postBundle(\"clinichub\", validToken(), badDate.getBytes(StandardCharsets.UTF_8));\n  postBundle(\"clinichub\", \"x.y.z\", BUNDLE);\n\n  String everything =\n      String.join(\n              \"\\n\", jdbc.queryForList(\"select row_to_json(m)::text from message m\", String.class))\n          + String.join(\n              \"\\n\",\n              jdbc.queryForList(\n                  \"select row_to_json(i)::text from message_identifier i\", String.class));\n  for (String marker : new String[] {\"Zzyzx\", \"Testpatient\", \"MARKER-\"}) {\n    assertThat(everything).doesNotContain(marker);\n    assertThat(output.getAll()).doesNotContain(marker);\n  }\n  assertThat(messages()).hasSize(3);"
+    },
+    "tests/ci": {
+      "file": ".github/workflows/ci.yml",
+      "start": 7,
+      "end": 18,
+      "code": "jobs:\n  verify:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-java@v4\n        with:\n          distribution: temurin\n          java-version: \"21\"\n          cache: maven\n      - name: Build and test (Testcontainers needs Docker, available on the runner)\n        run: mvn -B verify"
+    },
+    "relay/checks": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 103,
+      "end": 119,
+      "code": "HubProperties.Route route = match.matches() ? properties.routes().get(routeName) : null;\nif (route == null || !route.allowsPath(path) || hasDotSegments(path)) {\n  refuse(response, call, started, 404, \"not-found\", \"No such route.\", \"unknown-route-or-path\");\n  return;\n}\ncall.format(route.bodyFormat());\nString method = request.getMethod();\nif (!route.allowedMethods().contains(method)) {\n  response.setHeader(\"Allow\", String.join(\", \", route.allowedMethods()));\n  refuse(\n      response,\n      call,\n      started,\n      405,\n      \"not-supported\",\n      \"Method not allowed.\",\n      \"method-not-allowed\");"
+    },
+    "relay/token": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 123,
+      "end": 158,
+      "code": "String authorization = request.getHeader(\"Authorization\");\nif (authorization == null && hasApiKey(route, request)) {\n  // The upstream checks the key; the hub cannot.\n  call.sender(\"api-key\");\n} else {\n  try {\n    call.sender(tokens.validate(authorization, route).clientId());\n  } catch (TokenValidator.Rejected e) {\n    response.setHeader(\"WWW-Authenticate\", \"Bearer\");\n    refuse(\n        response,\n        call,\n        started,\n        401,\n        \"login\",\n        \"The access token was not accepted.\",\n        e.getMessage());\n    return;\n  } catch (TokenValidator.Unavailable e) {\n    refuse(\n        response,\n        call,\n        started,\n        503,\n        \"transient\",\n        \"Tokens cannot be verified right now.\",\n        e.getMessage());\n    return;\n  }\n}\n\nbyte[] body =\n    request\n        .getInputStream()\n        .readNBytes((int) Math.min(properties.maxBodyBytes(), Integer.MAX_VALUE - 1) + 1);\nif (body.length > properties.maxBodyBytes()) {"
+    },
+    "relay/refuse": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 403,
+      "end": 423,
+      "code": "private void refuse(\n    HttpServletResponse response,\n    CallContext call,\n    long started,\n    int status,\n    String code,\n    String text,\n    String reason)\n    throws IOException {\n  response.setStatus(status);\n  response.setContentType(\"application/fhir+json\");\n  response\n      .getOutputStream()\n      .write(\n          (\"{\\\"resourceType\\\":\\\"OperationOutcome\\\",\\\"issue\\\":[{\\\"severity\\\":\\\"error\\\",\\\"code\\\":\\\"\"\n                  + code\n                  + \"\\\",\\\"diagnostics\\\":\\\"\"\n                  + text\n                  + \"\\\"}]}\")\n              .getBytes(StandardCharsets.UTF_8));\n  finish(call, started, null, status, status + \" \" + reason);"
+    },
+    "tokens/decoder": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+      "start": 47,
+      "end": 57,
+      "code": "decoder =\n    NimbusJwtDecoder.withJwkSetUri(properties.auth().effectiveJwksUri())\n        .jwsAlgorithm(SignatureAlgorithm.RS256)\n        // OpenIddict marks access tokens \"at+jwt\" (RFC 9068); the default accepts only \"JWT\".\n        .jwtProcessorCustomizer(\n            processor ->\n                processor.setJWSTypeVerifier(\n                    new DefaultJOSEObjectTypeVerifier<SecurityContext>(\n                        JOSEObjectType.JWT, new JOSEObjectType(\"at+jwt\"), null)))\n        .build();\ndecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.auth().issuer()));"
+    },
+    "tokens/validate": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+      "start": 60,
+      "end": 71,
+      "code": "public Sender validate(String authorization, HubProperties.Route route)\n    throws Rejected, Unavailable {\n  Jwt jwt = decode(authorization);\n  if (!route.requiredScopes().isEmpty() && !scopes(jwt).containsAll(route.requiredScopes())) {\n    throw new Rejected(\"wrong-scope\");\n  }\n  if (!route.allowedAudiences().isEmpty()\n      && route.allowedAudiences().stream()\n          .noneMatch(a -> jwt.getAudience() != null && jwt.getAudience().contains(a))) {\n    throw new Rejected(\"wrong-audience\");\n  }\n  return new Sender(clientId(jwt));"
+    },
+    "tokens/scopes": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/TokenValidator.java",
+      "start": 89,
+      "end": 101,
+      "code": "static Set<String> scopes(Jwt jwt) {\n  Object claim = jwt.getClaims().get(\"scope\");\n  Set<String> result = new HashSet<>();\n  if (claim instanceof String s) {\n    for (String part : s.trim().split(\"\\\\s+\")) {\n      if (!part.isEmpty()) {\n        result.add(part);\n      }\n    }\n  } else if (claim instanceof Collection<?> c) {\n    c.forEach(o -> result.add(String.valueOf(o)));\n  }\n  return result;"
+    },
+    "forward/headers": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 198,
+      "end": 217,
+      "code": "List<String> headers = new ArrayList<>(FORWARDED_HEADERS);\nheaders.addAll(route.forwardHeaders());\nfor (String name : headers) {\n  List<String> values = Collections.list(request.getHeaders(name));\n  if (!values.isEmpty()) {\n    upstream.header(name, String.join(\", \", values));\n  }\n}\nif (request.getHeader(\"X-Request-Id\") == null) {\n  upstream.header(\"X-Request-Id\", id.toString());\n}\nString forwardedFor = request.getHeader(\"X-Forwarded-For\");\nupstream.header(\n    \"X-Forwarded-For\",\n    forwardedFor == null\n        ? request.getRemoteAddr()\n        : forwardedFor + \", \" + request.getRemoteAddr());\nupstream.header(\"X-Forwarded-Proto\", request.getScheme());\nupstream.header(\n    \"X-Forwarded-Host\", request.getHeader(\"Host\") == null ? \"\" : request.getHeader(\"Host\"));"
+    },
+    "forward/errors": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 224,
+      "end": 242,
+      "code": "} catch (HttpTimeoutException e) {\n  refuse(\n      response,\n      call,\n      started,\n      504,\n      \"timeout\",\n      \"The upstream did not answer in time.\",\n      \"upstream-timeout\");\n  return;\n} catch (IOException e) {\n  refuse(\n      response,\n      call,\n      started,\n      502,\n      \"transient\",\n      \"The upstream could not be reached.\",\n      \"upstream-unreachable\");"
+    },
+    "forward/yml": {
+      "file": "src/main/resources/application.yml",
+      "start": 4,
+      "end": 6,
+      "code": "# The cancel is PUT .../ServiceRequest?identifier=system|42. Tomcat refuses a raw | (and these)\n# in a query by default; the relay percent-encodes them when it forwards.\nrelaxed-query-chars: '|,{,},[,],^,<,>,\",`,\\'"
+    },
+    "forward/query": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 373,
+      "end": 389,
+      "code": "public static String query(String raw) {\n  StringBuilder out = new StringBuilder(raw.length() + 8);\n  raw.codePoints()\n      .forEach(\n          cp -> {\n            if ((cp >= 'a' && cp <= 'z')\n                || (cp >= 'A' && cp <= 'Z')\n                || (cp >= '0' && cp <= '9')\n                || (cp < 128 && QUERY_SAFE.indexOf(cp) >= 0)) {\n              out.appendCodePoint(cp);\n            } else {\n              for (byte b : new String(Character.toChars(cp)).getBytes(StandardCharsets.UTF_8)) {\n                out.append('%').append(String.format(\"%02X\", b & 0xff));\n              }\n            }\n          });\n  return out.toString();"
+    },
+    "message-log/schema": {
+      "file": "src/main/resources/db/migration/V1__message_log.sql",
+      "start": 2,
+      "end": 24,
+      "code": "CREATE TABLE message (\n    id               uuid         PRIMARY KEY,\n    received_at      timestamptz  NOT NULL DEFAULT now(),\n    route            varchar(60)  NOT NULL,\n    direction        varchar(10)  NOT NULL CHECK (direction IN ('inbound', 'outbound')),\n    sender_client_id varchar(100),\n    clinic_slug      varchar(60),\n    method           varchar(10)  NOT NULL,\n    path             text         NOT NULL,\n    content_type     varchar(200),\n    request_size     bigint,\n    request_sha256   char(64),\n    bundle_id        varchar(100),\n    resource_summary jsonb,\n    upstream_status  integer,\n    latency_ms       integer,\n    error            text\n);\n\nCREATE INDEX ix_message_received_at ON message (received_at DESC);\nCREATE INDEX ix_message_route_status ON message (route, upstream_status);\nCREATE INDEX ix_message_clinic ON message (clinic_slug, received_at DESC);\nCREATE INDEX ix_message_bundle ON message (bundle_id);"
+    },
+    "message-log/entry": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java",
+      "start": 28,
+      "end": 45,
+      "code": "/** Metadata only. There is deliberately no field for a body. */\npublic record Entry(\n    UUID id,\n    Instant receivedAt,\n    String route,\n    String senderClientId,\n    String clinicSlug,\n    String method,\n    String path,\n    String contentType,\n    Long requestSize,\n    String requestSha256,\n    String bundleId,\n    BodySummary summary,\n    Integer upstreamStatus,\n    int responseStatus,\n    long latencyMs,\n    String error) {}"
+    },
+    "message-log/write": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/MessageLog.java",
+      "start": 82,
+      "end": 97,
+      "code": "public void write(Entry entry, EventFactory.Result events, Runnable alsoInTransaction) {\n  try {\n    transaction.executeWithoutResult(\n        status -> {\n          try {\n            insert(entry, events);\n            if (alsoInTransaction != null) {\n              alsoInTransaction.run();\n            }\n          } catch (JsonProcessingException e) {\n            throw new IllegalStateException(e);\n          }\n        });\n  } catch (RuntimeException e) {\n    log.error(\n        \"message log write failed for route {}: {}\", entry.route(), e.getClass().getSimpleName());"
+    },
+    "search/v1ident": {
+      "file": "src/main/resources/db/migration/V1__message_log.sql",
+      "start": 26,
+      "end": 34,
+      "code": "-- Identifiers found in a message (ServiceRequest, externalId), for searching.\nCREATE TABLE message_identifier (\n    message_id uuid         NOT NULL REFERENCES message (id) ON DELETE CASCADE,\n    system     varchar(200) NOT NULL,\n    value      varchar(200) NOT NULL,\n    PRIMARY KEY (message_id, system, value)\n);\n\nCREATE INDEX ix_message_identifier_lookup ON message_identifier (system, value);"
+    },
+    "search/identifier": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/MessagesController.java",
+      "start": 104,
+      "end": 115,
+      "code": "if (identifier != null && !identifier.isBlank()) {\n  int bar = identifier.lastIndexOf('|');\n  sql.append(\" and exists (select 1 from message_identifier i where i.message_id = m.id\");\n  if (bar > 0) {\n    sql.append(\" and i.system = ? and i.value = ?\");\n    params.add(identifier.substring(0, bar));\n    params.add(identifier.substring(bar + 1));\n  } else {\n    sql.append(\" and i.value = ?\");\n    params.add(identifier);\n  }\n  sql.append(\")\");"
+    },
+    "event-factory/types": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+      "start": 15,
+      "end": 31,
+      "code": "* Turns one relayed call into zero or more events. Events are about answers: a call the upstream\n* did not answer (unreachable, timeout) makes none, so the sender's retry makes them once.\n*\n* <ul>\n*   <li>{@code order.placed}: an order Bundle the upstream answered, whatever the answer.\n*   <li>{@code order.accepted}: the same, answered 2xx.\n*   <li>{@code order.cancelled} / {@code order.cancel-refused}: a cancel answered 2xx / 409.\n*   <li>{@code result.final} / {@code result.amended}: a DiagnosticReport in that status, answered\n*       2xx. Other statuses make no event.\n*   <li>{@code finance.document}: each financial document of a call answered 2xx.\n* </ul>\n*\n* Prescriptions and patient merges make no event (a drug says too much about a patient). A merge\n* answered 2xx moves the pseudonym remembered with the merged patient's orders to the survivor's,\n* so later results of those orders carry the survivor's pseudonym.\n*\n* <p>Event ids are derived from the content, so the same call sent twice is one event."
+    },
+    "event-factory/revoked": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+      "start": 157,
+      "end": 162,
+      "code": "// ClinicHub sends a cancel as a transaction Bundle whose entry is the ServiceRequest again,\n// status revoked (a conditional PUT inside the Bundle): a cancel, not a new order.\nif (\"revoked\".equals(order.status())) {\n  cancel(call, order.identifier(), order.status(), events);\n  continue;\n}"
+    },
+    "event-factory/cancel": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+      "start": 210,
+      "end": 214,
+      "code": "int status = call.upstreamStatus();\nString type =\n    status >= 200 && status < 300\n        ? \"order.cancelled\"\n        : status == 409 ? \"order.cancel-refused\" : null;"
+    },
+    "event-factory/id": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventFactory.java",
+      "start": 317,
+      "end": 320,
+      "code": "String key = type + \"|\" + clinic + \"|\" + orderId + \"|\" + discriminator;\nreturn new ClinicalEvent(\n    ClinicalEvent.SCHEMA_VERSION,\n    UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)),"
+    },
+    "pseudonym/hmac": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/Pseudonymizer.java",
+      "start": 21,
+      "end": 29,
+      "code": "public String of(String clinicSlug, String mrn) {\n  if (key.length == 0) {\n    throw new IllegalStateException(\"no pseudonym secret configured\");\n  }\n  try {\n    Mac mac = Mac.getInstance(\"HmacSHA256\");\n    mac.init(new SecretKeySpec(key, \"HmacSHA256\"));\n    byte[] digest = mac.doFinal((clinicSlug + \"|\" + mrn).getBytes(StandardCharsets.UTF_8));\n    return HexFormat.of().formatHex(digest);"
+    },
+    "pseudonym/link": {
+      "file": "src/main/resources/db/migration/V3__event_outbox.sql",
+      "start": 19,
+      "end": 30,
+      "code": "-- What a later call needs to know about an order: results and cancels do not carry the patient, so the\n-- pseudonym, test and priority are remembered from the order. De-identified: no MRN, no name.\nCREATE TABLE order_link (\n    clinic_slug       varchar(60)  NOT NULL,\n    order_id          varchar(200) NOT NULL,\n    patient_pseudonym char(64),\n    application       varchar(60),\n    test_code_system  varchar(200),\n    test_code         varchar(100),\n    priority          varchar(20),\n    created_at        timestamptz  NOT NULL DEFAULT now(),\n    PRIMARY KEY (clinic_slug, order_id)"
+    },
+    "pseudonym/upsert": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/OrderLinks.java",
+      "start": 69,
+      "end": 74,
+      "code": "on conflict (clinic_slug, order_id) do update set\n  patient_pseudonym = coalesce(excluded.patient_pseudonym, order_link.patient_pseudonym),\n  application = coalesce(excluded.application, order_link.application),\n  test_code_system = coalesce(excluded.test_code_system, order_link.test_code_system),\n  test_code = coalesce(excluded.test_code, order_link.test_code),\n  priority = coalesce(excluded.priority, order_link.priority)"
+    },
+    "outbox/table": {
+      "file": "src/main/resources/db/migration/V3__event_outbox.sql",
+      "start": 4,
+      "end": 13,
+      "code": "CREATE TABLE event_outbox (\n    id              uuid         PRIMARY KEY,\n    message_id      uuid,\n    created_at      timestamptz  NOT NULL DEFAULT now(),\n    event_type      varchar(60)  NOT NULL,\n    payload         jsonb        NOT NULL,\n    attempts        integer      NOT NULL DEFAULT 0,\n    next_attempt_at timestamptz  NOT NULL DEFAULT now(),\n    published_at    timestamptz,\n    last_error      varchar(200)"
+    },
+    "outbox/publish": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+      "start": 92,
+      "end": 94,
+      "code": "select id, event_type, payload::text, attempts from event_outbox\n where published_at is null and next_attempt_at <= now()\n order by created_at limit ? for update skip locked"
+    },
+    "outbox/confirm": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+      "start": 107,
+      "end": 112,
+      "code": "rabbit.invoke(\n    ops -> {\n      for (Row row : rows) {\n        ops.send(properties.exchange(), row.type(), message(row));\n      }\n      ops.waitForConfirmsOrDie(CONFIRM_TIMEOUT_MS);"
+    },
+    "outbox/backoff": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/EventPublisher.java",
+      "start": 135,
+      "end": 138,
+      "code": "Duration backoff(int attempts) {\n  long seconds = 1L << Math.min(attempts + 1, 20);\n  return Duration.ofSeconds(Math.min(seconds, Math.max(1, properties.maxBackoff().toSeconds())));\n}"
+    },
+    "outbox/rabbit": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/events/RabbitConfig.java",
+      "start": 22,
+      "end": 33,
+      "code": "TopicExchange clinicalEventsExchange(EventsProperties properties) {\n  return new TopicExchange(properties.exchange(), true, false);\n}\n\n@Bean\nQueue clinicalEventsQueue(EventsProperties properties) {\n  return QueueBuilder.durable(properties.queue()).build();\n}\n\n@Bean\nBinding clinicalEventsBinding(Queue clinicalEventsQueue, TopicExchange clinicalEventsExchange) {\n  return BindingBuilder.bind(clinicalEventsQueue).to(clinicalEventsExchange).with(\"#\");"
+    },
+    "mllp/frame": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Mllp.java",
+      "start": 28,
+      "end": 54,
+      "code": "public static byte[] read(InputStream in, int maxBytes) throws IOException {\n  int b;\n  do {\n    b = in.read();\n    if (b < 0) {\n      return null;\n    }\n  } while (b != VT);\n  ByteArrayOutputStream out = new ByteArrayOutputStream(1024);\n  while (true) {\n    b = in.read();\n    if (b < 0) {\n      throw new FrameException(\"connection closed inside a message\");\n    }\n    if (b == FS) {\n      if (in.read() != CR) {\n        throw new FrameException(\"frame does not end with <FS><CR>\");\n      }\n      return out.toByteArray();\n    }\n    if (b == VT) {\n      throw new FrameException(\"start byte inside a message\");\n    }\n    if (out.size() >= maxBytes) {\n      throw new FrameException(\"message too large\");\n    }\n    out.write(b);"
+    },
+    "mllp/serve": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/MllpServer.java",
+      "start": 82,
+      "end": 92,
+      "code": "private void serve(Socket socket) {\n  try (socket) {\n    socket.setSoTimeout((int) settings.readTimeout().toMillis());\n    InputStream in = socket.getInputStream();\n    OutputStream out = socket.getOutputStream();\n    while (true) {\n      byte[] frame = Mllp.read(in, settings.maxMessageBytes());\n      if (frame == null) {\n        return;\n      }\n      Mllp.write(out, inbound.handle(frame));"
+    },
+    "oru/table": {
+      "file": "docs/architecture.md",
+      "start": 308,
+      "end": 322,
+      "code": "| HL7 v2 | FHIR R4 |\n|---|---|\n| MSH-3.MSH-4, MSH-10 | sender id (`EXTLAB.LAB1`) and message id, used for de-duplication; Bundle id and resource ids are derived from them, so a resend gives the same ids |\n| ORC-2 / OBR-2 placer order number `101^harbourview` (or the whole `urn:clinichub:harbourview:service-request` as the first component) | `DiagnosticReport.basedOn.identifier` = `urn:clinichub:harbourview:service-request\\|101` |\n| ORC-3 / OBR-3 filler order number | `DiagnosticReport.identifier` (`urn:integrationhub:hl7:{sender}:filler-order`) |\n| OBR-4 | `DiagnosticReport.code` (LN → LOINC, SCT → SNOMED, an unknown system name → `urn:integrationhub:hl7:{sender}:{name}`) |\n| OBR-7 / OBR-22 | `effectiveDateTime` / `issued` |\n| OBR-25 (table 0123) | `status`: F final, C amended, X cancelled; P, R, A, O, I, S, Y are accepted and **not forwarded** (ClinicHub takes final, amended, cancelled) |\n| OBX-2 NM / SN / ST, TX, FT / CE, CWE, CNE | `valueQuantity` (with `<`, `>`, `<=`, `>=` as comparator, unit from OBX-6 as UCUM) / `valueString` / `valueCodeableConcept` |\n| OBX-3 | `Observation.code`; the Observations are `DiagnosticReport.result` |\n| OBX-7 | `referenceRange` (text, and low/high when it is `a-b`, `<a` or `>a`) |\n| OBX-8 (table 0078, repeating) | `interpretation` (v3 ObservationInterpretation); a flag not in the table is kept as text |\n| OBX-11 (table 0085) | `Observation.status`; OBX-14, else OBR-7 → `effectiveDateTime` |\n| NTE after an OBX / after the OBR | `Observation.note` / `DiagnosticReport.conclusion` |\n| PID, PV1, NK1, … | **not read**. No patient is named in what goes to ClinicHub; it knows the patient from the order |"
+    },
+    "oru/placer": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java",
+      "start": 215,
+      "end": 232,
+      "code": "Reference placerOrder(Segment source, Segment obr) throws Hl7Exception {\n  String id = ei(source, 2);\n  String namespace = source.component(2, 2);\n  if (id.isEmpty() && source != obr) {\n    id = ei(obr, 2);\n    namespace = obr.component(2, 2);\n  }\n  if (id.isEmpty()) {\n    throw new Hl7Exception(\"no placer order number\");\n  }\n  Matcher urn = URN_ORDER.matcher(id);\n  if (urn.matches() && ORDER_ID.matcher(urn.group(2)).matches()) {\n    return identifierReference(urn.group(1), urn.group(2));\n  }\n  if (SLUG.matcher(namespace).matches() && ORDER_ID.matcher(id).matches()) {\n    return identifierReference(\"urn:clinichub:\" + namespace + \":service-request\", id);\n  }\n  throw new Hl7Exception(\"placer order number is not a ClinicHub order\");"
+    },
+    "oru/never": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/OruToFhir.java",
+      "start": 39,
+      "end": 41,
+      "code": "*   <li>PID and every other segment: <b>never read</b>. No patient is named in what is forwarded;\n*       ClinicHub knows the patient from the order.\n* </ul>"
+    },
+    "store-forward/insert": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+      "start": 143,
+      "end": 149,
+      "code": "insert into hl7_inbound (id, received_at, sender, control_id, status, report_count, next_attempt_at, payload)\nvalues (?, ?, ?, ?, 'PENDING', ?, now() + make_interval(secs => ?), ?)\non conflict (sender, control_id) do update\n   set status = 'PENDING', attempts = 0, received_at = excluded.received_at,\n       next_attempt_at = excluded.next_attempt_at, payload = excluded.payload,\n       report_count = excluded.report_count, last_error = null, last_status = null, id = excluded.id\n where hl7_inbound.status in ('FAILED', 'REJECTED')"
+    },
+    "store-forward/outcomes": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/ClinicHubClient.java",
+      "start": 67,
+      "end": 77,
+      "code": "if (status >= 200 && status < 300) {\n  return new Delivery(Outcome.DELIVERED, status, null);\n}\nif (status == 401) {\n  token = null; // expired or revoked early: fetch a new one next time\n  return new Delivery(Outcome.RETRY, status, \"unauthorized\");\n}\nif (status == 408 || status == 425 || status == 429 || status >= 500) {\n  return new Delivery(Outcome.RETRY, status, \"clinichub-unavailable\");\n}\nreturn new Delivery(Outcome.REJECTED, status, \"clinichub-refused\");"
+    },
+    "store-forward/cipher": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/PayloadCipher.java",
+      "start": 31,
+      "end": 39,
+      "code": "public byte[] encrypt(byte[] plain, String rowId) {\n  try {\n    byte[] iv = new byte[IV_BYTES];\n    random.nextBytes(iv);\n    Cipher cipher = Cipher.getInstance(\"AES/GCM/NoPadding\");\n    cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_BITS, iv));\n    cipher.updateAAD(rowId.getBytes(StandardCharsets.UTF_8));\n    byte[] sealed = cipher.doFinal(plain);\n    return ByteBuffer.allocate(iv.length + sealed.length).put(iv).put(sealed).array();"
+    },
+    "store-forward/test": {
+      "file": "src/test/java/ca/arashkeshtgar/integrationhub/Hl7InboundTest.java",
+      "start": 167,
+      "end": 171,
+      "code": "assertThat(new String(payload, StandardCharsets.ISO_8859_1))\n    .as(\"encrypted at rest\")\n    .doesNotContain(\"DiagnosticReport\")\n    .doesNotContain(\"Glucose\")\n    .doesNotContain(\"harbourview\");"
+    },
+    "orders-out/yml": {
+      "file": "src/main/resources/application.yml",
+      "start": 147,
+      "end": 151,
+      "code": "externallab:\n  hl7-order: true\n  allowed-audiences: [externallab]\n  required-scopes: [orders]\n  allowed-methods: [POST, PUT]"
+    },
+    "orders-out/send": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/relay/RelayController.java",
+      "start": 271,
+      "end": 275,
+      "code": "* A route for an external laboratory: the order Bundle is sent as an ORM^O01 and the lab's ACK is\n* the answer. 200 when the lab took it; 409 for a cancellation and 422 for an order the lab\n* refused (ClinicHub treats 409 as an answer and 422 as a failure to retry); 502 when the lab did\n* not answer; 503 when no lab is set up; 400 when the body cannot be an order.\n*/"
+    },
+    "orders-out/ack": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Orders.java",
+      "start": 90,
+      "end": 102,
+      "code": "Mllp.write(socket.getOutputStream(), message);\nbyte[] ack = Mllp.read(socket.getInputStream(), properties.mllp().maxMessageBytes());\nif (ack == null) {\n  return \"no-ack\";\n}\nHl7Message parsed = Hl7Message.parse(new String(ack, StandardCharsets.UTF_8));\nString code = parsed.first(\"MSA\").map(m -> m.field(1)).orElse(\"\");\nif (Hl7Ack.ACCEPT.equals(code) || \"CA\".equals(code)) {\n  return null;\n}\nreturn List.of(\"AE\", \"AR\", \"CE\", \"CR\").contains(code)\n    ? \"ack-\" + code.toLowerCase()\n    : \"bad-ack\";"
+    },
+    "admin-access/chain": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/SecurityConfig.java",
+      "start": 40,
+      "end": 53,
+      "code": ".authorizeHttpRequests(\n    auth ->\n        auth.requestMatchers(EndpointRequest.to(HealthEndpoint.class, InfoEndpoint.class))\n            .permitAll()\n            .requestMatchers(\"/route/**\", \"/error\")\n            .permitAll()\n            .requestMatchers(\n                \"/api/messages\",\n                \"/api/messages/**\",\n                \"/api/admin/**\",\n                \"/actuator/prometheus\")\n            .hasAuthority(AdminAccessFilter.AUTHORITY)\n            .anyRequest()\n            .authenticated())"
+    },
+    "admin-access/has": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+      "start": 101,
+      "end": 107,
+      "code": "static boolean has(Set<String> granted, String wanted) {\n  if (granted.contains(wanted)) {\n    return true;\n  }\n  int colon = wanted.indexOf(':');\n  return colon > 0 && granted.contains(wanted.substring(colon + 1));\n}"
+    },
+    "admin-access/replaying": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+      "start": 83,
+      "end": 91,
+      "code": "boolean replaying = request.getRequestURI().startsWith(\"/api/admin\") && isWrite(request);\nif (!audienceOk || !canView || (replaying && !canReplay)) {\n  deny(\n      response,\n      403,\n      replaying\n          ? \"No permission to change the hub (replay, code map).\"\n          : \"No permission to read the message log.\");\n  return;"
+    },
+    "admin-access/local": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AdminAccessFilter.java",
+      "start": 149,
+      "end": 156,
+      "code": "private static boolean isLocal(HttpServletRequest request) {\n  if (request.getHeader(\"X-Forwarded-For\") != null\n      || request.getHeader(\"Forwarded\") != null\n      || request.getHeader(\"X-Real-IP\") != null) {\n    return false;\n  }\n  try {\n    return InetAddress.getByName(request.getRemoteAddr()).isLoopbackAddress();"
+    },
+    "health/status": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java",
+      "start": 113,
+      "end": 114,
+      "code": "String status =\n    down.contains(name) ? \"down\" : fail15 > 0 ? \"degraded\" : calls15 > 0 ? \"ok\" : \"idle\";"
+    },
+    "health/failing": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/RouteHealth.java",
+      "start": 56,
+      "end": 73,
+      "code": "public List<String> failing() {\n  List<String> down = new ArrayList<>();\n  jdbc.query(\n      \"\"\"\n      select route,\n             count(*) filter (where response_status >= 500),\n             count(*) filter (where upstream_status is not null and upstream_status < 500)\n        from message\n       where received_at > now() - make_interval(secs => ?)\n       group by route\n      \"\"\",\n      rs -> {\n        if (rs.getLong(2) >= alerts.routeDownMinFailures() && rs.getLong(3) == 0) {\n          down.add(rs.getString(1));\n        }\n      },\n      (double) alerts.routeDownAfter().toSeconds());\n  return down;"
+    },
+    "health/unique": {
+      "file": "src/main/resources/db/migration/V5__admin.sql",
+      "start": 32,
+      "end": 32,
+      "code": "CREATE UNIQUE INDEX uq_alert_open ON alert (kind, subject) WHERE resolved_at IS NULL;"
+    },
+    "health/notify": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/AlertMonitor.java",
+      "start": 178,
+      "end": 181,
+      "code": "// Opened and resolved between two rounds: nothing was told, nothing to tell.\njdbc.update(\n    \"update alert set notified_at = now(), resolved_notified_at = now()\"\n        + \" where resolved_at is not null and notified_at is null\");"
+    },
+    "dead-letters/keep": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/hl7/Hl7Inbound.java",
+      "start": 210,
+      "end": 218,
+      "code": "case REJECTED -> {\n  jdbc.update(\n      \"update hl7_inbound set status = 'REJECTED', payload = case when ? then payload end,\"\n          + \" failed_at = now(), attempts = attempts + 1, last_status = ?, last_error = ? where id = ?\",\n      keepForReplay(),\n      delivery.status(),\n      delivery.note(),\n      id);\n  outcome = Outcome.REJECTED;"
+    },
+    "dead-letters/yml": {
+      "file": "src/main/resources/application.yml",
+      "start": 62,
+      "end": 64,
+      "code": "# A message the hub gave up on, or ClinicHub refused, keeps its (encrypted) payload this many days so it can be\n# replayed from the admin web; then the payload is dropped. 0 = drop it at once (no replay).\nreplay-window-days: ${HUB_HL7_REPLAY_WINDOW_DAYS:7}"
+    },
+    "dead-letters/replay": {
+      "file": "src/main/java/ca/arashkeshtgar/integrationhub/admin/DeadLetters.java",
+      "start": 96,
+      "end": 105,
+      "code": "String statuses = \"inbound\".equals(queue) ? \"('FAILED', 'REJECTED')\" : \"('FAILED')\";\nint changed =\n    jdbc.update(\n        \"update \"\n            + table\n            + \" set status = 'PENDING', attempts = 0, next_attempt_at = now(), failed_at = null,\"\n            + \" last_error = null, replay_count = replay_count + 1, last_replayed_at = now(),\"\n            + \" last_replayed_by = ? where id = ? and status in \"\n            + statuses\n            + \" and payload is not null\","
+    },
+    "web/signed": {
+      "file": "web/src/App.tsx",
+      "start": 19,
+      "end": 21,
+      "code": "function Signed() {\n  const auth = useAuth();\n  const me = useResource<Me>(auth, '/api/admin/me');"
+    },
+    "web/confirm": {
+      "file": "web/src/pages/DeadLetters.tsx",
+      "start": 82,
+      "end": 88,
+      "code": "{!l.replayable && <span className=\"muted small\">No longer kept</span>}\n{l.replayable && !me.canReplay && <span className=\"muted small\">No permission to replay</span>}\n{l.replayable &&\n  me.canReplay &&\n  (confirming === l.id ? (\n    <span className=\"confirm\">\n      Replay this message?{' '}"
+    },
+    "web/nginx": {
+      "file": "web/nginx.conf.template",
+      "start": 9,
+      "end": 13,
+      "code": "# Only the admin API and the message log are proxied; the relay (/route) and the metrics are not reachable from here.\nlocation /api/ {\n  proxy_pass ${HUB_API_URL};\n  proxy_set_header Host $host;\n  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;"
+    }
+  },
+  "endpoints": [],
+  "tables": [],
+  "routes": [
+    {
+      "path": "messages",
+      "component": "Messages",
+      "guards": []
+    },
+    {
+      "path": "messages/:id",
+      "component": "MessageDetail",
+      "guards": []
+    },
+    {
+      "path": "dead-letters",
+      "component": "DeadLetters",
+      "guards": []
+    },
+    {
+      "path": "alerts",
+      "component": "Alerts",
+      "guards": []
+    },
+    {
+      "path": "code-map",
+      "component": "CodeMap",
+      "guards": []
+    },
+    {
+      "path": "*",
+      "redirect": "/",
+      "guards": []
+    }
+  ]
+}
